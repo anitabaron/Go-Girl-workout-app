@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar.vue";
 import Hero from "@/components/Hero.vue";
 import HomeCards from "./components/HomeCards.vue";
 import ExcercisesList from "./components/ExcercisesList.vue";
+import Footer from "./components/Footer.vue";
 </script>
 
 <template>
@@ -10,4 +11,5 @@ import ExcercisesList from "./components/ExcercisesList.vue";
   <Hero />
   <HomeCards />
   <ExcercisesList :limit="3" :showButton="true" :details="false" />
+  <Footer />
 </template>

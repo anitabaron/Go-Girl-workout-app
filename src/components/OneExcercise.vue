@@ -38,7 +38,7 @@ const toggleFullDetails = () => {
         @click="toggleFullDetails"
         class="text-goRed hover:text-black mb-1"
       >
-        {{ showDetails ? "Hide" : "Details" }}
+        {{ showDetails ? "Hide" : "Show details" }}
       </button>
       <div class="text-goDarkPink my-3">
         <h3>Reps: {{ exc.reps }}</h3>
