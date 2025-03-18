@@ -1,13 +1,12 @@
 {
-  "name": "vue-crash-2024",
+  "name": "go-girl-workout-app",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "server": "json-server --watch src/jobs.json --port 8000"
+    "preview": "vite preview"
   },
   "dependencies": {
     "axios": "^1.7.2",
