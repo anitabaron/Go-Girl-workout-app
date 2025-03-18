@@ -24,6 +24,11 @@ import logo from "@/assets/img/logo.png";
                 >Workout plan</a
               >
               <a
+                href="excersises.html"
+                class="text-white font-medium hover:bg-goDarkPink hover:text-white rounded-md px-3 py-2 transition-all duration-300"
+                >Excersises</a
+              >
+              <a
                 href="start.html"
                 class="text-white font-medium hover:bg-goDarkPink hover:text-white rounded-md px-3 py-2 transition-all duration-300"
                 >Start</a
