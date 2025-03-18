@@ -9,5 +9,5 @@ import ExcercisesList from "./components/ExcercisesList.vue";
   <Navbar />
   <Hero />
   <HomeCards />
-  <ExcercisesList :limit="3" :showButton="true" />
+  <ExcercisesList :limit="3" :showButton="true" :details="false" />
 </template>

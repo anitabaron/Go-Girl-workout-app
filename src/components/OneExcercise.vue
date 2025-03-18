@@ -1,17 +1,27 @@
 <script setup>
 import workoutList from "@/workouts.json";
-import { defineProps, ref } from "vue";
+import { defineProps, ref, computed } from "vue";
 
-defineProps({
+const props = defineProps({
   exc: Object,
 });
 
-// const showFullDescription = ref(false);
+const showDetails = ref(false);
+const truncDetails = computed(() => {
+  let details = props.exc.details;
+  if (!showDetails.value) {
+    details = details.substring(0, 0) + "...";
+  }
+  return details;
+});
+const toggleFullDetails = () => {
+  showDetails.value = !showDetails.value;
+};
 </script>
 
 <template>
   <div
-    class="bg-goLightPink rounded-xl shadow-md relative p-4 flex flex-col justify-between h-[350px]"
+    class="bg-goLightPink rounded-xl shadow-md relative p-4 flex flex-col justify-between"
   >
     <div class="flex-grow">
       <div class="mb-3">
@@ -23,7 +33,13 @@ defineProps({
         <p>{{ exc.description }}</p>
       </div>
 
-      <p>{{ exc.details }}</p>
+      <p>{{ truncDetails }}</p>
+      <button
+        @click="toggleFullDetails"
+        class="text-goRed hover:text-black mb-1"
+      >
+        {{ showDetails ? "Hide" : "Details" }}
+      </button>
       <div class="text-goDarkPink my-3">
         <h3>Reps: {{ exc.reps }}</h3>
         <h3>Duration: {{ exc.duration }}</h3>
@@ -34,11 +50,11 @@ defineProps({
       </div>
     </div>
 
-    <div class="border border-gray-100 my-2"></div>
+    <div class="border border-white my-2"></div>
 
     <div class="flex flex-col lg:flex-row justify-between">
       <div class="text-goRed mb-3">
-        <i class="fa-solid fa-location-dot text-lg"></i>
+        <!-- <i class="fa-solid fa-location-dot text-lg"></i> -->
         Series: {{ exc.series }}
       </div>
 
