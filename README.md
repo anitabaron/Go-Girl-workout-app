@@ -1,6 +1,6 @@
 # Welcome to Go Girl Workout App! 🚀
 
-![Go Girl! Workout App](./public/sneek.JPG)
+![Go Girl! Workout App](./public/www.JPG)
 
 A simple and effective tool to help you plan, track, and stay consistent with your workouts. Designed for both coaches and individual users, this app allows easy customization of workout routines, including exercise repetitions, sets, and time tracking.
 
@@ -18,9 +18,9 @@ A simple and effective tool to help you plan, track, and stay consistent with yo
 - 🔹 Phase 2: Progress tracking & analytics
 - 🔹 Phase 3: Social sharing & coach feedback
 
-# Vue Jobs Project (YouTube)
+## Vue Online Course (YouTube)
 
-This is the project based on the [YouTube VUE.js crash course](https://www.youtube.com/watch?v=VeNfHj6MhgA).
+This project is based on the [YouTube VUE.js crash course] (https://www.youtube.com/watch?v=VeNfHj6MhgA).
 
 ### Install Dependencies
 
