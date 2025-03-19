@@ -1,10 +1,10 @@
 <script setup>
-import workoutList from "@/workouts.json";
+import exercisesList from "@/exercises.json";
 
 import { ref, defineProps } from "vue";
-import OneExcercise from "./OneExcercise.vue";
-const workouts = ref(workoutList);
-// console.log(workouts.value);
+import OneExercise from "./OneExercise.vue";
+const exercises = ref(exercisesList);
+// console.log(exercises.value);
 
 defineProps({
   limit: Number,
@@ -23,19 +23,19 @@ defineProps({
           Browse exercise
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <OneExcercise
-            v-for="workout in workouts.slice(0, limit || workouts.length)"
-            :key="workout.id"
-            :exc="workout"
+          <OneExercise
+            v-for="exc in exercises.slice(0, limit || exercises.length)"
+            :key="exc.id"
+            :exc="exc"
           />
         </div>
       </div>
     </section>
     <section v-if="showButton" class="m-auto max-w-lg mt-5 px-6">
       <a
-        href="/excercises"
+        href="/exercises"
         class="block bg-goRed text-white text-center py-4 px-6 rounded-xl hover:bg-gray-700"
-        >View All Excercises</a
+        >View All Exercises</a
       >
     </section>
   </section>

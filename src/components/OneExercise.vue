@@ -1,5 +1,4 @@
 <script setup>
-import workoutList from "@/workouts.json";
 import { defineProps, ref, computed } from "vue";
 
 const props = defineProps({
@@ -53,13 +52,10 @@ const toggleFullDetails = () => {
     <div class="border border-white my-2"></div>
 
     <div class="flex flex-col lg:flex-row justify-between">
-      <div class="text-goRed mb-3">
-        <!-- <i class="fa-solid fa-location-dot text-lg"></i> -->
-        Series: {{ exc.series }}
-      </div>
+      <div class="text-goRed mb-3">Series: {{ exc.series }}</div>
 
       <a
-        :href="'/excercise/' + exc.id"
+        :href="'/exercise/' + exc.id"
         class="h-[36px] bg-goDarkPink hover:bg-goRed text-white px-4 py-2 rounded-lg text-center text-sm"
       >
         Details

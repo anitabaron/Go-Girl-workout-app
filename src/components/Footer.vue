@@ -22,7 +22,7 @@
     </div>
 
     <p class="text-sm mt-2">
-      &copy; 2024 Go Girl Workout App. All rights reserved.
+      &copy; 2025 Go Girl Workout App. All rights reserved.
     </p>
   </footer>
 </template>

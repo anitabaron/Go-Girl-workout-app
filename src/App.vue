@@ -2,7 +2,7 @@
 import Navbar from "@/components/Navbar.vue";
 import Hero from "@/components/Hero.vue";
 import HomeCards from "./components/HomeCards.vue";
-import ExcercisesList from "./components/ExcercisesList.vue";
+import ExcercisesList from "./components/ExercisesList.vue";
 import Footer from "./components/Footer.vue";
 </script>
 
