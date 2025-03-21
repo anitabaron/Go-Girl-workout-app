@@ -18,7 +18,7 @@ A simple and effective tool to help you plan, track, and stay consistent with yo
 - 🔹 Phase 2: Progress tracking & analytics
 - 🔹 Phase 3: Social sharing & coach feedback
 
-## Vue Online Course (YouTube)
+## Vue.js Online Course (YouTube)
 
 This project is based on the [YouTube VUE.js crash course] (https://www.youtube.com/watch?v=VeNfHj6MhgA).
 

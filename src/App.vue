@@ -1,15 +1,15 @@
 <script setup>
 import Navbar from "@/components/Navbar.vue";
-import Hero from "@/components/Hero.vue";
-import HomeCards from "./components/HomeCards.vue";
-import ExcercisesList from "./components/ExercisesList.vue";
 import Footer from "./components/Footer.vue";
+import { RouterView } from "vue-router";
 </script>
 
 <template>
-  <Navbar />
-  <Hero />
-  <HomeCards />
-  <ExcercisesList :limit="3" :showButton="true" :details="false" />
-  <Footer />
+  <div class="flex flex-col min-h-screen">
+    <Navbar />
+    <main class="flex-1">
+      <RouterView />
+    </main>
+    <Footer />
+  </div>
 </template>

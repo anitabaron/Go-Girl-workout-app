@@ -7,6 +7,7 @@
     "reps": 30,
     "series": 3,
     "duration": "40 sec",
+    "restTime": 30,
     "sides": "no",
     "level": 1,
     "details": "Keep a steady pace, maintain an upright posture, and land softly to reduce impact on the joints."
@@ -19,6 +20,7 @@
     "reps": 20,
     "series": 2,
     "duration": "30 sec",
+    "restTime": 30,
     "sides": "no",
     "level": 1,
     "details": "Start with small circles and gradually increase the size. Reverse the direction halfway through."
@@ -31,6 +33,7 @@
     "reps": 20,
     "series": 3,
     "duration": "30 sec",
+    "restTime": 30,
     "sides": "yes",
     "level": 1,
 
@@ -44,6 +47,7 @@
     "reps": 15,
     "series": 2,
     "duration": "20 sec",
+    "restTime": 30,
     "sides": "no",
     "level": 1,
     "details": "Avoid tensing your neck; keep movements controlled and smooth."
@@ -56,6 +60,7 @@
     "reps": 15,
     "series": 2,
     "duration": "30 sec",
+    "restTime": 30,
     "sides": "yes",
     "level": 1,
     "details": "Hold onto a stable surface for balance and keep movements controlled."
@@ -68,6 +73,7 @@
     "reps": 6,
     "series": 4,
     "duration": "30 sec",
+    "restTime": 120,
     "sides": "no",
     "level": 3,
     "details": "Keep your core engaged and avoid swinging for better muscle activation."
@@ -80,6 +86,7 @@
     "reps": 15,
     "series": 3,
     "duration": "30 sec",
+    "restTime": 60,
     "sides": "no",
     "level": 2,
     "details": "Engage your core, keep elbows slightly tucked, and maintain a controlled pace."
@@ -92,6 +99,7 @@
     "reps": 20,
     "series": 3,
     "duration": "40 sec",
+    "restTime": 30,
     "sides": "no",
     "level": 1,
     "details": "Keep your back straight, knees aligned with toes, and push through your heels."
@@ -104,6 +112,7 @@
     "reps": 10,
     "series": 3,
     "duration": "30 sec",
+    "restTime": 120,
     "sides": "no",
     "level": 3,
     "details": "Keep your elbows close to your body and avoid swinging."
@@ -116,6 +125,7 @@
     "reps": 1,
     "series": 3,
     "duration": "45 sec",
+    "restTime": 30,
     "sides": "no",
     "level": 1,
     "details": "Engage your core and avoid letting your hips sag."
@@ -128,6 +138,7 @@
     "reps": 5,
     "series": 2,
     "duration": "60 sec",
+    "restTime": 30,
     "sides": "no",
     "level": 1,
     "details": "Focus on slow and controlled breathing to relax the nervous system."
@@ -140,6 +151,7 @@
     "reps": 1,
     "series": 1,
     "duration": "30 sec per side",
+    "restTime": 30,
     "sides": "yes",
     "level": 1,
     "details": "Keep your knees slightly bent if needed and avoid bouncing."
@@ -152,6 +164,7 @@
     "reps": 1,
     "series": 1,
     "duration": "20 sec per side",
+    "restTime": 30,
     "sides": "yes",
     "level": 1,
     "details": "Keep your shoulders relaxed and breathe deeply."
@@ -164,6 +177,7 @@
     "reps": 1,
     "series": 1,
     "duration": "30 sec",
+    "restTime": 30,
     "sides": "no",
     "level": 1,
     "details": "Keep your back straight and avoid straining."
@@ -176,6 +190,7 @@
     "reps": 10,
     "series": 2,
     "duration": "40 sec",
+    "restTime": 30,
     "sides": "no",
     "level": 1,
     "details": "Synchronize movements with your breath for relaxation."
