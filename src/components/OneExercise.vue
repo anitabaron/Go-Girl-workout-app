@@ -1,4 +1,5 @@
 <script setup>
+import { RouterLink } from "vue-router";
 import { defineProps, ref, computed } from "vue";
 
 const props = defineProps({
@@ -54,12 +55,12 @@ const toggleFullDetails = () => {
     <div class="flex flex-col lg:flex-row justify-between">
       <div class="text-goRed mb-3">Series: {{ exc.series }}</div>
 
-      <a
-        :href="'/exercise/' + exc.id"
+      <RouterLink
+        :to="'/exercise/' + exc.id"
         class="h-[36px] bg-goDarkPink hover:bg-goRed text-white px-4 py-2 rounded-lg text-center text-sm"
       >
         Details
-      </a>
+      </RouterLink>
     </div>
   </div>
 </template>

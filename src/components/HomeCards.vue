@@ -1,4 +1,5 @@
 <script setup>
+import { RouterLink } from "vue-router";
 import Card from "@/components/Card.vue";
 </script>
 
@@ -11,24 +12,24 @@ import Card from "@/components/Card.vue";
           <p class="mt-2 mb-4">
             Discover the perfect workout and unlock your inner strength today!
           </p>
-          <a
-            href="workouts-list.html"
+          <RouterLink
+            to="/workouts"
             class="inline-block bg-black text-white rounded-lg px-4 py-2 hover:bg-goRed"
           >
             Browse Workout
-          </a>
+          </RouterLink>
         </Card>
         <Card bg="bg-goLightPink">
           <h2 class="text-2xl font-bold">For Coach</h2>
           <p class="mt-2 mb-4">
             Create the perfect workout to empower the girl
           </p>
-          <a
-            href="add-workout.html"
+          <RouterLink
+            to="/workouts/add"
             class="inline-block bg-black text-white rounded-lg px-4 py-2 hover:bg-goRed"
           >
             Add workout
-          </a>
+          </RouterLink>
         </Card>
       </div>
     </div>

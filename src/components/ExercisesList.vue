@@ -1,4 +1,5 @@
 <script setup>
+import { RouterLink } from "vue-router";
 import exercisesList from "@/exercises.json";
 
 import { ref, defineProps } from "vue";
@@ -32,10 +33,10 @@ defineProps({
       </div>
     </section>
     <section v-if="showButton" class="m-auto max-w-lg mt-5 px-6">
-      <a
-        href="/exercises"
+      <RouterLink
+        to="/exercises"
         class="block bg-goRed text-white text-center py-4 px-6 rounded-xl hover:bg-gray-700"
-        >View All Exercises</a
+        >View All Exercises</RouterLink
       >
     </section>
   </section>

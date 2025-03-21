@@ -1,5 +1,11 @@
 <script setup>
+import { RouterLink, useRoute } from "vue-router";
 import logo from "@/assets/img/logo.png";
+
+const isActiveLink = (routePath) => {
+  const route = useRoute();
+  return route.path === routePath;
+};
 </script>
 
 <template>
@@ -10,28 +16,28 @@ import logo from "@/assets/img/logo.png";
           class="flex flex-1 items-center justify-center md:items-stretch md:justify-start"
         >
           <!-- Logo -->
-          <a
+          <RouterLink
             class="flex flex-shrink-0 items-center mr-4 rounded-3xl transition-transform duration-300 hover:scale-110"
-            href="index.html"
+            to="/"
           >
             <img class="h-10 w-auto" v-bind:src="logo" alt="Go Girl" />
-          </a>
+          </RouterLink>
           <div class="md:ml-auto">
             <div class="flex space-x-2">
-              <a
-                href="workouts.html"
+              <RouterLink
+                to="/workouts"
                 class="text-white font-medium hover:bg-goDarkPink hover:text-white rounded-md px-3 py-2 transition-all duration-300"
-                >Workouts</a
+                >Workouts</RouterLink
               >
-              <a
-                href="exercises.html"
+              <RouterLink
+                to="/exercises"
                 class="text-white font-medium hover:bg-goDarkPink hover:text-white rounded-md px-3 py-2 transition-all duration-300"
-                >Exercises</a
+                >Exercises</RouterLink
               >
-              <a
-                href="statistics.html"
+              <RouterLink
+                to="/statistics"
                 class="text-white font-medium hover:bg-goDarkPink hover:text-white rounded-md px-3 py-2 transition-all duration-300"
-                >Statistics</a
+                >Statistics</RouterLink
               >
             </div>
           </div>
