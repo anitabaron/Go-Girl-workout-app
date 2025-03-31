@@ -1,8 +1,9 @@
 <script setup>
 import { RouterLink } from "vue-router";
-import axios from "axios";
 import { reactive, onMounted } from "vue";
 import OneExercise from "./OneExercise.vue";
+import PulseLoader from "vue-spinner/src/PulseLoader.vue";
+import axios from "axios";
 
 const state = reactive({
   exercises: [],
@@ -19,7 +20,7 @@ defineProps({
 
 onMounted(async () => {
   try {
-    const response = await axios.get("http://localhost:8000/exercises");
+    const response = await axios.get(`http://localhost:8000/exercises`);
     state.exercises = response.data;
   } catch (e) {
     console.error("Error fetching exercises", e);
@@ -33,17 +34,23 @@ onMounted(async () => {
   <section class="bg-goPink py-10">
     <section class="px-4">
       <div class="container-xl lg:container m-auto">
-        <h2 class="text-3xl font-bold text-black pb-6 text-center">
+        <!-- <h2 class="text-3xl font-bold text-black pb-6 text-center">
           Browse exercise
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        </h2> -->
+        <!-- Show loading spinner while loading is true -->
+        <div v-if="state.isLoading" class="text-center text-red py-6">
+          <PulseLoader />
+        </div>
+
+        <!-- Show OneExercise whien done loading -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <OneExercise
             v-for="exc in state.exercises.slice(
               0,
               limit || state.exercises.length
             )"
             :key="exc.id"
-            :exc="exc"
+            :exercise="exc"
           />
         </div>
       </div>

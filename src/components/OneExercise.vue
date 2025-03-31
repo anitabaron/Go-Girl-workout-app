@@ -3,12 +3,12 @@ import { RouterLink } from "vue-router";
 import { ref, computed } from "vue";
 
 const props = defineProps({
-  exc: Object,
+  exercise: Object,
 });
 
 const showDetails = ref(false);
 const truncDetails = computed(() => {
-  let details = props.exc.details;
+  let details = props.exercise.details;
   if (!showDetails.value) {
     details = details.substring(0, 0) + "...";
   }
@@ -25,12 +25,12 @@ const toggleFullDetails = () => {
   >
     <div class="flex-grow">
       <div class="mb-3">
-        <div class="text-gray-500 my-2">{{ exc.title }}</div>
-        <h3 class="text-xl font-bold">{{ exc.title }}</h3>
+        <div class="text-gray-500 my-2">{{ exercise.type }}</div>
+        <h3 class="text-xl font-bold">{{ exercise.title }}</h3>
       </div>
 
       <div class="mb-2">
-        <p>{{ exc.description }}</p>
+        <p>{{ exercise.description }}</p>
       </div>
 
       <p>{{ truncDetails }}</p>
@@ -41,11 +41,11 @@ const toggleFullDetails = () => {
         {{ showDetails ? "Hide" : "Show details" }}
       </button>
       <div class="text-goDarkPink my-3">
-        <h3>Reps: {{ exc.reps }}</h3>
-        <h3>Duration: {{ exc.duration }}</h3>
+        <h3>Reps: {{ exercise.reps }}</h3>
+        <h3>Duration: {{ exercise.duration }}</h3>
 
-        <h3 v-if="exc.sides !== 'no'" class="text-goDarkPink mb-2">
-          Sides: {{ exc.sides }}
+        <h3 v-if="exercise.sides !== 'no'" class="text-goDarkPink mb-2">
+          Sides: {{ exercise.sides }}
         </h3>
       </div>
     </div>
@@ -53,10 +53,10 @@ const toggleFullDetails = () => {
     <div class="border border-white my-2"></div>
 
     <div class="flex flex-col lg:flex-row justify-between">
-      <div class="text-goRed mb-3">Series: {{ exc.series }}</div>
+      <div class="text-goRed mb-3">Series: {{ exercise.series }}</div>
 
       <RouterLink
-        :to="'/exercises/' + exc.id"
+        :to="'/exercises/' + exercise.id"
         class="h-[36px] bg-goDarkPink hover:bg-goRed text-white px-4 py-2 rounded-lg text-center text-sm"
       >
         Details
