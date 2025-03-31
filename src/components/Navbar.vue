@@ -22,21 +22,49 @@ const isActiveLink = (routePath) => {
           >
             <img class="h-10 w-auto" v-bind:src="logo" alt="Go Girl" />
           </RouterLink>
+          <!-- Nav -->
           <div class="md:ml-auto">
             <div class="flex space-x-2">
               <RouterLink
                 to="/workouts"
-                class="text-white font-medium hover:bg-goDarkPink hover:text-white rounded-md px-3 py-2 transition-all duration-300"
+                :class="[
+                  isActiveLink('/workouts')
+                    ? 'bg-goDarkPink '
+                    : 'hover:bg-goMidRed hover:transition-all hover:duration-30 ',
+                  'text-white',
+                  'font-medium',
+                  'px-3',
+                  'py-2',
+                  'rounded-md',
+                ]"
                 >Workouts</RouterLink
               >
               <RouterLink
                 to="/exercises"
-                class="text-white font-medium hover:bg-goDarkPink hover:text-white rounded-md px-3 py-2 transition-all duration-300"
+                :class="[
+                  isActiveLink('/exercises')
+                    ? 'bg-goDarkPink '
+                    : 'hover:bg-goMidRed hover:transition-all hover:duration-30 ',
+                  'text-white',
+                  'font-medium',
+                  'px-3',
+                  'py-2',
+                  'rounded-md',
+                ]"
                 >Exercises</RouterLink
               >
               <RouterLink
                 to="/statistics"
-                class="text-white font-medium hover:bg-goDarkPink hover:text-white rounded-md px-3 py-2 transition-all duration-300"
+                :class="[
+                  isActiveLink('/statistics')
+                    ? 'bg-goDarkPink '
+                    : 'hover:bg-goMidRed hover:transition-all hover:duration-30 ',
+                  'text-white',
+                  'font-medium',
+                  'px-3',
+                  'py-2',
+                  'rounded-md',
+                ]"
                 >Statistics</RouterLink
               >
             </div>

@@ -2,7 +2,7 @@
 import { RouterLink } from "vue-router";
 import exercisesList from "@/exercises.json";
 
-import { ref, defineProps } from "vue";
+import { ref } from "vue";
 import OneExercise from "./OneExercise.vue";
 const exercises = ref(exercisesList);
 // console.log(exercises.value);

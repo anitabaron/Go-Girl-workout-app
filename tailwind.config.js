@@ -13,6 +13,7 @@ export default {
         goPink: "#ffbdc8",
         goLightPink: "#ffe3e7",
         goDarkPink: "#f97a7d",
+        goMidRed: "#f9444f",
         goRed: "#f00b0d",
       },
     },

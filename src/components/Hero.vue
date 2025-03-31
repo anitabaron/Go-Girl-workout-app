@@ -1,5 +1,4 @@
 <script setup>
-import { defineProps } from "vue";
 import logoClose from "@/assets/img/logo-close.png";
 
 defineProps({
