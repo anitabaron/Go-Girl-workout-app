@@ -21,7 +21,7 @@ const toggleFullDetails = () => {
 
 <template>
   <div
-    class="bg-goLightPink rounded-xl shadow-md relative p-4 flex flex-col justify-between"
+    class="bg-white rounded-xl shadow-md relative p-4 flex flex-col justify-between"
   >
     <div class="flex-grow">
       <div class="mb-3">
@@ -56,7 +56,7 @@ const toggleFullDetails = () => {
       <div class="text-goRed mb-3">Series: {{ exc.series }}</div>
 
       <RouterLink
-        :to="'/exercise/' + exc.id"
+        :to="'/exercises/' + exc.id"
         class="h-[36px] bg-goDarkPink hover:bg-goRed text-white px-4 py-2 rounded-lg text-center text-sm"
       >
         Details

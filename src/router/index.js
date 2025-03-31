@@ -1,8 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import WorkoutsView from "../views/WorkoutsView.vue";
-import ExercisesView from "../views/ExercisesView.vue";
+import ExercisesListView from "../views/ExercisesListView.vue";
+import ExercisesView from "../views/ExerciseView.vue";
 import StatisticsView from "../views/StatisticsView.vue";
+import NoFoundView from "../views/NoFoundView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,12 +22,22 @@ const router = createRouter({
     {
       path: "/exercises",
       name: "exercises",
+      component: ExercisesListView,
+    },
+    {
+      path: "/exercises/:id",
+      name: "exercise",
       component: ExercisesView,
     },
     {
       path: "/statistics",
       name: "statistics",
       component: StatisticsView,
+    },
+    {
+      path: "/:catchAll(.*)",
+      name: "not-found",
+      component: NoFoundView,
     },
   ],
 });
