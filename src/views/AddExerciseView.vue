@@ -1,5 +1,33 @@
 <script setup>
-import { RouterLink } from "vue-router";
+import { reactive } from "vue";
+import { v4 as uuidv4 } from "uuid";
+const form = reactive({
+  type: "Main Workout",
+  title: "",
+  description: "",
+  reps: 10,
+  series: 3,
+  duration: 10,
+  restTime: 30,
+  sides: "no",
+  level: 1,
+  details: "",
+});
+const handleSubmit = async () => {
+  const newExercise = {
+    id: uuidv4(),
+    type: form.type,
+    title: form.title,
+    description: form.description,
+    reps: form.reps,
+    series: form.series,
+    duration: form.duration,
+    restTime: form.restTime,
+    sides: form.sides,
+    level: form.level,
+    details: form.details,
+  };
+};
 </script>
 <template>
   <section class="bg-goLightPink">
@@ -7,7 +35,7 @@ import { RouterLink } from "vue-router";
       <div
         class="bg-white px-6 py-8 mb-4 shadow-md rounded-md border m-4 md:m-0"
       >
-        <form>
+        <form @submit.prevent="handleSubmit">
           <h2 class="text-3xl text-center font-semibold mb-6">Add Exercise</h2>
 
           <div class="mb-2">
@@ -15,14 +43,15 @@ import { RouterLink } from "vue-router";
               >Type</label
             >
             <select
+              v-model="form.type"
               id="type"
               name="type"
               class="border rounded w-full py-2 px-3"
               required
             >
-              <option value="Full-Time">Warm-up</option>
-              <option value="Part-Time">Main Workout</option>
-              <option value="Remote">Cool-down</option>
+              <option value="Warm-up">Warm-up</option>
+              <option value="Main Workout">Main Workout</option>
+              <option value="Cool-down">Cool-down</option>
             </select>
           </div>
 
@@ -32,8 +61,9 @@ import { RouterLink } from "vue-router";
             >
             <input
               type="text"
-              id="name"
-              name="name"
+              v-model="form.title"
+              id="title"
+              name="title"
               class="border rounded w-full py-2 px-3 mb-2"
               placeholder="eg. Shoulder Stretch"
               required
@@ -45,6 +75,7 @@ import { RouterLink } from "vue-router";
             >
             <textarea
               id="description"
+              v-model="form.description"
               name="description"
               class="border rounded w-full py-2 px-3"
               rows="3"
@@ -58,9 +89,9 @@ import { RouterLink } from "vue-router";
             >
             <select
               id="reps"
+              v-model="form.reps"
               name="reps"
               class="border rounded w-full py-1 px-3"
-              required
             >
               <option value="6">6</option>
               <option value="8">8</option>
@@ -76,9 +107,9 @@ import { RouterLink } from "vue-router";
             >
             <select
               id="duration"
+              v-model="form.duration"
               name="duration"
               class="border rounded w-full py-1 px-3"
-              required
             >
               <option value="10">10</option>
               <option value="15">15</option>
@@ -95,9 +126,9 @@ import { RouterLink } from "vue-router";
             >
             <select
               id="restTime"
+              v-model="form.restTime"
               name="restTime"
               class="border rounded w-full py-1 px-3"
-              required
             >
               <option value="10">10</option>
               <option value="20">20</option>
@@ -112,9 +143,9 @@ import { RouterLink } from "vue-router";
             >
             <select
               id="sides"
+              v-model="form.sides"
               name="sides"
               class="border rounded w-full py-1 px-3"
-              required
             >
               <option value="yes">yes</option>
               <option value="no">no</option>
@@ -127,6 +158,7 @@ import { RouterLink } from "vue-router";
             >
             <select
               id="level"
+              v-model="form.level"
               name="level"
               class="border rounded w-full py-1 px-3"
               required
@@ -143,6 +175,7 @@ import { RouterLink } from "vue-router";
             >
             <select
               id="series"
+              v-model="form.series"
               name="series"
               class="border rounded w-full py-1 px-3"
               required
@@ -160,6 +193,7 @@ import { RouterLink } from "vue-router";
             >
             <textarea
               id="details"
+              v-model="form.details"
               name="details"
               class="border rounded w-full py-2 px-3"
               rows="2"
@@ -181,7 +215,6 @@ import { RouterLink } from "vue-router";
               name="exercise-video"
               class="border rounded w-full py-2 px-3"
               placeholder="Link to video"
-              required
             />
           </div>
 
