@@ -4,6 +4,7 @@ import { reactive, onMounted } from "vue";
 import OneExercise from "./OneExercise.vue";
 import PulseLoader from "vue-spinner/src/PulseLoader.vue";
 import axios from "axios";
+import AddExerciseButton from "./AddExerciseButton.vue";
 
 const state = reactive({
   exercises: [],
@@ -20,7 +21,7 @@ defineProps({
 
 onMounted(async () => {
   try {
-    const response = await axios.get(`http://localhost:8000/exercises`);
+    const response = await axios.get(`/api/exercises`);
     state.exercises = response.data;
   } catch (e) {
     console.error("Error fetching exercises", e);
@@ -31,7 +32,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="bg-goPink py-10">
+  <section class="bg-goPink">
+    <AddExerciseButton />
     <section class="px-4">
       <div class="container-xl lg:container m-auto">
         <!-- <h2 class="text-3xl font-bold text-black pb-6 text-center">
@@ -58,7 +60,7 @@ onMounted(async () => {
     <section v-if="showButton" class="m-auto max-w-lg mt-5 px-6">
       <RouterLink
         to="/exercises"
-        class="block bg-goRed text-white text-center py-4 px-6 rounded-xl hover:bg-gray-700"
+        class="block bg-goMidRed text-white text-center py-4 px-6 rounded-xl hover:bg-goRed"
         >View All Exercises</RouterLink
       >
     </section>

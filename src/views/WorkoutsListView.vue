@@ -1,8 +1,8 @@
 <script setup>
-import AddWorkout from "./AddWorkoutView.vue";
+import AddWorkoutButton from "../components/AddWorkoutButton.vue";
 // import OneFullWorkout from "../components/OneFullWorkout.vue";
 </script>
 <template>
-  One Workout View
-  <AddWorkout />
+  All Workouts View
+  <AddWorkoutButton />
 </template>

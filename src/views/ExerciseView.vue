@@ -14,7 +14,7 @@ const state = reactive({
 onMounted(async () => {
   try {
     const response = await axios.get(
-      `http://localhost:8000/exercises/${exerciseId}`
+      `/api/exercises/${exerciseId}`
     );
     state.exercise = response.data;
   } catch (e) {
