@@ -1,11 +1,13 @@
 <script setup>
 import { RouterLink } from "vue-router";
-import exercisesList from "@/exercises.json";
-
-import { ref } from "vue";
+import axios from "axios";
+import { reactive, onMounted } from "vue";
 import OneExercise from "./OneExercise.vue";
-const exercises = ref(exercisesList);
-// console.log(exercises.value);
+
+const state = reactive({
+  exercises: [],
+  isLoading: true,
+});
 
 defineProps({
   limit: Number,
@@ -13,6 +15,17 @@ defineProps({
     type: Boolean,
     default: false,
   },
+});
+
+onMounted(async () => {
+  try {
+    const response = await axios.get("http://localhost:8000/exercises");
+    state.exercises = response.data;
+  } catch (e) {
+    console.error("Error fetching exercises", e);
+  } finally {
+    state.isLoading = false;
+  }
 });
 </script>
 
@@ -25,7 +38,10 @@ defineProps({
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <OneExercise
-            v-for="exc in exercises.slice(0, limit || exercises.length)"
+            v-for="exc in state.exercises.slice(
+              0,
+              limit || state.exercises.length
+            )"
             :key="exc.id"
             :exc="exc"
           />

@@ -36,6 +36,14 @@ Vue will run on http://localhost:3000
 npm run dev
 ```
 
+### Run JSON Server
+
+The server will run on http://localhost:8000
+
+```bash
+npm run server
+```
+
 ### Build for Production
 
 ```bash
