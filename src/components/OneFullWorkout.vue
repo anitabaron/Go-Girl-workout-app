@@ -37,7 +37,7 @@ const props = defineProps({
         :to="'/workouts/' + workout.id"
         class="h-[36px] bg-goDarkPink hover:bg-goRed text-white px-4 py-2 rounded-lg text-center text-sm"
       >
-        Details
+        Pick Workout
       </RouterLink>
     </div>
   </div>

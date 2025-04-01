@@ -32,7 +32,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="bg-goPink">
+  <section class="bg-goPink pb-6">
     <AddExerciseButton />
     <section class="px-4">
       <div class="container-xl lg:container m-auto">
