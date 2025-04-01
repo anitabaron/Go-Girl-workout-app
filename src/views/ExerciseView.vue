@@ -46,11 +46,12 @@ onMounted(async () => {
               {{ state.exercise.description }}
             </p class="mb-4">
             <p class="mb-4">{{ state.exercise.details }}</p>
-            <p class="mb-4">Reps: {{ state.exercise.reps }}</p>
-            <p class="mb-4">Duration: {{ state.exercise.duration }} sec</p>
-            <h3 class="text-goMidRed text-lg font-bold mb-2">Series</h3>
-            <p class="mb-4">{{ state.exercise.series }}</p>
-             <p class="mb-4">Rest time: {{ state.exercise.restTime }} sec</p>
+            <p class="mb-4">Reps: {{ state.exercise.work.reps }}</p>
+            <p class="mb-4">Duration: {{ state.exercise.work.duration }} sec</p>
+            <p class="mb-4">Rest time between sets (in seconds): {{ state.exercise.work.restTime }} sec</p>
+            <h3 class="text-goMidRed text-lg font-bold mb-2">Sets</h3>
+            <p class="mb-4">{{ state.exercise.sets }}</p>
+            <p class="mb-4">Rest time after all sets (in seconds) {{ state.exercise.restAfterAll }} sec</p>
           </div>
         </main>
 

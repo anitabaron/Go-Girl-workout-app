@@ -41,8 +41,11 @@ const toggleFullDetails = () => {
         {{ showDetails ? "Hide" : "Show details" }}
       </button>
       <div class="text-goDarkPink my-3">
-        <h3>Reps: {{ exercise.reps }}</h3>
-        <h3>Duration: {{ exercise.duration }}</h3>
+        <h3>Reps: {{ exercise.work.reps }}</h3>
+        <h3>Duration: {{ exercise.work.duration }}</h3>
+        <h3>
+          Rest time between sets (in seconds) {{ exercise.work.restTime }}
+        </h3>
 
         <h3 v-if="exercise.sides !== 'no'" class="text-goDarkPink mb-2">
           Sides: {{ exercise.sides }}
@@ -53,7 +56,7 @@ const toggleFullDetails = () => {
     <div class="border border-white my-2"></div>
 
     <div class="flex flex-col lg:flex-row justify-between">
-      <div class="text-goRed mb-3">Series: {{ exercise.series }}</div>
+      <div class="text-goRed mb-3">Sets: {{ exercise.sets }}</div>
 
       <RouterLink
         :to="'/exercises/' + exercise.id"

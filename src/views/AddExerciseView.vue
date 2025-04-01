@@ -1,14 +1,19 @@
 <script setup>
+import router from "@/router";
 import { reactive } from "vue";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 const form = reactive({
   type: "Main Workout",
   title: "",
   description: "",
-  reps: 10,
-  series: 3,
-  duration: 10,
-  restTime: 30,
+  work: {
+    reps: 10,
+    duration: 10,
+    restTime: 30,
+  },
+  sets: 3,
+  restAfterAll: 120,
   sides: "no",
   level: 1,
   details: "",
@@ -19,14 +24,23 @@ const handleSubmit = async () => {
     type: form.type,
     title: form.title,
     description: form.description,
-    reps: form.reps,
-    series: form.series,
-    duration: form.duration,
-    restTime: form.restTime,
+    work: {
+      reps: form.work.reps,
+      duration: form.work.duration,
+      restTime: form.work.restTime,
+    },
+    sets: form.sets,
+    restAfterAll: form.restAfterAll,
     sides: form.sides,
     level: form.level,
     details: form.details,
   };
+  try {
+    const response = await axios.post("/api/exercises", newExercise);
+    router.push(`/exercises/${response.data.id}`);
+  } catch (e) {
+    console.error("Error fetching exercise", e);
+  }
 };
 </script>
 <template>
@@ -89,7 +103,7 @@ const handleSubmit = async () => {
             >
             <select
               id="reps"
-              v-model="form.reps"
+              v-model="form.work.reps"
               name="reps"
               class="border rounded w-full py-1 px-3"
             >
@@ -107,7 +121,7 @@ const handleSubmit = async () => {
             >
             <select
               id="duration"
-              v-model="form.duration"
+              v-model="form.work.duration"
               name="duration"
               class="border rounded w-full py-1 px-3"
             >
@@ -122,11 +136,11 @@ const handleSubmit = async () => {
 
           <div class="mb-2">
             <label for="type" class="block text-gray-700 font-bold mb-2"
-              >Rest time in sec</label
+              >Rest time between sets (in seconds)</label
             >
             <select
               id="restTime"
-              v-model="form.restTime"
+              v-model="form.work.restTime"
               name="restTime"
               class="border rounded w-full py-1 px-3"
             >
@@ -171,12 +185,12 @@ const handleSubmit = async () => {
 
           <div class="mb-2">
             <label for="type" class="block text-goRed font-bold mb-2"
-              >Series</label
+              >Sets</label
             >
             <select
-              id="series"
-              v-model="form.series"
-              name="series"
+              id="sets"
+              v-model="form.sets"
+              name="sets"
               class="border rounded w-full py-1 px-3"
               required
             >
@@ -184,6 +198,22 @@ const handleSubmit = async () => {
               <option value="2">2</option>
               <option value="3">3</option>
               <option value="4">4</option>
+            </select>
+          </div>
+
+          <div class="mb-2">
+            <label for="type" class="block text-gray-700 font-bold mb-2"
+              >Rest time after all sets (in seconds)</label
+            >
+            <select
+              id="restAfterAll"
+              v-model="form.restAfterAll"
+              name="restAfterAll"
+              class="border rounded w-full py-1 px-3"
+            >
+              <option value="60">60</option>
+              <option value="90">90</option>
+              <option value="120">120</option>
             </select>
           </div>
 

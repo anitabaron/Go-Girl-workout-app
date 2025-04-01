@@ -47,12 +47,12 @@ onMounted(async () => {
         <!-- Show OneExercise whien done loading -->
         <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <OneExercise
-            v-for="exc in state.exercises.slice(
+            v-for="exercise in state.exercises.slice(
               0,
               limit || state.exercises.length
             )"
-            :key="exc.id"
-            :exercise="exc"
+            :key="exercise.id"
+            :exercise="exercise"
           />
         </div>
       </div>
