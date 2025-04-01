@@ -256,5 +256,61 @@
       "level": 1,
       "details": ""
     }
+  ],
+  "workouts": [
+    {
+      "name": "Full Body Blast",
+      "description": "A complete full-body workout to build strength and endurance.",
+      "allExercises": {
+        "warmUp": ["Jumping Jacks", "Arm Circles"],
+        "mainWorkout": ["Push-ups", "Squats", "Burpees"],
+        "coolDown": ["Child's Pose", "Deep Breathing"]
+      },
+      "coach": "Anna"
+    },
+    {
+      "name": "Core Crusher",
+      "description": "Focus on building a strong and stable core.",
+      "allExercises": {
+        "warmUp": ["High Knees", "Torso Twists"],
+        "mainWorkout": ["Plank", "Russian Twists", "Bicycle Crunches"],
+        "coolDown": ["Cobra Stretch", "Cat-Cow Stretch"]
+      },
+      "coach": "Mike"
+    },
+    {
+      "name": "Lower Body Burn",
+      "description": "Target glutes, quads, and hamstrings.",
+      "allExercises": {
+        "warmUp": ["Leg Swings", "Hip Circles"],
+        "mainWorkout": ["Lunges", "Wall Sit", "Glute Bridges"],
+        "coolDown": ["Seated Forward Bend", "Figure Four Stretch"]
+      },
+      "coach": "Sophie"
+    },
+    {
+      "name": "Cardio Quickie",
+      "description": "A fast-paced workout to get your heart rate up.",
+      "allExercises": {
+        "warmUp": ["Jog in Place", "Arm Swings"],
+        "mainWorkout": ["Mountain Climbers", "Jump Rope", "Skaters"],
+        "coolDown": ["Standing Hamstring Stretch", "Side Stretch"]
+      },
+      "coach": "Leo"
+    },
+    {
+      "name": "Mobility & Recovery",
+      "description": "Gentle routine to improve flexibility and aid recovery.",
+      "allExercises": {
+        "warmUp": ["Neck Rolls", "Shoulder Rolls"],
+        "mainWorkout": [
+          "World’s Greatest Stretch",
+          "Downward Dog",
+          "Hip Flexor Stretch"
+        ],
+        "coolDown": ["Breathing Exercises", "Supine Twist"]
+      },
+      "coach": "Ella"
+    }
   ]
 }

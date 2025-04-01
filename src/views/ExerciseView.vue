@@ -2,7 +2,7 @@
 import PulseLoader from "vue-spinner/src/PulseLoader.vue";
 import { reactive, onMounted } from "vue";
 import { useRoute, RouterLink } from "vue-router";
-import BackButton from "../components/BackButton.vue";
+import BacktoExercisesBtn from "../components/BacktoExercisesBtn.vue";
 import axios from "axios";
 
 const route = useRoute();
@@ -25,7 +25,7 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <BackButton />
+  <BacktoExercisesBtn />
   <section v-if="!state.isLoading" class="bg-goLightPink">
     <div class="container m-auto py-10 px-6">
       <div class="grid grid-cols-1 md:grid-cols-70/30 w-full gap-6">
