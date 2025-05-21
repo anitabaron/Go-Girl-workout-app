@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Frontend & Vite
 node_modules
 .DS_Store
 dist
@@ -15,6 +16,11 @@ coverage
 *.local
 .vscode
 
+# Local environment files
+.env.local
+.env.*.local
+
+# Cypress
 /cypress/videos/
 /cypress/screenshots/
 
@@ -29,3 +35,10 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Backend
+backend/node_modules
+backend/.
+
+# General env protection
+.env

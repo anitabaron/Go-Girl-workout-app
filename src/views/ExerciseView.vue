@@ -11,10 +11,14 @@ const state = reactive({
   exercise: {},
   isLoading: true,
 });
+
+const baseURL = "http://localhost:8000/api";
+console.log("Using baseURL:", baseURL);
+
 onMounted(async () => {
   try {
     const response = await axios.get(
-      `/api/exercises/${exerciseId}`
+      `${baseURL}/exercises/${exerciseId}`
     );
     state.exercise = response.data;
   } catch (e) {

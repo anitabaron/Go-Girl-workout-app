@@ -1,0 +1,365 @@
+{
+    "exercises": [
+        {
+            "id": "1",
+            "type": "Warm-up",
+            "title": "Jumping Jacks",
+            "description": "Perform dynamic jumping jacks to increase heart rate and warm up the muscles.",
+            "work": {
+                "reps": 30,
+                "duration": 40,
+                "restTime": 30
+            },
+            "sets": 3,
+            "restAfterAll": 30,
+            "sides": "no",
+            "level": 1,
+            "details": "Keep a steady pace, maintain an upright posture, and land softly to reduce impact on the joints."
+        },
+        {
+            "id": "2",
+            "type": "Warm-up",
+            "title": "Arm Circles",
+            "description": "Move your arms in circular motions to warm up the shoulders.",
+            "work": {
+                "reps": 20,
+                "duration": 30,
+                "restTime": 30
+            },
+            "sets": 2,
+            "restAfterAll": 30,
+            "sides": "no",
+            "level": 1,
+            "details": "Start with small circles and gradually increase the size. Reverse the direction halfway through."
+        },
+        {
+            "id": "3",
+            "type": "Warm-up",
+            "title": "High Knees",
+            "description": "Run in place while lifting your knees to hip level.",
+            "work": {
+                "reps": 20,
+                "duration": 30,
+                "restTime": 30
+            },
+            "sets": 3,
+            "restAfterAll": 30,
+            "sides": "yes",
+            "level": 1,
+            "details": "Keep your core engaged and land softly on your feet."
+        },
+        {
+            "id": "4",
+            "type": "Warm-up",
+            "title": "Shoulder Shrugs",
+            "description": "Raise and lower your shoulders to release tension and prepare for upper body exercises.",
+            "work": {
+                "reps": 15,
+                "duration": 20,
+                "restTime": 30
+            },
+            "sets": 2,
+            "restAfterAll": 30,
+            "sides": "no",
+            "level": 1,
+            "details": "Avoid tensing your neck; keep movements controlled and smooth."
+        },
+        {
+            "id": "5",
+            "type": "Warm-up",
+            "title": "Leg Swings",
+            "description": "Swing one leg forward and backward to warm up the hips and legs.",
+            "work": {
+                "reps": 15,
+                "duration": 30,
+                "restTime": 30
+            },
+            "sets": 2,
+            "restAfterAll": 30,
+            "sides": "yes",
+            "level": 1,
+            "details": "Hold onto a stable surface for balance and keep movements controlled."
+        },
+        {
+            "id": "6",
+            "type": "Main Workout",
+            "title": "Pull-ups",
+            "description": "Grip the bar with your palms facing forward and pull yourself up until your chin is above the bar.",
+            "work": {
+                "reps": 6,
+                "duration": 30,
+                "restTime": 30
+            },
+            "sets": 4,
+            "restAfterAll": 120,
+            "sides": "no",
+            "level": 3,
+            "details": "Keep your core engaged and avoid swinging for better muscle activation."
+        },
+        {
+            "id": "7",
+            "type": "Main Workout",
+            "title": "Push-ups",
+            "description": "Lower your chest to the ground and push back up while keeping your body straight.",
+            "work": {
+                "reps": 15,
+                "duration": 30,
+                "restTime": 30
+            },
+            "sets": 3,
+            "restAfterAll": 60,
+            "sides": "no",
+            "level": 2,
+            "details": "Engage your core, keep elbows slightly tucked, and maintain a controlled pace."
+        },
+        {
+            "id": "8",
+            "type": "Main Workout",
+            "title": "Squats",
+            "description": "Lower your body by bending your knees and hips, then return to a standing position.",
+            "work": {
+                "reps": 20,
+                "duration": 40,
+                "restTime": 30
+            },
+            "sets": 3,
+            "restAfterAll": 30,
+            "sides": "no",
+            "level": 1,
+            "details": "Keep your back straight, knees aligned with toes, and push through your heels."
+        },
+        {
+            "id": "9",
+            "type": "Main Workout",
+            "title": "Dips",
+            "description": "Use parallel bars or a bench to lower and lift your body using your triceps and shoulders.",
+            "work": {
+                "reps": 10,
+                "duration": 30,
+                "restTime": 30
+            },
+            "sets": 3,
+            "restAfterAll": 120,
+            "sides": "no",
+            "level": 3,
+            "details": "Keep your elbows close to your body and avoid swinging."
+        },
+        {
+            "id": "10",
+            "type": "Main Workout",
+            "title": "Plank Hold",
+            "description": "Maintain a straight body position while supporting yourself on your forearms and toes.",
+            "work": {
+                "reps": 1,
+                "duration": 45,
+                "restTime": 30
+            },
+            "sets": 3,
+            "restAfterAll": 30,
+            "sides": "no",
+            "level": 1,
+            "details": "Engage your core and avoid letting your hips sag."
+        },
+        {
+            "id": "11",
+            "type": "Cool-down",
+            "title": "Deep Breathing",
+            "description": "Inhale deeply through the nose, hold, and exhale slowly through the mouth.",
+            "work": {
+                "reps": 5,
+                "duration": 60,
+                "restTime": 30
+            },
+            "sets": 2,
+            "restAfterAll": 30,
+            "sides": "no",
+            "level": 1,
+            "details": "Focus on slow and controlled breathing to relax the nervous system."
+        },
+        {
+            "id": "12",
+            "type": "Cool-down",
+            "title": "Standing Hamstring Stretch",
+            "description": "Bend forward at the hips and reach for your toes to stretch the hamstrings.",
+            "work": {
+                "reps": 1,
+                "duration": 40,
+                "restTime": 30
+            },
+            "sets": 1,
+            "restAfterAll": 30,
+            "sides": "yes",
+            "level": 1,
+            "details": "Keep your knees slightly bent if needed and avoid bouncing."
+        },
+        {
+            "id": "13",
+            "type": "Cool-down",
+            "title": "Shoulder Stretch",
+            "description": "Cross one arm over your chest and use the opposite hand to hold it in place.",
+            "work": {
+                "reps": 1,
+                "duration": 20,
+                "restTime": 30
+            },
+            "sets": 1,
+            "restAfterAll": 10,
+            "sides": "yes",
+            "level": 1,
+            "details": "Keep your shoulders relaxed and breathe deeply."
+        },
+        {
+            "id": "14",
+            "type": "Cool-down",
+            "title": "Seated Forward Fold",
+            "description": "Sit with your legs extended and reach forward toward your toes.",
+            "work": {
+                "reps": 1,
+                "duration": 30,
+                "restTime": 30
+            },
+            "sets": 1,
+            "restAfterAll": 10,
+            "sides": "no",
+            "level": 1,
+            "details": "Keep your back straight and avoid straining."
+        },
+        {
+            "id": "15",
+            "type": "Cool-down",
+            "title": "Cat-Cow Stretch",
+            "description": "Move between arching and rounding your back while on all fours.",
+            "work": {
+                "reps": 10,
+                "duration": 40,
+                "restTime": 10
+            },
+            "sets": 2,
+            "restAfterAll": 30,
+            "sides": "no",
+            "level": 1,
+            "details": "Synchronize movements with your breath for relaxation."
+        },
+        {
+            "id": "ecbb3620-2583-497d-8c45-cfa9fb293a35",
+            "type": "Main Workout",
+            "title": "fgnfgn",
+            "description": "fgnfnfn",
+            "work": {
+                "reps": 10,
+                "duration": 10,
+                "restTime": 30
+            },
+            "sets": 3,
+            "restAfterAll": 120,
+            "sides": "no",
+            "level": 1,
+            "details": ""
+        },
+        {
+            "id": "91c87f61-deb6-4ca6-a1f9-ff59a0c089f5",
+            "type": "Warm-up",
+            "title": "dhdhht",
+            "description": "ttrjhrj",
+            "work": {
+                "reps": 10,
+                "duration": 10,
+                "restTime": 30
+            },
+            "sets": 3,
+            "restAfterAll": 120,
+            "sides": "no",
+            "level": 1,
+            "details": ""
+        }
+    ],
+    "statistics": [
+        {
+            "date": "2025-02-03",
+            "exercises": {
+                "Pull-ups": [6, 5, 3, 3],
+                "Push-ups": [15, 12, 10, 8],
+                "Squats": [20, 20, 18, 15],
+                "Dips": [10, 8, 6, 5],
+                "Plank Hold": [45, 45, 40]
+            }
+        },
+        {
+            "date": "2025-02-07",
+            "exercises": {
+                "Pull-ups": [7, 6, 5, 4],
+                "Push-ups": [18, 15, 12, 10],
+                "Squats": [22, 22, 20, 18],
+                "Dips": [12, 10, 8, 6],
+                "Plank Hold": [50, 45, 45]
+            }
+        },
+        {
+            "date": "2025-02-10",
+            "exercises": {
+                "Pull-ups": [5, 4, 4, 3],
+                "Push-ups": [20, 18, 15, 12],
+                "Squats": [25, 22, 20, 20],
+                "Dips": [14, 12, 10, 8],
+                "Plank Hold": [55, 50, 45]
+            }
+        }
+    ],
+    "workouts": [
+        {
+            "name": "Full Body Blast",
+            "description": "A complete full-body workout to build strength and endurance.",
+            "allExercises": {
+                "warmUp": ["Jumping Jacks", "Arm Circles"],
+                "mainWorkout": ["Push-ups", "Squats", "Burpees"],
+                "coolDown": ["Child's Pose", "Deep Breathing"]
+            },
+            "coach": "Anna",
+            "id": "b432"
+        },
+        {
+            "name": "Core Crusher",
+            "description": "Focus on building a strong and stable core.",
+            "allExercises": {
+                "warmUp": ["High Knees", "Torso Twists"],
+                "mainWorkout": ["Plank", "Russian Twists", "Bicycle Crunches"],
+                "coolDown": ["Cobra Stretch", "Cat-Cow Stretch"]
+            },
+            "coach": "Mike",
+            "id": "33f1"
+        },
+        {
+            "name": "Lower Body Burn",
+            "description": "Target glutes, quads, and hamstrings.",
+            "allExercises": {
+                "warmUp": ["Leg Swings", "Hip Circles"],
+                "mainWorkout": ["Lunges", "Wall Sit", "Glute Bridges"],
+                "coolDown": ["Seated Forward Bend", "Figure Four Stretch"]
+            },
+            "coach": "Sophie",
+            "id": "73d6"
+        },
+        {
+            "name": "Cardio Quickie",
+            "description": "A fast-paced workout to get your heart rate up.",
+            "allExercises": {
+                "warmUp": ["Jog in Place", "Arm Swings"],
+                "mainWorkout": ["Mountain Climbers", "Jump Rope", "Skaters"],
+                "coolDown": ["Standing Hamstring Stretch", "Side Stretch"]
+            },
+            "coach": "Leo",
+            "id": "bc71"
+        },
+        {
+            "name": "Mobility & Recovery",
+            "description": "Gentle routine to improve flexibility and aid recovery.",
+            "allExercises": {
+                "warmUp": ["Neck Rolls", "Shoulder Rolls"],
+                "mainWorkout": ["World’s Greatest Stretch", "Downward Dog", "Hip Flexor Stretch"],
+                "coolDown": ["Breathing Exercises", "Supine Twist"]
+            },
+            "coach": "Ella",
+            "id": "cd39"
+        }
+    ]
+}

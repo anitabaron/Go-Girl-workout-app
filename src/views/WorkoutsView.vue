@@ -1,5 +1,4 @@
 <script setup>
-// import OneFullWorkout from "../components/OneFullWorkout.vue";
 import PulseLoader from "vue-spinner/src/PulseLoader.vue";
 import { reactive, onMounted } from "vue";
 import { useRoute, RouterLink } from "vue-router";
@@ -13,9 +12,11 @@ const state = reactive({
   workout: {},
   isLoading: true,
 });
+const baseURL = "http://localhost:8000/api";
+
 onMounted(async () => {
   try {
-    const response = await axios.get(`/api/workouts/${workoutId}`);
+    const response = await axios.get(`${baseURL}/workouts/${workoutId}`);
     state.workout = response.data;
   } catch (e) {
     console.error("Error fetching workout", e);
@@ -78,7 +79,7 @@ onMounted(async () => {
           <!-- Manage -->
           <div class="bg-white p-6 rounded-lg shadow-md mt-6">
             <RouterLink
-             :to="`/workouts/edit/${state.workout.id}`"
+             :to="`/workouts/edit/${state.workout._id}`"
               class="bg-goDarkPink hover:bg-red-600 text-white text-center font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mb-4 block"
               >Edit workout</RouterLink
             >
