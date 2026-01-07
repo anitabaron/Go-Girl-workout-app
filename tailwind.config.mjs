@@ -17,7 +17,7 @@ const config = {
       colors: {
         goPink: "#ffbdc8",
         goLightPink: "#ffe3e7",
-        goDarkPink: "#f97a7d",
+        goDarkPink: "#F695A3",
         goMidRed: "#f9444f",
         goRed: "#f00b0d",
       },
