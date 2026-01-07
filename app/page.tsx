@@ -2,64 +2,86 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <div className="min-h-screen bg-goLightPink font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
+      <header className="bg-goPink">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-10 text-center sm:px-10">
+          <Image
+            src="/logo.png"
+            alt="Go Girl Workout App"
+            width={450}
+            height={180}
+            priority
+            className="h-auto w-[280px] sm:w-[360px] md:w-[450px]"
+          />
+          <div className="space-y-3">
+            <h1 className="text-3xl font-extrabold tracking-tight text-goRed sm:text-4xl md:text-5xl">
+              designed to help you stay on track with your goals
+            </h1>
+            <p className="text-xl font-semibold text-goRed sm:text-2xl">
+              stay tuned
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
+        <section className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-950">
+          <h2 className="text-xl font-bold tracking-tight">Planned features</h2>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            Here’s what’s coming next.
+          </p>
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+            <li className="rounded-xl bg-goLightPink/70 p-4 text-sm dark:bg-white/5">
+              <span className="font-semibold">Workout timer</span> with audio
+              cues and intervals.
+            </li>
+            <li className="rounded-xl bg-goLightPink/70 p-4 text-sm dark:bg-white/5">
+              <span className="font-semibold">Plans & programs</span> tailored
+              to goals and fitness level.
+            </li>
+            <li className="rounded-xl bg-goLightPink/70 p-4 text-sm dark:bg-white/5">
+              <span className="font-semibold">Progress tracking</span> for
+              workouts, streaks, and PRs.
+            </li>
+            <li className="rounded-xl bg-goLightPink/70 p-4 text-sm dark:bg-white/5">
+              <span className="font-semibold">Favorites</span> and quick-start
+              routines.
+            </li>
+          </ul>
+        </section>
+      </main>
+
+      <footer className="bg-goDarkPink text-white">
+        <div className="mx-auto w-full max-w-5xl px-6 py-6 text-center sm:px-10">
+          <p className="text-lg font-bold">
+            &quot;Strong today, unstoppable tomorrow.&quot;
+          </p>
+
+          <div className="mt-3 flex justify-center gap-5 text-sm font-semibold">
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href="https://github.com/anitabaron"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline-offset-4 hover:text-goRed"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
+              GitHub
+            </a>
             <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href="https://linkedin.com/in/anita-baron"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline-offset-4 hover:text-goRed"
             >
-              Learning
-            </a>{" "}
-            center.
+              LinkedIn
+            </a>
+          </div>
+
+          <p className="mt-3 text-xs text-white/80">
+            &copy; {new Date().getFullYear()} Go Girl Workout App. All rights
+            reserved.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </footer>
     </div>
   );
 }
