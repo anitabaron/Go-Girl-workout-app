@@ -8,18 +8,12 @@ const config = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ["Poppins", "sans-serif"],
-      },
-      gridTemplateColumns: {
-        "70/30": "70% 28%",
-      },
       colors: {
-        goPink: "#ffbdc8",
-        goLightPink: "#ffe3e7",
-        goDarkPink: "#F695A3",
-        goMidRed: "#f9444f",
-        goRed: "#f00b0d",
+        goPink: "var(--go-pink)",
+        goLightPink: "var(--go-light-pink)",
+        goDarkPink: "var(--go-dark-pink)",
+        goMidRed: "var(--go-mid-red)",
+        goRed: "var(--go-red)",
       },
     },
   },
