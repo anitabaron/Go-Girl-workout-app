@@ -13,11 +13,11 @@ Go Girl to prywatna aplikacja webowa dla kobiet w wieku 30–45 lat, które regu
 - śledzić rekordy (PR) w ćwiczeniach,
 - opcjonalnie generować/optmalizować plany treningowe przez AI, zgodnie z preferencjami.
 
-### 1.2 Zakres MVP (wysoki poziom)
+### 1.2 Zakres MVP
 
 W MVP produkt dostarcza:
 
-- konta użytkowników (Supabase Auth, najprostszy flow np. magic link),
+- konta użytkowników (Supabase Auth),
 - prywatną bibliotekę ćwiczeń (CRUD),
 - plany treningowe jako szablony wielokrotnego użytku (CRUD),
 - asystenta treningu do wykonywania sesji (start/pause/next/back/skip) z autozapisem i możliwością wznowienia,
@@ -36,6 +36,7 @@ W MVP produkt dostarcza:
 - Priorytetem jest funkcjonalność i prostota, a nie rozbudowana analityka.
 - Brak funkcji społecznościowych, brak udostępniania treningów.
 - Integracja AI jest etapem po wdrożeniu podstawowych CRUD oraz asystenta sesji.
+- Aplikacja (Next.js) jest hostowana na Vercel, aby uprościć wdrożenia i zminimalizować ryzyko związane z SSR/route handlers.
 
 ## 2. Problem użytkownika
 
@@ -248,7 +249,7 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Kryteria akceptacji:
 
   - Formularz umożliwia wpisanie title, wybór type i part.
-  - Formularz wymaga podania co najmniej jednego z: time lub series lub reps lub rest.
+  - Formularz wymaga podania co najmniej jednego z: time lub series lub reps lub rest lub restAfter.
   - Po zapisie ćwiczenie jest widoczne na liście.
 
 - ID: US-011
@@ -308,7 +309,7 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Kryteria akceptacji:
 
   - Użytkowniczka może podać name i opcjonalnie description.
-  - Użytkowniczka może przypisać metadane part (dla organizacji).
+  - Do tworzenia planu wykorzystuje zapisane w swoim koncie pojedyncze ćwiczenia
   - Po zapisaniu plan pojawia się na liście planów.
 
 - ID: US-026
@@ -333,7 +334,7 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Opis: Jako użytkowniczka chcę zapisać planowane parametry ćwiczeń, aby mieć bazę do wykonania.
   Kryteria akceptacji:
 
-  - Dla każdego ćwiczenia w planie można ustawić planned\_\* (np. planned_sets/reps/duration/rest).
+  - Dla każdego ćwiczenia w planie można ustawić planned\_\* (np. planned_sets/reps/duration/rest/restAfter).
   - Walidacja pozwala pominąć nieadekwatne pola zależnie od typu ćwiczenia (np. izometria może mieć duration).
   - Parametry są widoczne w asystencie sesji jako “planowane”.
 
@@ -378,7 +379,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 
   - Timer startuje przy rozpoczęciu sesji.
   - Pause zatrzymuje timer, a wznowienie kontynuuje od zatrzymanego czasu.
-  - Timer nie wymusza wartości duration_actual; duration_actual może być wpisane ręcznie.
 
 - ID: US-032
   Tytuł: Wyświetlenie bieżącego ćwiczenia z parametrami planowanymi
@@ -395,6 +395,7 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 
   - Użytkowniczka może wprowadzić actual\_\* dla ćwiczenia (np. actual_sets/reps/duration/weight/rest, zgodnie z formatem set logs).
   - Dane są zapisywane w sesji przy użyciu next lub pause (autosave).
+  - Jeśli dane nie są nadpisywane kopiują wartości z pola planned\_\* do actual\_\*
 
 - ID: US-034
   Tytuł: Nawigacja next zapisuje stan ćwiczenia
@@ -407,7 +408,7 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 
 - ID: US-035
   Tytuł: Nawigacja previous do poprzedniego ćwiczenia
-  Opis: Jako użytkowniczka chcę wrócić do poprzedniego ćwiczenia, aby je podejrzeć lub poprawić.
+  Opis: Jako użytkowniczka chcę wrócić do poprzedniego ćwiczenia, aby je podejrzeć lub wykonać później.
   Kryteria akceptacji:
 
   - Kliknięcie previous przenosi do poprzedniego ćwiczenia na liście.
@@ -421,6 +422,7 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   - Kliknięcie skip oznacza ćwiczenie jako pominięte w ramach sesji i przechodzi do następnego.
   - Skip nie tworzy set logs, jeśli użytkowniczka nic nie zapisała dla tego ćwiczenia.
   - Sesja może zostać ukończona mimo pominięć.
+  - Skip takze działa jako autosave dla biezacego stanu sesji
 
 - ID: US-037
   Tytuł: Autosave przy pauzie
@@ -486,8 +488,9 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Kryteria akceptacji:
 
   - UI pozwala dodać i edytować listę serii dla ćwiczenia (set logs).
-  - Każda seria umożliwia wprowadzenie wartości takich jak reps/time/weight/rest (zgodnie z docelowym formatem).
-  - Dane są zapisywane w sesji przy next/pause.
+  - Każda seria umożliwia wprowadzenie wartości takich jak reps/time/weight (zgodnie z docelowym formatem).
+  - Nie ma moliwości wprowadzania zmian do rest i restAfter, odpoczynek nie jest tu kluczowy pod względem weryfikacji wykonania i aktualizowania PR
+  - Dane są zapisywane w sesji przy next/pause/skip.
 
 - ID: US-051
   Tytuł: Walidacja minimalnych danych w serii
@@ -496,19 +499,13 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 
   - System blokuje zapis serii bez żadnych wartości roboczych (np. wszystkie pola puste).
   - Komunikat walidacyjny wskazuje, które pola wymagają uzupełnienia.
-
-- ID: US-052
-  Tytuł: Usuwanie serii z logu
-  Opis: Jako użytkowniczka chcę móc usunąć omyłkowo dodaną serię.
-  Kryteria akceptacji:
-  - Użytkowniczka może usunąć wybraną serię z listy set logs.
-  - Po usunięciu i zapisie sesji PR są przeliczane na podstawie aktualnych logów.
+  - Przy pominięciu ćwiczenia skip wpisuje do historii biezacej sesji reps lub time jako 0
 
 ### 5.6 PR (rekordy)
 
 - ID: US-060
   Tytuł: Automatyczne wykrywanie PR po zapisie serii
-  Opis: Jako użytkowniczka chcę, aby aplikacja wykryła nowy rekord, gdy zapiszę lepszy wynik.
+  Opis: Jako użytkowniczka chcę, aby aplikacja wykryła nowy rekord, gdy zapiszę lepszy (wieksza liczba) wynik.
   Kryteria akceptacji:
 
   - Po zapisie sesji system porównuje nowe set logs z dotychczasowym PR dla danego ćwiczenia.
@@ -529,14 +526,16 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 
   - Po nadpisaniu logów serii system przelicza PR dla danego ćwiczenia.
   - Jeśli wcześniejszy PR przestaje być najlepszy, system aktualizuje PR do poprawnej wartości wynikającej z danych.
+  - PR posiada oprócz samego rekordu take datę jego wykonania.
 
 - ID: US-063
   Tytuł: Widok listy PR
   Opis: Jako użytkowniczka chcę zobaczyć moje rekordy, aby śledzić postępy.
   Kryteria akceptacji:
-  - Widok PR pokazuje listę ćwiczeń z aktualnym rekordem.
+  - Widok PR pokazuje listę ćwiczeń z aktualnym rekordem i datą.
   - Widok zawiera co najmniej: tytuł ćwiczenia oraz najlepszą wartość dla dostępnych typów rekordów (max_reps/max_duration/max_weight).
   - Widok pokazuje tylko dane użytkowniczki.
+  - Jeśli seria określa 3 serie po kilka powtórzeń np. 4 3 3, to wykonanie 5 3 3 będzie PR, a takze wykonanie 4 4 3 bedzie rekordem, jeśli ćwiczenie wykonywane jest w seriach to PR bierze pod uwagę całość czyli wszystkie serie, nie pojedyncze serie z danego zestawu.
 
 ### 5.7 Historia treningów
 
@@ -561,9 +560,9 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Opis: Jako użytkowniczka chcę usunąć plan bez kasowania historii jego wykonań.
   Kryteria akceptacji:
   - Po usunięciu planu sesje historyczne nadal są widoczne i spójne.
-  - Sesja pokazuje nazwę planu lub wartość zastępczą (np. “Plan usunięty”), bez błędów.
+  - Sesja pokazuje nazwę planu z dopiskiem np. “Plan usunięty”, bez błędów.
 
-### 5.8 AI: generuj i optymalizuj
+### 5.8 AI: generuj i optymalizuj - do wdrozenia po wykonaniu planu podstawowego
 
 - ID: US-080
   Tytuł: Formularz “na żądanie” do generowania treningu

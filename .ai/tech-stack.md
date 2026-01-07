@@ -27,7 +27,7 @@ AI – Integracja przez OpenRouter
 CI/CD i Hosting
 
 - GitHub Actions wykorzystywane do automatyzacji procesów CI/CD (lint, testy, build).
-- Frontend hostowany na Cloudflare Pages, zapewniający globalny CDN, HTTPS oraz szybkie deploymenty.
+- Frontend hostowany na Vercel (hosting “Next.js-first”), zapewniający szybkie deploymenty, preview deployments dla PR oraz wsparcie dla SSR/route handlers w typowym środowisku Next.js.
 
 Security
 
