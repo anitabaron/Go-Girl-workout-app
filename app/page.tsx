@@ -51,7 +51,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-goDarkPink text-white">
+      <footer className="bg-goPink text-white">
         <div className="mx-auto w-full max-w-5xl px-6 py-6 text-center sm:px-10">
           <p className="text-lg font-bold">
             &quot;Strong today, unstoppable tomorrow.&quot;

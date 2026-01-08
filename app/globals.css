@@ -8,7 +8,6 @@
   /* Brand / app colors (Tailwind tokens) */
   --go-pink: #ffbdc8;
   --go-light-pink: #ffe3e7;
-  --go-dark-pink: #f695a3;
   --go-mid-red: #f9444f;
   --go-red: #f00b0d;
 }
@@ -28,7 +27,6 @@
     /* Brand / app colors (Tailwind tokens) - dark theme overrides */
     --go-pink: #a85b6b;
     --go-light-pink: #2a171c;
-    --go-dark-pink: #c46a7d;
     --go-mid-red: #c24856;
     --go-red: #d14a4f;
   }

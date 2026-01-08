@@ -11,7 +11,6 @@ const config = {
       colors: {
         goPink: "var(--go-pink)",
         goLightPink: "var(--go-light-pink)",
-        goDarkPink: "var(--go-dark-pink)",
         goMidRed: "var(--go-mid-red)",
         goRed: "var(--go-red)",
       },
