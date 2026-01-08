@@ -1,0 +1,41 @@
+---
+alwaysApply: true
+---
+
+# AI Rules for {{project-name}}
+
+{{project-description}}
+
+## Tech Stack
+
+- Next js
+- TypeScript 5
+- React 19
+- Tailwind 4
+
+## Project Structure
+
+When introducing changes to the project, always follow the directory structure below:
+
+- `./src` - source code
+- `./src/app` - Next.js App Router (layouts, pages, route groups)
+- `./src/app/(route)/page.tsx` - pages per route segment
+- `./src/app/api` - API route handlers
+- `./src/components` - UI components (static and dynamic)
+- `./src/assets` - internal static assets (e.g., images)
+- `./public` - public assets served directly
+
+When modifying the directory structure, always update this section.
+
+## Coding practices
+
+### Guidelines for clean code
+
+- Prioritize error handling and edge cases
+- Handle errors and edge cases at the beginning of functions.
+- Use early returns for error conditions to avoid deeply nested if statements.
+- Place the happy path last in the function for improved readability.
+- Avoid unnecessary else statements; use if-return pattern instead.
+- Use guard clauses to handle preconditions and invalid states early.
+- Implement proper error logging and user-friendly error messages.
+- Consider using custom error types or error factories for consistent error handling.
