@@ -8,7 +8,7 @@ alwaysApply: true
 
 ## Tech Stack
 
-- Next js
+- Next js 16
 - TypeScript 5
 - React 19
 - Tailwind 4
@@ -22,8 +22,11 @@ When introducing changes to the project, always follow the directory structure b
 - `./src/app/(route)/page.tsx` - pages per route segment
 - `./src/app/api` - API route handlers
 - `./src/components` - UI components (static and dynamic)
+- `./src/components/ui` - Client-side components from Shadcn/ui
 - `./src/assets` - internal static assets (e.g., images)
 - `./public` - public assets served directly
+- `./src/db` - Supabase clients and types
+- `./src/types.ts` - Shared types for backend and frontend (Entities, DTOs)
 
 When modifying the directory structure, always update this section.
 
