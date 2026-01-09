@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "check:supabase": "node scripts/check-supabase-config.js"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
@@ -15,6 +16,8 @@
     ]
   },
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.90.1",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -28,6 +31,7 @@
     "eslint-config-next": "16.1.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "supabase": "^2.72.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

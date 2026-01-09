@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { DbTest } from "../components/db-test";
 
 export default function Home() {
   return (
@@ -22,6 +23,7 @@ export default function Home() {
             </p>
           </div>
         </div>
+        <DbTest />
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
