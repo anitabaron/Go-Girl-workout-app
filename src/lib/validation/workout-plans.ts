@@ -50,6 +50,34 @@ export const workoutPlanExerciseInputSchema = z
   .strict();
 
 /**
+ * Schema dla częściowej aktualizacji ćwiczenia w planie treningowym.
+ * Wymaga id ćwiczenia w planie i pozwala na aktualizację tylko wybranych pól.
+ */
+export const workoutPlanExerciseUpdateSchema = z
+  .object({
+    id: z
+      .string()
+      .refine(
+        (val) => uuidRegex.test(val),
+        "id musi być prawidłowym UUID ćwiczenia w planie"
+      ),
+    exercise_id: z
+      .string()
+      .refine(
+        (val) => uuidRegex.test(val),
+        "exercise_id musi być prawidłowym UUID"
+      )
+      .optional(),
+    section_type: sectionTypeSchema.optional(),
+    section_position: sectionPositionSchema.optional(),
+    planned_sets: plannedSetsSchema,
+    planned_reps: plannedRepsSchema,
+    planned_duration_seconds: plannedDurationSchema,
+    planned_rest_seconds: plannedRestSchema,
+  })
+  .strict();
+
+/**
  * Schema dla tworzenia planu treningowego.
  */
 export const workoutPlanCreateSchema = z
@@ -75,19 +103,33 @@ export const workoutPlanCreateSchema = z
 
 /**
  * Schema dla aktualizacji planu treningowego (partial version of create).
+ * Pozwala na częściową aktualizację ćwiczeń - każde ćwiczenie musi mieć id
+ * i tylko wybrane pola będą zaktualizowane.
  */
-export const workoutPlanUpdateSchema = workoutPlanCreateSchema
-  .partial()
+export const workoutPlanUpdateSchema = z
+  .object({
+    name: nameSchema.optional(),
+    description: descriptionSchema,
+    part: partSchema,
+    exercises: z
+      .array(workoutPlanExerciseUpdateSchema)
+      .min(1, "Lista ćwiczeń do aktualizacji nie może być pusta")
+      .optional(),
+  })
+  .strict()
   .superRefine((data, ctx) => {
     if (data.exercises !== undefined && data.exercises.length > 0) {
-      const errors = validateWorkoutPlanBusinessRules(data.exercises);
-
-      errors.forEach((message) =>
-        ctx.addIssue({
-          code: "custom",
-          message,
-        })
-      );
+      // Sprawdź czy wszystkie ćwiczenia mają id
+      for (let i = 0; i < data.exercises.length; i++) {
+        const exercise = data.exercises[i];
+        if (!exercise.id) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Ćwiczenie na pozycji ${i} musi mieć pole 'id'.`,
+            path: ["exercises", i, "id"],
+          });
+        }
+      }
     }
   });
 

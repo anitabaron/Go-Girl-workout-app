@@ -223,6 +223,63 @@ export async function updateWorkoutPlan(
 }
 
 /**
+ * Aktualizuje pojedyncze ćwiczenie w planie treningowym.
+ */
+export async function updateWorkoutPlanExercise(
+  client: DbClient,
+  planId: string,
+  exerciseId: string,
+  input: {
+    exercise_id?: string;
+    section_type?: Database["public"]["Enums"]["exercise_type"];
+    section_position?: number;
+    planned_sets?: number | null;
+    planned_reps?: number | null;
+    planned_duration_seconds?: number | null;
+    planned_rest_seconds?: number | null;
+  }
+) {
+  const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] = {};
+
+  if (input.exercise_id !== undefined) {
+    updateData.exercise_id = input.exercise_id;
+  }
+  if (input.section_type !== undefined) {
+    updateData.section_type = input.section_type;
+  }
+  if (input.section_position !== undefined) {
+    updateData.section_position = input.section_position;
+  }
+  if (input.planned_sets !== undefined) {
+    updateData.planned_sets = input.planned_sets;
+  }
+  if (input.planned_reps !== undefined) {
+    updateData.planned_reps = input.planned_reps;
+  }
+  if (input.planned_duration_seconds !== undefined) {
+    updateData.planned_duration_seconds = input.planned_duration_seconds;
+  }
+  if (input.planned_rest_seconds !== undefined) {
+    updateData.planned_rest_seconds = input.planned_rest_seconds;
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    // Brak zmian do wykonania
+    return { data: null, error: null };
+  }
+
+  const { data, error } = await client
+    .from("workout_plan_exercises")
+    .update(updateData)
+    .eq("plan_id", planId)
+    .eq("id", exerciseId)
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+/**
  * Usuwa wszystkie ćwiczenia z planu treningowego.
  */
 export async function deleteWorkoutPlanExercises(client: DbClient, planId: string) {

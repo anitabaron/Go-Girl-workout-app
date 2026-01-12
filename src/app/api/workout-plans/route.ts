@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 import { workoutPlanQuerySchema } from "@/lib/validation/workout-plans";
 import { respondWithServiceError } from "@/lib/http/errors";
@@ -31,10 +32,34 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const params = Object.fromEntries(url.searchParams.entries());
-    const parsedQuery = workoutPlanQuerySchema.parse({
-      ...params,
-      limit: params.limit ? Number(params.limit) : undefined,
-    });
+
+    // Poprawne parsowanie parametrów zapytania
+    const queryParams: Record<string, unknown> = {};
+
+    if (params.part) {
+      queryParams.part = params.part;
+    }
+
+    if (params.sort) {
+      queryParams.sort = params.sort;
+    }
+
+    if (params.order) {
+      queryParams.order = params.order;
+    }
+
+    if (params.limit) {
+      const limitNum = Number(params.limit);
+      if (!Number.isNaN(limitNum) && limitNum > 0) {
+        queryParams.limit = limitNum;
+      }
+    }
+
+    if (params.cursor) {
+      queryParams.cursor = params.cursor;
+    }
+
+    const parsedQuery = workoutPlanQuerySchema.parse(queryParams);
 
     const result = await listWorkoutPlansService(userId, parsedQuery);
 
@@ -44,9 +69,23 @@ export async function GET(request: Request) {
       return respondWithServiceError(error);
     }
 
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          message: "Nieprawidłowe parametry zapytania.",
+          code: "BAD_REQUEST",
+          details: error.issues.map((issue) => issue.message).join("; "),
+        },
+        { status: 400 }
+      );
+    }
+
     console.error("GET /api/workout-plans unexpected error", error);
     return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
+      {
+        message: "Wystąpił błąd serwera.",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
