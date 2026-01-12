@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import type { ServiceError } from "@/services/exercises";
+import type { ServiceError as ExerciseServiceError } from "@/services/exercises";
+import type { ServiceError as WorkoutPlanServiceError } from "@/services/workout-plans";
+
+type ServiceError = ExerciseServiceError | WorkoutPlanServiceError;
 
 type ErrorBody = {
   message: string;
