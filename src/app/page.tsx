@@ -24,6 +24,7 @@ export default function Home() {
           </div>
         </div>
         {/* <DbTest /> */}
+        <p>test pause deploy 1</p>
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
