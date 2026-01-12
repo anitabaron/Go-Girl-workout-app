@@ -7,6 +7,7 @@ interface TestNumRecord {
   id: number;
   created_at: string;
   num: number;
+  letter: string;
 }
 
 export function DbTest() {
@@ -28,7 +29,7 @@ export function DbTest() {
         count,
       } = await supabase
         .from(tableName)
-        .select("id, created_at, num", { count: "exact", head: false });
+        .select("id, created_at, num, letter", { count: "exact", head: false });
 
       if (queryError) {
         setError(`Błąd: ${queryError.message}`);
@@ -110,7 +111,10 @@ export function DbTest() {
           count,
         } = await supabase
           .from("test-num")
-          .select("id, created_at, num", { count: "exact", head: false });
+          .select("id, created_at, num, letter", {
+            count: "exact",
+            head: false,
+          });
 
         if (cancelled) return;
 
@@ -207,7 +211,7 @@ export function DbTest() {
             key={record.id}
             className="p-3 bg-white border rounded-md shadow-sm"
           >
-            <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="font-semibold text-gray-700">ID:</span>{" "}
                 <span className="text-gray-900">{record.id}</span>
@@ -221,6 +225,10 @@ export function DbTest() {
                 <span className="text-gray-900">
                   {new Date(record.created_at).toLocaleString("pl-PL")}
                 </span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-700">Letter:</span>{" "}
+                <span className="text-gray-900">{record.letter}</span>
               </div>
             </div>
           </div>
