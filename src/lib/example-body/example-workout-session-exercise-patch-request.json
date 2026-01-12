@@ -1,0 +1,25 @@
+{
+  "actual_reps": 12,
+  "actual_sets": 3,
+  "actual_duration_seconds": null,
+  "actual_rest_seconds": 60,
+  "is_skipped": false,
+  "sets": [
+    {
+      "set_number": 1,
+      "reps": 12,
+      "weight_kg": 50.0
+    },
+    {
+      "set_number": 2,
+      "reps": 10,
+      "weight_kg": 50.0
+    },
+    {
+      "set_number": 3,
+      "reps": 8,
+      "weight_kg": 50.0
+    }
+  ],
+  "advance_cursor_to_next": true
+}

@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 
 import type { ServiceError as ExerciseServiceError } from "@/services/exercises";
 import type { ServiceError as WorkoutPlanServiceError } from "@/services/workout-plans";
+import type { ServiceError as WorkoutSessionServiceError } from "@/services/workout-sessions";
 
-type ServiceError = ExerciseServiceError | WorkoutPlanServiceError;
+type ServiceError =
+  | ExerciseServiceError
+  | WorkoutPlanServiceError
+  | WorkoutSessionServiceError;
 
 type ErrorBody = {
   message: string;

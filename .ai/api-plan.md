@@ -59,7 +59,7 @@ Notes:
 
 ### 2.2 Workout Plans
 
-- `POST /api/plans`
+- `POST /api/workout-plans`
 
   - Create plan with ordered exercises.
   - Body: `{ name, description?, part?, exercises: [{ exercise_id, section_type, section_position, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] }`
@@ -67,33 +67,33 @@ Notes:
   - Success: `201` with plan + items.
   - Errors: `400` validation/empty plan, `409` duplicates in positions, `401/403`.
 
-- `GET /api/plans`
+- `GET /api/workout-plans`
 
   - List plans.
   - Query: `part?`, `sort=created_at|name`, `order`, `limit`, `cursor`.
   - Success: `200` list with counts.
 
-- `GET /api/plans/{id}`
+- `GET /api/workout-plans/{id}`
 
   - Plan detail with exercises (ordered by section_type, section_position).
   - Success: `200`.
   - Errors: `404`, `401/403`.
 
-- `PATCH /api/plans/{id}`
+- `PATCH /api/workout-plans/{id}`
 
   - Update metadata and full exercise list (replace strategy).
   - Body same as create; validation same; affects future sessions only.
   - Success: `200`.
   - Errors: `400`, `409`, `404`, `401/403`.
 
-- `DELETE /api/plans/{id}`
+- `DELETE /api/workout-plans/{id}`
   - Remove plan; sessions remain (plan_name snapshot preserved).
   - Success: `204`.
   - Errors: `404`, `401/403`.
 
 ### 2.3 Workout Sessions (start/resume/history)
 
-- `POST /api/sessions`
+- `POST /api/workout-sessions`
 
   - Start new session from plan or resume existing in_progress.
   - Body: `{ workout_plan_id }` optional (required for MVP; ad-hoc not in scope).
@@ -101,19 +101,19 @@ Notes:
   - Success: `201` new session or `200` resumed.
   - Errors: `404` plan not found/owned, `409` if conflicting state, `401/403`.
 
-- `GET /api/sessions`
+- `GET /api/workout-sessions`
 
   - List sessions (history).
   - Query: `status?=in_progress|completed`, `plan_id?`, `from?`/`to?` date, `sort=started_at|completed_at|status`, `order`, `limit`, `cursor`.
   - Success: `200` summary items (id, plan_name_at_time, status, started_at, completed_at).
 
-- `GET /api/sessions/{id}`
+- `GET /api/workout-sessions/{id}`
 
   - Session detail with exercises and sets; includes planned vs actual.
   - Success: `200`.
   - Errors: `404`, `401/403`.
 
-- `PATCH /api/sessions/{id}/status`
+- `PATCH /api/workout-sessions/{id}/status`
   - Update status to `completed` or `in_progress` (for pause/resume); sets `completed_at` when completing.
   - Body: `{ status }`.
   - Success: `200`.
@@ -121,7 +121,7 @@ Notes:
 
 ### 2.4 Session Exercise Autosave (next/previous/skip)
 
-- `PATCH /api/sessions/{id}/exercises/{position}`
+- `PATCH /api/workout-sessions/{id}/exercises/{position}`
   - Upsert state for exercise at given position; supports autosave on next/pause/skip and previous edits.
   - Body:
     - `actual_sets?`, `actual_reps?`, `actual_duration_seconds?`, `actual_rest_seconds?`, `is_skipped?`

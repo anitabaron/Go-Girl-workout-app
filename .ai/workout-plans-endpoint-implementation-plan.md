@@ -11,10 +11,10 @@
 
 ## 2. Szczegóły żądania
 
-### 2.1 POST /api/plans
+### 2.1 POST /api/workout-plans
 
 - **Metoda HTTP**: `POST`
-- **URL**: `/api/plans`
+- **URL**: `/api/workout-plans`
 - **Body**:
   ```typescript
   {
@@ -45,10 +45,10 @@
     - `planned_rest_seconds`: jeśli podane, >= 0
   - Brak duplikatów pozycji w tej samej sekcji
 
-### 2.2 GET /api/plans
+### 2.2 GET /api/workout-plans
 
 - **Metoda HTTP**: `GET`
-- **URL**: `/api/plans`
+- **URL**: `/api/workout-plans`
 - **Query Parameters**:
   - `part?`: ExercisePart (Legs, Core, Back, Arms, Chest)
   - `sort?`: `"created_at"` | `"name"` (domyślnie: `"created_at"`)
@@ -56,29 +56,29 @@
   - `limit?`: number (domyślnie: 20, max: 100)
   - `cursor?`: string (opaque cursor dla paginacji)
 
-### 2.3 GET /api/plans/{id}
+### 2.3 GET /api/workout-plans/{id}
 
 - **Metoda HTTP**: `GET`
-- **URL**: `/api/plans/{id}`
+- **URL**: `/api/workout-plans/{id}`
 - **Path Parameters**:
   - `id`: UUID planu treningowego
 - **Walidacja**:
   - Plan musi istnieć i należeć do użytkownika
 
-### 2.4 PATCH /api/plans/{id}
+### 2.4 PATCH /api/workout-plans/{id}
 
 - **Metoda HTTP**: `PATCH`
-- **URL**: `/api/plans/{id}`
+- **URL**: `/api/workout-plans/{id}`
 - **Path Parameters**:
   - `id`: UUID planu treningowego
 - **Body**: identyczne jak POST (wszystkie pola opcjonalne, ale jeśli `exercises` podane, to pełna lista zastępuje istniejącą)
 - **Walidacja**: identyczna jak POST
 - **Uwaga**: Aktualizacja wpływa tylko na przyszłe sesje; istniejące sesje zachowują snapshot `plan_name_at_time`
 
-### 2.5 DELETE /api/plans/{id}
+### 2.5 DELETE /api/workout-plans/{id}
 
 - **Metoda HTTP**: `DELETE`
-- **URL**: `/api/plans/{id}`
+- **URL**: `/api/workout-plans/{id}`
 - **Path Parameters**:
   - `id`: UUID planu treningowego
 - **Walidacja**:
@@ -90,6 +90,7 @@
 ### 3.1 DTOs i Command Modele (z `src/types.ts`)
 
 - `WorkoutPlanCreateCommand`: Command do tworzenia planu
+
   ```typescript
   {
     name: string;
@@ -100,6 +101,7 @@
   ```
 
 - `WorkoutPlanExerciseInput`: Input dla ćwiczenia w planie
+
   ```typescript
   {
     exercise_id: UUID;
@@ -113,6 +115,7 @@
   ```
 
 - `WorkoutPlanDTO`: DTO planu z ćwiczeniami
+
   ```typescript
   {
     id: UUID;
@@ -126,6 +129,7 @@
   ```
 
 - `WorkoutPlanExerciseDTO`: DTO ćwiczenia w planie
+
   ```typescript
   {
     id: UUID;
@@ -157,7 +161,7 @@
 
 ## 4. Szczegóły odpowiedzi
 
-### 4.1 POST /api/plans
+### 4.1 POST /api/workout-plans
 
 - **Status**: `201 Created`
 - **Body**: `WorkoutPlanDTO` (plan z pełną listą ćwiczeń, posortowaną po `section_type`, `section_position`)
@@ -168,10 +172,10 @@
   - `403`: Brak dostępu (jeśli RLS zwróci perm error)
   - `500`: Błąd serwera
 
-### 4.2 GET /api/plans
+### 4.2 GET /api/workout-plans
 
 - **Status**: `200 OK`
-- **Body**: 
+- **Body**:
   ```typescript
   {
     items: Array<{
@@ -192,7 +196,7 @@
   - `403`: Brak dostępu
   - `500`: Błąd serwera
 
-### 4.3 GET /api/plans/{id}
+### 4.3 GET /api/workout-plans/{id}
 
 - **Status**: `200 OK`
 - **Body**: `WorkoutPlanDTO` (plan z pełną listą ćwiczeń, posortowaną po `section_type`, `section_position`)
@@ -202,7 +206,7 @@
   - `403`: Brak dostępu
   - `500`: Błąd serwera
 
-### 4.4 PATCH /api/plans/{id}
+### 4.4 PATCH /api/workout-plans/{id}
 
 - **Status**: `200 OK`
 - **Body**: `WorkoutPlanDTO` (zaktualizowany plan z pełną listą ćwiczeń)
@@ -214,7 +218,7 @@
   - `403`: Brak dostępu
   - `500`: Błąd serwera
 
-### 4.5 DELETE /api/plans/{id}
+### 4.5 DELETE /api/workout-plans/{id}
 
 - **Status**: `204 No Content`
 - **Body**: Brak
@@ -226,7 +230,7 @@
 
 ## 5. Przepływ danych
 
-### 5.1 POST /api/plans
+### 5.1 POST /api/workout-plans
 
 1. Pobierz sesję użytkownika przez Supabase auth (server-side client). Wymuś obecność `user.id`.
 2. Waliduj body przez Zod schema (`workoutPlanCreateSchema`).
@@ -242,7 +246,7 @@
 6. Pobierz utworzony plan z ćwiczeniami (JOIN lub osobne query + sortowanie).
 7. Zwróć `WorkoutPlanDTO` z ćwiczeniami posortowanymi po `section_type`, `section_position`.
 
-### 5.2 GET /api/plans
+### 5.2 GET /api/workout-plans
 
 1. Pobierz sesję użytkownika. Wymuś obecność `user.id`.
 2. Waliduj query params przez Zod schema (`planQuerySchema`).
@@ -257,7 +261,7 @@
 6. Opcjonalnie: dla każdego planu pobierz liczbę ćwiczeń (COUNT subquery lub osobne query).
 7. Zwróć `{ items, nextCursor }`.
 
-### 5.3 GET /api/plans/{id}
+### 5.3 GET /api/workout-plans/{id}
 
 1. Pobierz sesję użytkownika. Wymuś obecność `user.id`.
 2. Waliduj `id` jako UUID.
@@ -266,7 +270,7 @@
 5. Pobierz wszystkie ćwiczenia z `workout_plan_exercises` gdzie `plan_id = {id}`, posortowane po `section_type`, `section_position`.
 6. Zwróć `WorkoutPlanDTO` z ćwiczeniami.
 
-### 5.4 PATCH /api/plans/{id}
+### 5.4 PATCH /api/workout-plans/{id}
 
 1. Pobierz sesję użytkownika. Wymuś obecność `user.id`.
 2. Waliduj `id` jako UUID.
@@ -281,7 +285,7 @@
 8. Pobierz zaktualizowany plan z ćwiczeniami.
 9. Zwróć `WorkoutPlanDTO`.
 
-### 5.5 DELETE /api/plans/{id}
+### 5.5 DELETE /api/workout-plans/{id}
 
 1. Pobierz sesję użytkownika. Wymuś obecność `user.id`.
 2. Waliduj `id` jako UUID.
@@ -334,6 +338,7 @@
 ### 7.1 Mapowanie kodów statusu
 
 - **`400 Bad Request`**:
+
   - Nieprawidłowe body/query (Zod validation errors)
   - Pusta lista ćwiczeń (`exercises.length === 0`)
   - Nieprawidłowe pozycje (`section_position <= 0`)
@@ -342,17 +347,21 @@
   - Limit poza zakresem (max 100)
 
 - **`401 Unauthorized`**:
+
   - Brak aktywnej sesji
   - Nieprawidłowy token autoryzacji
 
 - **`403 Forbidden`**:
+
   - RLS policy rejection (rzadko, jeśli kod weryfikuje własność)
 
 - **`404 Not Found`**:
+
   - Plan nie istnieje lub nie należy do użytkownika
   - Ćwiczenie (`exercise_id`) nie istnieje lub nie należy do użytkownika
 
 - **`409 Conflict`**:
+
   - Duplikaty pozycji w sekcji (unique constraint violation na `(plan_id, section_type, section_position)`)
   - FK constraint violation (jeśli ćwiczenie zostanie usunięte podczas tworzenia planu)
 
@@ -397,20 +406,23 @@
 
 ### 8.2 Optymalizacje zapytań
 
-- **GET /api/plans (lista)**:
+- **GET /api/workout-plans (lista)**:
+
   - Użyj paginacji kursorem zamiast offset (lepsze dla dużych zbiorów).
   - Sortuj po indeksowanych kolumnach (`created_at`, `name`).
   - Opcjonalnie: COUNT subquery dla `exercise_count` tylko jeśli potrzebne (lub osobne query batch).
 
-- **GET /api/plans/{id}**:
+- **GET /api/workout-plans/{id}**:
+
   - Pojedyncze zapytanie z JOIN lub dwa zapytania (plan + ćwiczenia).
   - Sortowanie ćwiczeń po `section_type`, `section_position` w DB (nie w kodzie).
 
-- **POST /api/plans**:
+- **POST /api/workout-plans**:
+
   - Weryfikacja własności ćwiczeń: batch query dla wszystkich `exercise_id` jednocześnie (zamiast N queries).
   - Użyj transakcji dla atomowości (wstaw plan + ćwiczenia).
 
-- **PATCH /api/plans/{id}**:
+- **PATCH /api/workout-plans/{id}**:
   - Jeśli `exercises` podane, użyj transakcji:
     1. DELETE wszystkich istniejących ćwiczeń
     2. INSERT nowych ćwiczeń
@@ -426,7 +438,7 @@
 
 ### 8.4 Cache (opcjonalnie, przyszłość)
 
-- GET /api/plans/{id}: cache z TTL (np. 5 minut) dla często odczytywanych planów.
+- GET /api/workout-plans/{id}: cache z TTL (np. 5 minut) dla często odczytywanych planów.
 - Inwalidacja cache przy PATCH/DELETE.
 
 ## 9. Etapy wdrożenia
@@ -474,7 +486,7 @@
 ### 9.3 Warstwa serwisowa
 
 3. **Utwórz `src/services/plans.ts`**:
-   - `createPlanService(userId, payload)`: 
+   - `createPlanService(userId, payload)`:
      - Walidacja Zod
      - Walidacja domenowa (co najmniej jedno ćwiczenie, unikalność pozycji)
      - Batch weryfikacja własności ćwiczeń
@@ -502,12 +514,13 @@
 
 ### 9.4 Route handlers
 
-4. **Utwórz `src/app/api/plans/route.ts`**:
+4. **Utwórz `src/app/api/workout-plans/route.ts`**:
+
    - `GET`: pobierz sesję → waliduj query → wywołaj `listPlansService` → zwróć 200
    - `POST`: pobierz sesję → waliduj body → wywołaj `createPlanService` → zwróć 201
    - Obsługa błędów: `ServiceError` → `respondWithServiceError()`, inne → 500
 
-5. **Utwórz `src/app/api/plans/[id]/route.ts`**:
+5. **Utwórz `src/app/api/workout-plans/[id]/route.ts`**:
    - `GET`: pobierz sesję → waliduj id → wywołaj `getPlanService` → zwróć 200
    - `PATCH`: pobierz sesję → waliduj id + body → wywołaj `updatePlanService` → zwróć 200
    - `DELETE`: pobierz sesję → waliduj id → wywołaj `deletePlanService` → zwróć 204
@@ -516,6 +529,7 @@
 ### 9.5 Integracja z istniejącym kodem
 
 6. **Zaktualizuj `src/lib/http/errors.ts`** (jeśli potrzebne):
+
    - Upewnij się, że `respondWithServiceError()` obsługuje wszystkie kody błędów
 
 7. **Zaktualizuj `src/types.ts`** (jeśli potrzebne):
@@ -548,20 +562,20 @@
 
 - Zamiast N queries dla każdego `exercise_id`, wykonaj jedno zapytanie:
   ```sql
-  SELECT id FROM exercises 
+  SELECT id FROM exercises
   WHERE user_id = $1 AND id = ANY($2::uuid[])
   ```
 - Porównaj długość wyników z długością `exerciseIds` w request.
 
 ### 10.3 Sortowanie ćwiczeń
 
-- W `GET /api/plans/{id}` i `POST/PATCH` response, sortuj ćwiczenia po:
+- W `GET /api/workout-plans/{id}` i `POST/PATCH` response, sortuj ćwiczenia po:
   1. `section_type` (Warm-up → Main Workout → Cool-down)
   2. `section_position` (ascending)
 
 ### 10.4 Strategia replace dla ćwiczeń
 
-- W `PATCH /api/plans/{id}`, jeśli `exercises` podane w body:
+- W `PATCH /api/workout-plans/{id}`, jeśli `exercises` podane w body:
   - Traktuj jako pełną listę (nie merge z istniejącymi).
   - Usuń wszystkie istniejące ćwiczenia.
   - Wstaw nowe ćwiczenia.
