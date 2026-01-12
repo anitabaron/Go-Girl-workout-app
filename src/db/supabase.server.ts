@@ -1,13 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+import type { Database } from "./database.types";
+
 /**
  * Tworzy klienta Supabase dla Server Components i Server Actions w Next.js 16 App Router.
  * 
  * Ten klient używa @supabase/ssr do zarządzania sesjami przez cookies,
  * co zapewnia prawidłowe działanie autentykacji w środowisku server-side.
  * 
- * @returns {Promise<ReturnType<typeof createServerClient>>} Instancja klienta Supabase
+ * @returns {Promise<ReturnType<typeof createServerClient<Database>>>} Instancja klienta Supabase
  * 
  * @example
  * // W Server Component:
@@ -25,7 +27,7 @@ import { cookies } from "next/headers";
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

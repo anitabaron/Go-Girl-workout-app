@@ -1,5 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 
+import type { Database } from "./database.types";
+
 /**
  * Klient Supabase dla Client Components w Next.js 16 App Router.
  * 
@@ -10,13 +12,13 @@ import { createBrowserClient } from "@supabase/ssr";
  * 
  * @example
  * "use client";
- * import { supabase } from "@/db/src/db/supabase.client";
+ * import { supabase } from "@/db/supabase.client";
  * 
  * export function MyComponent() {
  *   const { data } = await supabase.from('exercises').select('*');
  * }
  */
-export const supabase = createBrowserClient(
+export const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
