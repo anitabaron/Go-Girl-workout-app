@@ -1,0 +1,203 @@
+---
+alwaysApply: false
+---
+
+# Supabase Next.js Initialization
+
+This document provides a reproducible guide to create the necessary file structure for integrating Supabase with your Next.js project.
+
+## Prerequisites
+
+- Your project should use Next.js 16, TypeScript 5, React 19, and Tailwind 4.
+- Install the `@supabase/supabase-js` and `@supabase/ssr` packages.
+- Ensure that `/supabase/config.toml` exists
+- Ensure that a file `/src/db/database.types.ts` exists and contains the correct type definitions for your database.
+
+IMPORTANT: Check prerequisites before performing actions below. If they're not met, stop and ask a user for the fix.
+
+## File Structure and Setup
+
+### 1. Supabase Client for Client Components
+
+Create the file `/src/db/src/db/supabase.client.ts` with the following content:
+
+```ts
+import { createBrowserClient } from "@supabase/ssr";
+
+import type { Database } from "../../database.types";
+
+/**
+ * Klient Supabase dla Client Components w Next.js 16 App Router.
+ * 
+ * Ten klient używa @supabase/ssr do zarządzania sesjami przez cookies,
+ * co zapewnia synchronizację sesji między server i client components.
+ * 
+ * Użyj tego klienta w komponentach oznaczonych "use client".
+ * 
+ * @example
+ * "use client";
+ * import { supabase } from "@/db/src/db/supabase.client";
+ * 
+ * export function MyComponent() {
+ *   const { data } = await supabase.from('exercises').select('*');
+ * }
+ */
+export const supabase = createBrowserClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+```
+
+This file initializes the Supabase client for client-side components using the environment variables `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+### 2. Supabase Client for Server Components and Server Actions
+
+Create the file `/src/db/src/db/supabase.server.ts` with the following content:
+
+```ts
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+import type { Database } from "../../database.types";
+
+/**
+ * Tworzy klienta Supabase dla Server Components i Server Actions w Next.js 16 App Router.
+ * 
+ * Ten klient używa @supabase/ssr do zarządzania sesjami przez cookies,
+ * co zapewnia prawidłowe działanie autentykacji w środowisku server-side.
+ * 
+ * @returns {Promise<ReturnType<typeof createServerClient<Database>>>} Instancja klienta Supabase
+ * 
+ * @example
+ * // W Server Component:
+ * const supabase = await createClient();
+ * const { data } = await supabase.from('exercises').select('*');
+ * 
+ * @example
+ * // W Server Action:
+ * 'use server';
+ * export async function getExercises() {
+ *   const supabase = await createClient();
+ *   return await supabase.from('exercises').select('*');
+ * }
+ */
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions, or you can handle it differently.
+          }
+        },
+      },
+    }
+  );
+}
+```
+
+This file creates a Supabase client factory function for server-side components and server actions, properly handling cookies for authentication.
+
+### 3. Middleware Setup (Optional but Recommended)
+
+Create the file `/src/middleware.ts` with the following content:
+
+```ts
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // Refresh session if expired - required for Server Components
+  await supabase.auth.getUser();
+
+  return supabaseResponse;
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
+```
+
+This middleware refreshes user sessions automatically, ensuring authentication works correctly across server and client components.
+
+### 4. Environment Variables
+
+Ensure your `.env.local` file contains:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+**Important:**
+- Variables must start with `NEXT_PUBLIC_` to be available in the browser
+- Never commit `.env.local` to the repository
+- Use `.env.example` as a template for other developers
+
+### 5. TypeScript Configuration (Optional)
+
+If you want to add type safety for environment variables, you can extend your `tsconfig.json` or create a type declaration file. However, Next.js 16 with TypeScript automatically infers types from environment variables when using `process.env.NEXT_PUBLIC_*`.
+
+For additional type safety, you can create `/src/env.d.ts`:
+
+```ts
+/// <reference types="node" />
+
+declare namespace NodeJS {
+  interface ProcessEnv {
+    readonly NEXT_PUBLIC_SUPABASE_URL: string;
+    readonly NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  }
+}
+```
+
+This file provides type definitions for environment variables, ensuring proper typing throughout your application.

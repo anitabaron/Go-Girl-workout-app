@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "../db/src/db/supabase.client";
+import { supabase } from "../db/supabase.client";
 
 interface TestNumRecord {
   id: number;
