@@ -98,8 +98,6 @@ export type WorkoutPlanCreateCommand = Pick<
   exercises: WorkoutPlanExerciseInput[];
 };
 
-export type WorkoutPlanUpdateCommand = WorkoutPlanCreateCommand;
-
 export type WorkoutPlanExerciseDTO = Omit<
   WorkoutPlanExerciseEntity,
   "plan_id" | "created_at"
