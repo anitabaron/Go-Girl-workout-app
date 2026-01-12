@@ -74,10 +74,7 @@ export async function createExerciseService(
     );
   }
 
-  const { data, error } = await insertExercise(supabase, userId, {
-    ...parsed,
-    title_normalized: titleNormalized,
-  });
+  const { data, error } = await insertExercise(supabase, userId, parsed);
 
   if (error) {
     throw mapDbError(error);
@@ -193,10 +190,7 @@ export async function updateExerciseService(
     }
   }
 
-  const { data, error } = await updateExercise(supabase, userId, id, {
-    ...patch,
-    title_normalized: titleNormalized,
-  });
+  const { data, error } = await updateExercise(supabase, userId, id, patch);
 
   if (error) {
     throw mapDbError(error);

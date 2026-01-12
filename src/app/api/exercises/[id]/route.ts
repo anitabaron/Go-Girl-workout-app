@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/db/supabase.server";
 import { respondWithServiceError } from "@/lib/http/errors";
 import {
   deleteExerciseService,
@@ -9,15 +8,8 @@ import {
   updateExerciseService,
 } from "@/services/exercises";
 
-async function getUserId() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error || !data.user) {
-    return null;
-  }
-
-  return data.user.id;
+function getUserId() {
+  return process.env.DEFAULT_USER_ID ?? null;
 }
 
 type RouteContext = {
@@ -31,7 +23,7 @@ export async function GET(
   { params }: RouteContext
 ) {
   try {
-    const userId = await getUserId();
+    const userId = getUserId();
 
     if (!userId) {
       return NextResponse.json(
@@ -61,7 +53,7 @@ export async function PATCH(
   { params }: RouteContext
 ) {
   try {
-    const userId = await getUserId();
+    const userId = getUserId();
 
     if (!userId) {
       return NextResponse.json(
@@ -92,7 +84,7 @@ export async function DELETE(
   { params }: RouteContext
 ) {
   try {
-    const userId = await getUserId();
+    const userId = getUserId();
 
     if (!userId) {
       return NextResponse.json(
@@ -103,7 +95,7 @@ export async function DELETE(
 
     await deleteExerciseService(userId, params.id);
 
-    return NextResponse.json(null, { status: 204 });
+    return new Response(null, { status: 204 });
   } catch (error) {
     if (error instanceof ServiceError) {
       return respondWithServiceError(error);

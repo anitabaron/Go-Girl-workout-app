@@ -65,7 +65,7 @@ export async function findByNormalizedTitle(
 export async function insertExercise(
   client: DbClient,
   userId: string,
-  input: ExerciseCreateCommand & { title_normalized: string }
+  input: ExerciseCreateCommand
 ) {
   const { data, error } = await client
     .from("exercises")
@@ -83,7 +83,7 @@ export async function updateExercise(
   client: DbClient,
   userId: string,
   id: string,
-  input: ExerciseUpdateCommand & { title_normalized?: string }
+  input: ExerciseUpdateCommand
 ) {
   const { data, error } = await client
     .from("exercises")

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/db/supabase.server";
 import { exerciseQuerySchema } from "@/lib/validation/exercises";
 import { respondWithServiceError } from "@/lib/http/errors";
 import {
@@ -9,20 +8,13 @@ import {
   ServiceError,
 } from "@/services/exercises";
 
-async function getUserId() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error || !data.user) {
-    return null;
-  }
-
-  return data.user.id;
+function getUserId() {
+  return process.env.DEFAULT_USER_ID ?? null;
 }
 
 export async function GET(request: Request) {
   try {
-    const userId = await getUserId();
+    const userId = getUserId();
 
     if (!userId) {
       return NextResponse.json(
@@ -56,7 +48,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getUserId();
+    const userId = getUserId();
 
     if (!userId) {
       return NextResponse.json(

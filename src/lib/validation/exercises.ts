@@ -45,7 +45,7 @@ const METRIC_ERROR = "Podaj dokładnie jedno z pól: reps lub duration_seconds."
 const REST_ERROR =
   "Wymagane jest co najmniej jedno pole odpoczynku (rest_in_between_seconds lub rest_after_series_seconds).";
 
-export const exerciseCreateSchema = z
+const exerciseBaseSchema = z
   .object({
     title: titleSchema,
     type: z.enum(exerciseTypeValues),
@@ -58,8 +58,10 @@ export const exerciseCreateSchema = z
     rest_in_between_seconds: restSchema,
     rest_after_series_seconds: restSchema,
   })
-  .strict()
-  .superRefine((data, ctx) => {
+  .strict();
+
+export const exerciseCreateSchema = exerciseBaseSchema.superRefine(
+  (data, ctx) => {
     const errors = collectBusinessRuleErrors(data);
 
     errors.forEach((message) =>
@@ -68,9 +70,10 @@ export const exerciseCreateSchema = z
         message,
       })
     );
-  });
+  }
+);
 
-export const exerciseUpdateSchema = exerciseCreateSchema
+export const exerciseUpdateSchema = exerciseBaseSchema
   .partial()
   .superRefine((data, ctx) => {
     const hasReps = hasOwnValue(data, "reps");
