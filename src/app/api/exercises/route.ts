@@ -12,14 +12,20 @@ function getUserId() {
   return process.env.DEFAULT_USER_ID ?? null;
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
 export async function GET(request: Request) {
   try {
     const userId = getUserId();
 
-    if (!userId) {
+    if (!userId || !isUuid(userId)) {
       return NextResponse.json(
-        { message: "Brak aktywnej sesji." },
-        { status: 401 }
+        { message: "Brak lub nieprawidłowy DEFAULT_USER_ID w środowisku." },
+        { status: 500 }
       );
     }
 
@@ -50,10 +56,10 @@ export async function POST(request: Request) {
   try {
     const userId = getUserId();
 
-    if (!userId) {
+    if (!userId || !isUuid(userId)) {
       return NextResponse.json(
-        { message: "Brak aktywnej sesji." },
-        { status: 401 }
+        { message: "Brak lub nieprawidłowy DEFAULT_USER_ID w środowisku." },
+        { status: 500 }
       );
     }
 

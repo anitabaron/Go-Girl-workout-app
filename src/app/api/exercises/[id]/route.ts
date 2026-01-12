@@ -12,27 +12,40 @@ function getUserId() {
   return process.env.DEFAULT_USER_ID ?? null;
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export async function GET(
-  _request: Request,
-  { params }: RouteContext
-) {
+export async function GET(request: Request, { params }: RouteContext) {
   try {
     const userId = getUserId();
 
-    if (!userId) {
+    if (!userId || !isUuid(userId)) {
       return NextResponse.json(
-        { message: "Brak aktywnej sesji." },
-        { status: 401 }
+        { message: "Brak lub nieprawidłowy DEFAULT_USER_ID w środowisku." },
+        { status: 500 }
       );
     }
 
-    const exercise = await getExerciseService(userId, params.id);
+    const { id } = await params;
+    const exerciseId = id ?? new URL(request.url).searchParams.get("id");
+
+    if (!exerciseId) {
+      return NextResponse.json(
+        { message: "Brak identyfikatora ćwiczenia w ścieżce." },
+        { status: 400 }
+      );
+    }
+
+    const exercise = await getExerciseService(userId, exerciseId);
 
     return NextResponse.json(exercise, { status: 200 });
   } catch (error) {
@@ -48,22 +61,29 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: RouteContext
-) {
+export async function PATCH(request: Request, { params }: RouteContext) {
   try {
     const userId = getUserId();
 
-    if (!userId) {
+    if (!userId || !isUuid(userId)) {
       return NextResponse.json(
-        { message: "Brak aktywnej sesji." },
-        { status: 401 }
+        { message: "Brak lub nieprawidłowy DEFAULT_USER_ID w środowisku." },
+        { status: 500 }
+      );
+    }
+
+    const { id } = await params;
+    const exerciseId = id ?? new URL(request.url).searchParams.get("id");
+
+    if (!exerciseId) {
+      return NextResponse.json(
+        { message: "Brak identyfikatora ćwiczenia w ścieżce." },
+        { status: 400 }
       );
     }
 
     const body = await request.json();
-    const updated = await updateExerciseService(userId, params.id, body);
+    const updated = await updateExerciseService(userId, exerciseId, body);
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
@@ -79,21 +99,28 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: RouteContext
-) {
+export async function DELETE(request: Request, { params }: RouteContext) {
   try {
     const userId = getUserId();
 
-    if (!userId) {
+    if (!userId || !isUuid(userId)) {
       return NextResponse.json(
-        { message: "Brak aktywnej sesji." },
-        { status: 401 }
+        { message: "Brak lub nieprawidłowy DEFAULT_USER_ID w środowisku." },
+        { status: 500 }
       );
     }
 
-    await deleteExerciseService(userId, params.id);
+    const { id } = await params;
+    const exerciseId = id ?? new URL(request.url).searchParams.get("id");
+
+    if (!exerciseId) {
+      return NextResponse.json(
+        { message: "Brak identyfikatora ćwiczenia w ścieżce." },
+        { status: 400 }
+      );
+    }
+
+    await deleteExerciseService(userId, exerciseId);
 
     return new Response(null, { status: 204 });
   } catch (error) {
