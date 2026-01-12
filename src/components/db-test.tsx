@@ -15,26 +15,31 @@ export function DbTest() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<TestNumRecord[]>([]);
   const [debugInfo, setDebugInfo] = useState<string>("");
+  const [newNum, setNewNum] = useState<number>(6);
+  const [newLetter, setNewLetter] = useState<string>("F");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editNum, setEditNum] = useState<number>(0);
+  const [editLetter, setEditLetter] = useState<string>("");
 
-  const fetchData = useCallback(async (tableName: string) => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setDebugInfo(`Próba połączenia z tabelą: "${tableName}"`);
+    setDebugInfo('Próba połączenia z tabelą: "test-num"');
 
     try {
-      // Spróbuj z count, żeby zobaczyć czy to RLS
       const {
         data: records,
         error: queryError,
         count,
       } = await supabase
-        .from(tableName)
-        .select("id, created_at, num, letter", { count: "exact", head: false });
+        .from("test-num")
+        .select("id, created_at, num, letter", { count: "exact", head: false })
+        .order("id", { ascending: true });
 
       if (queryError) {
         setError(`Błąd: ${queryError.message}`);
         setDebugInfo(
-          `❌ Błąd przy zapytaniu do "${tableName}": ${queryError.message}`
+          `❌ Błąd przy zapytaniu do "test-num": ${queryError.message}`
         );
         setLoading(false);
         return false;
@@ -46,11 +51,11 @@ export function DbTest() {
 
       if (recordCount === 0 && records?.length === 0) {
         setDebugInfo(
-          `⚠️ Zapytanie wykonane, ale 0 rekordów. Prawdopodobnie RLS blokuje dostęp do "${tableName}". Count: ${count}`
+          `⚠️ Zapytanie wykonane, ale 0 rekordów. Prawdopodobnie RLS blokuje dostęp do "test-num". Count: ${count}`
         );
       } else {
         setDebugInfo(
-          `✅ Sukces! Znaleziono ${recordCount} rekord(ów) w tabeli "${tableName}"`
+          `✅ Sukces! Znaleziono ${recordCount} rekord(ów) w tabeli "test-num"`
         );
       }
 
@@ -68,32 +73,112 @@ export function DbTest() {
   const testWithRPC = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setDebugInfo("Próba z użyciem RPC (surowe SQL)...");
+    setDebugInfo(
+      "Funkcja RPC nie jest dostępna. Używam standardowego zapytania..."
+    );
+    setLoading(false);
+    await fetchData();
+  }, [fetchData]);
+
+  const addRecord = useCallback(async () => {
+    setError(null);
+    setDebugInfo(`Dodawanie rekordu: num=${newNum}, letter=${newLetter}`);
 
     try {
-      // Spróbuj użyć RPC do wykonania surowego zapytania SQL
-      // To może ominąć niektóre ograniczenia RLS (ale tylko jeśli masz funkcję)
-      const { data, error } = await supabase.rpc("exec_sql", {
-        query: 'SELECT id, created_at, num FROM "test-num" LIMIT 10',
-      });
+      const { data: newRecord, error: insertError } = await supabase
+        .from("test-num")
+        .insert({ num: newNum, letter: newLetter })
+        .select()
+        .single();
 
-      if (error) {
-        // RPC może nie być dostępne, to normalne
-        setDebugInfo(
-          `RPC nie dostępne (to normalne): ${error.message}. Użyj standardowego zapytania.`
-        );
-        setLoading(false);
+      if (insertError) {
+        setError(`Błąd dodawania: ${insertError.message}`);
+        setDebugInfo(`❌ Błąd: ${insertError.message}`);
         return;
       }
 
-      setData((data as TestNumRecord[]) || []);
-      setDebugInfo(`✅ RPC działa! Znaleziono ${data?.length || 0} rekordów`);
-      setLoading(false);
+      setDebugInfo(`✅ Dodano rekord ID: ${newRecord?.id}`);
+      setNewNum((prev) => prev + 1);
+      const currentCodePoint = newLetter.codePointAt(0) ?? 65;
+      const nextCharCode = currentCodePoint + 1;
+      setNewLetter(String.fromCodePoint(nextCharCode > 90 ? 65 : nextCharCode));
+      await fetchData();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Nieznany błąd";
-      setDebugInfo(`RPC nie dostępne: ${errorMessage}`);
-      setLoading(false);
+      setError(`Błąd: ${errorMessage}`);
+      setDebugInfo(`❌ Błąd: ${errorMessage}`);
     }
+  }, [newNum, newLetter, fetchData]);
+
+  const updateRecord = useCallback(
+    async (id: number) => {
+      setError(null);
+      setDebugInfo(`Aktualizowanie rekordu ID: ${id}`);
+
+      try {
+        const { error: updateError } = await supabase
+          .from("test-num")
+          .update({ num: editNum, letter: editLetter })
+          .eq("id", id);
+
+        if (updateError) {
+          setError(`Błąd aktualizacji: ${updateError.message}`);
+          setDebugInfo(`❌ Błąd: ${updateError.message}`);
+          return;
+        }
+
+        setDebugInfo(`✅ Zaktualizowano rekord ID: ${id}`);
+        setEditingId(null);
+        await fetchData();
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Nieznany błąd";
+        setError(`Błąd: ${errorMessage}`);
+        setDebugInfo(`❌ Błąd: ${errorMessage}`);
+      }
+    },
+    [editNum, editLetter, fetchData]
+  );
+
+  const deleteRecord = useCallback(
+    async (id: number) => {
+      setError(null);
+      setDebugInfo(`Usuwanie rekordu ID: ${id}`);
+
+      try {
+        const { error: deleteError } = await supabase
+          .from("test-num")
+          .delete()
+          .eq("id", id);
+
+        if (deleteError) {
+          setError(`Błąd usuwania: ${deleteError.message}`);
+          setDebugInfo(`❌ Błąd: ${deleteError.message}`);
+          return;
+        }
+
+        setDebugInfo(`✅ Usunięto rekord ID: ${id}`);
+        await fetchData();
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Nieznany błąd";
+        setError(`Błąd: ${errorMessage}`);
+        setDebugInfo(`❌ Błąd: ${errorMessage}`);
+      }
+    },
+    [fetchData]
+  );
+
+  const startEdit = useCallback((record: TestNumRecord) => {
+    setEditingId(record.id);
+    setEditNum(record.num);
+    setEditLetter(record.letter);
+  }, []);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditNum(0);
+    setEditLetter("");
   }, []);
 
   useEffect(() => {
@@ -114,7 +199,8 @@ export function DbTest() {
           .select("id, created_at, num, letter", {
             count: "exact",
             head: false,
-          });
+          })
+          .order("id", { ascending: true });
 
         if (cancelled) return;
 
@@ -153,8 +239,32 @@ export function DbTest() {
 
     void loadData();
 
+    // Subskrypcja real-time
+    const channel = supabase
+      .channel("test-num-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "test-num",
+        },
+        (payload) => {
+          const recordId =
+            (payload.new as TestNumRecord | null)?.id ||
+            (payload.old as TestNumRecord | null)?.id ||
+            "nieznany";
+          setDebugInfo(
+            `🔄 Real-time update: ${payload.eventType} na rekord ID: ${recordId}`
+          );
+          void loadData();
+        }
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
+      void supabase.removeChannel(channel);
     };
   }, []);
 
@@ -189,10 +299,10 @@ export function DbTest() {
 
       <div className="mb-4 flex flex-wrap gap-2">
         <button
-          onClick={() => fetchData("test-num")}
+          onClick={() => fetchData()}
           className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
         >
-          Odśwież (test-num)
+          Odśwież
         </button>
         <button
           onClick={testWithRPC}
@@ -200,6 +310,44 @@ export function DbTest() {
         >
           Test RPC
         </button>
+      </div>
+
+      {/* Formularz dodawania */}
+      <div className="mb-4 p-3 bg-white border rounded-md">
+        <h3 className="text-sm font-semibold mb-2">Dodaj nowy rekord:</h3>
+        <div className="flex gap-2 items-end">
+          <div>
+            <label htmlFor="new-num" className="text-xs text-gray-600">
+              Num:
+            </label>
+            <input
+              id="new-num"
+              type="number"
+              value={newNum}
+              onChange={(e) => setNewNum(Number(e.target.value))}
+              className="w-20 px-2 py-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="new-letter" className="text-xs text-gray-600">
+              Letter:
+            </label>
+            <input
+              id="new-letter"
+              type="text"
+              value={newLetter}
+              onChange={(e) => setNewLetter(e.target.value.toUpperCase())}
+              maxLength={1}
+              className="w-20 px-2 py-1 border rounded text-sm"
+            />
+          </div>
+          <button
+            onClick={addRecord}
+            className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+          >
+            Dodaj
+          </button>
+        </div>
       </div>
 
       <p className="text-sm text-gray-600 mb-4">
@@ -211,26 +359,92 @@ export function DbTest() {
             key={record.id}
             className="p-3 bg-white border rounded-md shadow-sm"
           >
-            <div className="grid grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="font-semibold text-gray-700">ID:</span>{" "}
-                <span className="text-gray-900">{record.id}</span>
+            {editingId === record.id ? (
+              <div className="space-y-2">
+                <div className="flex gap-2 items-center">
+                  <div>
+                    <label
+                      htmlFor={`edit-num-${record.id}`}
+                      className="text-xs text-gray-600"
+                    >
+                      Num:
+                    </label>
+                    <input
+                      id={`edit-num-${record.id}`}
+                      type="number"
+                      value={editNum}
+                      onChange={(e) => setEditNum(Number(e.target.value))}
+                      className="w-20 px-2 py-1 border rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor={`edit-letter-${record.id}`}
+                      className="text-xs text-gray-600"
+                    >
+                      Letter:
+                    </label>
+                    <input
+                      id={`edit-letter-${record.id}`}
+                      type="text"
+                      value={editLetter}
+                      onChange={(e) =>
+                        setEditLetter(e.target.value.toUpperCase())
+                      }
+                      maxLength={1}
+                      className="w-20 px-2 py-1 border rounded text-sm"
+                    />
+                  </div>
+                  <button
+                    onClick={() => updateRecord(record.id)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                  >
+                    Zapisz
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                  >
+                    Anuluj
+                  </button>
+                </div>
               </div>
-              <div>
-                <span className="font-semibold text-gray-700">Num:</span>{" "}
-                <span className="text-gray-900">{record.num}</span>
+            ) : (
+              <div className="grid grid-cols-4 gap-4 text-sm items-center">
+                <div>
+                  <span className="font-semibold text-gray-700">ID:</span>{" "}
+                  <span className="text-gray-900">{record.id}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700">Num:</span>{" "}
+                  <span className="text-gray-900">{record.num}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700">Created:</span>{" "}
+                  <span className="text-gray-900">
+                    {new Date(record.created_at).toLocaleString("pl-PL")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div>
+                    <span className="font-semibold text-gray-700">Letter:</span>{" "}
+                    <span className="text-gray-900">{record.letter}</span>
+                  </div>
+                  <button
+                    onClick={() => startEdit(record)}
+                    className="px-2 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600"
+                  >
+                    Edytuj
+                  </button>
+                  <button
+                    onClick={() => deleteRecord(record.id)}
+                    className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+                  >
+                    Usuń
+                  </button>
+                </div>
               </div>
-              <div>
-                <span className="font-semibold text-gray-700">Created:</span>{" "}
-                <span className="text-gray-900">
-                  {new Date(record.created_at).toLocaleString("pl-PL")}
-                </span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Letter:</span>{" "}
-                <span className="text-gray-900">{record.letter}</span>
-              </div>
-            </div>
+            )}
           </div>
         ))}
       </div>
