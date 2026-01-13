@@ -9,22 +9,21 @@ import { AddExerciseButton } from "@/components/exercises/add-exercise-button";
 
 export default async function ExercisesPage({
   searchParams,
-}: {
+}: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+}>) {
   const params = await searchParams;
 
   // Walidacja i parsowanie query params
-  let parsedQuery: ExerciseQueryParams;
-  try {
-    parsedQuery = exerciseQuerySchema.parse({
-      ...params,
-      limit: params.limit ? Number(params.limit) : undefined,
-    });
-  } catch (error) {
-    // Fallback do domyślnych wartości przy błędzie walidacji
-    parsedQuery = exerciseQuerySchema.parse({});
-  }
+  const parseResult = exerciseQuerySchema.safeParse({
+    ...params,
+    limit: params.limit ? Number(params.limit) : undefined,
+  });
+
+  // Fallback do domyślnych wartości przy błędzie walidacji
+  const parsedQuery: ExerciseQueryParams = parseResult.success
+    ? parseResult.data
+    : exerciseQuerySchema.parse({});
 
   // Pobranie user ID
   const userId = await getUserId();

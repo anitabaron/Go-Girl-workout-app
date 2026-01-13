@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { DbTest } from "../components/db-test";
 
 export default function Home() {
   return (
