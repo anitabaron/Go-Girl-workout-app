@@ -13,9 +13,9 @@ import {
 
 export function EmptyState() {
   return (
-    <Card className="mx-auto max-w-md rounded-2xl border border-black/5 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-950">
+    <Card className="mx-auto max-w-md rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950">
       <CardHeader className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
           <Dumbbell className="h-8 w-8 text-destructive" aria-hidden="true" />
         </div>
         <CardTitle className="text-2xl font-extrabold text-destructive">

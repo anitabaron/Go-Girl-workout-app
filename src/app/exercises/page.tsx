@@ -50,14 +50,14 @@ export default async function ExercisesPage({
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
-        <section className="mb-6 rounded-2xl border border-black/5 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-950">
+        <section className="mb-6 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <ExerciseFilters />
             <ExerciseSort />
           </div>
         </section>
 
-        <section className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-950">
+        <section className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
           <ExercisesList
             exercises={result.items}
             nextCursor={result.nextCursor}

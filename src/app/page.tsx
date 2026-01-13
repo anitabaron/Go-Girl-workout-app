@@ -25,25 +25,25 @@ export default function Home() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
-        <section className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-950">
+        <section className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
           <h2 className="text-xl font-bold tracking-tight">Planned features</h2>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             Here’s what’s coming next.
           </p>
           <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-            <li className="rounded-xl bg-secondary/70 p-4 text-sm dark:bg-white/5">
+            <li className="rounded-xl bg-secondary/70 p-4 text-sm dark:bg-card">
               <span className="font-semibold">Workout timer</span> with audio
               cues and intervals.
             </li>
-            <li className="rounded-xl bg-secondary/70 p-4 text-sm dark:bg-white/5">
+            <li className="rounded-xl bg-secondary/70 p-4 text-sm dark:bg-card">
               <span className="font-semibold">Plans & programs</span> tailored
               to goals and fitness level.
             </li>
-            <li className="rounded-xl bg-secondary/70 p-4 text-sm dark:bg-white/5">
+            <li className="rounded-xl bg-secondary/70 p-4 text-sm dark:bg-card">
               <span className="font-semibold">Progress tracking</span> for
               workouts, streaks, and PRs.
             </li>
-            <li className="rounded-xl bg-secondary/70 p-4 text-sm dark:bg-white/5">
+            <li className="rounded-xl bg-secondary/70 p-4 text-sm dark:bg-card">
               <span className="font-semibold">Favorites</span> and quick-start
               routines.
             </li>
