@@ -81,6 +81,136 @@ export const sessionStatusUpdateSchema = z
   .strict();
 
 /**
+ * Schema dla pojedynczej serii ćwiczenia w autosave.
+ */
+const sessionExerciseSetSchema = z
+  .object({
+    set_number: z.number().int().positive("set_number musi być liczbą całkowitą większą od 0"),
+    reps: z.number().int().nonnegative("reps musi być >= 0").nullable().optional(),
+    duration_seconds: z
+      .number()
+      .int()
+      .nonnegative("duration_seconds musi być >= 0")
+      .nullable()
+      .optional(),
+    weight_kg: z
+      .number()
+      .nonnegative("weight_kg musi być >= 0")
+      .nullable()
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      data.reps !== null ||
+      data.duration_seconds !== null ||
+      data.weight_kg !== null,
+    {
+      message:
+        "Każda seria musi mieć co najmniej jedną metrykę (reps, duration_seconds, lub weight_kg)",
+    }
+  );
+
+/**
+ * Schema dla autosave ćwiczenia w sesji treningowej (PATCH /api/workout-sessions/{id}/exercises/{order}).
+ */
+export const sessionExerciseAutosaveSchema = z
+  .object({
+    // Parametry faktyczne (opcjonalne)
+    // actual_count_sets - liczba wykonanych serii (można pominąć, zostanie obliczona z sets.length)
+    actual_count_sets: z
+      .number()
+      .int()
+      .nonnegative("actual_count_sets musi być >= 0")
+      .nullable()
+      .optional(),
+    // actual_sum_reps - suma reps ze wszystkich serii (można pominąć, zostanie obliczona automatycznie)
+    actual_sum_reps: z
+      .number()
+      .int()
+      .nonnegative("actual_sum_reps musi być >= 0")
+      .nullable()
+      .optional(),
+    actual_duration_seconds: z
+      .number()
+      .int()
+      .nonnegative("actual_duration_seconds musi być >= 0")
+      .nullable()
+      .optional(),
+
+    // Parametry planowane (opcjonalne)
+    planned_sets: z
+      .number()
+      .int()
+      .positive("planned_sets musi być > 0")
+      .nullable()
+      .optional(),
+    planned_reps: z
+      .number()
+      .int()
+      .positive("planned_reps musi być > 0")
+      .nullable()
+      .optional(),
+    planned_duration_seconds: z
+      .number()
+      .int()
+      .positive("planned_duration_seconds musi być > 0")
+      .nullable()
+      .optional(),
+    planned_rest_seconds: z
+      .number()
+      .int()
+      .nonnegative("planned_rest_seconds musi być >= 0")
+      .nullable()
+      .optional(),
+
+    // Flaga pominięcia (opcjonalne)
+    is_skipped: z.boolean().optional(),
+
+    // Serie ćwiczenia (opcjonalne, zastępuje wszystkie istniejące serie)
+    sets: z.array(sessionExerciseSetSchema).optional(),
+
+    // Flaga przesunięcia kursora do następnego ćwiczenia (opcjonalne)
+    advance_cursor_to_next: z.boolean().optional(),
+  })
+  .strict()
+  .refine(
+    (data) => {
+      // Jeśli is_skipped = true, dozwolone są puste serie
+      if (data.is_skipped === true) {
+        return true;
+      }
+      // Jeśli is_skipped = false lub nie podano, a podano serie, każda musi mieć metryki
+      if (data.sets && data.sets.length > 0) {
+        return data.sets.every(
+          (set) =>
+            set.reps !== null ||
+            set.duration_seconds !== null ||
+            set.weight_kg !== null
+        );
+      }
+      return true;
+    },
+    {
+      message:
+        "Jeśli is_skipped = false, każda seria musi mieć co najmniej jedną metrykę",
+    }
+  )
+  .refine(
+    (data) => {
+      // Sprawdź unikalność set_number w tablicy sets
+      if (data.sets && data.sets.length > 0) {
+        const setNumbers = data.sets.map((set) => set.set_number);
+        const uniqueSetNumbers = new Set(setNumbers);
+        return uniqueSetNumbers.size === setNumbers.length;
+      }
+      return true;
+    },
+    {
+      message: "set_number musi być unikalne w tablicy sets",
+    }
+  );
+
+/**
  * Enkoduje kursor paginacji do base64url string.
  */
 export function encodeCursor(cursor: {

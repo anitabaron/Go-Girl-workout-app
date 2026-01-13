@@ -150,8 +150,11 @@ export type SessionExerciseSetDTO = Omit<
 
 export type SessionExerciseDTO = Omit<
   WorkoutSessionExerciseEntity,
-  "session_id" | "created_at" | "updated_at"
+  "session_id" | "created_at" | "updated_at" | "actual_sets" | "actual_reps"
 > & {
+  // Mapowanie nazw z bazy danych na nazwy API
+  actual_count_sets: number | null; // Liczba wykonanych serii
+  actual_sum_reps: number | null; // Suma reps ze wszystkich serii
   sets: SessionExerciseSetDTO[];
 };
 
@@ -164,22 +167,29 @@ export type SessionExerciseSetCommand = Pick<
   "set_number" | "reps" | "duration_seconds" | "weight_kg"
 >;
 
-export type SessionExerciseAutosaveCommand = Partial<
-  Pick<
-    TablesUpdate<"workout_session_exercises">,
-    | "actual_duration_seconds"
-    | "actual_reps"
-    | "actual_rest_seconds"
-    | "actual_sets"
-    | "planned_duration_seconds"
-    | "planned_reps"
-    | "planned_rest_seconds"
-    | "planned_sets"
-    | "is_skipped"
-  >
-> & {
+export type SessionExerciseAutosaveCommand = {
+  // Agregaty na poziomie ćwiczenia (opcjonalne, obliczane automatycznie z serii)
+  actual_count_sets?: number | null; // Liczba wykonanych serii
+  actual_sum_reps?: number | null; // Suma reps ze wszystkich serii
+  actual_duration_seconds?: number | null; // Maksymalny czas z pojedynczej serii
+  // Parametry planowane (opcjonalne)
+  planned_sets?: number | null;
+  planned_reps?: number | null;
+  planned_duration_seconds?: number | null;
+  planned_rest_seconds?: number | null;
+  // Flaga pominięcia
+  is_skipped?: boolean;
+  // Serie ćwiczenia
   sets?: SessionExerciseSetCommand[];
+  // Flaga przesunięcia kursora
   advance_cursor_to_next?: boolean;
+};
+
+export type SessionExerciseAutosaveResponse = SessionExerciseDTO & {
+  cursor: {
+    current_position: number;
+    last_action_at: string;
+  };
 };
 
 /**

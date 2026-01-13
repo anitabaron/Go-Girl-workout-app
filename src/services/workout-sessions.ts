@@ -4,6 +4,7 @@ import { createClient } from "@/db/supabase.server";
 import type { Database } from "@/db/database.types";
 import type {
   SessionDetailDTO,
+  SessionExerciseAutosaveResponse,
   SessionListQueryParams,
   SessionSummaryDTO,
 } from "@/types";
@@ -11,6 +12,7 @@ import {
   sessionStartSchema,
   sessionListQuerySchema,
   sessionStatusUpdateSchema,
+  sessionExerciseAutosaveSchema,
 } from "@/lib/validation/workout-sessions";
 import {
   findInProgressSession,
@@ -23,6 +25,12 @@ import {
   findWorkoutSessionSets,
   mapToDetailDTO,
   findExercisesByIdsForSnapshots,
+  findWorkoutSessionExerciseByOrder,
+  updateWorkoutSessionExercise,
+  updateWorkoutSessionCursor,
+  findNextExerciseOrder,
+  callSaveWorkoutSessionExercise,
+  mapExerciseToDTO,
 } from "@/repositories/workout-sessions";
 import {
   findWorkoutPlanById,
@@ -516,4 +524,402 @@ function assertUser(userId: string) {
   if (!userId) {
     throw new ServiceError("UNAUTHORIZED", "Brak aktywnej sesji.");
   }
+}
+
+/**
+ * Waliduje path parameters dla autosave.
+ */
+function validateAutosavePathParams(sessionId: string, order: number) {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (!uuidRegex.test(sessionId)) {
+    throw new ServiceError("BAD_REQUEST", "id musi być prawidłowym UUID");
+  }
+
+  if (!Number.isInteger(order) || order <= 0) {
+    throw new ServiceError(
+      "BAD_REQUEST",
+      "order musi być liczbą całkowitą większą od 0"
+    );
+  }
+}
+
+/**
+ * Sprawdza istnienie sesji i waliduje jej status.
+ */
+async function validateSessionForAutosave(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  sessionId: string
+) {
+  const { data: session, error: sessionError } = await findWorkoutSessionById(
+    supabase,
+    userId,
+    sessionId
+  );
+
+  if (sessionError) {
+    throw mapDbError(sessionError);
+  }
+
+  if (!session) {
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Sesja treningowa nie została znaleziona."
+    );
+  }
+
+  if (session.status !== "in_progress") {
+    throw new ServiceError(
+      "CONFLICT",
+      "Sesja treningowa nie jest w statusie 'in_progress'."
+    );
+  }
+
+  return session;
+}
+
+/**
+ * Sprawdza istnienie ćwiczenia w sesji.
+ */
+async function validateExerciseForAutosave(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  sessionId: string,
+  order: number
+) {
+  const { data: exercise, error: exerciseError } =
+    await findWorkoutSessionExerciseByOrder(supabase, sessionId, order);
+
+  if (exerciseError) {
+    throw mapDbError(exerciseError);
+  }
+
+  if (!exercise) {
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Ćwiczenie o podanej kolejności nie zostało znalezione w sesji."
+    );
+  }
+
+  return exercise;
+}
+
+/**
+ * Mapuje błędy funkcji DB na ServiceError.
+ */
+function mapSaveFunctionError(error: { message?: string }): ServiceError {
+  if (
+    error.message?.includes("Session not found") ||
+    error.message?.includes("not found")
+  ) {
+    return new ServiceError(
+      "NOT_FOUND",
+      "Sesja treningowa nie została znaleziona."
+    );
+  }
+
+  if (
+    error.message?.includes("Access denied") ||
+    error.message?.includes("access denied")
+  ) {
+    return new ServiceError(
+      "FORBIDDEN",
+      "Brak dostępu do tej sesji treningowej."
+    );
+  }
+
+  return new ServiceError(
+    "INTERNAL",
+    "Wystąpił błąd podczas zapisywania ćwiczenia.",
+    error.message
+  );
+}
+
+/**
+ * Przygotowuje dane planned_* do aktualizacji.
+ */
+function preparePlannedUpdates(parsed: {
+  planned_sets?: number | null;
+  planned_reps?: number | null;
+  planned_duration_seconds?: number | null;
+  planned_rest_seconds?: number | null;
+}): {
+  planned_sets?: number | null;
+  planned_reps?: number | null;
+  planned_duration_seconds?: number | null;
+  planned_rest_seconds?: number | null;
+} | null {
+  if (
+    parsed.planned_sets === undefined &&
+    parsed.planned_reps === undefined &&
+    parsed.planned_duration_seconds === undefined &&
+    parsed.planned_rest_seconds === undefined
+  ) {
+    return null;
+  }
+
+  const updates: {
+    planned_sets?: number | null;
+    planned_reps?: number | null;
+    planned_duration_seconds?: number | null;
+    planned_rest_seconds?: number | null;
+  } = {};
+
+  if (parsed.planned_sets !== undefined) {
+    updates.planned_sets = parsed.planned_sets;
+  }
+  if (parsed.planned_reps !== undefined) {
+    updates.planned_reps = parsed.planned_reps;
+  }
+  if (parsed.planned_duration_seconds !== undefined) {
+    updates.planned_duration_seconds = parsed.planned_duration_seconds;
+  }
+  if (parsed.planned_rest_seconds !== undefined) {
+    updates.planned_rest_seconds = parsed.planned_rest_seconds;
+  }
+
+  return updates;
+}
+
+/**
+ * Aktualizuje kursor sesji, jeśli advance_cursor_to_next = true.
+ */
+async function updateCursorIfNeeded(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  sessionId: string,
+  order: number,
+  advanceCursor: boolean
+): Promise<void> {
+  if (!advanceCursor) {
+    return;
+  }
+
+  const { data: nextOrder, error: nextOrderError } =
+    await findNextExerciseOrder(supabase, sessionId, order);
+
+  if (nextOrderError) {
+    throw mapDbError(nextOrderError);
+  }
+
+  // Jeśli istnieje następne ćwiczenie, przesuń kursor
+  if (nextOrder !== null) {
+    const { error: cursorError } = await updateWorkoutSessionCursor(
+      supabase,
+      sessionId,
+      nextOrder
+    );
+
+    if (cursorError) {
+      throw mapDbError(cursorError);
+    }
+  }
+  // Jeśli nie ma następnego ćwiczenia, kursor pozostaje na aktualnym (order)
+}
+
+/**
+ * Pobiera zaktualizowane ćwiczenie z seriami i kursorem sesji.
+ */
+async function fetchUpdatedExerciseWithCursor(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  sessionId: string,
+  sessionExerciseId: string,
+  order: number
+): Promise<SessionExerciseAutosaveResponse> {
+  const { data: updatedExercise, error: fetchExerciseError } =
+    await findWorkoutSessionExerciseByOrder(supabase, sessionId, order);
+
+  if (fetchExerciseError) {
+    throw mapDbError(fetchExerciseError);
+  }
+
+  if (!updatedExercise) {
+    throw new ServiceError(
+      "INTERNAL",
+      "Nie udało się pobrać zaktualizowanego ćwiczenia."
+    );
+  }
+
+  const { data: sets, error: setsError } = await findWorkoutSessionSets(
+    supabase,
+    [sessionExerciseId]
+  );
+
+  if (setsError) {
+    throw mapDbError(setsError);
+  }
+
+  const { data: updatedSession, error: sessionFetchError } =
+    await findWorkoutSessionById(supabase, userId, sessionId);
+
+  if (sessionFetchError) {
+    throw mapDbError(sessionFetchError);
+  }
+
+  if (!updatedSession) {
+    throw new ServiceError(
+      "INTERNAL",
+      "Nie udało się pobrać zaktualizowanej sesji."
+    );
+  }
+
+  const exerciseDTO = mapExerciseToDTO(updatedExercise, sets?.data ?? []);
+
+  return {
+    ...exerciseDTO,
+    cursor: {
+      current_position: updatedSession.current_position ?? order,
+      last_action_at: updatedSession.last_action_at,
+    },
+  };
+}
+
+/**
+ * Oblicza agregaty z serii, jeśli nie zostały podane ręcznie.
+ * Opcja A: Automatyczne obliczanie z fallbackiem na wartości ręczne.
+ * Mapuje nazwy API (actual_count_sets, actual_sum_reps) na nazwy bazy danych (actual_sets, actual_reps).
+ */
+function calculateAggregatesFromSets(
+  parsed: {
+    actual_count_sets?: number | null;
+    actual_sum_reps?: number | null;
+    actual_duration_seconds?: number | null;
+    sets?: Array<{
+      reps?: number | null;
+      duration_seconds?: number | null;
+      weight_kg?: number | null;
+    }> | null;
+  }
+): {
+  actual_sets: number | null; // Dla bazy danych
+  actual_reps: number | null; // Dla bazy danych
+  actual_duration_seconds: number | null;
+} {
+  // actual_count_sets (API) → actual_sets (DB): jeśli nie podano, oblicz z sets.length
+  let actualSets: number | null = null;
+  if (parsed.actual_count_sets !== undefined) {
+    actualSets = parsed.actual_count_sets;
+  } else if (parsed.sets && parsed.sets.length > 0) {
+    actualSets = parsed.sets.length;
+  }
+
+  // actual_sum_reps (API) → actual_reps (DB): jeśli nie podano, oblicz sumę reps z serii
+  let actualReps: number | null = null;
+  if (parsed.actual_sum_reps !== undefined) {
+    actualReps = parsed.actual_sum_reps;
+  } else if (parsed.sets && parsed.sets.length > 0) {
+    const sum = parsed.sets.reduce((acc, set) => {
+      return acc + (set.reps ?? 0);
+    }, 0);
+    // Zwróć sumę tylko jeśli > 0 (null oznacza brak danych)
+    actualReps = sum > 0 ? sum : null;
+  }
+
+  // actual_duration_seconds: jeśli nie podano, oblicz max duration_seconds z serii
+  let actualDurationSeconds: number | null = null;
+  if (parsed.actual_duration_seconds !== undefined) {
+    actualDurationSeconds = parsed.actual_duration_seconds;
+  } else if (parsed.sets && parsed.sets.length > 0) {
+    const durations = parsed.sets
+      .map((set) => set.duration_seconds)
+      .filter((d): d is number => d !== null && d !== undefined);
+    if (durations.length > 0) {
+      actualDurationSeconds = Math.max(...durations);
+    }
+  }
+
+  return {
+    actual_sets: actualSets, // Mapowanie na nazwę bazy danych
+    actual_reps: actualReps, // Mapowanie na nazwę bazy danych
+    actual_duration_seconds: actualDurationSeconds,
+  };
+}
+
+/**
+ * Autosave ćwiczenia w sesji treningowej.
+ * Aktualizuje parametry faktyczne ćwiczenia, serie, planned_* (opcjonalnie) i kursor sesji.
+ */
+export async function autosaveWorkoutSessionExerciseService(
+  userId: string,
+  sessionId: string,
+  order: number,
+  payload: unknown
+): Promise<SessionExerciseAutosaveResponse> {
+  assertUser(userId);
+  validateAutosavePathParams(sessionId, order);
+
+  const parsed = parseOrThrow(sessionExerciseAutosaveSchema, payload);
+  const supabase = await createClient();
+
+  await validateSessionForAutosave(supabase, userId, sessionId);
+  const exercise = await validateExerciseForAutosave(
+    supabase,
+    sessionId,
+    order
+  );
+
+  // Oblicz agregaty z serii, jeśli nie zostały podane ręcznie (Opcja A)
+  const aggregates = calculateAggregatesFromSets(parsed);
+
+  const setsDataForDb =
+    parsed.sets && parsed.sets.length > 0
+      ? parsed.sets.map((set) => ({
+          reps: set.reps ?? null,
+          duration_seconds: set.duration_seconds ?? null,
+          weight_kg: set.weight_kg ?? null,
+        }))
+      : null;
+
+  const { data: sessionExerciseId, error: saveError } =
+    await callSaveWorkoutSessionExercise(supabase, {
+      p_session_id: sessionId,
+      p_exercise_id: exercise.exercise_id,
+      p_order: order,
+      p_actual_sets: aggregates.actual_sets,
+      p_actual_reps: aggregates.actual_reps,
+      p_actual_duration_seconds: aggregates.actual_duration_seconds,
+      p_actual_rest_seconds: null,
+      p_is_skipped: parsed.is_skipped ?? false,
+      p_sets_data: setsDataForDb,
+    });
+
+  if (saveError) {
+    throw mapSaveFunctionError(saveError);
+  }
+
+  if (!sessionExerciseId) {
+    throw new ServiceError(
+      "INTERNAL",
+      "Nie udało się zapisać ćwiczenia w sesji."
+    );
+  }
+
+  const plannedUpdates = preparePlannedUpdates(parsed);
+  if (plannedUpdates) {
+    const { error: updateError } = await updateWorkoutSessionExercise(
+      supabase,
+      sessionExerciseId,
+      plannedUpdates
+    );
+
+    if (updateError) {
+      throw mapDbError(updateError);
+    }
+  }
+
+  await updateCursorIfNeeded(
+    supabase,
+    sessionId,
+    order,
+    parsed.advance_cursor_to_next === true
+  );
+
+  return await fetchUpdatedExerciseWithCursor(
+    supabase,
+    userId,
+    sessionId,
+    sessionExerciseId,
+    order
+  );
 }

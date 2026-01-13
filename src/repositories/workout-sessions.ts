@@ -371,7 +371,7 @@ export function mapToDetailDTO(
 
   const exerciseDTOs: SessionExerciseDTO[] = exercises.map((exercise) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { session_id, created_at, updated_at, ...exerciseRest } = exercise;
+    const { session_id, created_at, updated_at, actual_sets, actual_reps, ...exerciseRest } = exercise;
 
     const setDTOs: SessionExerciseSetDTO[] = (
       setsByExerciseId.get(exercise.id) ?? []
@@ -383,6 +383,9 @@ export function mapToDetailDTO(
 
     return {
       ...exerciseRest,
+      // Mapowanie nazw z bazy danych na nazwy API
+      actual_count_sets: actual_sets,
+      actual_sum_reps: actual_reps,
       sets: setDTOs,
     };
   });
@@ -390,6 +393,35 @@ export function mapToDetailDTO(
   return {
     ...sessionSummary,
     exercises: exerciseDTOs,
+  };
+}
+
+/**
+ * Mapuje pojedyncze ćwiczenie sesji z seriami na SessionExerciseDTO.
+ * Mapuje nazwy z bazy danych (actual_sets, actual_reps) na nazwy API (actual_count_sets, actual_sum_reps).
+ */
+export function mapExerciseToDTO(
+  exercise: WorkoutSessionExerciseRow,
+  sets: WorkoutSessionSetRow[]
+): SessionExerciseDTO {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { session_id, created_at, updated_at, actual_sets, actual_reps, ...exerciseRest } = exercise;
+
+  const setDTOs: SessionExerciseSetDTO[] = sets
+    .filter((set) => set.session_exercise_id === exercise.id)
+    .map((set) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { session_exercise_id, created_at, updated_at, ...setRest } = set;
+      return setRest;
+    })
+    .sort((a, b) => a.set_number - b.set_number);
+
+  return {
+    ...exerciseRest,
+    // Mapowanie nazw z bazy danych na nazwy API
+    actual_count_sets: actual_sets,
+    actual_sum_reps: actual_reps,
+    sets: setDTOs,
   };
 }
 
@@ -410,4 +442,151 @@ function applyCursorFilter(
   return query.or(
     `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`
   );
+}
+
+/**
+ * Znajduje ćwiczenie sesji treningowej po session_id i order.
+ */
+export async function findWorkoutSessionExerciseByOrder(
+  client: DbClient,
+  sessionId: string,
+  order: number
+) {
+  const { data, error } = await client
+    .from("workout_session_exercises")
+    .select("*")
+    .eq("session_id", sessionId)
+    .eq("order", order)
+    .maybeSingle();
+
+  return { data, error };
+}
+
+/**
+ * Aktualizuje planned_* w workout_session_exercises.
+ */
+export async function updateWorkoutSessionExercise(
+  client: DbClient,
+  sessionExerciseId: string,
+  updates: {
+    planned_sets?: number | null;
+    planned_reps?: number | null;
+    planned_duration_seconds?: number | null;
+    planned_rest_seconds?: number | null;
+  }
+) {
+  const { data, error } = await client
+    .from("workout_session_exercises")
+    .update(updates)
+    .eq("id", sessionExerciseId)
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+/**
+ * Aktualizuje current_position w workout_sessions.
+ */
+export async function updateWorkoutSessionCursor(
+  client: DbClient,
+  sessionId: string,
+  currentPosition: number
+) {
+  const { data, error } = await client
+    .from("workout_sessions")
+    .update({
+      current_position: currentPosition,
+      last_action_at: new Date().toISOString(),
+    })
+    .eq("id", sessionId)
+    .select(sessionSelectColumns)
+    .single();
+
+  return {
+    data: data ? mapToSummaryDTO(data as WorkoutSessionRow) : null,
+    error,
+  };
+}
+
+/**
+ * Sprawdza, czy istnieje następne ćwiczenie (order + 1) w sesji.
+ * Zwraca order następnego ćwiczenia lub null, jeśli nie istnieje.
+ */
+export async function findNextExerciseOrder(
+  client: DbClient,
+  sessionId: string,
+  currentOrder: number
+) {
+  const { data, error } = await client
+    .from("workout_session_exercises")
+    .select("order")
+    .eq("session_id", sessionId)
+    .eq("order", currentOrder + 1)
+    .maybeSingle();
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  return {
+    data: data ? data.order : null,
+    error: null,
+  };
+}
+
+/**
+ * Wywołuje funkcję DB save_workout_session_exercise przez Supabase RPC.
+ * Mapuje sets na format JSONB dla funkcji DB.
+ * Zwraca session_exercise_id (UUID jako string).
+ */
+export async function callSaveWorkoutSessionExercise(
+  client: DbClient,
+  params: {
+    p_session_id: string;
+    p_exercise_id: string;
+    p_order: number;
+    p_actual_sets?: number | null;
+    p_actual_reps?: number | null;
+    p_actual_duration_seconds?: number | null;
+    p_actual_rest_seconds?: number | null;
+    p_is_skipped?: boolean;
+    p_sets_data?: Array<{
+      reps?: number | null;
+      duration_seconds?: number | null;
+      weight_kg?: number | null;
+    }> | null;
+  }
+) {
+  // Mapuj sets na format JSONB (bez set_number, bo funkcja DB nie potrzebuje)
+  const setsDataJson =
+    params.p_sets_data && params.p_sets_data.length > 0
+      ? params.p_sets_data.map((set) => ({
+          reps: set.reps ?? null,
+          duration_seconds: set.duration_seconds ?? null,
+          weight_kg: set.weight_kg ?? null,
+        }))
+      : null;
+
+  const { data, error } = await client.rpc("save_workout_session_exercise", {
+    p_session_id: params.p_session_id,
+    p_exercise_id: params.p_exercise_id,
+    p_order: params.p_order,
+    p_actual_sets: params.p_actual_sets ?? null,
+    p_actual_reps: params.p_actual_reps ?? null,
+    p_actual_duration_seconds: params.p_actual_duration_seconds ?? null,
+    p_actual_rest_seconds: params.p_actual_rest_seconds ?? null,
+    p_is_skipped: params.p_is_skipped ?? false,
+    p_sets_data: setsDataJson,
+  });
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  // Funkcja DB zwraca session_exercise_id jako string (UUID)
+  return {
+    data: data ? String(data) : null,
+    error: null,
+  };
 }
