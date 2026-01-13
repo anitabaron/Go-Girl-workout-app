@@ -1,0 +1,29 @@
+---
+alwaysApply: false
+---
+
+Neutral colors
+The neutral palette consists of the black, white, and grays that ground an interface. These colors are used on surfaces, text, and layout elements. When used in components, they often connote a change in state.
+
+Brand colors
+The pink/red brand colors make the design unique and define the app.
+
+Visual hierarchy using neutrals and brand colors
+Use lighter on surfaces to highlight areas of primary focus and create a sense of hierarchy. This ensures a person’s eye is drawn to the areas of an interface that need the most attention or that will be most useful to them.
+
+Dark Mode
+In dark mode, the colors of the sproject palette shift in saturation and brightness to reduce eye strain and accommodate visual accessibility needs.
+
+Semantic Colors
+Select colors in the shared palette are specifically used to communicate feedback, status, or urgency. These are known as semantic colors and they should always convey important information.
+
+Depth, shadow, and light
+Three dimensional space by placing components at different elevations along the z-axis to increase the visual prominence of certain UI elements. This creates a clear hierarchy and sense of focus within an experience.
+
+Elevation uses the interplay of shadow and light to imply the distance between two surfaces and illustrate how far an object appears from the surface behind it.
+
+Shadow system
+The shadow ramp references increasing blur values to indicate shadow size and, thereby, distance. The shadow types, token values, and use cases are listed in the following elevation tables.
+
+Icons
+From Lucide library. Use modifiers to build on a simple idea.
