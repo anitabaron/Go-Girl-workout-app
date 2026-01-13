@@ -36,7 +36,13 @@ insert into "test-num" (num, letter) values
 -- 3. DISABLE RLS FOR DEVELOPMENT
 -- ============================================================================
 
-alter table "test-num" disable row level security;
+-- Only disable RLS if table exists
+do $$
+begin
+    if exists (select 1 from information_schema.tables where table_name = 'test-num') then
+        alter table "test-num" disable row level security;
+    end if;
+end $$;
 
 -- ============================================================================
 -- END OF MIGRATION

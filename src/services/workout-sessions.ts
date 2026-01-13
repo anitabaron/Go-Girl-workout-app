@@ -400,7 +400,7 @@ function createSessionSnapshots(
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
-  position: number;
+  order: number;
 }> {
   // Sortuj ćwiczenia planu: najpierw Warm-up, potem Main Workout, potem Cool-down
   // W ramach każdej sekcji sortuj po section_position
@@ -421,7 +421,7 @@ function createSessionSnapshots(
     return a.section_position - b.section_position;
   });
 
-  // Oblicz flattened position (1, 2, 3, ...)
+  // Oblicz flattened order (1, 2, 3, ...)
   const snapshots = sortedExercises.map((planExercise, index) => {
     const exercise = exercisesMap.get(planExercise.exercise_id);
 
@@ -455,7 +455,7 @@ function createSessionSnapshots(
       planned_reps: plannedReps,
       planned_duration_seconds: plannedDuration,
       planned_rest_seconds: plannedRest,
-      position: index + 1, // Flattened position starting from 1
+      order: index + 1, // Flattened order starting from 1
     };
   });
 

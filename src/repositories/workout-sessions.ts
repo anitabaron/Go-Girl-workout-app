@@ -203,7 +203,7 @@ export async function insertWorkoutSessionExercises(
     planned_reps: number | null;
     planned_duration_seconds: number | null;
     planned_rest_seconds: number | null;
-    position: number;
+    order: number;
   }>
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
@@ -216,7 +216,7 @@ export async function insertWorkoutSessionExercises(
     planned_reps: exercise.planned_reps,
     planned_duration_seconds: exercise.planned_duration_seconds,
     planned_rest_seconds: exercise.planned_rest_seconds,
-    position: exercise.position,
+    order: exercise.order,
     actual_sets: null,
     actual_reps: null,
     actual_duration_seconds: null,
@@ -267,7 +267,7 @@ export async function updateWorkoutSessionStatus(
 }
 
 /**
- * Pobiera wszystkie ćwiczenia sesji treningowej posortowane po position.
+ * Pobiera wszystkie ćwiczenia sesji treningowej posortowane po order.
  */
 export async function findWorkoutSessionExercises(
   client: DbClient,
@@ -277,7 +277,7 @@ export async function findWorkoutSessionExercises(
     .from("workout_session_exercises")
     .select("*")
     .eq("session_id", sessionId)
-    .order("position", { ascending: true });
+    .order("order", { ascending: true });
 
   if (error) {
     return { data: null, error };

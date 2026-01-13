@@ -121,15 +121,15 @@ Notes:
 
 ### 2.4 Session Exercise Autosave (next/previous/skip)
 
-- `PATCH /api/workout-sessions/{id}/exercises/{position}`
-  - Upsert state for exercise at given position; supports autosave on next/pause/skip and previous edits.
+- `PATCH /api/workout-sessions/{id}/exercises/{order}`
+  - Upsert state for exercise at given order; supports autosave on next/pause/skip and previous edits.
   - Body:
     - `actual_sets?`, `actual_reps?`, `actual_duration_seconds?`, `actual_rest_seconds?`, `is_skipped?`
     - `planned_sets?`, `planned_reps?`, `planned_duration_seconds?`, `planned_rest_seconds?` (client may send to keep parity with plan)
     - `sets?: [{ set_number, reps?, duration_seconds?, weight_kg? }]` (replaces existing sets)
     - `advance_cursor_to_next?: boolean` (client indicates “next” intent)
   - Validation:
-    - position > 0; exercise must exist in session.
+    - order > 0; exercise must exist in session.
     - Each set must have at least one metric (reps/duration/weight) and values >= 0.
     - If skip: allowed with empty sets; mark `is_skipped=true`.
   - Side effects:
@@ -196,7 +196,7 @@ Notes:
 - Exercise validation: reps XOR duration required; rest_in_between OR rest_after_series required; `series > 0`; rest values ≥ 0; title normalized uniqueness per user; block delete on FK references.
 - Plan validation: at least one exercise; section*position > 0 unique per (plan, section_type); planned*\* positive when provided; exercise_ids must belong to user.
 - Session rules: single `in_progress` per user; status enum (`in_progress`, `completed`); `current_position ≥ 0`; snapshot fields are immutable after creation.
-- Session exercise rules: position > 0; planned\_/actual non-negative; skip allowed; updates recalc PR.
+- Session exercise rules: order > 0; planned\_/actual non-negative; skip allowed; updates recalc PR.
 - Set rules: `set_number > 0`; at least one metric present (reps/duration/weight); all metrics ≥ 0; replace-on-save semantics.
 - PR logic: computed from session sets via DB function; stored in `personal_records`; recalculated on every save/edit; per metric type.
 - AI limits: `usage_count ≤ 5` per month; increment only on non-system-error completion; block when no exercises.
@@ -227,7 +227,7 @@ Notes:
 - Exercise item: `{ id, title, type, part, level?, details?, reps?, duration_seconds?, series, rest_in_between_seconds?, rest_after_series_seconds?, created_at, updated_at }`
 - Plan item: `{ id, name, description?, part?, exercises: [{ id, exercise_id, section_type, section_position, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] , created_at, updated_at }`
 - Session summary: `{ id, workout_plan_id?, plan_name_at_time?, status, started_at, completed_at?, current_position }`
-- Session detail: `{ ...summary, exercises: [{ id, position, exercise_id, exercise_title_at_time, exercise_type_at_time, exercise_part_at_time, planned_*, actual_*, is_skipped, sets: [{ set_number, reps?, duration_seconds?, weight_kg? }] }] }`
+- Session detail: `{ ...summary, exercises: [{ id, order, exercise_id, exercise_title_at_time, exercise_type_at_time, exercise_part_at_time, planned_*, actual_*, is_skipped, sets: [{ set_number, reps?, duration_seconds?, weight_kg? }] }] }`
 - Personal record item: `{ id, exercise_id, metric_type, value, achieved_at, achieved_in_session_id?, achieved_in_set_number?, created_at, updated_at }`
 - AI usage: `{ month_year, usage_count, remaining }`
 
@@ -236,7 +236,7 @@ Notes:
 - `400` Validation failed (details included).
 - `401/403` Unauthenticated/Forbidden (RLS or auth failure).
 - `404` Not found or not owned.
-- `409` Conflict: duplicate exercise title; session already in_progress; plan empty violation; position uniqueness; FK restrict on delete.
+- `409` Conflict: duplicate exercise title; session already in_progress; plan empty violation; order uniqueness; FK restrict on delete.
 - `429` Rate/limit exceeded (esp. AI).
 - `500` Internal / system_error (AI retry does not decrement usage).
 

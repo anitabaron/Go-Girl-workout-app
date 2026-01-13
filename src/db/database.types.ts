@@ -216,6 +216,27 @@ export type Database = {
           }
         ];
       };
+      "test-num": {
+        Row: {
+          created_at: string;
+          id: number;
+          letter: string;
+          num: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          letter: string;
+          num: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          letter?: string;
+          num?: number;
+        };
+        Relationships: [];
+      };
       workout_plan_exercises: {
         Row: {
           created_at: string;
@@ -313,11 +334,11 @@ export type Database = {
           exercise_type_at_time: Database["public"]["Enums"]["exercise_type"];
           id: string;
           is_skipped: boolean;
+          order: number;
           planned_duration_seconds: number | null;
           planned_reps: number | null;
           planned_rest_seconds: number | null;
           planned_sets: number | null;
-          position: number;
           session_id: string;
           updated_at: string;
         };
@@ -333,11 +354,11 @@ export type Database = {
           exercise_type_at_time: Database["public"]["Enums"]["exercise_type"];
           id?: string;
           is_skipped?: boolean;
+          order: number;
           planned_duration_seconds?: number | null;
           planned_reps?: number | null;
           planned_rest_seconds?: number | null;
           planned_sets?: number | null;
-          position: number;
           session_id: string;
           updated_at?: string;
         };
@@ -353,11 +374,11 @@ export type Database = {
           exercise_type_at_time?: Database["public"]["Enums"]["exercise_type"];
           id?: string;
           is_skipped?: boolean;
+          order?: number;
           planned_duration_seconds?: number | null;
           planned_reps?: number | null;
           planned_rest_seconds?: number | null;
           planned_sets?: number | null;
-          position?: number;
           session_id?: string;
           updated_at?: string;
         };
@@ -463,27 +484,6 @@ export type Database = {
           }
         ];
       };
-      "test-num": {
-        Row: {
-          id: number;
-          created_at: string;
-          num: number;
-          letter: string;
-        };
-        Insert: {
-          id?: number;
-          created_at?: string;
-          num: number;
-          letter: string;
-        };
-        Update: {
-          id?: number;
-          created_at?: string;
-          num?: number;
-          letter?: string;
-        };
-        Relationships: [];
-      };
     };
     Views: {
       [_ in never]: never;
@@ -501,7 +501,7 @@ export type Database = {
           p_actual_sets?: number;
           p_exercise_id: string;
           p_is_skipped?: boolean;
-          p_position: number;
+          p_order: number;
           p_session_id: string;
           p_sets_data?: Json;
         };

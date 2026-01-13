@@ -82,7 +82,14 @@ alter table workout_session_sets disable row level security;
 alter table personal_records disable row level security;
 alter table ai_usage disable row level security;
 alter table ai_requests disable row level security;
-alter table "test-num" disable row level security;
+
+-- Only disable RLS on test-num if table exists
+do $$
+begin
+    if exists (select 1 from information_schema.tables where table_name = 'test-num') then
+        alter table "test-num" disable row level security;
+    end if;
+end $$;
 
 -- ============================================================================
 -- END OF MIGRATION
