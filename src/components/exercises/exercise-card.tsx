@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 type ExerciseCardProps = {
-  exercise: ExerciseDTO;
+  readonly exercise: ExerciseDTO;
 };
 
 const partLabels: Record<ExercisePart, string> = {
