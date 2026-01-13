@@ -6,17 +6,8 @@ const config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  theme: {
-    extend: {
-      colors: {
-        goPink: "var(--go-pink)",
-        goLightPink: "var(--go-light-pink)",
-        goMidRed: "var(--go-mid-red)",
-        goRed: "var(--go-red)",
-      },
-    },
-  },
-  plugins: [],
+  // W Tailwind 4 kolory są definiowane w @theme w CSS, nie tutaj
+  // Zachowujemy config dla kompatybilności, ale kolory są w globals.css
 };
 
 export default config;

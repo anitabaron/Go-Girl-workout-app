@@ -17,6 +17,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Brand / app colors - camelCase dla kompatybilności z istniejącymi klasami */
+  --color-goPink: var(--go-pink);
+  --color-goLightPink: var(--go-light-pink);
+  --color-goMidRed: var(--go-mid-red);
+  --color-goRed: var(--go-red);
 }
 
 @media (prefers-color-scheme: dark) {
