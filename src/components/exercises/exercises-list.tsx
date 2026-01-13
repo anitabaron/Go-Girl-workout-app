@@ -28,7 +28,7 @@ export function ExercisesList({
       {hasMore && nextCursor && (
         <div className="flex justify-center pt-4">
           {/* TODO: Implementacja przycisku "Load more" w następnym kroku */}
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Więcej ćwiczeń dostępne (paginacja w przygotowaniu)
           </p>
         </div>

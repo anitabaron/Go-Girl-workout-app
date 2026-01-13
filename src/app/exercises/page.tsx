@@ -33,29 +33,39 @@ export default async function ExercisesPage({
   const result = await listExercisesService(userId, parsedQuery);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Biblioteka ćwiczeń
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Przeglądaj i zarządzaj swoimi ćwiczeniami
-          </p>
+    <div className="min-h-screen bg-goLightPink font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
+      <header className="bg-goPink">
+        <div className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-goRed sm:text-4xl md:text-5xl">
+                Biblioteka ćwiczeń
+              </h1>
+              <p className="mt-2 text-xl font-semibold text-goRed sm:text-2xl">
+                Przeglądaj i zarządzaj swoimi ćwiczeniami
+              </p>
+            </div>
+            <AddExerciseButton variant="auto" />
+          </div>
         </div>
-        <AddExerciseButton variant="auto" />
-      </div>
+      </header>
 
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <ExerciseFilters />
-        <ExerciseSort />
-      </div>
+      <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
+        <section className="mb-6 rounded-2xl border border-black/5 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-950">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <ExerciseFilters />
+            <ExerciseSort />
+          </div>
+        </section>
 
-      <ExercisesList
-        exercises={result.items}
-        nextCursor={result.nextCursor}
-        hasMore={result.nextCursor !== null}
-      />
+        <section className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-950">
+          <ExercisesList
+            exercises={result.items}
+            nextCursor={result.nextCursor}
+            hasMore={result.nextCursor !== null}
+          />
+        </section>
+      </main>
     </div>
   );
 }

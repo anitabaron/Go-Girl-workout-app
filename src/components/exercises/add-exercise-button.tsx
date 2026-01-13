@@ -22,9 +22,9 @@ export function AddExerciseButton({
           className={cn(
             "fixed bottom-6 right-6 z-50",
             "flex h-14 w-14 items-center justify-center rounded-full",
-            "bg-primary text-primary-foreground shadow-lg",
-            "transition-all hover:scale-110 hover:shadow-xl",
-            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+            "bg-goRed text-white shadow-lg",
+            "transition-all hover:scale-110 hover:bg-goRed/90 hover:shadow-xl",
+            "focus:outline-none focus:ring-2 focus:ring-goRed focus:ring-offset-2",
             "md:hidden" // Ukryj na desktop
           )}
           aria-label="Dodaj nowe ćwiczenie"
@@ -34,7 +34,7 @@ export function AddExerciseButton({
 
         {/* Button - widoczny tylko na desktop */}
         <div className="hidden md:block">
-          <Button asChild>
+          <Button asChild className="bg-goRed hover:bg-goRed/90 text-white">
             <Link href="/exercises/new">
               <Plus className="mr-2 h-4 w-4" />
               Dodaj ćwiczenie
@@ -52,9 +52,9 @@ export function AddExerciseButton({
         className={cn(
           "fixed bottom-6 right-6 z-50",
           "flex h-14 w-14 items-center justify-center rounded-full",
-          "bg-primary text-primary-foreground shadow-lg",
-          "transition-all hover:scale-110 hover:shadow-xl",
-          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          "bg-goRed text-white shadow-lg",
+          "transition-all hover:scale-110 hover:bg-goRed/90 hover:shadow-xl",
+          "focus:outline-none focus:ring-2 focus:ring-goRed focus:ring-offset-2"
         )}
         aria-label="Dodaj nowe ćwiczenie"
       >
@@ -64,7 +64,7 @@ export function AddExerciseButton({
   }
 
   return (
-    <Button asChild>
+    <Button asChild className="bg-goRed hover:bg-goRed/90 text-white">
       <Link href="/exercises/new">
         <Plus className="mr-2 h-4 w-4" />
         Dodaj ćwiczenie

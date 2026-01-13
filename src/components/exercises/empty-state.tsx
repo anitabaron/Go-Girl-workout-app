@@ -13,21 +13,21 @@ import {
 
 export function EmptyState() {
   return (
-    <Card className="mx-auto max-w-md">
+    <Card className="mx-auto max-w-md rounded-2xl border border-black/5 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-950">
       <CardHeader className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-          <Dumbbell className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-goPink/20">
+          <Dumbbell className="h-8 w-8 text-goRed" aria-hidden="true" />
         </div>
-        <CardTitle className="text-2xl">
+        <CardTitle className="text-2xl font-extrabold text-goRed">
           Nie masz jeszcze żadnych ćwiczeń
         </CardTitle>
-        <CardDescription className="mt-2">
+        <CardDescription className="mt-2 text-zinc-600 dark:text-zinc-400">
           Dodaj pierwsze ćwiczenie, aby rozpocząć budowanie swojej biblioteki
           treningowej
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center">
-        <Button asChild size="lg">
+        <Button asChild size="lg" className="bg-goRed hover:bg-goRed/90 text-white">
           <Link href="/exercises/new">Dodaj pierwsze ćwiczenie</Link>
         </Button>
       </CardContent>

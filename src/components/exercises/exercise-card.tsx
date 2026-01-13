@@ -28,16 +28,24 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
       className="block h-full"
       aria-label={`Zobacz szczegóły ćwiczenia: ${exercise.title}`}
     >
-      <Card className="h-full transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
+      <Card className="h-full rounded-xl border border-black/5 bg-goLightPink/70 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-goRed focus-within:ring-offset-2 dark:border-white/10 dark:bg-white/5">
         <CardHeader>
-          <CardTitle className="line-clamp-2 text-lg">{exercise.title}</CardTitle>
+          <CardTitle className="line-clamp-2 text-lg font-semibold">
+            {exercise.title}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{typeLabels[exercise.type]}</Badge>
-            <Badge variant="outline">{partLabels[exercise.part]}</Badge>
+            <Badge variant="secondary" className="bg-goPink/20 text-goRed hover:bg-goPink/30">
+              {typeLabels[exercise.type]}
+            </Badge>
+            <Badge variant="outline" className="border-goRed/30 text-goRed">
+              {partLabels[exercise.part]}
+            </Badge>
             {exercise.level && (
-              <Badge variant="outline">{exercise.level}</Badge>
+              <Badge variant="outline" className="border-goRed/30 text-goRed">
+                {exercise.level}
+              </Badge>
             )}
           </div>
         </CardContent>
