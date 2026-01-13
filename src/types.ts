@@ -206,6 +206,15 @@ export type PersonalRecordQueryParams = {
   cursor?: string | null;
 };
 
+export type PersonalRecordWithExerciseDTO = PersonalRecordDTO & {
+  exercise: {
+    id: string;
+    title: string;
+    type: ExerciseType;
+    part: ExercisePart;
+  };
+};
+
 /**
  * AI usage and plan generation/optimization
  */

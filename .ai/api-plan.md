@@ -124,8 +124,8 @@ Notes:
 - `PATCH /api/workout-sessions/{id}/exercises/{order}`
   - Upsert state for exercise at given order; supports autosave on next/pause/skip and previous edits.
   - Body:
-    - `actual_sets?`, `actual_reps?`, `actual_duration_seconds?`, `actual_rest_seconds?`, `is_skipped?`
-    - `planned_sets?`, `planned_reps?`, `planned_duration_seconds?`, `planned_rest_seconds?` (client may send to keep parity with plan)
+    - `actual_count_sets?` (aggregate: count of sets performed), `actual_sum_reps?` (aggregate: sum of reps across all sets), `actual_duration_seconds?`, `actual_rest_seconds?`, `is_skipped?`
+    - `planned_sets?` (planned number of sets), `planned_reps?` (planned reps per set - same value for all sets), `planned_duration_seconds?` (planned duration per set - same value for all sets), `planned_rest_seconds?` (client may send to keep parity with plan)
     - `sets?: [{ set_number, reps?, duration_seconds?, weight_kg? }]` (replaces existing sets)
     - `advance_cursor_to_next?: boolean` (client indicates “next” intent)
   - Validation:
@@ -196,7 +196,7 @@ Notes:
 - Exercise validation: reps XOR duration required; rest_in_between OR rest_after_series required; `series > 0`; rest values ≥ 0; title normalized uniqueness per user; block delete on FK references.
 - Plan validation: at least one exercise; section*position > 0 unique per (plan, section_type); planned*\* positive when provided; exercise_ids must belong to user.
 - Session rules: single `in_progress` per user; status enum (`in_progress`, `completed`); `current_position ≥ 0`; snapshot fields are immutable after creation.
-- Session exercise rules: order > 0; planned\_/actual non-negative; skip allowed; updates recalc PR.
+- Session exercise rules: order > 0; planned\_/actual non-negative; skip allowed; updates recalc PR. API uses `actual_count_sets` (count) and `actual_sum_reps` (sum) which map to DB columns `actual_sets` and `actual_reps`.
 - Set rules: `set_number > 0`; at least one metric present (reps/duration/weight); all metrics ≥ 0; replace-on-save semantics.
 - PR logic: computed from session sets via DB function; stored in `personal_records`; recalculated on every save/edit; per metric type.
 - AI limits: `usage_count ≤ 5` per month; increment only on non-system-error completion; block when no exercises.
@@ -227,7 +227,7 @@ Notes:
 - Exercise item: `{ id, title, type, part, level?, details?, reps?, duration_seconds?, series, rest_in_between_seconds?, rest_after_series_seconds?, created_at, updated_at }`
 - Plan item: `{ id, name, description?, part?, exercises: [{ id, exercise_id, section_type, section_position, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] , created_at, updated_at }`
 - Session summary: `{ id, workout_plan_id?, plan_name_at_time?, status, started_at, completed_at?, current_position }`
-- Session detail: `{ ...summary, exercises: [{ id, order, exercise_id, exercise_title_at_time, exercise_type_at_time, exercise_part_at_time, planned_*, actual_*, is_skipped, sets: [{ set_number, reps?, duration_seconds?, weight_kg? }] }] }`
+- Session detail: `{ ...summary, exercises: [{ id, order, exercise_id, exercise_title_at_time, exercise_type_at_time, exercise_part_at_time, planned_*, actual_count_sets?, actual_sum_reps?, actual_duration_seconds?, is_skipped, sets: [{ set_number, reps?, duration_seconds?, weight_kg? }] }] }`
 - Personal record item: `{ id, exercise_id, metric_type, value, achieved_at, achieved_in_session_id?, achieved_in_set_number?, created_at, updated_at }`
 - AI usage: `{ month_year, usage_count, remaining }`
 
