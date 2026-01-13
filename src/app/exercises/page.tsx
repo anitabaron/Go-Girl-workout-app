@@ -32,15 +32,15 @@ export default async function ExercisesPage({
   const result = await listExercisesService(userId, parsedQuery);
 
   return (
-    <div className="min-h-screen bg-goLightPink font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-goPink">
+    <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
+      <header className="bg-primary">
         <div className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-goRed sm:text-4xl md:text-5xl">
+              <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-4xl md:text-5xl">
                 Biblioteka ćwiczeń
               </h1>
-              <p className="mt-2 text-xl font-semibold text-goRed sm:text-2xl">
+              <p className="mt-2 text-xl font-semibold text-destructive sm:text-2xl">
                 Przeglądaj i zarządzaj swoimi ćwiczeniami
               </p>
             </div>
