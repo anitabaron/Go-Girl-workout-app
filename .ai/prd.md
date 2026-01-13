@@ -67,7 +67,7 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 
 ### 3.1 Konta i bezpieczeństwo dostępu
 
-3.1.1 Aplikacja musi obsługiwać logowanie użytkowników przez Supabase Auth (preferowany najprostszy flow, np. magic link).
+3.1.1 Aplikacja musi obsługiwać logowanie użytkowników przez Supabase Auth z użyciem tradycyjnego formularza email/password. Aplikacja powinna również obsługiwać rejestrację nowych użytkowników oraz reset hasła.
 3.1.2 Wszystkie dane domenowe (ćwiczenia, plany, sesje, PR, logi AI) muszą być prywatne per użytkownik i zabezpieczone na poziomie bazy przez RLS z filtrem user_id.
 3.1.3 Frontend nie może zakładać zaufania do danych po stronie klienta; egzekwowanie dostępu musi działać niezależnie od UI.
 
@@ -221,7 +221,9 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Opis: Jako użytkowniczka chcę móc się zalogować do aplikacji, aby mieć prywatny dostęp do swoich ćwiczeń i treningów.
   Kryteria akceptacji:
 
-  - Użytkowniczka może zainicjować proces logowania (np. magic link) i zakończyć go sukcesem.
+  - Użytkowniczka może zalogować się używając formularza email/password i zakończyć proces logowania sukcesem.
+  - Użytkowniczka może zarejestrować nowe konto używając formularza rejestracji.
+  - Użytkowniczka może zresetować hasło, jeśli je zapomniała.
   - Po zalogowaniu aplikacja przechodzi do widoku głównego.
   - Po wylogowaniu dane użytkowniczki nie są widoczne.
 
