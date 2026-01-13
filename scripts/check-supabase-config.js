@@ -4,10 +4,10 @@
  * Skrypt weryfikujący konfigurację Supabase w projekcie Next.js
  */
 
-/* eslint-disable @typescript-eslint/no-require-imports */
+ 
 const fs = require('node:fs');
 const path = require('node:path');
-/* eslint-enable @typescript-eslint/no-require-imports */
+ 
 
 const colors = {
   reset: '\x1b[0m',

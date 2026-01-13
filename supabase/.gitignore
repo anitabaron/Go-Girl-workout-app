@@ -6,3 +6,8 @@
 .env.keys
 .env.local
 .env.*.local
+
+# Backups
+backups/
+*.sql
+!seed.sql

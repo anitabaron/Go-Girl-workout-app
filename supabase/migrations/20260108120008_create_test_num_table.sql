@@ -25,12 +25,18 @@ create table if not exists "test-num" (
 -- 2. INSERT SAMPLE DATA
 -- ============================================================================
 
-insert into "test-num" (num, letter) values
-  (1, 'A'),
-  (2, 'B'),
-  (3, 'C'),
-  (4, 'D'),
-  (5, 'E');
+-- Only insert if table is empty (to avoid conflicts with existing data)
+do $$
+begin
+  if not exists (select 1 from "test-num" limit 1) then
+    insert into "test-num" (num, letter) values
+      (1, 'A'),
+      (2, 'B'),
+      (3, 'C'),
+      (4, 'D'),
+      (5, 'E');
+  end if;
+end $$;
 
 -- ============================================================================
 -- 3. DISABLE RLS FOR DEVELOPMENT

@@ -115,13 +115,31 @@ Projekt używa następujących pakietów Supabase:
 
 Migracje znajdują się w katalogu `supabase/migrations/`.
 
-Aby zastosować migracje lokalnie (jeśli używasz lokalnego Supabase):
+### ⚠️ WAŻNE: Backup przed migracjami!
+
+**Zawsze rób backup przed resetem bazy!** Komenda `supabase db reset` **USUWA WSZYSTKIE DANE**.
+
+### Bezpieczne komendy do migracji:
 
 ```bash
-supabase db reset
+# 1. Zrób backup przed zmianami
+pnpm backup:db
+
+# 2. Zastosuj tylko nowe migracje (bezpieczne - nie usuwa danych)
+pnpm db:migrate
+
+# 3. Tylko jeśli MUSISZ zresetować bazę (usuwa wszystkie dane!)
+pnpm db:reset  # Automatycznie tworzy backup przed resetem
 ```
 
-Aby zastosować migracje na produkcji, użyj Supabase Dashboard lub CLI.
+### ⚠️ NIEBEZPIECZNE komendy:
+
+```bash
+# ❌ NIGDY nie używaj bez backupu!
+supabase db reset  # USUWA WSZYSTKIE DANE!
+```
+
+Zobacz [DATA_BACKUP_AND_MIGRATIONS.md](./DATA_BACKUP_AND_MIGRATIONS.md) dla szczegółów.
 
 ## Row-Level Security (RLS)
 
