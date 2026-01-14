@@ -231,6 +231,44 @@ export function mapToDTO(row: ExerciseRow): ExerciseDTO {
   return rest;
 }
 
+/**
+ * Pobiera informacje o powiązaniach ćwiczenia z planami treningowymi i sesjami.
+ */
+export async function getExerciseRelations(
+  client: DbClient,
+  exerciseId: string
+): Promise<{
+  plansCount: number;
+  sessionsCount: number;
+  hasRelations: boolean;
+}> {
+  // Liczba planów używających ćwiczenia
+  const { count: plansCount, error: plansError } = await client
+    .from("workout_plan_exercises")
+    .select("*", { count: "exact", head: true })
+    .eq("exercise_id", exerciseId);
+
+  if (plansError) {
+    throw new Error(`Failed to count workout plans: ${plansError.message}`);
+  }
+
+  // Liczba sesji z tym ćwiczeniem
+  const { count: sessionsCount, error: sessionsError } = await client
+    .from("workout_session_exercises")
+    .select("*", { count: "exact", head: true })
+    .eq("exercise_id", exerciseId);
+
+  if (sessionsError) {
+    throw new Error(`Failed to count workout sessions: ${sessionsError.message}`);
+  }
+
+  return {
+    plansCount: plansCount ?? 0,
+    sessionsCount: sessionsCount ?? 0,
+    hasRelations: (plansCount ?? 0) > 0 || (sessionsCount ?? 0) > 0,
+  };
+}
+
 function applyCursorFilter(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query: any,
