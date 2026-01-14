@@ -1,0 +1,120 @@
+"use client";
+
+import type { SessionExerciseDTO, ExerciseType, ExercisePart } from "@/types";
+import { Badge } from "@/components/ui/badge";
+
+const partLabels: Record<ExercisePart, string> = {
+  Legs: "Nogi",
+  Core: "Brzuch",
+  Back: "Plecy",
+  Arms: "Ręce",
+  Chest: "Klatka",
+};
+
+const typeLabels: Record<ExerciseType, string> = {
+  "Warm-up": "Rozgrzewka",
+  "Main Workout": "Główny trening",
+  "Cool-down": "Schłodzenie",
+};
+
+type CurrentExerciseInfoProps = {
+  exercise: SessionExerciseDTO;
+};
+
+/**
+ * Komponent wyświetlający informacje o bieżącym ćwiczeniu:
+ * tytuł, typ, partię oraz parametry planowane (planned_*).
+ */
+export function CurrentExerciseInfo({ exercise }: CurrentExerciseInfoProps) {
+  const formatDuration = (seconds: number | null | undefined): string => {
+    if (!seconds) return "-";
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (minutes > 0) {
+      return `${minutes}min ${secs}s`;
+    }
+    return `${secs}s`;
+  };
+
+  return (
+    <div className="space-y-4 rounded-lg border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-zinc-950">
+      {/* Tytuł ćwiczenia */}
+      <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+        {exercise.exercise_title_at_time || "Brak nazwy"}
+      </h2>
+
+      {/* Badge z typem i partią */}
+      <div className="flex flex-wrap gap-2">
+        {exercise.exercise_type_at_time && (
+          <Badge
+            variant="secondary"
+            className="bg-secondary text-destructive hover:bg-primary"
+          >
+            {typeLabels[exercise.exercise_type_at_time] ||
+              exercise.exercise_type_at_time}
+          </Badge>
+        )}
+        {exercise.exercise_part_at_time && (
+          <Badge
+            variant="outline"
+            className="border-destructive text-destructive"
+          >
+            {partLabels[exercise.exercise_part_at_time] ||
+              exercise.exercise_part_at_time}
+          </Badge>
+        )}
+      </div>
+
+      {/* Parametry planowane */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {exercise.planned_sets !== null &&
+          exercise.planned_sets !== undefined && (
+            <div>
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                Serii planowanych
+              </p>
+              <p className="text-lg font-semibold">
+                {exercise.planned_sets}
+              </p>
+            </div>
+          )}
+
+        {exercise.planned_reps !== null &&
+          exercise.planned_reps !== undefined && (
+            <div>
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                Powtórzeń planowanych
+              </p>
+              <p className="text-lg font-semibold">
+                {exercise.planned_reps}
+              </p>
+            </div>
+          )}
+
+        {exercise.planned_duration_seconds !== null &&
+          exercise.planned_duration_seconds !== undefined && (
+            <div>
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                Czas trwania planowany
+              </p>
+              <p className="text-lg font-semibold">
+                {formatDuration(exercise.planned_duration_seconds)}
+              </p>
+            </div>
+          )}
+
+        {exercise.planned_rest_seconds !== null &&
+          exercise.planned_rest_seconds !== undefined && (
+            <div>
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                Przerwa planowana
+              </p>
+              <p className="text-lg font-semibold">
+                {formatDuration(exercise.planned_rest_seconds)}
+              </p>
+            </div>
+          )}
+      </div>
+    </div>
+  );
+}

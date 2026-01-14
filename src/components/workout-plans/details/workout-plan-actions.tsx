@@ -70,10 +70,9 @@ export function WorkoutPlanActions({
 
       if (sessionId) {
         toast.success("Sesja treningowa została rozpoczęta");
-        router.push(`/workout-sessions/${sessionId}`);
+        router.push(`/workout-sessions/${sessionId}/active`);
       } else {
-        toast.success("Sesja treningowa została rozpoczęta");
-        router.push("/workout-sessions");
+        toast.error("Nie udało się pobrać ID sesji treningowej");
       }
     } catch (error) {
       if (error instanceof TypeError) {
