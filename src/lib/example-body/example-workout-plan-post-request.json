@@ -6,7 +6,7 @@
     {
       "exercise_id": "ab5fd7bc-0653-4145-817f-39f39e596791",
       "section_type": "Warm-up",
-      "section_position": 1,
+      "section_order": 1,
       "planned_sets": 2,
       "planned_reps": 15,
       "planned_rest_seconds": 10
@@ -14,7 +14,7 @@
     {
       "exercise_id": "5383e05f-4da5-4f58-a206-ac0f1275c841",
       "section_type": "Main Workout",
-      "section_position": 1,
+      "section_order": 1,
       "planned_sets": 4,
       "planned_reps": 10,
       "planned_rest_seconds": 60
@@ -22,7 +22,7 @@
     {
       "exercise_id": "a9ce72bf-0206-46d4-a398-5f7da9c159d0",
       "section_type": "Main Workout",
-      "section_position": 2,
+      "section_order": 2,
       "planned_sets": 4,
       "planned_duration_seconds": 20,
       "planned_rest_seconds": 90
@@ -30,7 +30,7 @@
     {
       "exercise_id": "1bf55093-53cd-4b9a-932a-229e46b5f629",
       "section_type": "Cool-down",
-      "section_position": 1,
+      "section_order": 1,
       "planned_sets": 3,
       "planned_duration_seconds": 30,
       "planned_rest_seconds": 20

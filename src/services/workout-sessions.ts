@@ -379,7 +379,7 @@ function createSessionSnapshots(
   planExercises: Array<{
     exercise_id: string;
     section_type: Database["public"]["Enums"]["exercise_type"];
-    section_position: number;
+    section_order: number;
     planned_sets: number | null;
     planned_reps: number | null;
     planned_duration_seconds: number | null;
@@ -411,7 +411,7 @@ function createSessionSnapshots(
   order: number;
 }> {
   // Sortuj ćwiczenia planu: najpierw Warm-up, potem Main Workout, potem Cool-down
-  // W ramach każdej sekcji sortuj po section_position
+  // W ramach każdej sekcji sortuj po section_order
   const sortedExercises = [...planExercises].sort((a, b) => {
     const typeOrder = {
       "Warm-up": 1,
@@ -426,7 +426,7 @@ function createSessionSnapshots(
       return aOrder - bOrder;
     }
 
-    return a.section_position - b.section_position;
+    return a.section_order - b.section_order;
   });
 
   // Oblicz flattened order (1, 2, 3, ...)

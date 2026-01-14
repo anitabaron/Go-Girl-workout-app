@@ -279,7 +279,14 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   - Jeśli użytkowniczka nie ma żadnych ćwiczeń, lista pokazuje pusty stan i CTA do dodania ćwiczenia.
   - Pusty stan nie pokazuje danych innych użytkowników.
 
-- ID: US-013
+  - ID: US-013
+    Tytuł: Wyświetlanie szczegółów ćwiczenia
+    Opis: Jako użytkowniczka chcę wyświetlić szczegóły konkretnego ćwiczenia.
+    Kryteria akceptacji:
+
+  - Jeśli użytkowniczka nie ma żadnych ćwiczeń, nie ma moliwości przejścia do szczegółów.
+
+- ID: US-017
   Tytuł: Edycja ćwiczenia
   Opis: Jako użytkowniczka chcę edytować ćwiczenie, aby poprawić opis lub parametry.
   Kryteria akceptacji:

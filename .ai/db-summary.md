@@ -9,7 +9,7 @@
 6. Partial unique index: `unique(user_id) where status='in_progress'` na `workout_sessions`
 7. `title_normalized` jako generated column lub kolumna utrzymywana triggerem z `unique(user_id, title_normalized)`
 8. Blokada usuwania ćwiczenia tylko jeśli występuje w `workout_sessions` lub `personal_records` (FK RESTRICT); usunięcie z planu nie blokuje usunięcia ćwiczenia
-9. Kolejność ćwiczeń w planie: `section_type` (Warm-up/Main/Cool-down) + `section_position` w `workout_plan_exercises` z `unique(plan_id, section_type, section_position)`
+9. Kolejność ćwiczeń w planie: `section_type` (Warm-up/Main/Cool-down) + `section_order` w `workout_plan_exercises` z `unique(plan_id, section_type, section_order)`
 10. Jednostki w bazie: `duration_seconds int`, `rest_seconds int`, `weight_kg numeric(6,2)` z CHECK constraints (>= 0)
 11. Walidacja metryk: ćwiczenie ma `reps` LUB `duration` (nie oba), opcjonalnie `weight`; spójność metryk w ramach ćwiczenia w sesji
 12. `current_position` i `last_action_at` w `workout_sessions` dla śledzenia wznowienia
@@ -61,9 +61,9 @@
 
 3. **`workout_plan_exercises`** — ćwiczenia w planie
 
-   - Kolejność: `section_type` (Warm-up/Main/Cool-down) + `section_position`
+   - Kolejność: `section_type` (Warm-up/Main/Cool-down) + `section_order`
    - Parametry planu: `planned_sets`, `planned_reps`, `planned_duration`, `planned_rest`
-   - `unique(plan_id, section_type, section_position)`
+   - `unique(plan_id, section_type, section_order)`
 
 4. **`workout_sessions`** — sesje treningowe
 

@@ -64,8 +64,10 @@ if (fs.existsSync(envLocalPath)) {
     const key = keyMatch ? keyMatch[1].trim() : '';
     
     if (url && url !== '' && !url.startsWith('#')) {
-      if (url.startsWith('https://') && url.includes('.supabase.co')) {
-        checkmark(`NEXT_PUBLIC_SUPABASE_URL jest ustawione: ${url.substring(0, 30)}...`);
+      // Akceptuj zarówno lokalne (http://127.0.0.1:54321) jak i zdalne (https://...supabase.co) URL
+      if ((url.startsWith('https://') && url.includes('.supabase.co')) || 
+          (url.startsWith('http://') && (url.includes('127.0.0.1') || url.includes('localhost')))) {
+        checkmark(`NEXT_PUBLIC_SUPABASE_URL jest ustawione: ${url.substring(0, 40)}...`);
       } else {
         cross(`NEXT_PUBLIC_SUPABASE_URL ma nieprawidłowy format: ${url}`);
         hasErrors = true;
@@ -76,10 +78,11 @@ if (fs.existsSync(envLocalPath)) {
     }
     
     if (key && key !== '' && !key.startsWith('#')) {
-      if (key.length > 50) {
+      // Klucz lokalnego Supabase może być krótszy niż zdalny
+      if (key.length > 30) {
         checkmark('NEXT_PUBLIC_SUPABASE_ANON_KEY jest ustawione (długość OK)');
       } else {
-        warning('NEXT_PUBLIC_SUPABASE_ANON_KEY wydaje się być za krótkie');
+        warning('NEXT_PUBLIC_SUPABASE_ANON_KEY wydaje się być za krótkie (min. 30 znaków)');
         hasWarnings = true;
       }
     } else {
@@ -124,7 +127,7 @@ if (fs.existsSync(packageJsonPath)) {
 }
 
 // 3. Sprawdź strukturę klienta Supabase
-const clientPath = path.join(projectRoot, 'src/db/src/db/supabase.client.ts');
+const clientPath = path.join(projectRoot, 'src/db/supabase.client.ts');
 if (fs.existsSync(clientPath)) {
   checkmark('Plik supabase.client.ts istnieje');
   
@@ -174,7 +177,7 @@ if (fs.existsSync(clientPath)) {
 }
 
 // 4. Sprawdź czy istnieje osobny klient dla server components
-const serverClientPath = path.join(projectRoot, 'src/db/src/db/supabase.server.ts');
+const serverClientPath = path.join(projectRoot, 'src/db/supabase.server.ts');
 if (fs.existsSync(serverClientPath)) {
   checkmark('Osobny klient dla server components istnieje (supabase.server.ts)');
 } else {

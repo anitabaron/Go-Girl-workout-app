@@ -24,7 +24,7 @@
     exercises: Array<{
       exercise_id: UUID;              // Wymagane, musi należeć do użytkownika
       section_type: ExerciseType;      // Wymagane (Warm-up, Main Workout, Cool-down)
-      section_position: number;       // Wymagane, > 0, unikalne per section_type
+      section_order: number;       // Wymagane, > 0, unikalne per section_type
       planned_sets?: number | null;   // Opcjonalne, jeśli podane > 0
       planned_reps?: number | null;   // Opcjonalne, jeśli podane > 0
       planned_duration_seconds?: number | null;  // Opcjonalne, jeśli podane > 0
@@ -40,7 +40,7 @@
   - Dla każdego ćwiczenia:
     - `exercise_id`: wymagane, UUID, musi istnieć i należeć do użytkownika
     - `section_type`: wymagane, enum (Warm-up, Main Workout, Cool-down)
-    - `section_position`: wymagane, integer > 0, unikalne w ramach `(plan_id, section_type)`
+    - `section_order`: wymagane, integer > 0, unikalne w ramach `(plan_id, section_type)`
     - `planned_sets`, `planned_reps`, `planned_duration_seconds`: jeśli podane, > 0
     - `planned_rest_seconds`: jeśli podane, >= 0
   - Brak duplikatów pozycji w tej samej sekcji
@@ -106,7 +106,7 @@
   {
     exercise_id: UUID;
     section_type: ExerciseType;
-    section_position: number;
+    section_order: number;
     planned_sets?: number | null;
     planned_reps?: number | null;
     planned_duration_seconds?: number | null;
@@ -135,7 +135,7 @@
     id: UUID;
     exercise_id: UUID;
     section_type: ExerciseType;
-    section_position: number;
+    section_order: number;
     planned_sets?: number | null;
     planned_reps?: number | null;
     planned_duration_seconds?: number | null;
@@ -164,7 +164,7 @@
 ### 4.1 POST /api/workout-plans
 
 - **Status**: `201 Created`
-- **Body**: `WorkoutPlanDTO` (plan z pełną listą ćwiczeń, posortowaną po `section_type`, `section_position`)
+- **Body**: `WorkoutPlanDTO` (plan z pełną listą ćwiczeń, posortowaną po `section_type`, `section_order`)
 - **Błędy**:
   - `400`: Walidacja nieudana (puste ćwiczenia, nieprawidłowe pozycje, wartości ujemne, brakujące wymagane pola)
   - `409`: Duplikaty pozycji w sekcji, konflikt unikalności
@@ -199,7 +199,7 @@
 ### 4.3 GET /api/workout-plans/{id}
 
 - **Status**: `200 OK`
-- **Body**: `WorkoutPlanDTO` (plan z pełną listą ćwiczeń, posortowaną po `section_type`, `section_position`)
+- **Body**: `WorkoutPlanDTO` (plan z pełną listą ćwiczeń, posortowaną po `section_type`, `section_order`)
 - **Błędy**:
   - `404`: Plan nie istnieje lub nie należy do użytkownika
   - `401`: Brak autoryzacji
@@ -238,13 +238,13 @@
    - Sprawdź, że `exercises.length >= 1`.
    - Dla każdego ćwiczenia:
      - Zweryfikuj, że `exercise_id` istnieje i należy do użytkownika (query do `exercises`).
-     - Sprawdź, że `section_position > 0`.
+     - Sprawdź, że `section_order > 0`.
      - Sprawdź, że `planned_*` wartości są pozytywne (jeśli podane).
-   - Sprawdź unikalność `(section_type, section_position)` w ramach requestu.
+   - Sprawdź unikalność `(section_type, section_order)` w ramach requestu.
 4. Wstaw plan do `workout_plans` z `user_id` z sesji.
 5. Wstaw wszystkie ćwiczenia do `workout_plan_exercises` z `plan_id`.
 6. Pobierz utworzony plan z ćwiczeniami (JOIN lub osobne query + sortowanie).
-7. Zwróć `WorkoutPlanDTO` z ćwiczeniami posortowanymi po `section_type`, `section_position`.
+7. Zwróć `WorkoutPlanDTO` z ćwiczeniami posortowanymi po `section_type`, `section_order`.
 
 ### 5.2 GET /api/workout-plans
 
@@ -267,7 +267,7 @@
 2. Waliduj `id` jako UUID.
 3. Pobierz plan z `workout_plans` gdzie `id = {id}` AND `user_id = session.user.id`.
 4. Jeśli nie znaleziono, zwróć `404`.
-5. Pobierz wszystkie ćwiczenia z `workout_plan_exercises` gdzie `plan_id = {id}`, posortowane po `section_type`, `section_position`.
+5. Pobierz wszystkie ćwiczenia z `workout_plan_exercises` gdzie `plan_id = {id}`, posortowane po `section_type`, `section_order`.
 6. Zwróć `WorkoutPlanDTO` z ćwiczeniami.
 
 ### 5.4 PATCH /api/workout-plans/{id}
@@ -315,7 +315,7 @@
   - `name`: max 120 znaków
   - `description`: max 1000 znaków
   - `limit`: max 100
-  - `section_position`: > 0, integer
+  - `section_order`: > 0, integer
   - `planned_*`: jeśli podane, > 0 (lub >= 0 dla `planned_rest_seconds`)
 - UUID validation dla `id` i `exercise_id`.
 - Enum validation dla `part` i `section_type`.
@@ -325,7 +325,7 @@
 - **SQL Injection**: Używaj Supabase query builder (parametryzowane zapytania).
 - **Enumeration**: Brak rozróżnienia `404/403` po sprawdzeniu własności.
 - **Mass Assignment**: Whitelist pól w schematach Zod.
-- **Integer Overflow**: Walidacja zakresów dla `section_position` i `planned_*`.
+- **Integer Overflow**: Walidacja zakresów dla `section_order` i `planned_*`.
 
 ### 6.5 Row-Level Security (RLS)
 
@@ -341,7 +341,7 @@
 
   - Nieprawidłowe body/query (Zod validation errors)
   - Pusta lista ćwiczeń (`exercises.length === 0`)
-  - Nieprawidłowe pozycje (`section_position <= 0`)
+  - Nieprawidłowe kolejności (`section_order <= 0`)
   - Wartości `planned_*` ujemne lub zero (gdy wymagane > 0)
   - Nieprawidłowy cursor paginacji
   - Limit poza zakresem (max 100)
@@ -362,7 +362,7 @@
 
 - **`409 Conflict`**:
 
-  - Duplikaty pozycji w sekcji (unique constraint violation na `(plan_id, section_type, section_position)`)
+  - Duplikaty kolejności w sekcji (unique constraint violation na `(plan_id, section_type, section_order)`)
   - FK constraint violation (jeśli ćwiczenie zostanie usunięte podczas tworzenia planu)
 
 - **`500 Internal Server Error`**:
@@ -415,7 +415,7 @@
 - **GET /api/workout-plans/{id}**:
 
   - Pojedyncze zapytanie z JOIN lub dwa zapytania (plan + ćwiczenia).
-  - Sortowanie ćwiczeń po `section_type`, `section_position` w DB (nie w kodzie).
+  - Sortowanie ćwiczeń po `section_type`, `section_order` w DB (nie w kodzie).
 
 - **POST /api/workout-plans**:
 
@@ -449,7 +449,7 @@
    - `workoutPlanExerciseInputSchema`: schema dla pojedynczego ćwiczenia w planie
      - `exercise_id`: UUID, wymagane
      - `section_type`: enum (Warm-up, Main Workout, Cool-down)
-     - `section_position`: integer > 0
+     - `section_order`: integer > 0
      - `planned_sets`, `planned_reps`, `planned_duration_seconds`: optional, integer > 0 jeśli podane
      - `planned_rest_seconds`: optional, integer >= 0 jeśli podane
    - `workoutPlanCreateSchema`: schema dla tworzenia planu
@@ -571,7 +571,7 @@
 
 - W `GET /api/workout-plans/{id}` i `POST/PATCH` response, sortuj ćwiczenia po:
   1. `section_type` (Warm-up → Main Workout → Cool-down)
-  2. `section_position` (ascending)
+  2. `section_order` (ascending)
 
 ### 10.4 Strategia replace dla ćwiczeń
 

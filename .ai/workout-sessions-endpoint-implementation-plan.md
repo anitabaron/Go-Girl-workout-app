@@ -29,7 +29,7 @@
     - Dla każdego ćwiczenia w planie utwórz wpis w `workout_session_exercises` z snapshotami:
       - `exercise_title_at_time`, `exercise_type_at_time`, `exercise_part_at_time` z `exercises`.
       - `planned_*` wartości z `workout_plan_exercises` (lub z `exercises` jako fallback).
-      - `position` na podstawie kolejności w planie (flattened across sections).
+      - `order` na podstawie kolejności w planie (flattened across sections).
 - **Walidacja**:
   - `workout_plan_id`: wymagane, UUID, musi istnieć i należeć do użytkownika
   - Plan musi mieć co najmniej jedno ćwiczenie
@@ -160,7 +160,7 @@
       actual_reps: number | null;
       actual_duration_seconds: number | null;
       actual_rest_seconds: number | null;
-      position: number;
+      order: number;
       is_skipped: boolean;
       sets: Array<{
         id: UUID;
@@ -246,17 +246,17 @@
    - Zweryfikuj, że `workout_plan_id` istnieje i należy do użytkownika.
    - Pobierz plan z ćwiczeniami:
      - `SELECT * FROM workout_plans WHERE id = ? AND user_id = ?`
-     - `SELECT * FROM workout_plan_exercises WHERE plan_id = ? ORDER BY section_type, section_position`
+     - `SELECT * FROM workout_plan_exercises WHERE plan_id = ? ORDER BY section_type, section_order`
    - Jeśli plan nie istnieje lub nie ma ćwiczeń, zwróć `404`.
 5. Utwórz sesję:
    - `INSERT INTO workout_sessions (user_id, workout_plan_id, status, plan_name_at_time, started_at, current_position, last_action_at) VALUES (?, ?, 'in_progress', ?, now(), 0, now())`
 6. Dla każdego ćwiczenia w planie:
    - Pobierz szczegóły ćwiczenia: `SELECT * FROM exercises WHERE id = ? AND user_id = ?`
-   - Oblicz `position` (flattened: Warm-up pozycje 1-N, Main Workout N+1-M, Cool-down M+1-K)
+   - Oblicz `order` (flattened: Warm-up pozycje 1-N, Main Workout N+1-M, Cool-down M+1-K)
    - `INSERT INTO workout_session_exercises` z snapshotami:
      - `exercise_title_at_time`, `exercise_type_at_time`, `exercise_part_at_time` z `exercises`
      - `planned_*` z `workout_plan_exercises` (lub z `exercises` jako fallback jeśli NULL w planie)
-     - `position` obliczone
+     - `order` obliczone
      - `actual_*` początkowo NULL (będą wypełnione podczas treningu)
 7. Pobierz utworzoną sesję z ćwiczeniami i seriami (użyj logiki z GET /{id}).
 8. Zwróć `SessionDetailDTO` z status `201`.
@@ -285,7 +285,7 @@
 2. Waliduj `id` jako UUID.
 3. Pobierz sesję z `workout_sessions` gdzie `id = {id}` AND `user_id = session.user.id`.
 4. Jeśli nie znaleziono, zwróć `404`.
-5. Pobierz wszystkie ćwiczenia z `workout_session_exercises` gdzie `session_id = {id}`, posortowane po `position`.
+5. Pobierz wszystkie ćwiczenia z `workout_session_exercises` gdzie `session_id = {id}`, posortowane po `order`.
 6. Dla każdego ćwiczenia, pobierz serie z `workout_session_sets` gdzie `session_exercise_id = {exercise.id}`, posortowane po `set_number`.
 7. Zbuduj `SessionDetailDTO` z sesją, ćwiczeniami i seriami.
 8. Zwróć `SessionDetailDTO`.
@@ -471,7 +471,7 @@
 
 2. **Logika snapshotowania**:
    - Funkcja `createSessionSnapshots(plan, planExercises, exercises)`: Przygotuj dane do wstawienia ćwiczeń sesji
-   - Oblicz `position` (flattened across sections)
+   - Oblicz `order` (flattened across sections)
    - Mapuj `planned_*` z planu lub ćwiczenia jako fallback
 
 ### 9.3 Utworzenie serwisu

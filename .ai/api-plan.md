@@ -62,8 +62,8 @@ Notes:
 - `POST /api/workout-plans`
 
   - Create plan with ordered exercises.
-  - Body: `{ name, description?, part?, exercises: [{ exercise_id, section_type, section_position, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] }`
-  - Validation: at least one exercise; section*position > 0 and unique per section; planned*\* positive if present; exercise_id must belong to user.
+  - Body: `{ name, description?, part?, exercises: [{ exercise_id, section_type, section_order, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] }`
+  - Validation: at least one exercise; section_order > 0 and unique per section; planned*\* positive if present; exercise_id must belong to user.
   - Success: `201` with plan + items.
   - Errors: `400` validation/empty plan, `409` duplicates in positions, `401/403`.
 
@@ -75,7 +75,7 @@ Notes:
 
 - `GET /api/workout-plans/{id}`
 
-  - Plan detail with exercises (ordered by section_type, section_position).
+  - Plan detail with exercises (ordered by section_type, section_order).
   - Success: `200`.
   - Errors: `404`, `401/403`.
 
@@ -165,7 +165,7 @@ Notes:
 - `POST /api/ai/generate-plan`
 
   - Body: `{ goal, level, duration_minutes, parts:[], equipment?:string[] }`
-  - Success: `200` with proposed plan `{ name, description?, part?, exercises:[{ exercise_id, section_type, section_position, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] }`
+  - Success: `200` with proposed plan `{ name, description?, part?, exercises:[{ exercise_id, section_type, section_order, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] }`
   - Errors: `400` validation/limit exceeded, `401/403`, `429` rate/limit, `500` system_error (does not decrement usage).
 
 - `POST /api/ai/optimize-plan`
@@ -194,7 +194,7 @@ Notes:
 ## 4. Validation and Business Logic
 
 - Exercise validation: reps XOR duration required; rest_in_between OR rest_after_series required; `series > 0`; rest values ≥ 0; title normalized uniqueness per user; block delete on FK references.
-- Plan validation: at least one exercise; section*position > 0 unique per (plan, section_type); planned*\* positive when provided; exercise_ids must belong to user.
+- Plan validation: at least one exercise; section_order > 0 unique per (plan, section_type); planned*\* positive when provided; exercise_ids must belong to user.
 - Session rules: single `in_progress` per user; status enum (`in_progress`, `completed`); `current_position ≥ 0`; snapshot fields are immutable after creation.
 - Session exercise rules: order > 0; planned\_/actual non-negative; skip allowed; updates recalc PR. API uses `actual_count_sets` (count) and `actual_sum_reps` (sum) which map to DB columns `actual_sets` and `actual_reps`.
 - Set rules: `set_number > 0`; at least one metric present (reps/duration/weight); all metrics ≥ 0; replace-on-save semantics.
@@ -225,7 +225,7 @@ Notes:
 ## 7. Response Shapes (examples)
 
 - Exercise item: `{ id, title, type, part, level?, details?, reps?, duration_seconds?, series, rest_in_between_seconds?, rest_after_series_seconds?, created_at, updated_at }`
-- Plan item: `{ id, name, description?, part?, exercises: [{ id, exercise_id, section_type, section_position, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] , created_at, updated_at }`
+- Plan item: `{ id, name, description?, part?, exercises: [{ id, exercise_id, section_type, section_order, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] , created_at, updated_at }`
 - Session summary: `{ id, workout_plan_id?, plan_name_at_time?, status, started_at, completed_at?, current_position }`
 - Session detail: `{ ...summary, exercises: [{ id, order, exercise_id, exercise_title_at_time, exercise_type_at_time, exercise_part_at_time, planned_*, actual_count_sets?, actual_sum_reps?, actual_duration_seconds?, is_skipped, sets: [{ set_number, reps?, duration_seconds?, weight_kg? }] }] }`
 - Personal record item: `{ id, exercise_id, metric_type, value, achieved_at, achieved_in_session_id?, achieved_in_set_number?, created_at, updated_at }`

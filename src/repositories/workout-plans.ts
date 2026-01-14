@@ -159,11 +159,11 @@ export async function insertWorkoutPlanExercises(
   planId: string,
   exercises: WorkoutPlanExerciseInput[]
 ) {
-  const exercisesToInsert = exercises.map((exercise) => ({
+  const   exercisesToInsert = exercises.map((exercise) => ({
     plan_id: planId,
     exercise_id: exercise.exercise_id,
     section_type: exercise.section_type,
-    section_position: exercise.section_position,
+    section_order: exercise.section_order,
     planned_sets: exercise.planned_sets ?? null,
     planned_reps: exercise.planned_reps ?? null,
     planned_duration_seconds: exercise.planned_duration_seconds ?? null,
@@ -232,7 +232,7 @@ export async function updateWorkoutPlanExercise(
   input: {
     exercise_id?: string;
     section_type?: Database["public"]["Enums"]["exercise_type"];
-    section_position?: number;
+    section_order?: number;
     planned_sets?: number | null;
     planned_reps?: number | null;
     planned_duration_seconds?: number | null;
@@ -247,8 +247,8 @@ export async function updateWorkoutPlanExercise(
   if (input.section_type !== undefined) {
     updateData.section_type = input.section_type;
   }
-  if (input.section_position !== undefined) {
-    updateData.section_position = input.section_position;
+  if (input.section_order !== undefined) {
+    updateData.section_order = input.section_order;
   }
   if (input.planned_sets !== undefined) {
     updateData.planned_sets = input.planned_sets;
@@ -292,7 +292,7 @@ export async function deleteWorkoutPlanExercises(client: DbClient, planId: strin
 }
 
 /**
- * Pobiera wszystkie ćwiczenia planu treningowego posortowane po section_type i section_position.
+ * Pobiera wszystkie ćwiczenia planu treningowego posortowane po section_type i section_order.
  */
 export async function listWorkoutPlanExercises(
   client: DbClient,
@@ -303,7 +303,7 @@ export async function listWorkoutPlanExercises(
     .select("*")
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
-    .order("section_position", { ascending: true });
+    .order("section_order", { ascending: true });
 
   if (error) {
     return { data: null, error };

@@ -84,7 +84,7 @@ export type WorkoutPlanExerciseInput = Pick<
   TablesInsert<"workout_plan_exercises">,
   | "exercise_id"
   | "section_type"
-  | "section_position"
+  | "section_order"
   | "planned_sets"
   | "planned_reps"
   | "planned_duration_seconds"

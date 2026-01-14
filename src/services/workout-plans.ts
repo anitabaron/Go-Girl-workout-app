@@ -291,8 +291,8 @@ export async function updateWorkoutPlanService(
         updateData.section_type =
           exerciseUpdate.section_type as Database["public"]["Enums"]["exercise_type"];
       }
-      if (exerciseUpdate.section_position !== undefined) {
-        updateData.section_position = exerciseUpdate.section_position;
+      if (exerciseUpdate.section_order !== undefined) {
+        updateData.section_order = exerciseUpdate.section_order;
       }
       if (exerciseUpdate.planned_sets !== undefined) {
         updateData.planned_sets = exerciseUpdate.planned_sets ?? null;

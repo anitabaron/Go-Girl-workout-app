@@ -20,7 +20,7 @@ const nameSchema = z.string().trim().min(1).max(120);
 const descriptionSchema = z.string().trim().max(1000).optional().nullable();
 const partSchema = z.enum(exercisePartValues).optional().nullable();
 const sectionTypeSchema = z.enum(exerciseTypeValues);
-const sectionPositionSchema = z.number().int().positive();
+const sectionOrderSchema = z.number().int().positive();
 const plannedSetsSchema = z.number().int().positive().nullable().optional();
 const plannedRepsSchema = z.number().int().positive().nullable().optional();
 const plannedDurationSchema = z.number().int().positive().nullable().optional();
@@ -41,7 +41,7 @@ export const workoutPlanExerciseInputSchema = z
         "exercise_id musi być prawidłowym UUID"
       ),
     section_type: sectionTypeSchema,
-    section_position: sectionPositionSchema,
+    section_order: sectionOrderSchema,
     planned_sets: plannedSetsSchema,
     planned_reps: plannedRepsSchema,
     planned_duration_seconds: plannedDurationSchema,
@@ -69,7 +69,7 @@ export const workoutPlanExerciseUpdateSchema = z
       )
       .optional(),
     section_type: sectionTypeSchema.optional(),
-    section_position: sectionPositionSchema.optional(),
+    section_order: sectionOrderSchema.optional(),
     planned_sets: plannedSetsSchema,
     planned_reps: plannedRepsSchema,
     planned_duration_seconds: plannedDurationSchema,
@@ -173,20 +173,20 @@ export function validateWorkoutPlanBusinessRules(
 
   for (const exercise of exercises) {
     const sectionKey = exercise.section_type;
-    const position = exercise.section_position;
+    const order = exercise.section_order;
 
     if (!positionMap.has(sectionKey)) {
       positionMap.set(sectionKey, new Set());
     }
 
-    const positions = positionMap.get(sectionKey)!;
+    const orders = positionMap.get(sectionKey)!;
 
-    if (positions.has(position)) {
+    if (orders.has(order)) {
       errors.push(
-        `Duplikat pozycji ${position} w sekcji ${exercise.section_type}.`
+        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`
       );
     } else {
-      positions.add(position);
+      orders.add(order);
     }
 
     // Walidacja wartości planned_*
@@ -196,7 +196,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_sets <= 0
     ) {
       errors.push(
-        `planned_sets musi być większe od zera dla ćwiczenia na pozycji ${position} w sekcji ${exercise.section_type}.`
+        `planned_sets musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
       );
     }
 
@@ -206,7 +206,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_reps <= 0
     ) {
       errors.push(
-        `planned_reps musi być większe od zera dla ćwiczenia na pozycji ${position} w sekcji ${exercise.section_type}.`
+        `planned_reps musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
       );
     }
 
@@ -216,7 +216,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_duration_seconds <= 0
     ) {
       errors.push(
-        `planned_duration_seconds musi być większe od zera dla ćwiczenia na pozycji ${position} w sekcji ${exercise.section_type}.`
+        `planned_duration_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
       );
     }
 
@@ -226,7 +226,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_rest_seconds < 0
     ) {
       errors.push(
-        `planned_rest_seconds nie może być ujemne dla ćwiczenia na pozycji ${position} w sekcji ${exercise.section_type}.`
+        `planned_rest_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
       );
     }
   }

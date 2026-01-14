@@ -104,7 +104,7 @@ CREATE TABLE workout_plan_exercises (
     plan_id UUID NOT NULL REFERENCES workout_plans(id) ON DELETE CASCADE,
     exercise_id UUID NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
     section_type exercise_type NOT NULL,
-    section_position INTEGER NOT NULL CHECK (section_position > 0),
+    section_order INTEGER NOT NULL CHECK (section_order > 0),
     -- Parametry planu (mogą być NULL, kopiowane z ćwiczenia jako domyślne)
     planned_sets INTEGER CHECK (planned_sets IS NULL OR planned_sets > 0),
     planned_reps INTEGER CHECK (planned_reps IS NULL OR planned_reps > 0),
@@ -113,14 +113,14 @@ CREATE TABLE workout_plan_exercises (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     -- Unikalność kolejności w sekcji
-    CONSTRAINT workout_plan_exercises_unique_position
-        UNIQUE (plan_id, section_type, section_position)
+    CONSTRAINT workout_plan_exercises_unique_order
+        UNIQUE (plan_id, section_type, section_order)
 );
 
 -- Indeksy
 CREATE INDEX idx_workout_plan_exercises_plan_id ON workout_plan_exercises(plan_id);
 CREATE INDEX idx_workout_plan_exercises_exercise_id ON workout_plan_exercises(exercise_id);
-CREATE INDEX idx_workout_plan_exercises_plan_section ON workout_plan_exercises(plan_id, section_type, section_position);
+CREATE INDEX idx_workout_plan_exercises_plan_section_order ON workout_plan_exercises(plan_id, section_type, section_order);
 ```
 
 ### 2.4 `workout_sessions` - Sesje treningowe
@@ -179,21 +179,21 @@ CREATE TABLE workout_session_exercises (
     actual_duration_seconds INTEGER CHECK (actual_duration_seconds IS NULL OR actual_duration_seconds >= 0),
     actual_rest_seconds INTEGER CHECK (actual_rest_seconds IS NULL OR actual_rest_seconds >= 0),
     -- Kolejność w sesji
-    position INTEGER NOT NULL CHECK (position > 0),
+    "order" INTEGER NOT NULL CHECK ("order" > 0),
     -- Flaga pominięcia ćwiczenia
     is_skipped BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    -- Unikalność pozycji w sesji
-    CONSTRAINT workout_session_exercises_unique_position
-        UNIQUE (session_id, position)
+    -- Unikalność kolejności w sesji
+    CONSTRAINT workout_session_exercises_unique_order
+        UNIQUE (session_id, "order")
 );
 
 -- Indeksy
 CREATE INDEX idx_workout_session_exercises_session_id ON workout_session_exercises(session_id);
 CREATE INDEX idx_workout_session_exercises_exercise_id ON workout_session_exercises(exercise_id);
-CREATE INDEX idx_workout_session_exercises_session_position ON workout_session_exercises(session_id, position);
+CREATE INDEX idx_workout_session_exercises_session_order ON workout_session_exercises(session_id, "order");
 
 -- Trigger do aktualizacji updated_at
 CREATE TRIGGER workout_session_exercises_updated_at
@@ -495,7 +495,7 @@ $$;
 CREATE OR REPLACE FUNCTION save_workout_session_exercise(
     p_session_id UUID,
     p_exercise_id UUID,
-    p_position INTEGER,
+    p_order INTEGER,
     p_actual_sets INTEGER DEFAULT NULL,
     p_actual_reps INTEGER DEFAULT NULL,
     p_actual_duration_seconds INTEGER DEFAULT NULL,
@@ -530,18 +530,18 @@ BEGIN
     -- Pobierz lub utwórz wpis ćwiczenia w sesji
     SELECT id INTO v_session_exercise_id
     FROM workout_session_exercises
-    WHERE session_id = p_session_id AND position = p_position;
+    WHERE session_id = p_session_id AND "order" = p_order;
 
     IF v_session_exercise_id IS NULL THEN
         -- Utwórz nowy wpis (powinien już istnieć z snapshotem, ale na wypadek)
         INSERT INTO workout_session_exercises (
-            session_id, exercise_id, position,
+            session_id, exercise_id, "order",
             exercise_title_at_time, exercise_type_at_time, exercise_part_at_time,
             actual_sets, actual_reps, actual_duration_seconds, actual_rest_seconds,
             is_skipped
         )
         SELECT
-            p_session_id, p_exercise_id, p_position,
+            p_session_id, p_exercise_id, p_order,
             e.title, e.type, e.part,
             p_actual_sets, p_actual_reps, p_actual_duration_seconds, p_actual_rest_seconds,
             p_is_skipped
@@ -588,7 +588,7 @@ BEGIN
 
     -- Aktualizuj last_action_at w sesji
     UPDATE workout_sessions
-    SET last_action_at = now(), current_position = p_position
+    SET last_action_at = now(), current_position = p_order
     WHERE id = p_session_id;
 
     RETURN v_session_exercise_id;
@@ -938,9 +938,9 @@ workout_session_exercises
 
 - **exercises**: `user_id`, `(user_id, title_normalized)`, `(user_id, part)`, `(user_id, type)`
 - **workout_plans**: `user_id`, `(user_id, created_at DESC)`
-- **workout_plan_exercises**: `plan_id`, `exercise_id`, `(plan_id, section_type, section_position)`
+- **workout_plan_exercises**: `plan_id`, `exercise_id`, `(plan_id, section_type, section_order)`
 - **workout_sessions**: `user_id`, `(user_id, started_at DESC)`, `(user_id, status)`, `workout_plan_id`, partial unique `(user_id) WHERE status = 'in_progress'`
-- **workout_session_exercises**: `session_id`, `exercise_id`, `(session_id, position)`
+- **workout_session_exercises**: `session_id`, `exercise_id`, `(session_id, "order")`
 - **workout_session_sets**: `session_exercise_id`, `(session_exercise_id, reps, duration_seconds, weight_kg)` dla obliczeń PR
 - **personal_records**: `user_id`, `exercise_id`, `(user_id, exercise_id, metric_type)`, `(user_id, achieved_at DESC)`
 - **ai_usage**: `user_id`, `(user_id, month_year)`
@@ -993,9 +993,9 @@ workout_session_exercises
 
 ### 7.8 Kolejność ćwiczeń w planie
 
-- **`section_type` + `section_position`**: Umożliwia organizację ćwiczeń w sekcje (Warm-up, Main, Cool-down)
-- **Unique constraint**: `(plan_id, section_type, section_position)` zapewnia unikalność pozycji w sekcji
-- **Kolejność w sesji**: `position` w `workout_session_exercises` determinuje kolejność wykonywania
+- **`section_type` + `section_order`**: Umożliwia organizację ćwiczeń w sekcje (Warm-up, Main, Cool-down)
+- **Unique constraint**: `(plan_id, section_type, section_order)` zapewnia unikalność kolejności w sekcji
+- **Kolejność w sesji**: `order` w `workout_session_exercises` determinuje kolejność wykonywania
 
 ### 7.9 Jednostki i typy danych
 

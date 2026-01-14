@@ -7,7 +7,7 @@
 2. `GET /api/workout-sessions` - Lista sesji
 3. `GET /api/workout-sessions/{id}` - Szczegóły sesji
 4. `PATCH /api/workout-sessions/{id}/status` - Aktualizacja statusu (in_progress/completed)
-5. `PATCH /api/workout-sessions/{id}/exercises/{position}` - **Logowanie actual_reps, actual_duration, sets**
+5. `PATCH /api/workout-sessions/{id}/exercises/{order}` - **Logowanie actual_reps, actual_duration, sets**
 
 ### Zalety obecnego podejścia:
 ✅ **Separacja odpowiedzialności (SRP)**
@@ -16,7 +16,7 @@
 - Łatwiejsze w utrzymaniu i testowaniu
 
 ✅ **Semantyka REST**
-- `/exercises/{position}` wyraźnie wskazuje, że aktualizujemy konkretne ćwiczenie
+- `/exercises/{order}` wyraźnie wskazuje, że aktualizujemy konkretne ćwiczenie
 - URL wyraża hierarchię: sesja → ćwiczenie w sesji
 - Zgodne z konwencjami RESTful API
 
@@ -26,13 +26,13 @@
 - Możliwość dodania w przyszłości operacji na poziomie ćwiczenia (np. DELETE ćwiczenia z sesji)
 
 ✅ **Walidacja i bezpieczeństwo**
-- Łatwiejsze walidowanie, że `position` istnieje w sesji
+- Łatwiejsze walidowanie, że `order` istnieje w sesji
 - Możliwość sprawdzenia, czy ćwiczenie należy do sesji przed aktualizacją
 - Lepsze komunikaty błędów (404 dla nieistniejącego ćwiczenia vs nieistniejącej sesji)
 
 ✅ **Skalowalność**
 - Jeśli w przyszłości będzie potrzeba operacji na poziomie ćwiczenia (np. undo, historia zmian), struktura jest gotowa
-- Łatwiejsze dodanie endpointów pomocniczych (np. GET `/exercises/{position}`)
+- Łatwiejsze dodanie endpointów pomocniczych (np. GET `/exercises/{order}`)
 
 ### Wady obecnego podejścia:
 ❌ **Więcej endpointów do utrzymania**
@@ -44,7 +44,7 @@
 - (Ale to może być też zaleta - atomic updates per ćwiczenie)
 
 ❌ **Złożoność URL**
-- Dłuższe ścieżki: `/workout-sessions/{id}/exercises/{position}` vs `/workout-sessions/{id}`
+- Dłuższe ścieżki: `/workout-sessions/{id}/exercises/{order}` vs `/workout-sessions/{id}`
 
 ---
 
@@ -86,7 +86,7 @@
 - Trzeba walidować różne typy aktualizacji w jednym miejscu
 - Body requestu musi obsługiwać różne scenariusze:
   - Aktualizacja statusu
-  - Aktualizacja ćwiczenia (które? przez position w body?)
+  - Aktualizacja ćwiczenia (które? przez order w body?)
   - Aktualizacja wielu ćwiczeń naraz?
 
 ❌ **Mniej elastyczne**
@@ -98,14 +98,14 @@
 - `/workout-sessions/{id}` sugeruje aktualizację sesji, nie ćwiczenia w sesji
 
 ❌ **Potencjalne problemy z body requestu**
-- Jak określić, które ćwiczenie aktualizujemy? Przez `position` w body?
+- Jak określić, które ćwiczenie aktualizujemy? Przez `order` w body?
 - Czy body wygląda tak:
   ```json
   {
     "status": "in_progress",  // opcjonalnie
     "exercise_updates": [
       {
-        "position": 1,
+        "order": 1,
         "actual_reps": 12,
         "sets": [...]
       }
@@ -118,7 +118,7 @@
 
 ## Rekomendacja
 
-### Rekomenduję **obecne podejście** (z osobnym endpointem `/exercises/{position}`) z następujących powodów:
+### Rekomenduję **obecne podejście** (z osobnym endpointem `/exercises/{order}`) z następujących powodów:
 
 1. **Zgodność z zasadami SOLID**
    - Single Responsibility Principle: każdy endpoint ma jedną odpowiedzialność
@@ -126,7 +126,7 @@
 
 2. **Lepsza semantyka REST**
    - URL wyraża hierarchię i intencję
-   - `/workout-sessions/{id}/exercises/{position}` jasno mówi: "aktualizuj ćwiczenie na pozycji X w sesji Y"
+   - `/workout-sessions/{id}/exercises/{order}` jasno mówi: "aktualizuj ćwiczenie na pozycji X w sesji Y"
 
 3. **Elastyczność i skalowalność**
    - Łatwiejsze dodanie nowych operacji na poziomie ćwiczenia
@@ -137,7 +137,7 @@
    - Bardziej precyzyjne komunikaty walidacji
 
 5. **Zgodność z obecną implementacją**
-   - Funkcja `save_workout_session_exercise()` w bazie już przyjmuje `position`
+   - Funkcja `save_workout_session_exercise()` w bazie już przyjmuje `p_order`
    - Plan API już definiuje ten endpoint
    - Przykładowy body request już istnieje
 
@@ -151,13 +151,13 @@
 
 Można rozważyć **hybrydowe podejście**:
 - `PATCH /api/workout-sessions/{id}` - dla aktualizacji statusu i metadanych sesji
-- `PATCH /api/workout-sessions/{id}/exercises/{position}` - dla logowania actual_reps, sets
+- `PATCH /api/workout-sessions/{id}/exercises/{order}` - dla logowania actual_reps, sets
 - To zachowuje separację odpowiedzialności, ale upraszcza strukturę (status nie ma osobnego endpointu)
 
 ---
 
 ## Podsumowanie
 
-**Obecne podejście** jest bardziej zgodne z best practices REST API, łatwiejsze w utrzymaniu długoterminowo i bardziej elastyczne. Dodatkowy endpoint `/exercises/{position}` nie jest znaczącym obciążeniem, a przynosi korzyści w postaci lepszej organizacji kodu i łatwiejszego rozwoju aplikacji.
+**Obecne podejście** jest bardziej zgodne z best practices REST API, łatwiejsze w utrzymaniu długoterminowo i bardziej elastyczne. Dodatkowy endpoint `/exercises/{order}` nie jest znaczącym obciążeniem, a przynosi korzyści w postaci lepszej organizacji kodu i łatwiejszego rozwoju aplikacji.
 
 **Uproszczone podejście** ma sens tylko w bardzo prostych aplikacjach, gdzie priorytetem jest minimalizacja złożoności kosztem elastyczności.
