@@ -51,18 +51,27 @@ export function WorkoutPlanSort() {
 
   return (
     <div className="flex items-center gap-2">
-      <Select value={currentOption.value} onValueChange={handleSortChange}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Sortuj według" />
-        </SelectTrigger>
-        <SelectContent>
-          {sortOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="sort-select" className="sr-only">
+          Sortuj plany treningowe
+        </label>
+        <Select value={currentOption.value} onValueChange={handleSortChange}>
+          <SelectTrigger
+            id="sort-select"
+            className="w-[180px]"
+            aria-label="Sortuj plany treningowe"
+          >
+            <SelectValue placeholder="Sortuj według" />
+          </SelectTrigger>
+          <SelectContent>
+            {sortOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

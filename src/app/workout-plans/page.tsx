@@ -59,9 +59,9 @@ export default async function WorkoutPlansPage({
 
         <section className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
           <WorkoutPlansList
-            plans={result.items}
-            nextCursor={result.nextCursor}
-            hasMore={result.nextCursor !== null}
+            initialPlans={result.items}
+            initialNextCursor={result.nextCursor}
+            initialHasMore={result.nextCursor !== null}
           />
         </section>
       </main>

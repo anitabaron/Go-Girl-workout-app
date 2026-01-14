@@ -1,20 +1,18 @@
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 type LoadMoreButtonProps = {
   nextCursor: string;
+  onLoadMore: (cursor: string) => Promise<void>;
 };
 
-export function LoadMoreButton({ nextCursor }: LoadMoreButtonProps) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+export function LoadMoreButton({ nextCursor, onLoadMore }: LoadMoreButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
     if (isLoading) {
       return;
     }
@@ -22,12 +20,12 @@ export function LoadMoreButton({ nextCursor }: LoadMoreButtonProps) {
     setIsLoading(true);
 
     try {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("cursor", nextCursor);
-      router.push(`${pathname}?${params.toString()}`);
+      await onLoadMore(nextCursor);
     } catch (error) {
       console.error("Error loading more plans:", error);
-      // TODO: Wyświetlenie toast notification z komunikatem błędu
+      toast.error(
+        "Nie udało się załadować więcej planów. Spróbuj ponownie."
+      );
     } finally {
       setIsLoading(false);
     }

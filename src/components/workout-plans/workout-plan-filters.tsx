@@ -56,24 +56,33 @@ export function WorkoutPlanFilters() {
 
   return (
     <div className="flex flex-wrap items-center gap-4">
-      <Select
-        value={currentPart || "all"}
-        onValueChange={(value) =>
-          handleFilterChange(value === "all" ? null : value)
-        }
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Część ciała" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Wszystkie części</SelectItem>
-          {exercisePartValues.map((part) => (
-            <SelectItem key={part} value={part}>
-              {partLabels[part]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="part-filter" className="sr-only">
+          Filtruj po części ciała
+        </label>
+        <Select
+          value={currentPart || "all"}
+          onValueChange={(value) =>
+            handleFilterChange(value === "all" ? null : value)
+          }
+        >
+          <SelectTrigger
+            id="part-filter"
+            className="w-[180px]"
+            aria-label="Filtruj plany treningowe po części ciała"
+          >
+            <SelectValue placeholder="Część ciała" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie części</SelectItem>
+            {exercisePartValues.map((part) => (
+              <SelectItem key={part} value={part}>
+                {partLabels[part]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {hasActiveFilters && (
         <Button

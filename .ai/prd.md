@@ -367,8 +367,16 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Lista planów treningowych
   Opis: Jako użytkowniczka chcę przeglądać plany, aby szybko wybrać trening.
   Kryteria akceptacji:
+
   - Lista zawiera name, part oraz liczbę ćwiczeń.
   - Widoczne są tylko plany użytkowniczki.
+
+- ID: US-027
+  Tytuł: Wyświetlanie szczegółów planu treningowego
+  Opis: Jako użytkowniczka chcę wyświetlić szczegóły konkretnego planu treningowego.
+  Kryteria akceptacji:
+
+- Jeśli użytkowniczka nie ma żadnych planów treningowych, nie ma moliwości przejścia do szczegółów.
 
 ### 5.4 Asystent sesji treningowej (WorkoutSession)
 
