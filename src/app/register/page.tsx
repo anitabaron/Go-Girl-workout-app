@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/db/supabase.server";
 import { RegisterForm } from "@/components/auth/register/register-form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/navigation/page-header";
 
 export const metadata: Metadata = {
@@ -27,18 +28,18 @@ export default async function RegisterPage() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeader showBack={false} />
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md space-y-8">
-          <header className="text-center">
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-              Utwórz konto
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Utwórz konto</CardTitle>
+            <CardDescription>
               Zarejestruj się, aby rozpocząć treningi z Go Girl Workout App
-            </p>
-          </header>
-          <RegisterForm />
-        </div>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RegisterForm />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

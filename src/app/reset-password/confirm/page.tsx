@@ -1,27 +1,33 @@
 import type { Metadata } from "next";
-import { ResetPasswordForm } from "@/components/reset-password/reset-password-form";
+import { ResetPasswordConfirmForm } from "@/components/reset-password/confirm/reset-password-confirm-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/navigation/page-header";
 
 export const metadata: Metadata = {
-  title: "Reset hasła | Go Girl Workout App",
-  description: "Zresetuj swoje hasło do konta Go Girl Workout App",
+  title: "Potwierdzenie resetu hasła | Go Girl Workout App",
+  description: "Ustaw nowe hasło do konta Go Girl Workout App",
 };
 
-export default function ResetPasswordPage() {
+/**
+ * Strona potwierdzenia resetu hasła.
+ * 
+ * Uwaga: Weryfikacja tokenu z URL i logika backendowa będzie zaimplementowana w dalszej kolejności.
+ * Na razie strona renderuje tylko formularz UI.
+ */
+export default function ResetPasswordConfirmPage() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeader showBack={false} />
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Reset hasła</CardTitle>
+            <CardTitle className="text-2xl font-bold">Ustaw nowe hasło</CardTitle>
             <CardDescription>
-              Wprowadź swój adres email, a wyślemy Ci link do resetu hasła
+              Wprowadź nowe hasło dla swojego konta
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResetPasswordForm />
+            <ResetPasswordConfirmForm />
           </CardContent>
         </Card>
       </div>
