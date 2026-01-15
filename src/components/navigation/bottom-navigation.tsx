@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { navigationItems } from "./navigation-items";
 import { QuickStartButton } from "./quick-start-button";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/db/supabase.client";
+import { toast } from "sonner";
 
 export interface BottomNavigationProps {
+  user?: User | null;
   activeSection?: string;
 }
 
@@ -14,12 +18,27 @@ export interface BottomNavigationProps {
  * Zawiera ikony z etykietami dla każdej sekcji oraz wyróżniony przycisk "Start treningu" jako FAB.
  */
 export function BottomNavigation({
+  user,
   activeSection,
-}: BottomNavigationProps) {
+}: Readonly<BottomNavigationProps>) {
   const pathname = usePathname();
+  const router = useRouter();
   const currentSection =
     activeSection ??
     navigationItems.find((item) => pathname.startsWith(item.href))?.id;
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      toast.error("Nie udało się wylogować. Spróbuj ponownie.");
+      console.error("Sign out error:", error);
+      return;
+    }
+
+    router.push("/login");
+    router.refresh();
+  };
 
   // Filtrujemy elementy nawigacji, aby wykluczyć "workout-sessions" z listy (bo jest w środku jako FAB)
   const navItemsForBottom = navigationItems.filter(
@@ -51,7 +70,9 @@ export function BottomNavigation({
                 aria-label={item.label}
               >
                 <Icon className="h-5 w-5" />
-                <span className="text-xs">{item.mobileLabel ?? item.label}</span>
+                <span className="text-xs">
+                  {item.mobileLabel ?? item.label}
+                </span>
               </Link>
             );
           })}
@@ -72,16 +93,16 @@ export function BottomNavigation({
                 ? "text-primary font-semibold"
                 : "text-muted-foreground"
             }`}
-            aria-current={currentSection === "workout-sessions" ? "page" : undefined}
+            aria-current={
+              currentSection === "workout-sessions" ? "page" : undefined
+            }
             aria-label="Historia sesji"
           >
             {(() => {
               const HistoryIcon = navigationItems.find(
                 (item) => item.id === "workout-sessions"
               )?.icon;
-              return HistoryIcon ? (
-                <HistoryIcon className="h-5 w-5" />
-              ) : null;
+              return HistoryIcon ? <HistoryIcon className="h-5 w-5" /> : null;
             })()}
             <span className="text-xs">Historia</span>
           </Link>
@@ -103,10 +124,31 @@ export function BottomNavigation({
                 aria-label={item.label}
               >
                 <Icon className="h-5 w-5" />
-                <span className="text-xs">{item.mobileLabel ?? item.label}</span>
+                <span className="text-xs">
+                  {item.mobileLabel ?? item.label}
+                </span>
               </Link>
             );
           })}
+
+          {/* Login/Logout Button */}
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors text-muted-foreground hover:text-primary"
+              aria-label="Wyloguj"
+            >
+              <span className="text-xs">WYloguj</span>
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors text-muted-foreground hover:text-primary"
+              aria-label="Zaloguj"
+            >
+              <span className="text-xs">Zaloguj</span>
+            </Link>
+          )}
         </div>
       </div>
     </nav>

@@ -226,6 +226,11 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   - Użytkowniczka może zresetować hasło, jeśli je zapomniała.
   - Po zalogowaniu aplikacja przechodzi do widoku głównego.
   - Po wylogowaniu dane użytkowniczki nie są widoczne.
+  - Funkcjonalności aplikacji poza stroną główną '/' i dedykowanymi stronami do logowania, rejestracji, odzyskiwania hasła - nie są dostępne dla niezalogowanego uytkownika (US-010 - US-090)
+  - Użytkownik może logować się do systemu poprzez przycisk w prawym górnym rogu.
+  - Użytkownik może się wylogować z systemu poprzez przycisk w prawym górnym rogu w głównym.
+  - Nie korzystamy z zewnętrznych serwisów logowania (np. Google, GitHub).
+  - Odzyskiwanie hasła powinno być możliwe.
 
 - ID: US-002
   Tytuł: Izolacja danych użytkowników (RLS)

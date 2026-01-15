@@ -28,7 +28,7 @@ export default async function AppLayout({
 
       {/* Bottom Navigation - Mobile only */}
       <div className="md:hidden">
-        <BottomNavigation />
+        <BottomNavigation user={user} />
       </div>
     </>
   );
