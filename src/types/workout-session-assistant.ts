@@ -95,18 +95,36 @@ export function formDataToAutosaveCommand(
   sets?: SessionExerciseSetCommand[];
   advance_cursor_to_next?: boolean;
 } {
-  return {
+  const command: {
+    actual_count_sets?: number | null;
+    actual_sum_reps?: number | null;
+    actual_duration_seconds?: number | null;
+    is_skipped?: boolean;
+    sets?: SessionExerciseSetCommand[];
+    advance_cursor_to_next?: boolean;
+  } = {
     actual_count_sets: formData.actual_count_sets,
     actual_sum_reps: formData.actual_sum_reps,
     actual_duration_seconds: formData.actual_duration_seconds,
     // actual_rest_seconds nie jest obsługiwane przez API
     is_skipped: formData.is_skipped,
-    sets: formData.sets.map((set) => ({
+    advance_cursor_to_next: advanceCursor,
+  };
+
+  // Jeśli sets nie jest puste, wyślij zmapowane sets
+  // Jeśli sets jest puste, ale ćwiczenie jest pominięte, wyślij pustą tablicę aby wyczyścić istniejące serie
+  // Jeśli sets jest puste i ćwiczenie nie jest pominięte, nie wysyłaj sets (undefined = opcjonalne pole nie jest wysyłane)
+  if (formData.sets.length > 0) {
+    command.sets = formData.sets.map((set) => ({
       set_number: set.set_number,
       reps: set.reps,
       duration_seconds: set.duration_seconds,
       weight_kg: set.weight_kg,
-    })),
-    advance_cursor_to_next: advanceCursor,
-  };
+    }));
+  } else if (formData.is_skipped) {
+    // Gdy ćwiczenie jest pominięte i sets jest puste, wyślij pustą tablicę aby wyczyścić istniejące serie
+    command.sets = [];
+  }
+
+  return command;
 }

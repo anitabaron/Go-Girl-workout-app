@@ -862,14 +862,27 @@ export async function autosaveWorkoutSessionExerciseService(
   // Oblicz agregaty z serii, jeśli nie zostały podane ręcznie (Opcja A)
   const aggregates = calculateAggregatesFromSets(parsed);
 
-  const setsDataForDb =
-    parsed.sets && parsed.sets.length > 0
-      ? parsed.sets.map((set) => ({
-          reps: set.reps ?? null,
-          duration_seconds: set.duration_seconds ?? null,
-          weight_kg: set.weight_kg ?? null,
-        }))
-      : null;
+  // Przygotuj sets dla bazy danych:
+  // - Jeśli sets nie jest puste, wyślij zmapowane sets
+  // - Jeśli sets jest puste i is_skipped === true, wyślij [] aby wyczyścić istniejące serie
+  // - Jeśli sets jest puste i is_skipped !== true, wyślij null (nie zmieniaj istniejących serii)
+  let setsDataForDb: Array<{
+    reps: number | null;
+    duration_seconds: number | null;
+    weight_kg: number | null;
+  }> | null = null;
+
+  if (parsed.sets && parsed.sets.length > 0) {
+    setsDataForDb = parsed.sets.map((set) => ({
+      reps: set.reps ?? null,
+      duration_seconds: set.duration_seconds ?? null,
+      weight_kg: set.weight_kg ?? null,
+    }));
+  } else if (parsed.is_skipped === true) {
+    // Pusta tablica = wyczyść wszystkie istniejące serie
+    setsDataForDb = [];
+  }
+  // else: setsDataForDb pozostaje null (nie zmieniaj istniejących serii)
 
   const { data: sessionExerciseId, error: saveError } =
     await callSaveWorkoutSessionExercise(supabase, {

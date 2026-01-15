@@ -559,14 +559,27 @@ export async function callSaveWorkoutSessionExercise(
   }
 ) {
   // Mapuj sets na format JSONB (bez set_number, bo funkcja DB nie potrzebuje)
-  const setsDataJson =
-    params.p_sets_data && params.p_sets_data.length > 0
-      ? params.p_sets_data.map((set) => ({
-          reps: set.reps ?? null,
-          duration_seconds: set.duration_seconds ?? null,
-          weight_kg: set.weight_kg ?? null,
-        }))
-      : null;
+  // Jeśli p_sets_data jest pustą tablicą [], wyślij [] aby wyczyścić serie
+  // Jeśli p_sets_data jest null lub undefined, wyślij null (nie zmieniaj serii)
+  // Jeśli p_sets_data ma elementy, wyślij zmapowane sets
+  let setsDataJson: Array<{
+    reps: number | null;
+    duration_seconds: number | null;
+    weight_kg: number | null;
+  }> | null = null;
+
+  if (params.p_sets_data === null || params.p_sets_data === undefined) {
+    setsDataJson = null;
+  } else if (params.p_sets_data.length > 0) {
+    setsDataJson = params.p_sets_data.map((set) => ({
+      reps: set.reps ?? null,
+      duration_seconds: set.duration_seconds ?? null,
+      weight_kg: set.weight_kg ?? null,
+    }));
+  } else {
+    // Pusta tablica = wyczyść wszystkie serie
+    setsDataJson = [];
+  }
 
   const { data, error } = await client.rpc("save_workout_session_exercise", {
     p_session_id: params.p_session_id,
