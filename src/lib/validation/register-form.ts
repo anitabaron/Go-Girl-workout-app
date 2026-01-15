@@ -85,7 +85,7 @@ export function validateRegisterField(
     }
     return undefined;
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof z.ZodError && error.errors && error.errors.length > 0) {
       return error.errors[0]?.message;
     }
     return undefined;

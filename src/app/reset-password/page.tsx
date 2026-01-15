@@ -12,8 +12,8 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeader showBack={false} />
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="grid min-h-[calc(100vh-4rem)] place-items-center p-4">
+        <Card className="w-full max-w-lg min-w-[320px]">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Reset hasła</CardTitle>
             <CardDescription>
