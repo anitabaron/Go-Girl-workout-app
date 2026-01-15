@@ -88,7 +88,7 @@ begin
             and wss.reps > 0
         group by wse.session_id
         having sum(wss.reps) = v_total_reps
-        order by wse.updated_at desc
+        order by max(wse.updated_at) desc
         limit 1
         on conflict (user_id, exercise_id, metric_type)
         do update set

@@ -133,53 +133,69 @@ export function WorkoutSessionAssistant({
       data: ExerciseFormData,
       advanceCursor: boolean
     ): Promise<boolean> => {
+      console.log("[WorkoutSessionAssistant.saveExercise] Starting", {
+        sessionId,
+        exerciseOrder: currentExercise.exercise_order,
+        advanceCursor,
+        formData: data,
+      });
+
       setAutosaveStatus("saving");
       setAutosaveError(undefined);
 
       try {
         const command = formDataToAutosaveCommand(data, advanceCursor);
+        console.log("[WorkoutSessionAssistant.saveExercise] Command prepared:", JSON.stringify(command, null, 2));
 
-        const response = await fetch(
-          `/api/workout-sessions/${sessionId}/exercises/${currentExercise.order}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(command),
-          }
-        );
+        const url = `/api/workout-sessions/${sessionId}/exercises/${currentExercise.exercise_order}`;
+        console.log("[WorkoutSessionAssistant.saveExercise] Fetching URL:", url);
+
+        const response = await fetch(url, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(command),
+        });
+
+        console.log("[WorkoutSessionAssistant.saveExercise] Response status:", response.status, response.statusText);
+        console.log("[WorkoutSessionAssistant.saveExercise] Response ok:", response.ok);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          console.error("[WorkoutSessionAssistant.saveExercise] Error response:", errorData);
           throw new Error(errorData.message || "Błąd zapisu ćwiczenia");
         }
 
         const result = await response.json();
+        console.log("[WorkoutSessionAssistant.saveExercise] Success response:", JSON.stringify(result, null, 2));
         const updatedExercise = result.data;
 
         // Aktualizuj sesję z odpowiedzi
         setSession((prev) => ({
           ...prev,
           exercises: prev.exercises.map((ex) =>
-            ex.order === currentExercise.order ? updatedExercise : ex
+            ex.exercise_order === currentExercise.exercise_order ? updatedExercise : ex
           ),
           current_position:
             result.data.cursor?.current_position ?? prev.current_position,
         }));
 
+        console.log("[WorkoutSessionAssistant.saveExercise] Session updated successfully");
         setAutosaveStatus("saved");
         return true;
       } catch (error) {
+        console.error("[WorkoutSessionAssistant.saveExercise] Error:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Błąd zapisu ćwiczenia";
+        console.error("[WorkoutSessionAssistant.saveExercise] Error message:", errorMessage);
         setAutosaveError(errorMessage);
         setAutosaveStatus("error");
         toast.error(errorMessage);
         return false;
       }
     },
-    [sessionId, currentExercise.order]
+    [sessionId, currentExercise.exercise_order]
   );
 
   // Obsługa nawigacji next
