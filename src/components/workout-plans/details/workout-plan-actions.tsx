@@ -35,9 +35,11 @@ export function WorkoutPlanActions({
   };
 
   const handleStartWorkout = async () => {
+    console.log("handleStartWorkout called, planId:", planId);
     setIsStarting(true);
 
     try {
+      console.log("Sending POST request to /api/workout-sessions");
       const response = await fetch("/api/workout-sessions", {
         method: "POST",
         headers: {
@@ -48,16 +50,22 @@ export function WorkoutPlanActions({
         }),
       });
 
+      console.log("Response status:", response.status, response.statusText);
+
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error response:", errorData);
+        
         if (response.status === 404) {
           toast.error("Plan treningowy nie został znaleziony");
         } else if (response.status === 401 || response.status === 403) {
           toast.error("Brak autoryzacji. Zaloguj się ponownie.");
           router.push("/login");
         } else if (response.status >= 500) {
-          toast.error("Wystąpił błąd serwera. Spróbuj ponownie później.");
+          toast.error(
+            errorData.message || "Wystąpił błąd serwera. Spróbuj ponownie później."
+          );
         } else {
-          const errorData = await response.json().catch(() => ({}));
           toast.error(
             errorData.message || "Nie udało się rozpocząć sesji treningowej"
           );
@@ -66,15 +74,19 @@ export function WorkoutPlanActions({
       }
 
       const data = await response.json();
+      console.log("Success response data:", data);
       const sessionId = data.id || data.data?.id;
+      console.log("Extracted sessionId:", sessionId);
 
       if (sessionId) {
         toast.success("Sesja treningowa została rozpoczęta");
         router.push(`/workout-sessions/${sessionId}/active`);
       } else {
+        console.error("No sessionId found in response:", data);
         toast.error("Nie udało się pobrać ID sesji treningowej");
       }
     } catch (error) {
+      console.error("Error in handleStartWorkout:", error);
       if (error instanceof TypeError) {
         toast.error(
           "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."

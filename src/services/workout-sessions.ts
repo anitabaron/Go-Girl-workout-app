@@ -764,7 +764,7 @@ async function fetchUpdatedExerciseWithCursor(
     );
   }
 
-  const exerciseDTO = mapExerciseToDTO(updatedExercise, sets?.data ?? []);
+  const exerciseDTO = mapExerciseToDTO(updatedExercise, sets ?? []);
 
   return {
     ...exerciseDTO,

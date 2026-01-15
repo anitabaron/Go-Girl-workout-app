@@ -114,16 +114,46 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.error(
+        "POST /api/workout-sessions JSON parse error",
+        jsonError
+      );
+      return NextResponse.json(
+        {
+          message: "Nieprawidłowy format JSON w body żądania.",
+          code: "BAD_REQUEST",
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log("POST /api/workout-sessions request body:", JSON.stringify(body, null, 2));
+
     const { session, isNew } = await startWorkoutSessionService(userId, body);
+
+    console.log("POST /api/workout-sessions success, isNew:", isNew, "sessionId:", session.id);
 
     return NextResponse.json(session, { status: isNew ? 201 : 200 });
   } catch (error) {
     if (error instanceof ServiceError) {
+      console.error(
+        "POST /api/workout-sessions ServiceError:",
+        error.code,
+        error.message,
+        error.details
+      );
       return respondWithServiceError(error);
     }
 
     if (error instanceof ZodError) {
+      console.error(
+        "POST /api/workout-sessions ZodError:",
+        error.issues
+      );
       return NextResponse.json(
         {
           message: "Nieprawidłowe dane wejściowe.",
@@ -135,6 +165,9 @@ export async function POST(request: Request) {
     }
 
     console.error("POST /api/workout-sessions unexpected error", error);
+    if (error instanceof Error) {
+      console.error("Error stack:", error.stack);
+    }
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",

@@ -69,7 +69,26 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.error(
+        "PATCH /api/workout-sessions/[id]/exercises/[order] JSON parse error",
+        jsonError
+      );
+      return NextResponse.json(
+        {
+          message: "Nieprawidłowy format JSON w body żądania.",
+          code: "BAD_REQUEST",
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log("PATCH request body:", JSON.stringify(body, null, 2));
+    console.log("SessionId:", sessionId, "Order:", orderNumber);
+
     const result = await autosaveWorkoutSessionExerciseService(
       userId,
       sessionId,
@@ -80,10 +99,20 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ data: result }, { status: 200 });
   } catch (error) {
     if (error instanceof ServiceError) {
+      console.error(
+        "PATCH /api/workout-sessions/[id]/exercises/[order] ServiceError:",
+        error.code,
+        error.message,
+        error.details
+      );
       return respondWithServiceError(error);
     }
 
     if (error instanceof ZodError) {
+      console.error(
+        "PATCH /api/workout-sessions/[id]/exercises/[order] ZodError:",
+        error.issues
+      );
       return NextResponse.json(
         {
           message: "Nieprawidłowe dane wejściowe.",
@@ -98,6 +127,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       "PATCH /api/workout-sessions/[id]/exercises/[order] unexpected error",
       error
     );
+    if (error instanceof Error) {
+      console.error("Error stack:", error.stack);
+    }
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",

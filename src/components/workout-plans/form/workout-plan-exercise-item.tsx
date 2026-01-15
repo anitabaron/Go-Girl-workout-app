@@ -43,7 +43,10 @@ export function WorkoutPlanExerciseItem({
   const sectionOrderId = useId();
 
   const exerciseKey = `exercise_${index}`;
-  const exerciseErrors = errors[`${exerciseKey}.section_type`]
+  const exerciseErrors: Partial<{
+    section_type: string;
+    section_order: string;
+  }> = errors[`${exerciseKey}.section_type`]
     ? { section_type: errors[`${exerciseKey}.section_type`] }
     : errors[`${exerciseKey}.section_order`]
       ? { section_order: errors[`${exerciseKey}.section_order`] }
