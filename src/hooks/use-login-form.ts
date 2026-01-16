@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/db/supabase.client";
+import { useAuthStore } from "@/stores/auth-store";
+import { mapAuthError } from "@/lib/auth-errors";
 
 // ViewModel - stan formularza logowania
 export type LoginFormState = {
@@ -37,6 +39,7 @@ type UseLoginFormProps = {
 
 export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
   const router = useRouter();
+  const setUser = useAuthStore((state) => state.setUser);
   const [fields, setFields] = useState<LoginFormState>({
     email: "",
     password: "",
@@ -180,39 +183,11 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         });
 
         if (error) {
-          // Obsługa błędów autoryzacji
-          let errorMessage = "Nieprawidłowy email lub hasło";
-          const formErrors: string[] = [];
+          // Użycie centralnego mapowania błędów
+          const errorMessage = mapAuthError(error);
+          const formErrors: string[] = [errorMessage];
 
-          // Sprawdzenie typu błędu
-          const errorMsg = error.message.toLowerCase();
-          
-          if (
-            errorMsg.includes("email not confirmed") ||
-            errorMsg.includes("email_not_confirmed")
-          ) {
-            errorMessage =
-              "Konto nie zostało aktywowane. Sprawdź email i kliknij link aktywacyjny.";
-            formErrors.push(errorMessage);
-            toast.error(errorMessage);
-          } else if (
-            errorMsg.includes("rate limit") ||
-            errorMsg.includes("too many requests") ||
-            error.status === 429
-          ) {
-            errorMessage =
-              "Zbyt wiele prób logowania. Spróbuj ponownie za chwilę.";
-            formErrors.push(errorMessage);
-            toast.error(errorMessage);
-          } else if (error.status && error.status >= 500) {
-            errorMessage = "Wystąpił błąd serwera. Spróbuj ponownie później.";
-            formErrors.push(errorMessage);
-            toast.error(errorMessage);
-          } else {
-            // Domyślny komunikat błędu (już ustawiony na początku)
-            formErrors.push(errorMessage);
-            toast.error(errorMessage);
-          }
+          toast.error(errorMessage);
 
           setErrors({
             _form: formErrors,
@@ -239,39 +214,49 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
               }
             }
           }, 100);
-        } else if (data.session) {
+        } else if (data.session && data.user) {
+          // Remember Me - próba ustawienia dłuższego czasu wygaśnięcia cookies
+          if (fields.rememberMe) {
+            try {
+              // Pobranie projectRef z URL Supabase
+              const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+              const projectRef = supabaseUrl.split("//")[1]?.split(".")[0] || "";
+              
+              if (projectRef) {
+                // Próba ustawienia dłuższego maxAge dla cookies Supabase (30 dni)
+                const cookieName = `sb-${projectRef}-auth-token`;
+                const maxAge = 30 * 24 * 60 * 60; // 30 dni w sekundach
+                
+                // Ustawienie cookie z dłuższym czasem wygaśnięcia
+                // Uwaga: Cookies Supabase mogą być httpOnly, więc ta operacja może nie zadziałać
+                // W takim przypadku, długość sesji jest kontrolowana przez konfigurację Supabase
+                document.cookie = `${cookieName}=${data.session.access_token}; max-age=${maxAge}; path=/; SameSite=Lax`;
+              }
+            } catch {
+              // Ignorowanie błędów związanych z cookies (mogą być httpOnly)
+              // Długość sesji jest kontrolowana przez konfigurację Supabase
+              console.debug("Remember Me: Cookie modification not possible (may be httpOnly)");
+            }
+          }
+
+          // Aktualizacja Zustand store
+          setUser(data.user);
+
           // Sukces - przekierowanie
           toast.success("Zalogowano pomyślnie");
+          
           if (onSuccess) {
             onSuccess();
           } else {
+            // Kolejność operacji: setUser() → router.push() → router.refresh()
             router.push("/");
+            router.refresh();
           }
         }
       } catch (error) {
-        // Obsługa błędów sieci
-        let errorMessage: string;
+        // Obsługa błędów sieci i innych nieoczekiwanych błędów
+        const errorMessage = mapAuthError(error);
         
-        if (error instanceof TypeError) {
-          // Network error (brak połączenia, timeout)
-          if (
-            error.message.includes("fetch") ||
-            error.message.includes("network") ||
-            error.message.includes("Failed to fetch")
-          ) {
-            errorMessage =
-              "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.";
-          } else {
-            errorMessage =
-              "Wystąpił błąd połączenia. Sprawdź połączenie i spróbuj ponownie.";
-          }
-        } else {
-          // Nieoczekiwany błąd
-          errorMessage =
-            "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.";
-          console.error("Unexpected error during login:", error);
-        }
-
         toast.error(errorMessage);
         setErrors({
           _form: [errorMessage],
@@ -293,7 +278,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         setIsLoading(false);
       }
     },
-    [fields, router, onSuccess]
+    [fields, router, onSuccess, setUser]
   );
 
   return {

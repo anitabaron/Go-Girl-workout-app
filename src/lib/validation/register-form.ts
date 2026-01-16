@@ -85,8 +85,8 @@ export function validateRegisterField(
     }
     return undefined;
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return error.errors[0]?.message;
+    if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+      return error.issues[0]?.message;
     }
     return undefined;
   }
@@ -107,7 +107,7 @@ export function validateRegisterForm(
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors: Partial<Record<keyof RegisterFormState, string>> = {};
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         const path = err.path[0] as keyof RegisterFormState;
         if (path) {
           errors[path] = err.message;

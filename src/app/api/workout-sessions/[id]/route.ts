@@ -5,9 +5,23 @@ import {
   getWorkoutSessionService,
   ServiceError,
 } from "@/services/workout-sessions";
+import { createClient } from "@/db/supabase.server";
 
-function getUserId() {
-  return process.env.DEFAULT_USER_ID ?? null;
+/**
+ * Pobiera ID użytkownika z sesji Supabase dla API routes.
+ * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
+ */
+async function getUserIdFromSession(): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.id) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return user.id;
 }
 
 function isUuid(value: string) {
@@ -24,14 +38,7 @@ type RouteContext = {
 
 export async function GET(request: Request, { params }: RouteContext) {
   try {
-    const userId = getUserId();
-
-    if (!userId || !isUuid(userId)) {
-      return NextResponse.json(
-        { message: "Brak lub nieprawidłowy DEFAULT_USER_ID w środowisku." },
-        { status: 500 }
-      );
-    }
+    const userId = await getUserIdFromSession();
 
     const { id } = await params;
     const sessionId = id ?? new URL(request.url).searchParams.get("id");
@@ -54,6 +61,13 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     return NextResponse.json(session, { status: 200 });
   } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json(
+        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
+
     if (error instanceof ServiceError) {
       return respondWithServiceError(error);
     }

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { getPersonalRecordsByExerciseService, ServiceError } from "@/services/personal-records";
 import { getExerciseService } from "@/services/exercises";
 import { mapExercisePersonalRecordsToViewModel, typeLabels, partLabels } from "@/lib/personal-records/view-model";
@@ -29,8 +29,8 @@ export default async function ExercisePersonalRecordsPage({
     redirect("/personal-records");
   }
 
-  // Pobranie user ID
-  const userId = await getUserId();
+  // Pobranie user ID (wymaga autoryzacji)
+  const userId = await requireAuth();
 
   // Pobranie rekordów dla ćwiczenia
   let viewModel;

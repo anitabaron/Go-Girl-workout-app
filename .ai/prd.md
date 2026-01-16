@@ -68,8 +68,9 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 ### 3.1 Konta i bezpieczeństwo dostępu
 
 3.1.1 Aplikacja musi obsługiwać logowanie użytkowników przez Supabase Auth z użyciem tradycyjnego formularza email/password. Aplikacja powinna również obsługiwać rejestrację nowych użytkowników oraz reset hasła.
-3.1.2 Wszystkie dane domenowe (ćwiczenia, plany, sesje, PR, logi AI) muszą być prywatne per użytkownik i zabezpieczone na poziomie bazy przez RLS z filtrem user_id.
-3.1.3 Frontend nie może zakładać zaufania do danych po stronie klienta; egzekwowanie dostępu musi działać niezależnie od UI.
+3.1.2 Formularz logowania musi zawierać checkbox "Zapamiętaj mnie" (Remember Me), który pozwala użytkowniczce przedłużyć czas trwania sesji. Wartość checkboxa jest przekazywana do Supabase Auth podczas logowania.
+3.1.3 Wszystkie dane domenowe (ćwiczenia, plany, sesje, PR, logi AI) muszą być prywatne per użytkownik i zabezpieczone na poziomie bazy przez RLS z filtrem user_id.
+3.1.4 Frontend nie może zakładać zaufania do danych po stronie klienta; egzekwowanie dostępu musi działać niezależnie od UI.
 
 ### 3.2 Biblioteka ćwiczeń (Exercise) - CRUD
 
@@ -224,8 +225,16 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   - Użytkowniczka może zalogować się używając formularza email/password i zakończyć proces logowania sukcesem.
   - Użytkowniczka może zarejestrować nowe konto używając formularza rejestracji.
   - Użytkowniczka może zresetować hasło, jeśli je zapomniała.
+  - Formularz logowania zawiera checkbox "Zapamiętaj mnie" (Remember Me), który pozwala przedłużyć czas trwania sesji.
+  - Jeśli użytkowniczka zaznaczy "Zapamiętaj mnie", sesja pozostaje aktywna dłużej (zgodnie z konfiguracją Supabase Auth).
+  - Jeśli użytkowniczka nie zaznaczy "Zapamiętaj mnie", sesja wygasa zgodnie z domyślnymi ustawieniami.
   - Po zalogowaniu aplikacja przechodzi do widoku głównego.
   - Po wylogowaniu dane użytkowniczki nie są widoczne.
+  - Funkcjonalności aplikacji poza stroną główną '/' i dedykowanymi stronami do logowania, rejestracji, odzyskiwania hasła - nie są dostępne dla niezalogowanego uytkownika (US-010 - US-090)
+  - Użytkownik może logować się do systemu poprzez przycisk w prawym górnym rogu.
+  - Użytkownik może się wylogować z systemu poprzez przycisk w prawym górnym rogu w głównym.
+  - Nie korzystamy z zewnętrznych serwisów logowania (np. Google, GitHub).
+  - Odzyskiwanie hasła powinno być możliwe.
 
 - ID: US-002
   Tytuł: Izolacja danych użytkowników (RLS)

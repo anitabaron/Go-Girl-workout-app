@@ -271,8 +271,8 @@ export function useExerciseForm({
       }
       return undefined;
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return error.errors[0]?.message;
+      if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+        return error.issues[0]?.message;
       }
       return undefined;
     }

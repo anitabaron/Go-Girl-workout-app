@@ -44,8 +44,8 @@ export function useResetPasswordForm() {
       resetPasswordFormSchema.shape[field].parse(value);
       return undefined;
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return error.errors[0]?.message;
+      if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+        return error.issues[0]?.message;
       }
       return "Nieprawidłowa wartość";
     }
@@ -60,7 +60,7 @@ export function useResetPasswordForm() {
 
     if (!result.success) {
       const fieldErrors: ResetPasswordFormErrors = {};
-      result.error.errors.forEach((error) => {
+      result.error.issues.forEach((error) => {
         const field = error.path[0] as keyof ResetPasswordFormState;
         if (field === "email") {
           fieldErrors.email = error.message;

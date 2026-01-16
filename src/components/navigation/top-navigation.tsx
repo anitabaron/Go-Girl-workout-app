@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navigationItems } from "./navigation-items";
 import { QuickStartButton } from "./quick-start-button";
-import { UserMenu } from "./user-menu";
 import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/db/supabase.client";
+import { useAuthStore } from "@/stores/auth-store";
+import { toast } from "sonner";
 
 export interface TopNavigationProps {
   user?: User | null;
@@ -20,11 +22,31 @@ export interface TopNavigationProps {
 export function TopNavigation({
   user,
   activeSection,
-}: TopNavigationProps) {
+}: Readonly<TopNavigationProps>) {
   const pathname = usePathname();
+  const router = useRouter();
   const currentSection =
     activeSection ??
     navigationItems.find((item) => pathname.startsWith(item.href))?.id;
+
+  const clearUser = useAuthStore((state) => state.clearUser);
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      toast.error("Nie udało się wylogować. Spróbuj ponownie.");
+      console.error("Sign out error:", error);
+      return;
+    }
+
+    // Czyszczenie Zustand store
+    clearUser();
+
+    // Kolejność operacji: signOut() → clearUser() → router.push() → router.refresh()
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <nav
@@ -66,11 +88,16 @@ export function TopNavigation({
           </div>
         </div>
 
-        {/* Quick Start Button and User Menu / Login Link */}
+        {/* Quick Start Button and Login/Logout Button */}
         <div className="flex items-center gap-3">
           <QuickStartButton variant="button" />
           {user ? (
-            <UserMenu user={user} />
+            <button
+              onClick={handleSignOut}
+              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+            >
+              WYloguj
+            </button>
           ) : (
             <Link
               href="/login"

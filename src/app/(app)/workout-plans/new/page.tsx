@@ -1,7 +1,11 @@
+import { requireAuth } from "@/lib/auth";
 import { WorkoutPlanForm } from "@/components/workout-plans/form/workout-plan-form";
 import { PageHeader } from "@/components/navigation/page-header";
 
 export default async function NewWorkoutPlanPage() {
+  // Weryfikacja autoryzacji - automatyczne przekierowanie niezalogowanych użytkowników
+  await requireAuth();
+
   // W trybie tworzenia nie potrzebujemy pobierać danych
   // Formularz będzie pusty
 

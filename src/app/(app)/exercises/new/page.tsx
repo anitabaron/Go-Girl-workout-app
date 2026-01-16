@@ -1,7 +1,10 @@
+import { requireAuth } from "@/lib/auth";
 import { ExerciseForm } from "@/components/exercises/form/exercise-form";
 import { PageHeader } from "@/components/navigation/page-header";
 
-export default function NewExercisePage() {
+export default async function NewExercisePage() {
+  // Weryfikacja autoryzacji - automatyczne przekierowanie niezalogowanych użytkowników
+  await requireAuth();
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeader backHref="/exercises" />

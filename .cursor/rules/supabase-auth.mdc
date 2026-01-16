@@ -1,0 +1,458 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+
+# Supabase Auth Integration with Next.js
+
+Use this guide to introduce authentication (sign-up & sign-in) in Next.js 16 applications with App Router and server-side rendering (SSR) support
+
+## Before we start
+
+VERY IMPORTANT: Ask me which pages or components should behave differently after introducing authentication. Adjust further steps accordingly.
+
+## Core Requirements
+
+1. Use `@supabase/ssr` package (NOT auth-helpers)
+2. Use ONLY `getAll` and `setAll` for cookie management
+3. NEVER use individual `get`, `set`, or `remove` cookie methods
+4. Implement proper session management with middleware based on JWT (Supabase Auth)
+5. Separate client and server Supabase instances for Client Components and Server Components
+6. Use `getUserId()` helper function for authentication checks in Server Components
+7. **Implement "Remember Me" checkbox in login form** - required by PRD (see `prd.md` section 3.1.2 and US-001)
+
+## Installation
+
+```bash
+npm install @supabase/ssr @supabase/supabase-js
+```
+
+## Environment Variables
+
+Create `.env.local` file with required Supabase credentials (based on the snippet below or `.env.example` in project root)
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+DEFAULT_USER_ID=your_default_user_id_for_development
+```
+
+**Important:** In Next.js, environment variables used in client-side code must be prefixed with `NEXT_PUBLIC_`.
+
+Make sure `.env.example` is updated with the correct environment variables.
+
+## Implementation Steps
+
+### 1. Create Supabase Server Instance
+
+Create or update Supabase server client in `src/db/supabase.server.ts`:
+
+```typescript
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import type { Database } from "./database.types";
+
+/**
+ * Tworzy klienta Supabase dla Server Components i Server Actions w Next.js 16 App Router.
+ *
+ * Ten klient używa @supabase/ssr do zarządzania sesjami przez cookies,
+ * co zapewnia prawidłowe działanie autentykacji w środowisku server-side.
+ *
+ * @returns {Promise<ReturnType<typeof createServerClient<Database>>>} Instancja klienta Supabase
+ *
+ * @example
+ * // W Server Component:
+ * const supabase = await createClient();
+ * const { data } = await supabase.from('exercises').select('*');
+ *
+ * @example
+ * // W Server Action:
+ * 'use server';
+ * export async function getExercises() {
+ *   const supabase = await createClient();
+ *   return await supabase.from('exercises').select('*');
+ * }
+ */
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions, or you can handle it differently.
+          }
+        },
+      },
+    }
+  );
+}
+```
+
+### 2. Create Supabase Client Instance
+
+Create or update Supabase client for Client Components in `src/db/supabase.client.ts`:
+
+```typescript
+import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "./database.types";
+
+/**
+ * Klient Supabase dla Client Components w Next.js 16 App Router.
+ *
+ * Ten klient używa @supabase/ssr do zarządzania sesjami przez cookies,
+ * co zapewnia synchronizację sesji między server i client components.
+ *
+ * Użyj tego klienta w komponentach oznaczonych "use client".
+ *
+ * @example
+ * "use client";
+ * import { supabase } from "@/db/supabase.client";
+ *
+ * export function MyComponent() {
+ *   const { data } = await supabase.from('exercises').select('*');
+ * }
+ */
+export const supabase = createBrowserClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+```
+
+### 3. Create Auth Helper Function
+
+Create or update auth helper in `src/lib/auth.ts`:
+
+```typescript
+import { createClient } from "@/db/supabase.server";
+
+/**
+ * Pobiera ID użytkownika z sesji Supabase lub zwraca DEFAULT_USER_ID z env.
+ * Używane w Server Components do autentykacji.
+ *
+ * @returns {Promise<string>} ID użytkownika
+ * @throws {Error} Jeśli brak sesji i brak DEFAULT_USER_ID
+ *
+ * @example
+ * // W Server Component:
+ * const userId = await getUserId();
+ * const { data } = await supabase.from('exercises').select('*').eq('user_id', userId);
+ */
+export async function getUserId(): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user?.id) {
+    return user.id;
+  }
+
+  // Fallback dla developmentu
+  const defaultUserId = process.env.DEFAULT_USER_ID;
+
+  if (!defaultUserId) {
+    throw new Error("Brak aktywnej sesji i DEFAULT_USER_ID w środowisku.");
+  }
+
+  return defaultUserId;
+}
+```
+
+### 4. Implement Authentication Middleware
+
+Create or update middleware in `src/middleware.ts`:
+
+**Note:** In this project, middleware only refreshes the session. Route protection is handled in individual Server Components using `getUserId()`.
+
+```typescript
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // IMPORTANT: Always get user session first before any other operations
+  // This refreshes the session if expired - required for Server Components
+  await supabase.auth.getUser();
+
+  return supabaseResponse;
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    String.raw`/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)`,
+  ],
+};
+```
+
+### 5. Create Auth Pages
+
+Create auth pages in `src/app/login/`, `src/app/register/`, and `src/app/reset-password/`:
+
+```typescript
+// src/app/login/page.tsx
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { createClient } from "@/db/supabase.server";
+import { LoginForm } from "@/components/auth/login/login-form";
+
+export const metadata: Metadata = {
+  title: "Logowanie | Go Girl Workout App",
+  description: "Zaloguj się do swojego konta",
+};
+
+export default async function LoginPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Przekierowanie zalogowanych użytkowników do strony głównej
+  if (user !== null) {
+    redirect("/");
+  }
+
+  return (
+    <div>
+      <LoginForm />
+    </div>
+  );
+}
+```
+
+### 6. Protect Routes in Server Components
+
+In protected Next.js pages (Server Components), use `getUserId()`:
+
+```typescript
+// src/app/(app)/exercises/page.tsx
+import { getUserId } from "@/lib/auth";
+import { createClient } from "@/db/supabase.server";
+import { redirect } from "next/navigation";
+
+export default async function ExercisesPage() {
+  try {
+    const userId = await getUserId();
+    const supabase = await createClient();
+
+    // Fetch data using userId
+    const { data } = await supabase
+      .from("exercises")
+      .select("*")
+      .eq("user_id", userId);
+
+    return (
+      <div>
+        <h1>Exercises</h1>
+        {/* Render exercises */}
+      </div>
+    );
+  } catch (error) {
+    // If getUserId() throws (no session and no DEFAULT_USER_ID), redirect to login
+    redirect("/login");
+  }
+}
+```
+
+### 7. Use Auth in Client Components
+
+To access user data in Client Components, use the client Supabase instance:
+
+```typescript
+// src/components/user-profile.tsx
+"use client";
+
+import { supabase } from "@/db/supabase.client";
+import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+
+export function UserProfile() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (!user) return <div>Not authenticated</div>;
+
+  return <div>Welcome, {user.email}!</div>;
+}
+```
+
+### 8. Auth Forms in Client Components
+
+Auth forms (login, register, reset password) should use the client Supabase instance:
+
+```typescript
+// src/components/auth/login/login-form.tsx
+"use client";
+
+import { supabase } from "@/db/supabase.client";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+export function LoginForm() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      // Handle error (show toast, etc.)
+      console.error(error);
+      return;
+    }
+
+    if (data.user) {
+      // Remember Me: If checked, configure session persistence
+      // Note: Supabase Auth handles session management through cookies
+      // The "Remember Me" checkbox can influence cookie maxAge or session storage
+      // For implementation details, see auth-spec.md
+
+      router.push("/");
+      router.refresh();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Email and password fields */}
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+
+      {/* Remember Me checkbox - REQUIRED by PRD */}
+      <label>
+        <input
+          type="checkbox"
+          checked={rememberMe}
+          onChange={(e) => setRememberMe(e.target.checked)}
+        />
+        Zapamiętaj mnie
+      </label>
+
+      <button type="submit">Zaloguj</button>
+    </form>
+  );
+}
+```
+
+**Remember Me Implementation:**
+
+- The "Remember Me" checkbox is **required** by PRD (see `prd.md` and `auth-spec.md`)
+- When checked, the session should persist longer (extended session duration)
+- Implementation details:
+  - The `rememberMe` value is passed to Supabase Auth during login
+  - Session duration is controlled by Supabase configuration (`jwt_expiry` in `config.toml`)
+  - Cookies may have longer `maxAge` when "Remember Me" is checked
+  - For detailed implementation, see `auth-spec.md` section 4.1.2 and 4.1.3
+
+## Project Structure
+
+This project uses the following structure for authentication:
+
+- **Middleware** (`src/middleware.ts`): Only refreshes session, doesn't block routes
+- **Server Client** (`src/db/supabase.server.ts`): For Server Components and Server Actions
+- **Client Instance** (`src/db/supabase.client.ts`): For Client Components
+- **Auth Helper** (`src/lib/auth.ts`): `getUserId()` function for Server Components
+- **Auth Pages**: `src/app/login/`, `src/app/register/`, `src/app/reset-password/`
+- **Protected Routes**: All routes in `src/app/(app)/` require authentication
+- **No API Routes for Auth**: Authentication is handled directly in Client Components using `supabase.auth` methods
+- **Remember Me**: Login form includes "Zapamiętaj mnie" checkbox (required by PRD) - see `auth-spec.md` for implementation details
+
+## Security Best Practices
+
+- Set proper cookie options (httpOnly, secure, sameSite) - handled automatically by `@supabase/ssr`
+- Never expose Supabase service role key in client-side code
+- Use `NEXT_PUBLIC_` prefix only for variables needed in Client Components
+- Validate all user input server-side
+- Use proper error handling and logging
+- Always use Server Actions or Route Handlers for sensitive operations
+- Use `getUserId()` in Server Components to ensure user is authenticated before accessing data
+- **Remember Me**: Implement "Remember Me" checkbox in login form as required by PRD - this allows users to extend session duration
+
+## Common Pitfalls
+
+1. DO NOT use individual cookie methods (get/set/remove) - use `getAll` and `setAll` only
+2. DO NOT import from `@supabase/auth-helpers-nextjs` - use `@supabase/ssr` instead
+3. DO NOT skip the `auth.getUser()` call in middleware - it refreshes the session
+4. DO NOT modify cookie handling logic in `setAll` - it's critical for session management
+5. Always handle auth state changes properly in Client Components
+6. DO NOT use server client in Client Components - use `supabase.client.ts` instead
+7. DO NOT use client instance in Server Components - use `supabase.server.ts` instead
+8. Remember that `cookies()` from `next/headers` must be awaited in Next.js 15+
+9. Always use `getUserId()` in protected Server Components instead of manually checking user
+10. Middleware in this project doesn't block routes - protection is done in Server Components

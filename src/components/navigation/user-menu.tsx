@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { LogOut, User as UserIcon } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/db/supabase.client";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,7 @@ export interface UserMenuProps {
  */
 export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
+  const clearUser = useAuthStore((state) => state.clearUser);
 
   if (!user) {
     return null;
@@ -40,7 +42,11 @@ export function UserMenu({ user }: UserMenuProps) {
       return;
     }
 
-    router.push("/login");
+    // Czyszczenie Zustand store
+    clearUser();
+
+    // Kolejność operacji: signOut() → clearUser() → router.push() → router.refresh()
+    router.push("/");
     router.refresh();
   };
 

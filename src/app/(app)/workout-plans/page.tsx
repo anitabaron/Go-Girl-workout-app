@@ -1,5 +1,5 @@
 import { workoutPlanQuerySchema } from "@/lib/validation/workout-plans";
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { listWorkoutPlansService } from "@/services/workout-plans";
 import type { PlanQueryParams } from "@/types";
 import { WorkoutPlansList } from "@/components/workout-plans/workout-plans-list";
@@ -26,8 +26,8 @@ export default async function WorkoutPlansPage({
     ? parseResult.data
     : workoutPlanQuerySchema.parse({});
 
-  // Pobranie user ID
-  const userId = await getUserId();
+  // Pobranie user ID (wymaga autoryzacji)
+  const userId = await requireAuth();
 
   // Wywołanie service do pobrania danych
   const result = await listWorkoutPlansService(userId, parsedQuery);

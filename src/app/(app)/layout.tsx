@@ -1,10 +1,13 @@
 import { TopNavigation } from "@/components/navigation/top-navigation";
 import { BottomNavigation } from "@/components/navigation/bottom-navigation";
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { createClient } from "@/db/supabase.server";
 
 /**
  * Layout dla wszystkich stron aplikacji (oprócz stron autoryzacji).
  * Zawiera nawigację górną (desktop) i dolną (mobile).
+ * 
+ * AuthProvider synchronizuje stan autentykacji między Server Components a Client Components.
  */
 export default async function AppLayout({
   children,
@@ -18,7 +21,7 @@ export default async function AppLayout({
   } = await supabase.auth.getUser();
 
   return (
-    <>
+    <AuthProvider user={user}>
       {/* Top Navigation - Desktop only */}
       <div className="hidden md:block">
         <TopNavigation user={user} />
@@ -28,8 +31,8 @@ export default async function AppLayout({
 
       {/* Bottom Navigation - Mobile only */}
       <div className="md:hidden">
-        <BottomNavigation />
+        <BottomNavigation user={user} />
       </div>
-    </>
+    </AuthProvider>
   );
 }

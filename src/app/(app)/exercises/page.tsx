@@ -1,5 +1,5 @@
 import { exerciseQuerySchema } from "@/lib/validation/exercises";
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { listExercisesService } from "@/services/exercises";
 import type { ExerciseQueryParams } from "@/types";
 import { ExercisesList } from "@/components/exercises/exercises-list";
@@ -26,8 +26,8 @@ export default async function ExercisesPage({
     ? parseResult.data
     : exerciseQuerySchema.parse({});
 
-  // Pobranie user ID
-  const userId = await getUserId();
+  // Pobranie user ID (wymaga autoryzacji)
+  const userId = await requireAuth();
 
   // Wywołanie service do pobrania danych
   const result = await listExercisesService(userId, parsedQuery);
