@@ -20,7 +20,7 @@ interface ErrorProps {
  * @example
  * // W Server Component:
  * export default async function ProtectedPage() {
- *   const userId = await getUserId(); // Jeśli rzuca błąd, Error Boundary go przechwytuje
+ *   const userId = await requireAuth(); // Jeśli rzuca błąd, Error Boundary go przechwytuje
  *   return <div>Protected content</div>;
  * }
  */

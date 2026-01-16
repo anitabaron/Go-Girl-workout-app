@@ -12,6 +12,13 @@ Niniejszy dokument zawiera plan opcjonalnych ulepszeń modułu autentykacji, kt�
 
 ### ✅ Zaimplementowane funkcjonalności
 
+**Fundament bezpieczeństwa:**
+0. ✅ **Ochrona routes** - wszystkie Server Components i API routes są chronione
+   - Wszystkie strony w `(app)` route group używają `getUserId()` lub `requireAuth()`
+   - Wszystkie API routes używają `getUserIdFromSession()` (prawdziwa autoryzacja)
+   - Przekierowanie do `/login` lub błąd 401 przy braku autoryzacji
+
+**Podstawowa funkcjonalność autentykacji:**
 1. ✅ Formularz logowania z walidacją (Zod)
 2. ✅ Integracja z Supabase Auth (`signInWithPassword`)
 3. ✅ Centralne mapowanie błędów (`mapAuthError`)
@@ -28,6 +35,17 @@ Niniejszy dokument zawiera plan opcjonalnych ulepszeń modułu autentykacji, kt�
 - **Remember Me**: Próba modyfikacji cookies może nie zadziałać, jeśli cookies są `httpOnly` (zarządzane przez `@supabase/ssr`)
 - **Reset Password Confirm**: Weryfikacja tokenu działa, ale hook `useResetPasswordConfirmForm` wymaga pełnej implementacji
 - **Callback**: Brak implementacji `/auth/callback` (wymagane tylko jeśli `enable_email_autoconfirm = false`)
+
+---
+
+## Uwaga: Ochrona routes jako fundament bezpieczeństwa
+
+**Przed implementacją ulepszeń, zalecane jest upewnienie się, że:**
+- ✅ Wszystkie Server Components w `(app)` route group są chronione
+- ✅ Wszystkie API routes używają prawdziwej autoryzacji (nie `DEFAULT_USER_ID`)
+- ✅ Próby dostępu bez autoryzacji są prawidłowo obsługiwane (przekierowanie lub 401)
+
+Ochrona routes jest ważnym elementem pierwszego etapu wdrożenia autoryzacji. Zalecane jest wykonanie jej jako pierwszego kroku, aby zapewnić spójną ochronę wszystkich tras od początku.
 
 ---
 

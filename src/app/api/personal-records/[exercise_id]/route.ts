@@ -5,15 +5,23 @@ import {
   getPersonalRecordsByExerciseService,
   ServiceError,
 } from "@/services/personal-records";
+import { createClient } from "@/db/supabase.server";
 
-function getUserId() {
-  return process.env.DEFAULT_USER_ID ?? null;
-}
+/**
+ * Pobiera ID użytkownika z sesji Supabase dla API routes.
+ * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
+ */
+async function getUserIdFromSession(): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    value
-  );
+  if (!user?.id) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return user.id;
 }
 
 type RouteContext = {
@@ -24,14 +32,7 @@ type RouteContext = {
 
 export async function GET(request: Request, { params }: RouteContext) {
   try {
-    const userId = getUserId();
-
-    if (!userId || !isUuid(userId)) {
-      return NextResponse.json(
-        { message: "Brak lub nieprawidłowy DEFAULT_USER_ID w środowisku." },
-        { status: 500 }
-      );
-    }
+    const userId = await getUserIdFromSession();
 
     const { exercise_id } = await params;
     const exerciseId =
@@ -48,6 +49,13 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json(
+        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
+
     if (error instanceof ServiceError) {
       return respondWithServiceError(error);
     }

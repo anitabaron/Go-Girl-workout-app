@@ -56,6 +56,94 @@ Niniejszy dokument zawiera kompleksowy plan implementacji integracji logowania z
 
 ## Plan implementacji
 
+### Krok 0: Ochrona routes (Priorytet: Wysoki - Pierwszy etap)
+
+**Priorytet:** Wysoki - zalecane wykonanie jako pierwszy krok przed implementacją innych funkcjonalności autentykacji
+
+**Dlaczego to jest ważne:**
+- Bez ochrony routes, niezalogowani użytkownicy mogą uzyskać dostęp do chronionych stron
+- Ochrona routes jest fundamentem bezpieczeństwa aplikacji
+- Wszystkie inne funkcjonalności autentykacji (logowanie, sesja) wymagają ochrony tras, aby działać poprawnie
+
+**Zakres pracy:**
+
+1. **Ochrona wszystkich Server Components w `(app)` route group:**
+   - Każda strona musi używać `getUserId()` lub `requireAuth()` do weryfikacji autoryzacji
+   - Przekierowanie do `/login` przy braku sesji
+   - Wzorzec: `try { await getUserId(); } catch { redirect("/login"); }`
+
+2. **Ochrona Client Components:**
+   - Client Components używają `useEffect` z `supabase.auth.getUser()`
+   - Przekierowanie do `/login` jeśli użytkownik nie jest zalogowany
+
+3. **Ochrona API routes:**
+   - Wszystkie API routes muszą używać prawdziwej autoryzacji (nie `DEFAULT_USER_ID`)
+   - Funkcja `getUserIdFromSession()` do pobierania ID użytkownika z sesji
+   - Zwracanie błędu 401 (UNAUTHORIZED) przy braku autoryzacji
+
+4. **Weryfikacja kompletności:**
+   - Sprawdzenie wszystkich stron w `(app)` route group
+   - Sprawdzenie wszystkich API routes
+   - Testowanie prób dostępu bez autoryzacji
+
+**Pliki do modyfikacji:**
+- Wszystkie Server Components w `src/app/(app)/**/page.tsx`
+- Wszystkie API routes w `src/app/api/**/route.ts`
+- Client Components wymagające autoryzacji
+
+**Wzorzec dla Server Components:**
+```typescript
+import { redirect } from "next/navigation";
+import { getUserId } from "@/lib/auth";
+
+export default async function ProtectedPage() {
+  try {
+    await getUserId();
+  } catch {
+    redirect("/login");
+  }
+  
+  // Renderowanie strony
+}
+```
+
+**Wzorzec dla API Routes:**
+```typescript
+import { createClient } from "@/db/supabase.server";
+
+async function getUserIdFromSession(): Promise<string> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user?.id) {
+    throw new Error("UNAUTHORIZED");
+  }
+  
+  return user.id;
+}
+
+export async function GET(request: Request) {
+  try {
+    const userId = await getUserIdFromSession();
+    // Logika endpointu
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json(
+        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
+    // Obsługa innych błędów
+  }
+}
+```
+
+**Status:** ✅ Wysoki priorytet - zalecane wykonanie jako pierwszy krok
+
+**Uwaga:** Ten krok jest ważny dla bezpieczeństwa aplikacji. Zalecane jest wykonanie go przed implementacją innych funkcjonalności autentykacji, aby zapewnić spójną ochronę wszystkich tras od początku.
+
+---
+
 ### Krok 1: Utworzenie Zustand authStore
 
 **Plik:** `src/stores/auth-store.ts`
@@ -261,12 +349,24 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
 ## Kolejność implementacji
 
-1. ✅ **Krok 1-3:** Zustand authStore + AuthProvider + integracja w layout
-2. ✅ **Krok 4:** Helper do mapowania błędów
-3. ✅ **Krok 5:** Aktualizacja use-login-form.ts (błędy + Remember Me + store)
-4. ✅ **Krok 6:** Helper requireAuth()
-5. ✅ **Krok 7:** Error Boundary dla (app)
-6. ✅ **Krok 8:** Helper do modyfikacji cookies (Remember Me)
+**⚠️ WAŻNE:** Kolejność jest krytyczna dla bezpieczeństwa aplikacji!
+
+### Etap 1: Fundament bezpieczeństwa (Wysoki priorytet)
+
+1. **Krok 0:** Ochrona routes (Priorytet: Wysoki)
+   - Ochrona wszystkich Server Components w `(app)` route group
+   - Ochrona wszystkich API routes
+   - Weryfikacja kompletności ochrony
+   - Zalecane wykonanie jako pierwszy krok dla spójnej ochrony
+
+### Etap 2: Podstawowa funkcjonalność autentykacji
+
+2. ✅ **Krok 1-3:** Zustand authStore + AuthProvider + integracja w layout
+3. ✅ **Krok 4:** Helper do mapowania błędów
+4. ✅ **Krok 5:** Aktualizacja use-login-form.ts (błędy + Remember Me + store)
+5. ✅ **Krok 6:** Helper requireAuth()
+6. ✅ **Krok 7:** Error Boundary dla (app)
+7. ✅ **Krok 8:** Helper do modyfikacji cookies (Remember Me)
 
 ## Uwagi implementacyjne
 
@@ -391,7 +491,7 @@ const handleSignOut = async () => {
 **Ryzyko:** Średni (zabezpieczone przez RLS i Server Components)
 **Opis:** Middleware tylko odświeża sesję, ale nie blokuje dostępu. Ochrona odbywa się w Server Components przez `getUserId()`.
 **Status:** ✅ Zgodne z architekturą projektu (weryfikacja w komponentach)
-**Uwaga:** To nie jest luka - to zamierzone podejście zgodne z `auth-spec.md`
+**Uwaga:** To nie jest luka - to zamierzone podejście zgodne z `auth-spec.md`. Ochrona routes (Krok 0) powinna być zaimplementowana, aby middleware + weryfikacja w komponentach działały poprawnie.
 
 #### 3. ⚠️ Brak Error Boundary dla błędów autoryzacji
 **Ryzyko:** Średni (UX)
@@ -426,7 +526,12 @@ const handleSignOut = async () => {
 
 ### Rekomendacje bezpieczeństwa
 
-1. **✅ Wdrożyć wszystkie kroki z planu implementacji**
+1. **Ochrona routes (Krok 0) - Wysoki priorytet**
+   - Ochrona routes jest fundamentem bezpieczeństwa
+   - Zalecane wykonanie przed innymi krokami dla spójnej ochrony
+   - Weryfikacja wszystkich Server Components i API routes
+
+2. **Wdrożyć wszystkie kroki z planu implementacji**
    - Error Boundary (Krok 7)
    - requireAuth() wrapper (Krok 6)
    - Czyszczenie authStore przy wylogowaniu (Krok 9)
@@ -461,6 +566,7 @@ const handleSignOut = async () => {
 ## Podsumowanie
 
 Plan implementacji obejmuje:
+- **Krok 0 (Wysoki priorytet):** Ochrona routes - fundament bezpieczeństwa
 - ✅ 10 kroków implementacji (8 podstawowych + 2 dla wylogowania)
 - ✅ Integrację Zustand authStore z Supabase Auth
 - ✅ Implementację "Remember Me" z modyfikacją cookies
@@ -468,6 +574,8 @@ Plan implementacji obejmuje:
 - ✅ Automatyczne przekierowanie przy wygasłej sesji
 - ✅ Poprawę wylogowania z czyszczeniem authStore
 - ✅ Zgodność z wymaganiami PRD (US-001, US-002, US-003)
+
+**Uwaga:** Krok 0 (ochrona routes) ma wysoki priorytet i zalecane jest wykonanie go jako pierwszego, aby zapewnić spójną ochronę wszystkich tras od początku implementacji autoryzacji.
 
 **Zidentyfikowane luki:** 6 problemów (4 średnie, 2 niskie) - wszystkie mają rozwiązania w planie implementacji.
 

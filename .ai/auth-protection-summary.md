@@ -1,10 +1,12 @@
 # Podsumowanie ochrony stron przed nieautoryzowanym dostępem
 
-## Data: 2025-01-08
+## Data: 2025-01-08 (ostatnia aktualizacja: 2025-01-16)
 
 ## Przegląd
 
 Weryfikacja i implementacja ochrony wszystkich stron w aplikacji przed dostępem niezalogowanych użytkowników. Zgodnie z wymaganiami PRD (US-001), wszystkie strony poza stroną główną '/' wymagają autoryzacji.
+
+**Uwaga:** Ochrona routes jest ważnym elementem pierwszego etapu wdrożenia autoryzacji. Zalecane jest wykonanie ochrony routes jako pierwszego kroku, aby zapewnić spójną ochronę wszystkich tras od początku implementacji.
 
 ---
 
@@ -298,15 +300,28 @@ export default function ProtectedClientPage() {
 ### ✅ Zrealizowane
 
 - Wszystkie strony w `(app)` route group są chronione
+- Wszystkie API routes używają prawdziwej autoryzacji (nie `DEFAULT_USER_ID`)
 - Strona główna '/' pozostaje publiczna (zgodnie z wymaganiami)
 - Strony autoryzacji są publiczne (zgodnie z wymaganiami)
 - Niezalogowani użytkownicy są przekierowywani do `/login`
+- API routes zwracają błąd 401 (UNAUTHORIZED) przy braku autoryzacji
 
 ### 📝 Uwagi
 
 - Wszystkie Server Components używają wzorca `getUserId()` + `try-catch` + `redirect("/login")`
 - Client Component (`kitchen-sink`) używa `useEffect` z `supabase.auth.getUser()`
+- Wszystkie API routes używają `getUserIdFromSession()` do pobierania ID użytkownika z sesji
 - W przyszłości można rozważyć użycie `requireAuth()` wrapper (z planu implementacji) dla bardziej jednolitego podejścia
+
+### Rekomendacje dla przyszłych implementacji
+
+**Ochrona routes - zalecana kolejność implementacji:**
+1. Ochrona wszystkich Server Components w `(app)` route group
+2. Ochrona wszystkich API routes (użycie prawdziwej autoryzacji, nie `DEFAULT_USER_ID`)
+3. Weryfikacja kompletności ochrony
+4. Testowanie prób dostępu bez autoryzacji
+
+Zalecane jest wykonanie ochrony routes jako pierwszego kroku, aby zapewnić spójną ochronę wszystkich tras od początku implementacji autoryzacji.
 
 ---
 
