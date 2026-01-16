@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/db/supabase.server";
 
 /**
- * Pobiera ID użytkownika z sesji Supabase lub zwraca DEFAULT_USER_ID z env.
+ * Pobiera ID użytkownika z sesji Supabase.
  * Używane w Server Components do autentykacji.
  * 
- * @throws {Error} Jeśli brak sesji i brak DEFAULT_USER_ID
+ * @throws {Error} Jeśli brak aktywnej sesji
  * @returns {Promise<string>} ID użytkownika
  * 
  * @example
@@ -19,24 +19,17 @@ export async function getUserId(): Promise<string> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user?.id) {
-    return user.id;
+  if (!user?.id) {
+    throw new Error("Brak aktywnej sesji użytkownika.");
   }
 
-  // Fallback dla developmentu
-  const defaultUserId = process.env.DEFAULT_USER_ID;
-
-  if (!defaultUserId) {
-    throw new Error("Brak aktywnej sesji i DEFAULT_USER_ID w środowisku.");
-  }
-
-  return defaultUserId;
+  return user.id;
 }
 
 /**
  * Wymaga autoryzacji użytkownika - automatycznie przekierowuje do /login przy braku sesji.
  * 
- * Sprawdza sesję użytkownika BEZ fallbacku do DEFAULT_USER_ID.
+ * Sprawdza sesję użytkownika i przekierowuje do logowania jeśli brak autoryzacji.
  * Używane w Server Components do ochrony stron przed nieautoryzowanym dostępem.
  * 
  * @returns {Promise<string>} ID użytkownika
@@ -60,6 +53,6 @@ export async function requireAuth(): Promise<string> {
     return user.id;
   }
 
-  // Brak sesji - przekierowanie do logowania (BEZ fallbacku do DEFAULT_USER_ID)
+  // Brak sesji - przekierowanie do logowania
   redirect("/login?error=session_expired");
 }

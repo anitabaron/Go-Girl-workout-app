@@ -22,5 +22,3 @@ export const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-export const DEFAULT_USER_ID = "6f6b1fa9-d016-46c7-af12-5b4f03b0308c";
