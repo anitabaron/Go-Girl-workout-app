@@ -80,6 +80,8 @@ Moduł autentykacji obejmuje:
 
 #### 2.1.2 Routing chroniony (wymaga autoryzacji)
 
+**Uwaga:** Ochrona routes jest ważnym elementem pierwszego etapu wdrożenia autoryzacji. Zalecane jest wykonanie ochrony routes jako pierwszego kroku, aby zapewnić spójną ochronę wszystkich tras od początku.
+
 **Wszystkie strony w `(app)` route group wymagają autoryzacji:**
 
 - `/(app)/exercises/*` - zarządzanie ćwiczeniami
@@ -89,11 +91,24 @@ Moduł autentykacji obejmuje:
 
 **Mechanizm ochrony:**
 
-- Każda Server Component w `(app)` używa `getUserId()` z `@/lib/auth` do weryfikacji autoryzacji
+- **Server Components:** Każda Server Component w `(app)` używa `getUserId()` lub `requireAuth()` z `@/lib/auth` do weryfikacji autoryzacji
+  - Wzorzec: `try { await getUserId(); } catch { redirect("/login"); }`
+  - Przekierowanie do `/login` przy braku sesji
+- **Client Components:** Client Components używają `useEffect` z `supabase.auth.getUser()` do weryfikacji
+  - Przekierowanie do `/login` jeśli użytkownik nie jest zalogowany
+- **API Routes:** Wszystkie API routes używają `getUserIdFromSession()` do pobierania ID użytkownika
+  - Zwracanie błędu 401 (UNAUTHORIZED) przy braku autoryzacji
+  - **WAŻNE:** API routes nie mogą używać `DEFAULT_USER_ID` - muszą używać prawdziwej autoryzacji
 - Server Components pobierają użytkownika przez `createClient()` i przekazują go jako props do Client Components
 - Client Components inicjalizują globalny `authStore` (Zustand) z danymi użytkownika z Server Components
 - Funkcja `getUserId()` rzuca błąd, jeśli użytkownik nie jest zalogowany
 - Middleware odświeża sesję, ale nie blokuje dostępu (weryfikacja w komponentach)
+
+**Weryfikacja kompletności ochrony:**
+
+- Sprawdzenie wszystkich Server Components w `src/app/(app)/**/page.tsx`
+- Sprawdzenie wszystkich API routes w `src/app/api/**/route.ts`
+- Testowanie prób dostępu bez autoryzacji (powinno przekierować do `/login` lub zwrócić 401)
 
 #### 2.1.3 Layout aplikacji
 
@@ -1195,26 +1210,55 @@ WITH CHECK (auth.uid() = user_id);
 
 #### 4.3.2 Weryfikacja w API routes
 
-**Zasada:** API routes używają `getUserId()` do pobrania `user_id` i używają go w zapytaniach.
+**Uwaga:** Ochrona API routes jest ważnym elementem pierwszego etapu wdrożenia autoryzacji. Wszystkie API routes powinny używać prawdziwej autoryzacji (nie `DEFAULT_USER_ID`).
 
-**Przykład:**
+**Zasada:** API routes używają `getUserIdFromSession()` do pobrania `user_id` z sesji Supabase i używają go w zapytaniach.
+
+**Wzorzec implementacji:**
 
 ```typescript
 // src/app/api/exercises/route.ts
-export async function GET() {
-  const userId = await getUserId(); // Weryfikacja autoryzacji
+import { createClient } from "@/db/supabase.server";
 
+async function getUserIdFromSession(): Promise<string> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("exercises")
-    .select("*")
-    .eq("user_id", userId); // Filtrowanie po user_id
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user?.id) {
+    throw new Error("UNAUTHORIZED");
+  }
+  
+  return user.id;
+}
 
-  // RLS dodatkowo zabezpiecza przed manipulacją
+export async function GET(request: Request) {
+  try {
+    const userId = await getUserIdFromSession(); // Weryfikacja autoryzacji
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("exercises")
+      .select("*")
+      .eq("user_id", userId); // Filtrowanie po user_id
+
+    // RLS dodatkowo zabezpiecza przed manipulacją
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json(
+        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
+    // Obsługa innych błędów
+  }
 }
 ```
 
-**Uwaga:** Nawet jeśli API route używa `user_id`, RLS jest dodatkową warstwą bezpieczeństwa.
+**Ważne:**
+- API routes nie powinny używać `DEFAULT_USER_ID` w produkcji - to jest tylko dla developmentu
+- Wszystkie API routes powinny używać `getUserIdFromSession()` lub podobnej funkcji
+- Zwracanie błędu 401 (UNAUTHORIZED) przy braku autoryzacji
+- RLS jest dodatkową warstwą bezpieczeństwa, ale nie zastępuje weryfikacji w API routes
 
 ### 4.4 Bezpieczeństwo
 
