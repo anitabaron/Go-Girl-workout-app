@@ -6,9 +6,23 @@ import {
   updateWorkoutSessionStatusService,
   ServiceError,
 } from "@/services/workout-sessions";
+import { createClient } from "@/db/supabase.server";
 
-function getUserId() {
-  return process.env.DEFAULT_USER_ID ?? null;
+/**
+ * Pobiera ID użytkownika z sesji Supabase dla API routes.
+ * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
+ */
+async function getUserIdFromSession(): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.id) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return user.id;
 }
 
 function isUuid(value: string) {
@@ -27,16 +41,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   console.log("[PATCH /api/workout-sessions/[id]/status] Starting request");
   
   try {
-    const userId = getUserId();
+    const userId = await getUserIdFromSession();
     console.log("[PATCH /api/workout-sessions/[id]/status] userId:", userId);
-
-    if (!userId || !isUuid(userId)) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] Invalid userId");
-      return NextResponse.json(
-        { message: "Brak lub nieprawidłowy DEFAULT_USER_ID w środowisku." },
-        { status: 500 }
-      );
-    }
 
     const { id } = await params;
     const sessionId = id ?? new URL(request.url).searchParams.get("id");
@@ -85,6 +91,13 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
     console.error("[PATCH /api/workout-sessions/[id]/status] Error caught:", error);
+    
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json(
+        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
     
     if (error instanceof ServiceError) {
       console.error("[PATCH /api/workout-sessions/[id]/status] ServiceError:", {

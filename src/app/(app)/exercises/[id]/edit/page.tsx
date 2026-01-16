@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { getExerciseService } from "@/services/exercises";
 import { ExerciseForm } from "@/components/exercises/form/exercise-form";
 import { PageHeader } from "@/components/navigation/page-header";
@@ -11,7 +11,7 @@ export default async function EditExercisePage({
   params: Promise<{ id: string }>;
 }>) {
   const { id } = await params;
-  const userId = await getUserId();
+  const userId = await requireAuth();
 
   let exercise: ExerciseDTO;
 

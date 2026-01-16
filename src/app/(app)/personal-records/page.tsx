@@ -1,5 +1,5 @@
 import { personalRecordQuerySchema } from "@/lib/validation/personal-records";
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { listPersonalRecordsService } from "@/services/personal-records";
 import { listExercisesService } from "@/services/exercises";
 import type { PersonalRecordQueryParams, ExerciseQueryParams } from "@/types";
@@ -28,8 +28,8 @@ export default async function PersonalRecordsPage({
     ? parseResult.data
     : personalRecordQuerySchema.parse({});
 
-  // Pobranie user ID
-  const userId = await getUserId();
+  // Pobranie user ID (wymaga autoryzacji)
+  const userId = await requireAuth();
 
   // Pobranie listy ćwiczeń dla filtrów (opcjonalnie, z obsługą błędów)
   let exercises: Awaited<ReturnType<typeof listExercisesService>>["items"] =

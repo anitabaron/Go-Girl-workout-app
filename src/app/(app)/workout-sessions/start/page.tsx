@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import {
   listWorkoutSessionsService,
   getWorkoutSessionService,
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
  * Decyduje, który komponent wyświetlić na podstawie stanu danych.
  */
 export default async function StartWorkoutSessionPage() {
-  const userId = await getUserId();
+  const userId = await requireAuth();
 
   // Pobierz sesję in_progress (limit=1, bo może być tylko jedna)
   let inProgressSession: SessionDetailDTO | null = null;

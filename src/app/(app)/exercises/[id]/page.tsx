@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { getExerciseService } from "@/services/exercises";
 import { createClient } from "@/db/supabase.server";
 import { getExerciseRelations } from "@/repositories/exercises";
@@ -15,7 +15,7 @@ export default async function ExerciseDetailsPage({
   params: Promise<{ id: string }>;
 }>) {
   const { id } = await params;
-  const userId = await getUserId();
+  const userId = await requireAuth();
 
   // Walidacja UUID
   const uuidRegex =

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import {
   getWorkoutSessionService,
   ServiceError,
@@ -34,7 +34,7 @@ export default async function WorkoutSessionActivePage({
   let session: SessionDetailDTO;
 
   try {
-    const userId = await getUserId();
+    const userId = await requireAuth();
     session = await getWorkoutSessionService(userId, id);
   } catch (error) {
     if (error instanceof ServiceError) {

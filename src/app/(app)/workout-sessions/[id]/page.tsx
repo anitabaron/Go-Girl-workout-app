@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import {
   getWorkoutSessionService,
   ServiceError,
@@ -31,7 +31,7 @@ export default async function WorkoutSessionDetailsPage({
 
   let session;
   try {
-    const userId = await getUserId();
+    const userId = await requireAuth();
     session = await getWorkoutSessionService(userId, id);
   } catch (error) {
     if (error instanceof ServiceError) {

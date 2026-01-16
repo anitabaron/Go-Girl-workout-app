@@ -7,6 +7,7 @@ import { navigationItems } from "./navigation-items";
 import { QuickStartButton } from "./quick-start-button";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/db/supabase.client";
+import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "sonner";
 
 export interface TopNavigationProps {
@@ -28,6 +29,8 @@ export function TopNavigation({
     activeSection ??
     navigationItems.find((item) => pathname.startsWith(item.href))?.id;
 
+  const clearUser = useAuthStore((state) => state.clearUser);
+
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
 
@@ -37,7 +40,11 @@ export function TopNavigation({
       return;
     }
 
-    router.push("/login");
+    // Czyszczenie Zustand store
+    clearUser();
+
+    // Kolejność operacji: signOut() → clearUser() → router.push() → router.refresh()
+    router.push("/");
     router.refresh();
   };
 

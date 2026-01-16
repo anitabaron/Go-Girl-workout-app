@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
 import { WorkoutPlanForm } from "@/components/workout-plans/form/workout-plan-form";
 import { PageHeader } from "@/components/navigation/page-header";
@@ -21,7 +21,7 @@ export default async function EditWorkoutPlanPage({
 
   let workoutPlan;
   try {
-    const userId = await getUserId();
+    const userId = await requireAuth();
     workoutPlan = await getWorkoutPlanService(userId, id);
   } catch (error) {
     if (error instanceof ServiceError) {

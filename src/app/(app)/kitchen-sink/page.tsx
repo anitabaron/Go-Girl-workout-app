@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,8 +24,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/db/supabase.client";
 
 export default function KitchenSinkPage() {
+  const router = useRouter();
+
+  // Weryfikacja autoryzacji - przekierowanie niezalogowanych użytkowników
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.push("/login");
+      }
+    });
+  }, [router]);
   return (
     <div className="min-h-screen bg-secondary p-8 dark:bg-black">
       <div className="mx-auto max-w-6xl space-y-12">

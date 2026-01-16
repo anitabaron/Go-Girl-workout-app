@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getUserId } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { listWorkoutSessionsService } from "@/services/workout-sessions";
 import { sessionListQuerySchema } from "@/lib/validation/workout-sessions";
 import type { SessionListQueryParams } from "@/types";
@@ -28,6 +28,9 @@ export default async function WorkoutSessionsPage({
     ? parseResult.data
     : sessionListQuerySchema.parse({});
 
+  // Weryfikacja autoryzacji - automatyczne przekierowanie niezalogowanych użytkowników
+  const userId = await requireAuth();
+
   // Pobierz dane - obsługa błędów przez zwrócenie pustych danych
   let sessionsData = {
     items: [] as Awaited<ReturnType<typeof listWorkoutSessionsService>>["items"],
@@ -35,8 +38,6 @@ export default async function WorkoutSessionsPage({
   };
 
   try {
-    const userId = await getUserId();
-
     // Pobierz sesje in_progress
     const inProgressResult = await listWorkoutSessionsService(userId, {
       status: "in_progress",
