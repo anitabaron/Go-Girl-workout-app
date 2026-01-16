@@ -64,7 +64,9 @@ Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływ
 1. **Przeglądarka (Browser)** - Client Component, formularze, nawigacja
 2. **Middleware** - Odświeżanie sesji przed renderowaniem
 3. **Server Components** - Weryfikacja autoryzacji, renderowanie stron
-4. **Supabase Auth** - Serwis autentykacji, zarządzanie sesjami
+4. **AuthProvider** - Synchronizacja stanu autentykacji między Server a Client Components
+5. **authStore (Zustand)** - Globalny store stanu autentykacji w Client Components
+6. **Supabase Auth** - Serwis autentykacji, zarządzanie sesjami
 
 **Interakcje:**
 
@@ -73,6 +75,9 @@ Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływ
 - Przeglądarka ↔ Supabase Auth: Logowanie, rejestracja, reset hasła, wylogowanie
 - Middleware ↔ Supabase Auth: Odświeżanie tokenów
 - Server Components ↔ Supabase Auth: Weryfikacja sesji, pobieranie użytkownika
+- Server Components ↔ AuthProvider: Przekazywanie danych użytkownika do Client Components
+- AuthProvider ↔ authStore: Inicjalizacja i aktualizacja store z danymi użytkownika
+- AuthProvider ↔ Supabase Auth: Subskrypcja zmian stanu autentykacji (onAuthStateChange)
 
 ### 3. Procesy weryfikacji i odświeżania tokenów
 
@@ -80,8 +85,9 @@ Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływ
 
 - Middleware wywołuje `supabase.auth.getUser()` przy każdym żądaniu
 - Automatyczne odświeżenie jeśli token wygasł (jeśli refresh_token ważny)
-- Server Components używają `getUserId()` do weryfikacji autoryzacji
-- Jeśli brak sesji → błąd lub przekierowanie do logowania
+- Server Components używają `requireAuth()` do weryfikacji autoryzacji (automatyczne przekierowanie do /login)
+- Alternatywnie `getUserId()` z fallbackiem do DEFAULT_USER_ID (development)
+- Jeśli brak sesji → przekierowanie do logowania przez `requireAuth()`
 
 **Odświeżanie tokenu:**
 
@@ -99,7 +105,9 @@ Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływ
 3. Wywołanie `supabase.auth.signInWithPassword()`
 4. Supabase weryfikuje dane i zwraca sesję
 5. Tokens zapisywane w cookies przez `@supabase/ssr`
-6. Przekierowanie do strony głównej
+6. Aktualizacja `authStore` przez `setUser()` w `useLoginForm`
+7. `AuthProvider` subskrybuje zmiany przez `onAuthStateChange` i aktualizuje store
+8. Przekierowanie do strony głównej
 
 **Rejestracja:**
 
@@ -125,9 +133,12 @@ Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływ
 
 1. Middleware przechwytuje żądanie
 2. Wywołanie `supabase.auth.getUser()` → odświeżenie sesji
-3. Server Component weryfikuje autoryzację przez `getUserId()`
-4. Jeśli sesja ważna → renderowanie strony
-5. Jeśli sesja wygasła → błąd lub przekierowanie
+3. Server Component (AppLayout) pobiera użytkownika przez `createClient()`
+4. AppLayout renderuje `AuthProvider` z danymi użytkownika
+5. AuthProvider inicjalizuje `authStore` i subskrybuje zmiany autentykacji
+6. Chronione strony używają `requireAuth()` do weryfikacji autoryzacji
+7. Jeśli sesja ważna → renderowanie strony
+8. Jeśli sesja wygasła → automatyczne przekierowanie do /login przez `requireAuth()`
 
 </authentication_analysis>
 
@@ -139,6 +150,8 @@ sequenceDiagram
     participant Browser as Przeglądarka
     participant Middleware as Middleware
     participant ServerComp as Server Component
+    participant AuthProvider as AuthProvider
+    participant AuthStore as authStore
     participant SupabaseAuth as Supabase Auth
 
     Note over Browser,SupabaseAuth: Przepływ logowania
@@ -159,6 +172,10 @@ sequenceDiagram
         else Sukces
             SupabaseAuth-->>Browser: Sesja z access_token i refresh_token
             SupabaseAuth->>Browser: Zapisanie tokens w cookies
+            Browser->>AuthStore: setUser(data.user)
+            activate AuthStore
+            AuthStore-->>Browser: Store zaktualizowany
+            deactivate AuthStore
             Browser->>Browser: Przekierowanie do strony głównej
         end
 
@@ -241,6 +258,13 @@ sequenceDiagram
     SupabaseAuth->>Browser: Usunięcie tokens z cookies
     SupabaseAuth-->>Browser: Sukces
     deactivate SupabaseAuth
+    SupabaseAuth->>AuthProvider: onAuthStateChange("SIGNED_OUT")
+    activate AuthProvider
+    AuthProvider->>AuthStore: clearUser()
+    activate AuthStore
+    AuthStore-->>AuthProvider: Store wyczyszczony
+    deactivate AuthStore
+    deactivate AuthProvider
     Browser->>Browser: Przekierowanie do /login
 
     Note over Browser,SupabaseAuth: Przepływ odświeżenia strony i sesji
@@ -265,19 +289,37 @@ sequenceDiagram
     deactivate SupabaseAuth
     deactivate Middleware
 
-    Browser->>ServerComp: Renderowanie strony
+    Browser->>ServerComp: Renderowanie strony (AppLayout)
     activate ServerComp
-    ServerComp->>SupabaseAuth: getUser() przez getUserId()
+    ServerComp->>SupabaseAuth: getUser() przez createClient()
+    activate SupabaseAuth
+    SupabaseAuth-->>ServerComp: user (lub null)
+    deactivate SupabaseAuth
+    
+    ServerComp->>AuthProvider: Renderowanie z user prop
+    activate AuthProvider
+    AuthProvider->>AuthStore: setUser(user) - inicjalizacja
+    activate AuthStore
+    AuthStore-->>AuthProvider: Store zaktualizowany
+    deactivate AuthStore
+    AuthProvider->>SupabaseAuth: onAuthStateChange subscription
+    activate SupabaseAuth
+    SupabaseAuth-->>AuthProvider: Subskrypcja aktywna
+    deactivate SupabaseAuth
+    AuthProvider-->>ServerComp: AuthProvider gotowy
+    deactivate AuthProvider
+    
+    ServerComp->>ServerComp: Renderowanie chronionej strony
+    ServerComp->>SupabaseAuth: requireAuth() - weryfikacja
     activate SupabaseAuth
 
     alt Użytkownik zalogowany
         SupabaseAuth-->>ServerComp: user.id
         ServerComp->>ServerComp: Renderowanie chronionej strony
-        ServerComp->>Browser: HTML strony
+        ServerComp->>Browser: HTML strony z AuthProvider
     else Użytkownik niezalogowany
         SupabaseAuth-->>ServerComp: Brak użytkownika
-        ServerComp->>ServerComp: getUserId() rzuca błąd
-        ServerComp->>Browser: Przekierowanie do /login lub błąd
+        ServerComp->>Browser: redirect("/login?error=session_expired")
     end
 
     deactivate SupabaseAuth
@@ -290,7 +332,9 @@ sequenceDiagram
     activate SupabaseAuth
     SupabaseAuth->>SupabaseAuth: Konfiguracja dłuższego czasu ważności
     SupabaseAuth->>Browser: Sesja z dłuższym czasem wygaśnięcia
-    SupabaseAuth->>Browser: Cookies z dłuższym maxAge
+    SupabaseAuth->>Browser: Cookies z dłuższym maxAge (próba ustawienia 30 dni)
+    Browser->>Browser: Uwaga: Cookies Supabase mogą być httpOnly
+    Browser->>Browser: Długość sesji kontrolowana przez konfigurację Supabase
     deactivate SupabaseAuth
 
     Note over Browser: Sesja pozostaje aktywna dłużej, nawet po zamknięciu przeglądarki

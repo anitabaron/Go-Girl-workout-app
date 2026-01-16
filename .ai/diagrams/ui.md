@@ -13,7 +13,7 @@
 - **ResetPasswordPage** (`src/app/reset-password/page.tsx`) - Strona resetu hasła (wysyłanie linku)
 - **ResetPasswordConfirmPage** (`src/app/reset-password/confirm/page.tsx`) - Strona potwierdzenia resetu hasła (ustawienie nowego hasła) - WYMAGANA
 - **AuthCallbackRoute** (`src/app/auth/callback/route.ts`) - API route dla callbacków Supabase (potwierdzenie emaila) - WYMAGANA jeśli enable_email_autoconfirm = false
-- **AppLayout** (`src/app/(app)/layout.tsx`) - Layout aplikacji z nawigacją, pobiera użytkownika
+- **AppLayout** (`src/app/(app)/layout.tsx`) - Layout aplikacji z nawigacją, pobiera użytkownika, renderuje AuthProvider
 
 #### Komponenty formularzy (Client Components):
 
@@ -57,11 +57,23 @@
 
 #### Store (Zustand):
 
-- **authStore** (`src/stores/auth-store.ts`) - Globalny store dla stanu autentykacji - OPCJONALNY (wymieniony w specyfikacji, ale może nie być zaimplementowany)
+- **authStore** (`src/stores/auth-store.ts`) - Globalny store dla stanu autentykacji (Zustand)
+  - `user: User | null` - aktualny użytkownik
+  - `setUser(user)` - ustawienie użytkownika
+  - `clearUser()` - wyczyszczenie użytkownika
+  - `isAuthenticated()` - sprawdzenie czy użytkownik jest zalogowany
+
+#### Provider:
+
+- **AuthProvider** (`src/components/auth/auth-provider.tsx`) - Client Component synchronizujący stan autentykacji
+  - Inicjalizuje authStore z danymi użytkownika z Server Component
+  - Subskrybuje zmiany stanu autentykacji Supabase (onAuthStateChange)
+  - Automatycznie aktualizuje store przy zmianie sesji
 
 #### Funkcje pomocnicze:
 
-- **getUserId** (`src/lib/auth.ts`) - Pobiera ID użytkownika z sesji, rzuca błąd jeśli brak
+- **getUserId** (`src/lib/auth.ts`) - Pobiera ID użytkownika z sesji, rzuca błąd jeśli brak (z fallbackiem do DEFAULT_USER_ID w development)
+- **requireAuth** (`src/lib/auth.ts`) - Wymaga autoryzacji, automatycznie przekierowuje do /login przy braku sesji (używane w chronionych stronach)
 - **createClient** (`src/db/supabase.server.ts`) - Tworzy klienta Supabase dla Server Components
 - **supabase** (`src/db/supabase.client.ts`) - Klient Supabase dla Client Components
 
@@ -80,7 +92,7 @@
 3. **`/reset-password`** → ResetPasswordPage → ResetPasswordForm → useResetPasswordForm → Supabase Auth
 4. **`/reset-password/confirm`** → ResetPasswordConfirmPage → ResetPasswordConfirmForm → useResetPasswordConfirmForm → Supabase Auth
 5. **`/auth/callback`** → AuthCallbackRoute → Weryfikacja tokenu → Przekierowanie
-6. **`/(app)/*`** → AppLayout → TopNavigation/BottomNavigation → getUserId (weryfikacja autoryzacji)
+6. **`/(app)/*`** → AppLayout → AuthProvider → TopNavigation/BottomNavigation → requireAuth (weryfikacja autoryzacji)
 
 ### 3. Przepływ danych między komponentami
 
@@ -89,9 +101,12 @@
 1. Użytkownik wypełnia formularz → LoginForm (Client Component)
 2. LoginForm używa useLoginForm hook → zarządzanie stanem i walidacja
 3. useLoginForm wywołuje supabase.auth.signInWithPassword() → Supabase Auth
-4. Po sukcesie → przekierowanie do `/` przez router.push()
-5. Middleware odświeża sesję → cookies zaktualizowane
-6. AppLayout pobiera użytkownika → przekazuje do TopNavigation/BottomNavigation
+4. Po sukcesie → aktualizacja authStore przez setUser() w useLoginForm
+5. Przekierowanie do `/` przez router.push() i router.refresh()
+6. Middleware odświeża sesję → cookies zaktualizowane
+7. AppLayout pobiera użytkownika → renderuje AuthProvider z user prop
+8. AuthProvider inicjalizuje authStore i subskrybuje zmiany autentykacji
+9. TopNavigation/BottomNavigation odczytują stan z authStore
 
 #### Rejestracja:
 
@@ -120,9 +135,10 @@
 #### Ochrona tras:
 
 1. Middleware odświeża sesję przed każdym żądaniem
-2. Server Component w `(app)` wywołuje getUserId()
-3. getUserId() pobiera użytkownika przez createClient()
-4. Jeśli brak użytkownika → rzuca błąd (przekierowanie do `/login`)
+2. Server Component w `(app)` wywołuje requireAuth()
+3. requireAuth() pobiera użytkownika przez createClient()
+4. Jeśli brak użytkownika → automatyczne przekierowanie do `/login?error=session_expired`
+5. AppLayout renderuje AuthProvider, który synchronizuje stan z authStore
 
 ### 4. Opis funkcjonalności komponentów
 
@@ -139,8 +155,11 @@
 - **useResetPasswordConfirmForm**: Zarządza stanem (newPassword, confirmPassword), waliduje, wywołuje updateUser
 - **TopNavigation**: Renderuje nawigację desktop, przycisk logowania/wylogowania, obsługuje signOut
 - **BottomNavigation**: Renderuje nawigację mobile, przycisk logowania/wylogowania, obsługuje signOut
-- **AppLayout**: Pobiera użytkownika, renderuje nawigację, przekazuje user do komponentów
-- **getUserId**: Pobiera ID użytkownika z sesji, rzuca błąd jeśli brak (używane w Server Components)
+- **AppLayout**: Pobiera użytkownika, renderuje AuthProvider z user prop, renderuje nawigację
+- **AuthProvider**: Synchronizuje stan autentykacji między Server a Client Components, inicjalizuje authStore, subskrybuje zmiany autentykacji
+- **authStore**: Globalny store Zustand dla stanu autentykacji w Client Components
+- **getUserId**: Pobiera ID użytkownika z sesji, rzuca błąd jeśli brak (z fallbackiem do DEFAULT_USER_ID w development)
+- **requireAuth**: Wymaga autoryzacji, automatycznie przekierowuje do /login przy braku sesji (używane w chronionych stronach)
 - **createClient**: Tworzy klienta Supabase dla Server Components z zarządzaniem cookies
 - **supabase**: Klient Supabase dla Client Components
 - **middleware**: Odświeża sesję przed renderowaniem Server Components
@@ -208,8 +227,13 @@ flowchart TD
         authStore["authStore<br/>(Zustand Store)"]
     end
 
+    subgraph "Provider i Synchronizacja"
+        AuthProviderComp["AuthProvider<br/>(Client Component)"]
+    end
+
     subgraph "Funkcje Pomocnicze"
         getUserId["getUserId<br/>(Server Function)"]
+        requireAuth["requireAuth<br/>(Server Function)"]
         createClient["createClient<br/>(Server Function)"]
         validateRegisterForm["validateRegisterForm<br/>(Validation Function)"]
     end
@@ -232,8 +256,9 @@ flowchart TD
     RegisterPage --> RegisterForm
     ResetPasswordPage --> ResetPasswordForm
     ResetPasswordConfirmPage --> ResetPasswordConfirmForm
-    AppLayout --> TopNavigation
-    AppLayout --> BottomNavigation
+    AppLayout --> AuthProviderComp
+    AuthProviderComp --> TopNavigation
+    AuthProviderComp --> BottomNavigation
 
     %% Struktura formularza logowania
     LoginForm --> LoginFormFields
@@ -274,6 +299,7 @@ flowchart TD
     RegisterForm --> supabaseClient
     TopNavigation --> supabaseClient
     BottomNavigation --> supabaseClient
+    AuthProviderComp --> supabaseClient
 
     %% Supabase Client do Auth
     supabaseClient --> SupabaseAuth
@@ -288,7 +314,15 @@ flowchart TD
 
     %% Server Components do funkcji pomocniczych
     AppLayout --> createClient
-    AppLayout --> getUserId
+    AppLayout --> requireAuth
+    
+    %% AuthProvider do authStore
+    AuthProviderComp --> authStore
+    
+    %% Hooks do authStore
+    useLoginForm --> authStore
+    TopNavigation --> authStore
+    BottomNavigation --> authStore
 
     %% Middleware
     middleware --> supabaseServer
@@ -300,11 +334,13 @@ flowchart TD
     SupabaseAuth -.->|"Token callback"| AuthCallbackRoute
     AuthCallbackRoute -.->|"Przekierowanie"| LoginPage
 
-    %% Store (opcjonalny)
-    AppLayout -.->|"Przekazuje user"| authStore
+    %% Store synchronizacja
+    AppLayout -.->|"Przekazuje user prop"| AuthProviderComp
+    AuthProviderComp -.->|"Inicjalizuje i aktualizuje"| authStore
     useLoginForm -.->|"Aktualizuje po logowaniu"| authStore
     TopNavigation -.->|"Czyta stan"| authStore
     BottomNavigation -.->|"Czyta stan"| authStore
+    SupabaseAuth -.->|"onAuthStateChange"| AuthProviderComp
 
     %% Stylizacja
     classDef serverComponent fill:#e1f5ff,stroke:#01579b,stroke-width:2px
@@ -316,7 +352,7 @@ flowchart TD
     classDef store fill:#fff9c4,stroke:#f57f17,stroke-width:2px
 
     class LoginPage,RegisterPage,ResetPasswordPage,ResetPasswordConfirmPage,AppLayout,AuthCallbackRoute serverComponent
-    class LoginForm,RegisterForm,ResetPasswordForm,ResetPasswordConfirmForm,LoginFormFields,EmailInputLogin,PasswordInputLogin,RememberMeCheckbox,ValidationErrors,LoginButton,LoginLinks,EmailInputRegister,PasswordInputRegister,ConfirmPasswordInput,SubmitButton,LoginLink,ResetPasswordFormFields,ResetPasswordInstructions,ResetPasswordButton,BackToLoginLink,ResetPasswordConfirmFormFields,ResetPasswordConfirmButton,TopNavigation,BottomNavigation,PageHeader clientComponent
+    class LoginForm,RegisterForm,ResetPasswordForm,ResetPasswordConfirmForm,LoginFormFields,EmailInputLogin,PasswordInputLogin,RememberMeCheckbox,ValidationErrors,LoginButton,LoginLinks,EmailInputRegister,PasswordInputRegister,ConfirmPasswordInput,SubmitButton,LoginLink,ResetPasswordFormFields,ResetPasswordInstructions,ResetPasswordButton,BackToLoginLink,ResetPasswordConfirmFormFields,ResetPasswordConfirmButton,TopNavigation,BottomNavigation,PageHeader,AuthProvider,AuthProviderComp clientComponent
     class useLoginForm,useResetPasswordForm,useResetPasswordConfirmForm hook
     class getUserId,createClient,validateRegisterForm function
     class SupabaseAuth external

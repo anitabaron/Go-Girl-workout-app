@@ -51,9 +51,11 @@
 ### Podróż 4: Dostęp do chronionych funkcjonalności
 
 - **Stany:**
-  - StronaGlownaZalogowana → ProbaDostepuDoFunkcjonalnosci → WeryfikacjaSesji
-  - WeryfikacjaSesji → SesjaWazna → DostepDoFunkcjonalnosci
-  - WeryfikacjaSesji → SesjaWygasla → PrzekierowanieDoLogowania
+  - StronaGlownaZalogowana → ProbaDostepuDoFunkcjonalnosci → MiddlewareOdswiezaSesje
+  - MiddlewareOdswiezaSesje → AppLayoutPobieraUsera → AuthProviderInicjalizujeStore
+  - AuthProviderInicjalizujeStore → WeryfikacjaSesjiPrzezRequireAuth
+  - WeryfikacjaSesjiPrzezRequireAuth → SesjaWazna → DostepDoFunkcjonalnosci
+  - WeryfikacjaSesjiPrzezRequireAuth → SesjaWygasla → PrzekierowanieDoLogowania
 
 ### Podróż 5: Wylogowanie
 
@@ -119,7 +121,10 @@
 - **AktualizacjaHasla:** Wywołanie updateUser z nowym hasłem
 - **StronaGlownaZalogowana:** Dostęp do chronionych funkcjonalności aplikacji
 - **ProbaDostepuDoFunkcjonalnosci:** Próba wejścia na chronioną stronę
-- **WeryfikacjaSesji:** Sprawdzenie ważności sesji przez getUserId()
+- **MiddlewareOdswiezaSesje:** Middleware odświeża sesję przed każdym żądaniem przez getUser()
+- **AppLayoutPobieraUsera:** AppLayout pobiera użytkownika przez createClient() i przekazuje do AuthProvider
+- **AuthProviderInicjalizujeStore:** AuthProvider inicjalizuje authStore i subskrybuje zmiany autentykacji
+- **WeryfikacjaSesjiPrzezRequireAuth:** Sprawdzenie ważności sesji przez requireAuth() (automatyczne przekierowanie przy braku sesji)
 - **SesjaWazna:** Kontynuacja dostępu do funkcjonalności
 - **SesjaWygasla:** Przekierowanie do logowania
 - **KlikniecieWyloguj:** Akcja wylogowania przez przycisk w nawigacji
@@ -205,9 +210,12 @@ stateDiagram-v2
         if_wylogowanie --> StronaGlownaZalogowana: Błąd wylogowania
     }
 
-    state "Weryfikacja sesji" as WeryfikacjaSesji {
-        [*] --> SprawdzenieSesji
-        SprawdzenieSesji --> if_sesja <<choice>>
+    state "Weryfikacja sesji i synchronizacja" as WeryfikacjaSesji {
+        [*] --> MiddlewareOdswiezaSesje
+        MiddlewareOdswiezaSesje --> AppLayoutPobieraUsera
+        AppLayoutPobieraUsera --> AuthProviderInicjalizujeStore
+        AuthProviderInicjalizujeStore --> WeryfikacjaSesjiPrzezRequireAuth
+        WeryfikacjaSesjiPrzezRequireAuth --> if_sesja <<choice>>
         if_sesja --> SesjaWazna: Sesja aktywna
         if_sesja --> SesjaWygasla: Sesja wygasła
         SesjaWazna --> [*]
@@ -230,7 +238,7 @@ stateDiagram-v2
 
     StronaGlownaZalogowana --> Wylogowanie: Kliknięcie "Wyloguj"
     StronaGlownaZalogowana --> WeryfikacjaSesji: Próba dostępu do chronionych funkcji
-    StronaGlownaZalogowana --> StronaGlownaZalogowana: Odświeżenie strony
+    StronaGlownaZalogowana --> WeryfikacjaSesji: Odświeżenie strony (Middleware → AppLayout → AuthProvider)
 
     Wylogowanie --> FormularzLogowania: Sukces wylogowania
 
@@ -273,6 +281,17 @@ stateDiagram-v2
         - Plany treningowe
         - Sesje treningowe
         - Rekordy osobiste
+        
+        Wszystkie strony używają requireAuth()
+        do weryfikacji autoryzacji
+    end note
+
+    note right of AuthProviderInicjalizujeStore
+        AuthProvider:
+        - Inicjalizuje authStore z user prop
+        - Subskrybuje onAuthStateChange
+        - Automatycznie aktualizuje store
+        przy zmianie sesji
     end note
 
     StronaGlownaZalogowana --> [*]
