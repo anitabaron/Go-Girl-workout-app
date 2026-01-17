@@ -13,15 +13,15 @@ import {
 
 export function EmptyState() {
   return (
-    <Card className="mx-auto max-w-md rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950">
+    <Card className="mx-auto min-w-[320px] max-w-md rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
           <History className="h-8 w-8 text-destructive" aria-hidden="true" />
         </div>
-        <CardTitle className="text-2xl font-extrabold text-destructive">
+        <CardTitle className="text-2xl font-extrabold text-destructive break-words">
           Nie masz jeszcze żadnych sesji treningowych
         </CardTitle>
-        <CardDescription className="mt-2 text-zinc-600 dark:text-zinc-400">
+        <CardDescription className="mt-2 text-zinc-600 dark:text-zinc-400 break-words">
           Rozpocznij swój pierwszy trening, aby zobaczyć historię sesji
         </CardDescription>
       </CardHeader>

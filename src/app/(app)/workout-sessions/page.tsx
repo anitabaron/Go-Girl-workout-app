@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-
 import { requireAuth } from "@/lib/auth";
 import { listWorkoutSessionsService } from "@/services/workout-sessions";
 import { sessionListQuerySchema } from "@/lib/validation/workout-sessions";
@@ -17,16 +15,26 @@ export default async function WorkoutSessionsPage({
 }>) {
   const params = await searchParams;
 
+  console.log("[WorkoutSessionsPage] Raw searchParams:", params);
+
   // Walidacja i parsowanie query params
   const parseResult = sessionListQuerySchema.safeParse({
     ...params,
     limit: params.limit ? Number(params.limit) : undefined,
   });
 
+  console.log("[WorkoutSessionsPage] Parse result:", {
+    success: parseResult.success,
+    data: parseResult.success ? parseResult.data : null,
+    error: parseResult.success ? null : parseResult.error.issues,
+  });
+
   // Fallback do domyślnych wartości przy błędzie walidacji
   const parsedQuery: SessionListQueryParams = parseResult.success
     ? parseResult.data
     : sessionListQuerySchema.parse({});
+
+  console.log("[WorkoutSessionsPage] Final parsedQuery:", parsedQuery);
 
   // Weryfikacja autoryzacji - automatyczne przekierowanie niezalogowanych użytkowników
   const userId = await requireAuth();
@@ -38,22 +46,29 @@ export default async function WorkoutSessionsPage({
   };
 
   try {
-    // Pobierz sesje in_progress
-    const inProgressResult = await listWorkoutSessionsService(userId, {
-      status: "in_progress",
-      limit: 1,
-    });
-
-    // Jeśli jest sesja in_progress, przekieruj do niej
-    if (inProgressResult.items.length > 0) {
-      const session = inProgressResult.items[0];
-      redirect(`/workout-sessions/${session.id}/active`);
-    }
-
     // Pobierz wszystkie sesje (lub zgodnie z filtrami)
+    console.log("[WorkoutSessionsPage] Fetching sessions with query:", parsedQuery);
     const result = await listWorkoutSessionsService(userId, parsedQuery);
+    console.log("[WorkoutSessionsPage] Received sessions:", {
+      count: result.items.length,
+      items: result.items.map((s) => ({
+        id: s.id,
+        status: s.status,
+        started_at: s.started_at,
+        completed_at: s.completed_at,
+      })),
+      nextCursor: result.nextCursor,
+    });
     sessionsData = result;
-  } catch {
+  } catch (error) {
+    // Loguj błędy dla debugowania
+    console.error("Error fetching workout sessions:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      userId,
+      parsedQuery,
+    });
     // W przypadku błędu, użyj pustych danych (sessionsData już ma wartości domyślne)
     // Error boundary lub error.tsx obsłuży błędy renderowania
   }

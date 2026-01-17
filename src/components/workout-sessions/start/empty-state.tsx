@@ -23,8 +23,8 @@ export function EmptyState() {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
           <Calendar className="h-8 w-8 text-muted-foreground" />
         </div>
-        <CardTitle>Brak planów treningowych</CardTitle>
-        <CardDescription>
+        <CardTitle className="break-words">Brak planów treningowych</CardTitle>
+        <CardDescription className="break-words">
           Utwórz swój pierwszy plan treningowy, aby rozpocząć treningi
         </CardDescription>
       </CardHeader>

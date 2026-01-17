@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,10 +48,17 @@ export function PageHeader({
 
       <Link
         href="/"
-        className="font-bold text-lg hover:text-primary transition-colors"
+        className="flex items-center hover:opacity-80 transition-opacity"
         aria-label="Strona główna"
       >
-        Go Girl
+        <Image
+          src="/logo-pin.png"
+          alt="Go Girl"
+          width={58}
+          height={28}
+          className="h-7 w-auto"
+          priority
+        />
       </Link>
     </div>
   );
