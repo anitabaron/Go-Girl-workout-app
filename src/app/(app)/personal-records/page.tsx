@@ -71,12 +71,12 @@ export default async function PersonalRecordsPage({
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <PageHeader showBack={false} />
-      <header className="bg-primary">
-        <div className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-10">
+      <header className="bg-primary pt-[34px]">
+        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
           <PersonalRecordsHeader />
         </div>
       </header>
+      <PageHeader showBack={false} />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         <section className="mb-6 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">

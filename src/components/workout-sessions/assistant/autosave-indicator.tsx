@@ -54,7 +54,7 @@ export function AutosaveIndicator({
   const Icon = config.icon;
 
   return (
-    <div className="fixed right-4 top-4 z-50 flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 shadow-sm dark:border-border dark:bg-zinc-950">
+    <div className="fixed right-4 top-4 z-50 mt-24 flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 shadow-sm transition-opacity duration-200 dark:border-border dark:bg-zinc-950">
       <Icon className={`size-4 ${config.className}`} />
       <span className={`text-sm font-medium ${config.className}`}>
         {config.text}

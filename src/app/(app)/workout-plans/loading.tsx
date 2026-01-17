@@ -3,8 +3,8 @@ import { SkeletonLoader } from "@/components/workout-plans/skeleton-loader";
 export default function WorkoutPlansLoading() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary">
-        <div className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-10">
+      <header className="bg-primary pt-[34px]">
+        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <SkeletonLoader count={1} className="h-10 w-64 mb-2" />

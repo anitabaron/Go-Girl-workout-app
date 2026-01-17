@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,36 +28,19 @@ export function PageHeader({
   };
 
   return (
-    <div className="flex items-center justify-between gap-4 px-6 py-4 sm:px-10">
-      <div className="flex items-center gap-4">
-        {showBack && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center gap-2"
-            aria-label="Powrót do poprzedniego widoku"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Wstecz</span>
-          </Button>
-        )}
-      </div>
-
-      <Link
-        href="/"
-        className="flex items-center hover:opacity-80 transition-opacity"
-        aria-label="Strona główna"
-      >
-        <Image
-          src="/logo-pin.png"
-          alt="Go Girl"
-          width={58}
-          height={28}
-          className="h-7 w-auto"
-          priority
-        />
-      </Link>
+    <div className="flex items-center gap-4 px-6 py-4 sm:px-10">
+      {showBack && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBack}
+          className="flex items-center gap-2"
+          aria-label="Powrót do poprzedniego widoku"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Wstecz</span>
+        </Button>
+      )}
     </div>
   );
 }
