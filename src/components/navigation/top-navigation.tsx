@@ -102,14 +102,14 @@ export function TopNavigation({
           {user ? (
             <button
               onClick={handleSignOut}
-              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground cursor-pointer"
             >
               Wyloguj
             </button>
           ) : (
             <Link
               href="/login"
-              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground cursor-pointer"
             >
               Zaloguj
             </Link>
