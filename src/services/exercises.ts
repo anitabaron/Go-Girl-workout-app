@@ -168,6 +168,9 @@ export async function updateExerciseService(
     throw new ServiceError("BAD_REQUEST", domainErrors.join(" "));
   }
 
+  if (!merged.title) {
+    throw new Error("Title is required");
+  }
   const titleNormalized = normalizeTitle(merged.title);
 
   if (titleNormalized !== existing.title_normalized) {

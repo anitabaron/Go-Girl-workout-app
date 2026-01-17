@@ -578,7 +578,7 @@ function parseValidationErrors(errorData: {
     // Sprawdź czy błąd dotyczy konkretnego pola
     for (const [apiField, formField] of Object.entries(fieldMapping)) {
       if (errorMsg.toLowerCase().includes(apiField.toLowerCase())) {
-        errors[formField] = errorMsg;
+        (errors as Record<string, string>)[formField] = errorMsg;
         assigned = true;
         break;
       }

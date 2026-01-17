@@ -98,6 +98,12 @@ export type WorkoutPlanCreateCommand = Pick<
   exercises: WorkoutPlanExerciseInput[];
 };
 
+export type WorkoutPlanUpdateCommand = Partial<
+  Pick<TablesUpdate<"workout_plans">, "name" | "description" | "part">
+> & {
+  exercises?: WorkoutPlanExerciseInput[];
+};
+
 export type WorkoutPlanExerciseDTO = Omit<
   WorkoutPlanExerciseEntity,
   "plan_id" | "created_at"

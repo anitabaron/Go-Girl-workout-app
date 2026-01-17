@@ -255,7 +255,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         }
       } catch (error) {
         // Obsługa błędów sieci i innych nieoczekiwanych błędów
-        const errorMessage = mapAuthError(error);
+        const errorMessage = mapAuthError(error as Error);
         
         toast.error(errorMessage);
         setErrors({

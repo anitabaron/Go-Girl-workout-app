@@ -43,7 +43,7 @@ export function ResumeSessionCard({ session }: ResumeSessionCardProps) {
 
   // Oblicz postęp sesji
   const totalExercises = session.exercises.length;
-  const currentExerciseNumber = Math.max(1, session.current_position);
+  const currentExerciseNumber = Math.max(1, session.current_position ?? 0);
   const progressPercentage =
     totalExercises > 0
       ? Math.round((currentExerciseNumber / totalExercises) * 100)

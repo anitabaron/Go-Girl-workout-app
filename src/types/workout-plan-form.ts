@@ -74,7 +74,11 @@ export type WorkoutPlanMetadataFieldsProps = {
     description: string | null;
     part: ExercisePart | null;
   };
-  errors: Record<string, string>;
+  errors: {
+    name?: string;
+    description?: string;
+    part?: string;
+  };
   onChange: (field: string, value: unknown) => void;
   onBlur: (field: string) => void;
   disabled: boolean;

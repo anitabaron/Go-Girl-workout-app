@@ -49,8 +49,8 @@ type UseExerciseFormProps = {
 // Schema dla walidacji pojedynczych pól
 const fieldSchemas = {
   title: z.string().trim().min(1, "Tytuł jest wymagany").max(120, "Tytuł może mieć maksymalnie 120 znaków"),
-  type: z.enum(exerciseTypeValues, { errorMap: () => ({ message: "Typ jest wymagany" }) }),
-  part: z.enum(exercisePartValues, { errorMap: () => ({ message: "Partia jest wymagana" }) }),
+  type: z.enum(exerciseTypeValues, { message: "Typ jest wymagany" }),
+  part: z.enum(exercisePartValues, { message: "Partia jest wymagana" }),
   level: z.string().transform((val) => {
     if (!val || val.trim() === "" || val === "none") return null;
     if (["Beginner", "Intermediate", "Advanced"].includes(val)) {

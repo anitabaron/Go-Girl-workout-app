@@ -36,7 +36,7 @@ export const workoutPlanPartSchema = z
  * Schema dla walidacji section_type
  */
 export const workoutPlanSectionTypeSchema = z.enum(exerciseTypeValues, {
-  errorMap: () => ({ message: "Typ sekcji jest wymagany" }),
+    message: "Typ sekcji jest wymagany",
 });
 
 /**
@@ -129,7 +129,9 @@ export const workoutPlanFormSchema = z
   })
   .strict()
   .superRefine((data, ctx) => {
-    const errors = validateWorkoutPlanFormBusinessRules(data.exercises);
+    const errors = validateWorkoutPlanFormBusinessRules(
+      data.exercises as WorkoutPlanExerciseItemState[]
+    );
 
     errors.forEach((message) =>
       ctx.addIssue({

@@ -579,7 +579,7 @@ export async function callSaveWorkoutSessionExercise(
   console.log("[callSaveWorkoutSessionExercise] Starting with params:", {
     p_session_id: params.p_session_id,
     p_exercise_id: params.p_exercise_id,
-    p_order: params.p_order,
+    p_exercise_order: params.p_exercise_order,
     p_actual_sets: params.p_actual_sets,
     p_actual_reps: params.p_actual_reps,
     p_actual_duration_seconds: params.p_actual_duration_seconds,

@@ -35,10 +35,7 @@ function getPartLabel(part: ExercisePart | null): string | null {
     Arms: "Ręce",
     Back: "Plecy",
     Chest: "Klatka",
-    Shoulders: "Barki",
     Core: "Brzuch",
-    Cardio: "Cardio",
-    FullBody: "Całe ciało",
   };
 
   return labels[part] ?? part;

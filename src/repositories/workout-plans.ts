@@ -114,10 +114,16 @@ export async function findWorkoutPlansByUserId(
   if (items.length > limit) {
     const tail = items.pop()!;
 
+    // sort może być tylko "created_at" lub "name" (z workoutPlanSortFields)
+    const sortValue = sort === "created_at" 
+      ? tail.created_at 
+      : sort === "name" 
+        ? tail.name 
+        : tail.created_at; // fallback
     nextCursor = encodeCursor({
       sort,
       order,
-      value: tail[sort as keyof WorkoutPlanRow] as string | number,
+      value: sortValue,
       id: tail.id,
     });
   }
@@ -190,7 +196,7 @@ export async function updateWorkoutPlan(
   const updateData: {
     name?: string;
     description?: string | null;
-    part?: string | null;
+    part?: "Legs" | "Core" | "Back" | "Arms" | "Chest" | null;
   } = {};
 
   if (input.name !== undefined) {
@@ -339,9 +345,11 @@ export async function findExercisesByIds(
 /**
  * Mapuje wiersz z bazy danych na DTO planu (bez ćwiczeń).
  */
-export function mapToDTO(row: WorkoutPlanRow): Omit<WorkoutPlanDTO, "exercises"> {
+type WorkoutPlanSelectResult = Omit<WorkoutPlanRow, "user_id">;
+
+export function mapToDTO(row: WorkoutPlanRow | WorkoutPlanSelectResult): Omit<WorkoutPlanDTO, "exercises"> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { user_id, ...rest } = row;
+  const { user_id, ...rest } = row as WorkoutPlanRow;
   return rest;
 }
 
