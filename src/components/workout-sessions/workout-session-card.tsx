@@ -2,10 +2,12 @@
 
 import React, { memo, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Calendar, Play, CheckCircle2 } from "lucide-react";
 import type { SessionSummaryDTO } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 type WorkoutSessionCardProps = {
   readonly session: SessionSummaryDTO;
@@ -39,6 +41,7 @@ function formatDuration(startedAt: string, completedAt: string | null): string {
 }
 
 function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
+  const router = useRouter();
   const formattedStartedAt = useMemo(
     () => formatDate(session.started_at),
     [session.started_at]
@@ -56,6 +59,12 @@ function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
 
   const isInProgress = session.status === "in_progress";
   const planName = session.plan_name_at_time || "Plan usunięty";
+
+  const handleResume = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/workout-sessions/${session.id}/active`);
+  };
 
   return (
     <Card className="group relative h-full rounded-xl border border-border bg-secondary/70 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card">
@@ -99,6 +108,20 @@ function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
           </div>
         </CardContent>
       </Link>
+      {isInProgress && (
+        <CardFooter className="pt-0">
+          <Button
+            onClick={handleResume}
+            variant="default"
+            size="sm"
+            className="w-full"
+            aria-label="Wznów trening"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            Wznów
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

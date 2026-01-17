@@ -400,7 +400,7 @@ export function WorkoutSessionAssistant({
       <AutosaveIndicator status={autosaveStatus} errorMessage={autosaveError} />
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto md:pt-16">
         <div className="mx-auto w-full max-w-4xl px-4 py-6 space-y-6">
           {/* Timer */}
           <WorkoutTimer

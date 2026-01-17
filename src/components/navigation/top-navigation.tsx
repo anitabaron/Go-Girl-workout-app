@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navigationItems } from "./navigation-items";
@@ -61,7 +62,14 @@ export function TopNavigation({
           className="flex items-center space-x-2 font-bold text-lg"
           aria-label="Strona główna"
         >
-          <span>Go Girl</span>
+          <Image
+            src="/logo-pin.png"
+            alt="Go Girl"
+            width={58}
+            height={28}
+            className="h-7 w-auto"
+            priority
+          />
         </Link>
 
         {/* Navigation Links */}
@@ -96,7 +104,7 @@ export function TopNavigation({
               onClick={handleSignOut}
               className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
             >
-              WYloguj
+              Wyloguj
             </button>
           ) : (
             <Link

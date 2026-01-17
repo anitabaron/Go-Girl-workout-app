@@ -198,21 +198,48 @@ export async function listWorkoutSessionsService(
   const supabase = await createClient();
 
   try {
+    console.log("[listWorkoutSessionsService] Fetching sessions", {
+      userId,
+      query: parsed,
+    });
+
     const { data, nextCursor, error } = await findWorkoutSessionsByUserId(
       supabase,
       userId,
       parsed
     );
 
+    console.log("[listWorkoutSessionsService] Query result", {
+      dataCount: data?.length ?? 0,
+      nextCursor,
+      error: error ? {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      } : null,
+    });
+
     if (error) {
       throw mapDbError(error);
     }
 
-    return {
+    const result = {
       items: data ?? [],
       nextCursor: nextCursor ?? null,
     };
+
+    console.log("[listWorkoutSessionsService] Returning", {
+      itemsCount: result.items.length,
+      nextCursor: result.nextCursor,
+    });
+
+    return result;
   } catch (error) {
+    console.error("[listWorkoutSessionsService] Error", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
     if (error instanceof Error && error.message === "INVALID_CURSOR") {
       throw new ServiceError("BAD_REQUEST", "Nieprawidłowy kursor paginacji.");
     }
