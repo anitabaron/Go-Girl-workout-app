@@ -82,7 +82,18 @@ Po wykonaniu migracji sprawdź:
    - Kliknij "Settings" w górnej nawigacji
    - Wybierz "Environment Variables" z bocznego menu
 
-3. **Dodaj wymagane zmienne środowiskowe**
+3. **Włącz automatyczne udostępnianie zmiennych systemowych (opcjonalne, ale zalecane)**
+
+   - Znajdź opcję **"Automatically expose System Environment Variables"**
+   - ✅ **Zaznacz tę opcję** (zalecane dla Next.js)
+   - Ta opcja udostępnia zmienne systemowe Vercel takie jak:
+     - `VERCEL_ENV` - środowisko (production, preview, development)
+     - `VERCEL_URL` - URL deploymentu
+     - `VERCEL_TARGET_ENV` - docelowe środowisko
+   - **Dlaczego warto:** Next.js może używać tych zmiennych do wykrywania środowiska i konfiguracji
+   - **Bezpieczeństwo:** To są tylko zmienne systemowe Vercel, nie ma ryzyka bezpieczeństwa
+
+4. **Dodaj wymagane zmienne środowiskowe**
 
    **Zmienna 1:**
 
@@ -97,13 +108,14 @@ Po wykonaniu migracji sprawdź:
    - **Value**: Klucz anon/public z Supabase Dashboard
    - **Environment**: Wybierz wszystkie (Production, Preview, Development)
    - Kliknij "Save"
+   - **⚠️ UWAGA**: Vercel może wyświetlić ostrzeżenie o ekspozycji wartości w przeglądarce. To jest **BEZPIECZNE** i **NORMALNE** - klucz `anon` jest przeznaczony do użycia w przeglądarce. Możesz bezpiecznie zignorować to ostrzeżenie.
 
-4. **⚠️ WAŻNE: NIE dodawaj `DEFAULT_USER_ID`**
+5. **⚠️ WAŻNE: NIE dodawaj `DEFAULT_USER_ID`**
 
    - Ta zmienna została usunięta z kodu dla bezpieczeństwa
    - Jeśli istnieje w środowisku, usuń ją
 
-5. **Redeploy po dodaniu zmiennych**
+6. **Redeploy po dodaniu zmiennych**
    - Vercel automatycznie uruchomi nowy deployment po dodaniu zmiennych
    - Lub ręcznie uruchom redeploy z zakładki "Deployments"
 
@@ -142,6 +154,27 @@ vercel env pull .env.local
 1. Otwórz Supabase Dashboard
 2. Przejdź do Settings → API
 3. Skopiuj "anon public" key (NIE service_role key!)
+
+### ⚠️ Ostrzeżenie Vercel o `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+**Vercel może wyświetlić ostrzeżenie:**
+> "NEXT_PUBLIC_ exposes this value to the browser. Verify it is safe to share publicly."
+
+**To jest BEZPIECZNE i możesz zignorować to ostrzeżenie, ponieważ:**
+
+1. **Klucz `anon` jest przeznaczony do użycia w przeglądarce**
+   - To jest publiczny klucz API, zaprojektowany specjalnie do użycia w aplikacjach frontendowych
+   - Jest to standardowa praktyka w Supabase i innych serwisach BaaS
+
+2. **RLS (Row Level Security) chroni dane**
+   - Nawet jeśli klucz jest publiczny, RLS na poziomie bazy danych zapewnia, że użytkownicy widzą tylko swoje dane
+   - Klucz `anon` ma ograniczone uprawnienia - nie może wykonywać operacji administracyjnych
+
+3. **Różnica między kluczami:**
+   - ✅ **`anon` key** - bezpieczny do użycia w przeglądarce (używamy tego)
+   - ❌ **`service_role` key** - NIGDY nie używaj w przeglądarce (ma pełne uprawnienia)
+
+**Wniosek:** Możesz bezpiecznie kliknąć "Save" i zignorować ostrzeżenie Vercel.
 
 ---
 
