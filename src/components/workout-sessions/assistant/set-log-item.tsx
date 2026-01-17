@@ -10,6 +10,7 @@ type SetLogItemProps = {
   onChange: (set: SetLogFormData) => void;
   onRemove: () => void;
   error?: string;
+  showDuration?: boolean; // czy pokazać pole czasu trwania
 };
 
 /**
@@ -17,7 +18,7 @@ type SetLogItemProps = {
  * Zawiera pola: set_number (read-only), reps, duration_seconds, weight_kg.
  * Walidacja: co najmniej jedna metryka (reps/duration/weight) z wartością >= 0.
  */
-export function SetLogItem({ set, onChange, onRemove, error }: SetLogItemProps) {
+export function SetLogItem({ set, onChange, onRemove, error, showDuration = true }: SetLogItemProps) {
   const handleChange = (field: keyof SetLogFormData, value: string) => {
     const numValue = value === "" ? null : Number.parseFloat(value);
     onChange({
@@ -41,7 +42,7 @@ export function SetLogItem({ set, onChange, onRemove, error }: SetLogItemProps) 
           </div>
 
           {/* Pola metryk */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className={`grid grid-cols-1 gap-3 ${showDuration ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
             <div>
               <label
                 htmlFor={`reps-${set.set_number}`}
@@ -63,26 +64,28 @@ export function SetLogItem({ set, onChange, onRemove, error }: SetLogItemProps) 
               />
             </div>
 
-            <div>
-              <label
-                htmlFor={`duration-${set.set_number}`}
-                className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Czas (sekundy)
-              </label>
-              <Input
-                id={`duration-${set.set_number}`}
-                type="number"
-                min="0"
-                step="1"
-                value={set.duration_seconds ?? ""}
-                onChange={(e) => handleChange("duration_seconds", e.target.value)}
-                placeholder="0"
-                aria-label={`Czas trwania dla serii ${set.set_number}`}
-                aria-invalid={error ? "true" : "false"}
-                aria-describedby={error ? `error-${set.set_number}` : undefined}
-              />
-            </div>
+            {showDuration && (
+              <div>
+                <label
+                  htmlFor={`duration-${set.set_number}`}
+                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Czas (sekundy)
+                </label>
+                <Input
+                  id={`duration-${set.set_number}`}
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={set.duration_seconds ?? ""}
+                  onChange={(e) => handleChange("duration_seconds", e.target.value)}
+                  placeholder="0"
+                  aria-label={`Czas trwania dla serii ${set.set_number}`}
+                  aria-invalid={error ? "true" : "false"}
+                  aria-describedby={error ? `error-${set.set_number}` : undefined}
+                />
+              </div>
+            )}
 
             <div>
               <label

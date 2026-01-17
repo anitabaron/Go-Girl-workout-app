@@ -208,7 +208,7 @@ export function ExerciseExecutionForm({
       </h3>
 
       {/* Podsumowanie - wartości obliczane z serii (tylko do wyświetlenia) */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
         <div>
           <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Liczba serii
@@ -227,14 +227,18 @@ export function ExerciseExecutionForm({
           </div>
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Czas trwania (sekundy)
-          </label>
-          <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-zinc-900 dark:text-zinc-50">
-            {summaryValues.duration_seconds}
-          </div>
-        </div>
+        {/* Pokaż czas trwania tylko jeśli plan ma planned_duration_seconds */}
+        {exercise.planned_duration_seconds !== null &&
+          exercise.planned_duration_seconds !== undefined && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                Czas trwania (sekundy)
+              </label>
+              <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-zinc-900 dark:text-zinc-50">
+                {summaryValues.duration_seconds}
+              </div>
+            </div>
+          )}
 
         <div>
           <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -253,6 +257,7 @@ export function ExerciseExecutionForm({
         onUpdate={handleSetUpdate}
         onRemove={handleSetRemove}
         errors={errors?.sets}
+        showDuration={exercise.planned_duration_seconds !== null && exercise.planned_duration_seconds !== undefined}
       />
 
       {/* Checkbox "Pomiń ćwiczenie" */}

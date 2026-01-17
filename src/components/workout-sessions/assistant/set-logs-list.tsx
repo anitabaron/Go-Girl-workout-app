@@ -11,6 +11,7 @@ type SetLogsListProps = {
   onUpdate: (index: number, set: SetLogFormData) => void;
   onRemove: (index: number) => void;
   errors?: Record<number, string>; // klucz: index serii, wartość: komunikat błędu
+  showDuration?: boolean; // czy pokazać pole czasu trwania
 };
 
 /**
@@ -22,6 +23,7 @@ export function SetLogsList({
   onUpdate,
   onRemove,
   errors,
+  showDuration = true,
 }: SetLogsListProps) {
   return (
     <div className="space-y-4">
@@ -56,6 +58,7 @@ export function SetLogsList({
               onChange={(updatedSet) => onUpdate(index, updatedSet)}
               onRemove={() => onRemove(index)}
               error={errors?.[index]}
+              showDuration={showDuration}
             />
           ))}
         </div>

@@ -66,7 +66,7 @@ export function CurrentExerciseInfo({ exercise }: CurrentExerciseInfoProps) {
       </div>
 
       {/* Parametry planowane */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
         {exercise.planned_sets !== null &&
           exercise.planned_sets !== undefined && (
             <div>
