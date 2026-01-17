@@ -1,23 +1,27 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
 export default function ExerciseDetailsError({
-  error: _error,
+  error: _error, // eslint-disable-line @typescript-eslint/no-unused-vars
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   const router = useRouter();
+  const hasShownToast = useRef(false);
 
   useEffect(() => {
-    // Wyświetl toast notification o błędzie
-    toast.error("Nie udało się załadować szczegółów ćwiczenia");
+    // Wyświetl toast notification o błędzie tylko raz (nawet w React Strict Mode)
+    if (!hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.error("Nie udało się załadować szczegółów ćwiczenia");
+    }
   }, []);
 
   return (

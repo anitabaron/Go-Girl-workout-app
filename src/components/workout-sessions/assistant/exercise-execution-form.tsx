@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { useCallback, useEffect, useMemo, useRef, useState, startTransition } from "react";
 import { SetLogsList } from "./set-logs-list";
 import type { SessionExerciseDTO } from "@/types";
 import type {
@@ -27,19 +26,32 @@ export function ExerciseExecutionForm({
   errors,
 }: ExerciseExecutionFormProps) {
   // Inicjalizacja formData z danych ćwiczenia
-  const initialFormData = useMemo(
-    () => exerciseToFormData(exercise),
-    [exercise]
-  );
+  const initialFormData = useMemo(() => {
+    const data = exerciseToFormData(exercise);
+    
+    // Jeśli nie ma serii, ale są dane planowane, utwórz wstępne serie z planu
+    if (data.sets.length === 0 && exercise.planned_sets && exercise.planned_sets > 0) {
+      const initialSets: SetLogFormData[] = [];
+      for (let i = 1; i <= exercise.planned_sets; i++) {
+        initialSets.push({
+          set_number: i,
+          reps: exercise.planned_reps ?? null,
+          duration_seconds: exercise.planned_duration_seconds ?? null,
+          weight_kg: null, // Waga nie jest planowana, więc pozostaje null
+        });
+      }
+      data.sets = initialSets;
+    }
+    
+    return data;
+  }, [exercise]);
 
   const [formData, setFormData] = useState<ExerciseFormData>(
     initialFormData
   );
 
-  // Aktualizuj formData gdy zmienia się ćwiczenie
-  useEffect(() => {
-    setFormData(exerciseToFormData(exercise));
-  }, [exercise]);
+  // Ref do śledzenia poprzedniego ćwiczenia, aby uniknąć niepotrzebnych aktualizacji
+  const prevExerciseIdRef = useRef<string | number | undefined>(exercise.id);
 
   // Obliczanie actual_* z set logs (jeśli nie są ręcznie edytowane)
   const calculateActuals = useCallback((sets: SetLogFormData[]) => {
@@ -63,6 +75,45 @@ export function ExerciseExecutionForm({
     };
   }, [exercise.planned_rest_seconds]);
 
+  // Aktualizuj formData gdy zmienia się ćwiczenie
+  useEffect(() => {
+    // Sprawdź, czy ćwiczenie faktycznie się zmieniło
+    if (prevExerciseIdRef.current === exercise.id) {
+      return;
+    }
+    
+    prevExerciseIdRef.current = exercise.id;
+    
+    // Użyj startTransition, aby opóźnić aktualizację stanu i uniknąć synchronicznego setState w efekcie
+    startTransition(() => {
+      const newData = exerciseToFormData(exercise);
+      
+      // Jeśli nie ma serii, ale są dane planowane, utwórz wstępne serie z planu
+      if (newData.sets.length === 0 && exercise.planned_sets && exercise.planned_sets > 0) {
+        const initialSets: SetLogFormData[] = [];
+        for (let i = 1; i <= exercise.planned_sets; i++) {
+          initialSets.push({
+            set_number: i,
+            reps: exercise.planned_reps ?? null,
+            duration_seconds: exercise.planned_duration_seconds ?? null,
+            weight_kg: null,
+          });
+        }
+        newData.sets = initialSets;
+        
+        // Przelicz actual_* dla nowych serii
+        const calculated = calculateActuals(initialSets);
+        newData.actual_count_sets = calculated.actual_count_sets;
+        newData.actual_sum_reps = calculated.actual_sum_reps;
+        newData.actual_duration_seconds = calculated.actual_duration_seconds;
+        newData.actual_rest_seconds = calculated.actual_rest_seconds;
+      }
+      
+      setFormData(newData);
+      onChange(newData);
+    });
+  }, [exercise, calculateActuals, onChange]);
+
   // Aktualizacja formData i wywołanie onChange
   const updateFormData = useCallback(
     (updates: Partial<ExerciseFormData>) => {
@@ -83,14 +134,26 @@ export function ExerciseExecutionForm({
     [formData, onChange, calculateActuals]
   );
 
-  // Obsługa zmian w polach actual_*
-  const handleActualChange = useCallback(
-    (field: keyof ExerciseFormData, value: string) => {
-      const numValue = value === "" ? null : Number.parseFloat(value);
-      updateFormData({ [field]: numValue });
-    },
-    [updateFormData]
-  );
+  // Obliczanie wartości podsumowania z serii (tylko do wyświetlenia)
+  const summaryValues = useMemo(() => {
+    const countSets = formData.sets.length;
+    const sumReps = formData.sets.reduce(
+      (sum, set) => sum + (set.reps ?? 0),
+      0
+    );
+    const maxDuration = formData.sets.reduce(
+      (max, set) => Math.max(max, set.duration_seconds ?? 0),
+      0
+    );
+    const restSeconds = exercise.planned_rest_seconds ?? null;
+
+    return {
+      count_sets: countSets > 0 ? countSets : 0,
+      sum_reps: sumReps > 0 ? sumReps : 0,
+      duration_seconds: maxDuration > 0 ? maxDuration : 0,
+      rest_seconds: restSeconds,
+    };
+  }, [formData.sets, exercise.planned_rest_seconds]);
 
   // Obsługa dodania nowej serii
   const handleSetAdd = useCallback(() => {
@@ -144,126 +207,42 @@ export function ExerciseExecutionForm({
         Wykonanie ćwiczenia
       </h3>
 
-      {/* Pola actual_* (opcjonalne, obliczane automatycznie z set logs, ale możliwe do ręcznej edycji) */}
+      {/* Podsumowanie - wartości obliczane z serii (tylko do wyświetlenia) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label
-            htmlFor="actual_count_sets"
-            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
+          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Liczba serii
           </label>
-          <Input
-            id="actual_count_sets"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.actual_count_sets ?? ""}
-            onChange={(e) => handleActualChange("actual_count_sets", e.target.value)}
-            placeholder="0"
-            aria-label="Liczba wykonanych serii"
-            aria-invalid={errors?.actual_count_sets ? "true" : "false"}
-            aria-describedby={errors?.actual_count_sets ? "error-actual_count_sets" : undefined}
-          />
-          {errors?.actual_count_sets && (
-            <p
-              id="error-actual_count_sets"
-              className="mt-1 text-sm text-destructive"
-              role="alert"
-            >
-              {errors.actual_count_sets}
-            </p>
-          )}
+          <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-zinc-900 dark:text-zinc-50">
+            {summaryValues.count_sets}
+          </div>
         </div>
 
         <div>
-          <label
-            htmlFor="actual_sum_reps"
-            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
+          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Suma powtórzeń
           </label>
-          <Input
-            id="actual_sum_reps"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.actual_sum_reps ?? ""}
-            onChange={(e) => handleActualChange("actual_sum_reps", e.target.value)}
-            placeholder="0"
-            aria-label="Suma powtórzeń"
-            aria-invalid={errors?.actual_sum_reps ? "true" : "false"}
-            aria-describedby={errors?.actual_sum_reps ? "error-actual_sum_reps" : undefined}
-          />
-          {errors?.actual_sum_reps && (
-            <p
-              id="error-actual_sum_reps"
-              className="mt-1 text-sm text-destructive"
-              role="alert"
-            >
-              {errors.actual_sum_reps}
-            </p>
-          )}
+          <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-zinc-900 dark:text-zinc-50">
+            {summaryValues.sum_reps}
+          </div>
         </div>
 
         <div>
-          <label
-            htmlFor="actual_duration_seconds"
-            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
+          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Czas trwania (sekundy)
           </label>
-          <Input
-            id="actual_duration_seconds"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.actual_duration_seconds ?? ""}
-            onChange={(e) => handleActualChange("actual_duration_seconds", e.target.value)}
-            placeholder="0"
-            aria-label="Czas trwania w sekundach"
-            aria-invalid={errors?.actual_duration_seconds ? "true" : "false"}
-            aria-describedby={errors?.actual_duration_seconds ? "error-actual_duration_seconds" : undefined}
-          />
-          {errors?.actual_duration_seconds && (
-            <p
-              id="error-actual_duration_seconds"
-              className="mt-1 text-sm text-destructive"
-              role="alert"
-            >
-              {errors.actual_duration_seconds}
-            </p>
-          )}
+          <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-zinc-900 dark:text-zinc-50">
+            {summaryValues.duration_seconds}
+          </div>
         </div>
 
         <div>
-          <label
-            htmlFor="actual_rest_seconds"
-            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
+          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Przerwa (sekundy)
           </label>
-          <Input
-            id="actual_rest_seconds"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.actual_rest_seconds ?? ""}
-            onChange={(e) => handleActualChange("actual_rest_seconds", e.target.value)}
-            placeholder="0"
-            aria-label="Czas przerwy w sekundach"
-            aria-invalid={errors?.actual_rest_seconds ? "true" : "false"}
-            aria-describedby={errors?.actual_rest_seconds ? "error-actual_rest_seconds" : undefined}
-          />
-          {errors?.actual_rest_seconds && (
-            <p
-              id="error-actual_rest_seconds"
-              className="mt-1 text-sm text-destructive"
-              role="alert"
-            >
-              {errors.actual_rest_seconds}
-            </p>
-          )}
+          <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-zinc-900 dark:text-zinc-50">
+            {summaryValues.rest_seconds ?? "-"}
+          </div>
         </div>
       </div>
 
