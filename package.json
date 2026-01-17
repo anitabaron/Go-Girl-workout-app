@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
     "prepare": "husky",
     "check:supabase": "node scripts/check-supabase-config.js",
     "backup:db": "node scripts/backup-db.js",

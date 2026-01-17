@@ -1,2 +1,12 @@
 echo "HUSKY PRE-COMMIT RUNNING"
+
+# Sprawdź typy TypeScript przed commitem
+echo "🔍 Sprawdzanie typów TypeScript..."
+pnpm type-check || {
+  echo "❌ Błędy typów TypeScript wykryte! Napraw błędy przed commitem."
+  exit 1
+}
+
+# Uruchom lint-staged (ESLint)
+echo "🔍 Sprawdzanie składni i stylu kodu..."
 pnpm lint-staged
