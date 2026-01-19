@@ -171,9 +171,22 @@ export function WorkoutSessionAssistant({
     // Sprawdź, czy timer jest już uruchomiony (używamy ref, aby uniknąć zależności od session)
     const timerStarted = timerStateRef.current.lastTimerStartedAt !== null;
     const timerStopped = timerStateRef.current.lastTimerStoppedAt !== null;
+    const lastTimerStartedAt = timerStateRef.current.lastTimerStartedAt;
+    const lastTimerStoppedAt = timerStateRef.current.lastTimerStoppedAt;
     
-    // Jeśli timer nie jest uruchomiony lub został zatrzymany, uruchom go
-    if (!timerStarted || (timerStarted && timerStopped)) {
+    // Jeśli timer nie jest uruchomiony, uruchom go
+    // Jeśli timer został zatrzymany po ostatnim starcie, uruchom go ponownie
+    let shouldStart = !timerStarted;
+    if (timerStarted && timerStopped && lastTimerStartedAt && lastTimerStoppedAt) {
+      const startedTime = new Date(lastTimerStartedAt).getTime();
+      const stoppedTime = new Date(lastTimerStoppedAt).getTime();
+      // Jeśli ostatnie zatrzymanie jest nowsze niż ostatni start, timer został zatrzymany i można go wznowić
+      if (stoppedTime >= startedTime) {
+        shouldStart = true;
+      }
+    }
+    
+    if (shouldStart) {
       timerInitializedRef.current = true; // Oznacz jako zainicjalizowany przed wywołaniem API
       
       const now = new Date().toISOString();
@@ -495,38 +508,49 @@ export function WorkoutSessionAssistant({
   // Używamy ref do przechowywania aktualnych wartości, aby uniknąć zależności od session.last_timer_*
   const stopTimer = useCallback(async () => {
     // Użyj ref do sprawdzenia aktualnego stanu bez zależności
-    const timerStarted = timerStateRef.current.lastTimerStartedAt !== null;
-    const timerStopped = timerStateRef.current.lastTimerStoppedAt !== null;
+    const lastTimerStartedAt = timerStateRef.current.lastTimerStartedAt;
+    const lastTimerStoppedAt = timerStateRef.current.lastTimerStoppedAt;
     
-    // Jeśli timer jest uruchomiony i nie jest zatrzymany, zatrzymaj go
-    if (timerStarted && !timerStopped) {
-      const now = new Date().toISOString();
-      try {
-        const response = await fetch(`/api/workout-sessions/${sessionId}/timer`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            last_timer_stopped_at: now,
-          }),
-        });
+    // Zapisujemy czas jeśli timer był uruchomiony (lastTimerStartedAt istnieje)
+    // i jeśli timer nie został jeszcze zatrzymany LUB został ponownie uruchomiony po ostatnim zatrzymaniu
+    if (!lastTimerStartedAt) {
+      return;
+    }
+    
+    // Sprawdź czy timer został już zatrzymany i czy został ponownie uruchomiony
+    const isTimerActive = !lastTimerStoppedAt || 
+      (lastTimerStoppedAt && new Date(lastTimerStartedAt).getTime() > new Date(lastTimerStoppedAt).getTime());
+    
+    if (!isTimerActive) {
+      return;
+    }
+    
+    const now = new Date().toISOString();
+    try {
+      const response = await fetch(`/api/workout-sessions/${sessionId}/timer`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          last_timer_stopped_at: now,
+        }),
+      });
 
-        if (response.ok) {
-          const result = await response.json();
-          // Aktualizuj stan sesji z odpowiedzi API
-          if (result.data) {
-            setSession((prev) => ({
-              ...prev,
-              active_duration_seconds: result.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
-              last_timer_started_at: result.data.last_timer_started_at ?? prev.last_timer_started_at,
-              last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
-            }));
-          }
+      if (response.ok) {
+        const result = await response.json();
+        // Aktualizuj stan sesji z odpowiedzi API
+        if (result.data) {
+          setSession((prev) => ({
+            ...prev,
+            active_duration_seconds: result.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
+            last_timer_started_at: result.data.last_timer_started_at ?? prev.last_timer_started_at,
+            last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+          }));
         }
-      } catch (error) {
-        console.error("[WorkoutSessionAssistant.stopTimer] Error:", error);
       }
+    } catch (error) {
+      console.error("[WorkoutSessionAssistant.stopTimer] Error:", error);
     }
   }, [sessionId]);
 

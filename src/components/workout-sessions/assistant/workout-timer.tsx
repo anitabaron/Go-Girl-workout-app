@@ -81,12 +81,13 @@ export function WorkoutTimer({
   // Cleanup przy unmount - zatrzymaj timer przy wyjściu z asystenta
   useEffect(() => {
     return () => {
-      // Wywołaj callback, jeśli timer był aktywny
-      if (lastTimerStartedAt && !lastTimerStoppedAt && !isPaused && onTimerStop) {
+      // Wywołaj callback, jeśli timer był uruchomiony (lastTimerStartedAt istnieje)
+      // Logika w stopTimer sprawdzi czy trzeba zapisać czas (czy timer został wznowiony po ostatnim zatrzymaniu)
+      if (lastTimerStartedAt && onTimerStop) {
         onTimerStop();
       }
     };
-  }, [lastTimerStartedAt, lastTimerStoppedAt, isPaused, onTimerStop]);
+  }, [lastTimerStartedAt, onTimerStop]);
 
   // Formatowanie czasu: MM:SS lub HH:MM:SS
   const formatTime = (totalSeconds: number): string => {
