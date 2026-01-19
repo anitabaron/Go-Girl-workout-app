@@ -10,33 +10,33 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1";
-  };
+    PostgrestVersion: "14.1"
+  }
   graphql_public: {
     Tables: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
       graphql: {
         Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
     Enums: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       ai_requests: {
@@ -118,6 +118,7 @@ export type Database = {
           created_at: string
           details: string | null
           duration_seconds: number | null
+          estimated_set_time_seconds: number | null
           id: string
           level: string | null
           part: Database["public"]["Enums"]["exercise_part"]
@@ -135,6 +136,7 @@ export type Database = {
           created_at?: string
           details?: string | null
           duration_seconds?: number | null
+          estimated_set_time_seconds?: number | null
           id?: string
           level?: string | null
           part: Database["public"]["Enums"]["exercise_part"]
@@ -152,6 +154,7 @@ export type Database = {
           created_at?: string
           details?: string | null
           duration_seconds?: number | null
+          estimated_set_time_seconds?: number | null
           id?: string
           level?: string | null
           part?: Database["public"]["Enums"]["exercise_part"]
@@ -526,12 +529,9 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<
-  keyof Database,
-  "public"
->];
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
@@ -659,4 +659,4 @@ export const Constants = {
       workout_session_status: ["in_progress", "completed"],
     },
   },
-} as const;
+} as const

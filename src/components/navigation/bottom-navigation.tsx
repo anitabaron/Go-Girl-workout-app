@@ -56,7 +56,7 @@ export function BottomNavigation({
 
   return (
     <nav
-      className="fixed bottom-0 z-50 w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden"
+      className="fixed bottom-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden"
       role="navigation"
       aria-label="Nawigacja mobilna"
     >
@@ -74,7 +74,7 @@ export function BottomNavigation({
               alt="Go Girl"
               width={58}
               height={28}
-              className="h-7 w-auto"
+              className="h-8 w-auto"
               priority
             />
           </Link>

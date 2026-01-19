@@ -24,6 +24,7 @@ export type WorkoutPlanExerciseItemState = {
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
+  estimated_set_time_seconds: number | null;
 };
 
 /**
@@ -34,6 +35,7 @@ export type PlannedParamsState = {
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
+  estimated_set_time_seconds: number | null;
 };
 
 /**
@@ -94,6 +96,7 @@ export type WorkoutPlanExercisesListProps = {
     index: number,
     exercise: Partial<WorkoutPlanExerciseItemState>
   ) => void;
+  onMoveExercise: (index: number, direction: "up" | "down") => void;
   errors: Record<string, string>;
   disabled: boolean;
 };
@@ -104,8 +107,11 @@ export type WorkoutPlanExercisesListProps = {
 export type WorkoutPlanExerciseItemProps = {
   exercise: WorkoutPlanExerciseItemState;
   index: number;
+  exercises: WorkoutPlanExerciseItemState[]; // Wszystkie ćwiczenia, aby sprawdzić możliwość przesunięcia
   onChange: (updates: Partial<WorkoutPlanExerciseItemState>) => void;
   onRemove: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   errors: Record<string, string>;
   disabled: boolean;
 };
@@ -124,7 +130,7 @@ export type PlannedParamsEditorProps = {
  * Props dla AddExerciseDialog
  */
 export type AddExerciseDialogProps = {
-  onAddExercise: (exercise: ExerciseDTO) => void;
+  onAddExercise: (exercises: ExerciseDTO[]) => void;
   disabled: boolean;
   existingExerciseIds?: string[];
 };
@@ -133,7 +139,8 @@ export type AddExerciseDialogProps = {
  * Props dla ExerciseSelector
  */
 export type ExerciseSelectorProps = {
-  onSelectExercise: (exercise: ExerciseDTO) => void;
+  selectedExerciseIds: string[];
+  onToggleExercise: (exercise: ExerciseDTO) => void;
   excludedExerciseIds?: string[];
 };
 
@@ -182,12 +189,16 @@ export function dtoToFormState(
     exercises: dto.exercises.map((exercise) => ({
       id: exercise.id,
       exercise_id: exercise.exercise_id,
+      exercise_title: exercise.exercise_title ?? undefined,
+      exercise_type: exercise.exercise_type ?? undefined,
+      exercise_part: exercise.exercise_part ?? undefined,
       section_type: exercise.section_type,
       section_order: exercise.section_order,
       planned_sets: exercise.planned_sets,
       planned_reps: exercise.planned_reps,
       planned_duration_seconds: exercise.planned_duration_seconds,
       planned_rest_seconds: exercise.planned_rest_seconds,
+      estimated_set_time_seconds: exercise.exercise_estimated_set_time_seconds ?? null,
     })),
   };
 }
@@ -206,11 +217,12 @@ export function exerciseDtoToItemState(
     exercise_title: exerciseMetadata?.title,
     exercise_type: exerciseMetadata?.type,
     exercise_part: exerciseMetadata?.part,
-    section_type: exerciseDto.section_type,
-    section_order: exerciseDto.section_order,
-    planned_sets: exerciseDto.planned_sets,
-    planned_reps: exerciseDto.planned_reps,
-    planned_duration_seconds: exerciseDto.planned_duration_seconds,
-    planned_rest_seconds: exerciseDto.planned_rest_seconds,
-  };
-}
+      section_type: exerciseDto.section_type,
+      section_order: exerciseDto.section_order,
+      planned_sets: exerciseDto.planned_sets,
+      planned_reps: exerciseDto.planned_reps,
+      planned_duration_seconds: exerciseDto.planned_duration_seconds,
+      planned_rest_seconds: exerciseDto.planned_rest_seconds,
+      estimated_set_time_seconds: exerciseMetadata?.estimated_set_time_seconds ?? null,
+    };
+  }

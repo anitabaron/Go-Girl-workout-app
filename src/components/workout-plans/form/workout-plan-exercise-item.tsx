@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -9,13 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { exerciseTypeValues } from "@/lib/validation/exercises";
 import type { WorkoutPlanExerciseItemProps } from "@/types/workout-plan-form";
 import { PlannedParamsEditor } from "./planned-params-editor";
-import { useId } from "react";
+import { useId, useMemo } from "react";
 
 const partLabels: Record<string, string> = {
   Legs: "Nogi",
@@ -34,8 +33,11 @@ const typeLabels: Record<string, string> = {
 export function WorkoutPlanExerciseItem({
   exercise,
   index,
+  exercises,
   onChange,
   onRemove,
+  onMoveUp,
+  onMoveDown,
   errors,
   disabled,
 }: Readonly<WorkoutPlanExerciseItemProps>) {
@@ -52,6 +54,35 @@ export function WorkoutPlanExerciseItem({
       ? { section_order: errors[`${exerciseKey}.section_order`] }
       : {};
 
+  // Sprawdź czy można przesunąć ćwiczenie w górę/dół w ramach tej samej sekcji
+  const { canMoveUp, canMoveDown } = useMemo(() => {
+    if (!onMoveUp && !onMoveDown) {
+      return { canMoveUp: false, canMoveDown: false };
+    }
+
+    // Znajdź wszystkie ćwiczenia w tej samej sekcji i posortuj je
+    const exercisesInSection = exercises
+      .map((ex, i) => ({ exercise: ex, originalIndex: i }))
+      .filter(({ exercise: ex }) => ex.section_type === exercise.section_type)
+      .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
+
+    // Znajdź pozycję bieżącego ćwiczenia (porównaj po indexie w oryginalnej tablicy)
+    const currentPosition = exercisesInSection.findIndex(
+      ({ originalIndex }) => originalIndex === index
+    );
+
+    if (currentPosition === -1) {
+      return { canMoveUp: false, canMoveDown: false };
+    }
+
+    return {
+      canMoveUp: onMoveUp !== undefined && currentPosition > 0,
+      canMoveDown:
+        onMoveDown !== undefined &&
+        currentPosition < exercisesInSection.length - 1,
+    };
+  }, [exercises, exercise.section_type, index, onMoveUp, onMoveDown]);
+
   const plannedParamsErrors: Record<string, string> = {};
   if (errors[`${exerciseKey}.planned_sets`]) {
     plannedParamsErrors.planned_sets = errors[`${exerciseKey}.planned_sets`];
@@ -66,6 +97,10 @@ export function WorkoutPlanExerciseItem({
   if (errors[`${exerciseKey}.planned_rest_seconds`]) {
     plannedParamsErrors.planned_rest_seconds =
       errors[`${exerciseKey}.planned_rest_seconds`];
+  }
+  if (errors[`${exerciseKey}.estimated_set_time_seconds`]) {
+    plannedParamsErrors.estimated_set_time_seconds =
+      errors[`${exerciseKey}.estimated_set_time_seconds`];
   }
 
   return (
@@ -142,22 +177,39 @@ export function WorkoutPlanExerciseItem({
             >
               Kolejność
             </label>
-            <Input
-              id={sectionOrderId}
-              type="number"
-              min="1"
-              step="1"
-              value={exercise.section_order}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                if (!Number.isNaN(value) && Number.isInteger(value) && value > 0) {
-                  onChange({ section_order: value });
-                }
-              }}
-              disabled={disabled}
-              className="mt-1"
-              aria-invalid={exerciseErrors.section_order ? "true" : "false"}
-            />
+            <div className="mt-1 flex items-center gap-1.5">
+              <div
+                id={sectionOrderId}
+                className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium transition-colors"
+                aria-invalid={exerciseErrors.section_order ? "true" : "false"}
+              >
+                {exercise.section_order}
+              </div>
+              <div className="flex flex-row gap-0.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={onMoveUp}
+                  disabled={disabled || !canMoveUp}
+                  className="h-8 w-8 shrink-0"
+                  aria-label="Przesuń w górę"
+                >
+                  <ChevronUp className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={onMoveDown}
+                  disabled={disabled || !canMoveDown}
+                  className="h-8 w-8 shrink-0"
+                  aria-label="Przesuń w dół"
+                >
+                  <ChevronDown className="size-4" />
+                </Button>
+              </div>
+            </div>
             {exerciseErrors.section_order && (
               <p className="mt-1 text-xs text-destructive" role="alert">
                 {exerciseErrors.section_order}
@@ -177,6 +229,7 @@ export function WorkoutPlanExerciseItem({
               planned_reps: exercise.planned_reps,
               planned_duration_seconds: exercise.planned_duration_seconds,
               planned_rest_seconds: exercise.planned_rest_seconds,
+              estimated_set_time_seconds: exercise.estimated_set_time_seconds,
             }}
             onChange={(field, value) => onChange({ [field]: value })}
             errors={plannedParamsErrors}

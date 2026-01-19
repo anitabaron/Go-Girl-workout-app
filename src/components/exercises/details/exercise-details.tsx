@@ -113,6 +113,17 @@ export function ExerciseDetails({ exercise }: ExerciseDetailsProps) {
                   </p>
                 </div>
               )}
+            {exercise.estimated_set_time_seconds !== null &&
+              exercise.estimated_set_time_seconds !== undefined && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Szacunkowy czas zestawu (sekundy)
+                  </p>
+                  <p className="text-lg font-semibold" aria-label={`${exercise.estimated_set_time_seconds} sekund szacunkowego czasu zestawu`}>
+                    {exercise.estimated_set_time_seconds}
+                  </p>
+                </div>
+              )}
           </div>
         </CardContent>
       </Card>

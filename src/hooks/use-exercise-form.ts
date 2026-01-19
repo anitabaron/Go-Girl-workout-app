@@ -23,6 +23,7 @@ export type ExerciseFormState = {
   series: string;
   rest_in_between_seconds: string;
   rest_after_series_seconds: string;
+  estimated_set_time_seconds: string;
 };
 
 // Błędy walidacji
@@ -37,6 +38,7 @@ export type ExerciseFormErrors = {
   series?: string;
   rest_in_between_seconds?: string;
   rest_after_series_seconds?: string;
+  estimated_set_time_seconds?: string;
   _form?: string[]; // Błędy na poziomie formularza (reguły biznesowe)
 };
 
@@ -129,6 +131,18 @@ const fieldSchemas = {
     }
     return num;
   }).nullable().optional(),
+  estimated_set_time_seconds: z.string().transform((val) => {
+    if (!val || val.trim() === "") return null;
+    const num = Number(val);
+    if (Number.isNaN(num) || !Number.isInteger(num) || num <= 0) {
+      throw new z.ZodError([{
+        code: "custom",
+        path: [],
+        message: "Szacunkowy czas zestawu musi być liczbą całkowitą większą od zera",
+      }]);
+    }
+    return num;
+  }).nullable().optional(),
 };
 
 // Funkcja pomocnicza do konwersji DTO na ViewModel
@@ -145,6 +159,7 @@ function dtoToFormState(dto?: ExerciseDTO): ExerciseFormState {
       series: "",
       rest_in_between_seconds: "",
       rest_after_series_seconds: "",
+      estimated_set_time_seconds: "",
     };
   }
 
@@ -159,6 +174,7 @@ function dtoToFormState(dto?: ExerciseDTO): ExerciseFormState {
     series: dto.series.toString(),
     rest_in_between_seconds: dto.rest_in_between_seconds?.toString() ?? "",
     rest_after_series_seconds: dto.rest_after_series_seconds?.toString() ?? "",
+    estimated_set_time_seconds: dto.estimated_set_time_seconds?.toString() ?? "",
   };
 }
 
@@ -212,6 +228,13 @@ function formStateToCommand(
     }
   }
 
+  if (state.estimated_set_time_seconds.trim()) {
+    const estimatedTime = Number(state.estimated_set_time_seconds);
+    if (!Number.isNaN(estimatedTime) && Number.isInteger(estimatedTime) && estimatedTime > 0) {
+      command.estimated_set_time_seconds = estimatedTime;
+    }
+  }
+
   return command;
 }
 
@@ -254,7 +277,8 @@ export function useExerciseForm({
         (current.duration_seconds ?? null) !== (initialData.duration_seconds ?? null) ||
         current.series !== initialData.series ||
         (current.rest_in_between_seconds ?? null) !== (initialData.rest_in_between_seconds ?? null) ||
-        (current.rest_after_series_seconds ?? null) !== (initialData.rest_after_series_seconds ?? null)
+        (current.rest_after_series_seconds ?? null) !== (initialData.rest_after_series_seconds ?? null) ||
+        (current.estimated_set_time_seconds ?? null) !== (initialData.estimated_set_time_seconds ?? null)
       );
     } catch {
       // Jeśli nie można przekonwertować, uznaj że są zmiany
@@ -459,6 +483,7 @@ function parseValidationErrors(errorData: {
     series: "series",
     rest_in_between_seconds: "rest_in_between_seconds",
     rest_after_series_seconds: "rest_after_series_seconds",
+    estimated_set_time_seconds: "estimated_set_time_seconds",
   };
 
   for (const errorMsg of errorMessages) {

@@ -61,6 +61,7 @@ export type ExerciseCreateCommand = Pick<
   | "series"
   | "rest_in_between_seconds"
   | "rest_after_series_seconds"
+  | "estimated_set_time_seconds"
 >;
 
 export type ExerciseUpdateCommand = Partial<ExerciseCreateCommand>;
@@ -98,10 +99,14 @@ export type WorkoutPlanCreateCommand = Pick<
   exercises: WorkoutPlanExerciseInput[];
 };
 
+export type WorkoutPlanExerciseUpdateOrCreate = WorkoutPlanExerciseInput & {
+  id?: string; // Opcjonalne id - jeśli podane, to aktualizacja; jeśli nie, to dodanie
+};
+
 export type WorkoutPlanUpdateCommand = Partial<
   Pick<TablesUpdate<"workout_plans">, "name" | "description" | "part">
 > & {
-  exercises?: WorkoutPlanExerciseInput[];
+  exercises?: WorkoutPlanExerciseUpdateOrCreate[];
 };
 
 export type WorkoutPlanExerciseDTO = Omit<
@@ -109,6 +114,10 @@ export type WorkoutPlanExerciseDTO = Omit<
   "plan_id" | "created_at"
 > & {
   exercise_title?: string | null;
+  exercise_type?: ExerciseType | null;
+  exercise_part?: ExercisePart | null;
+  exercise_estimated_set_time_seconds?: number | null;
+  exercise_rest_after_series_seconds?: number | null;
 };
 
 export type WorkoutPlanDTO = Omit<WorkoutPlanEntity, "user_id"> & {

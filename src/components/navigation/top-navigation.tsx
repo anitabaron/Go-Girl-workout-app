@@ -51,7 +51,7 @@ export function TopNavigation({
 
   return (
     <nav
-      className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      className="fixed top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       role="navigation"
       aria-label="Główna nawigacja"
     >
@@ -67,7 +67,7 @@ export function TopNavigation({
             alt="Go Girl"
             width={58}
             height={28}
-            className="h-7 w-auto"
+            className="h-9 w-auto"
             priority
           />
         </Link>

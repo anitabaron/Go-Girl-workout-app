@@ -40,6 +40,7 @@ const repsSchema = z.number().int().positive().nullable().optional();
 const durationSchema = z.number().int().positive().nullable().optional();
 const restSchema = z.number().int().nonnegative().nullable().optional();
 const seriesSchema = z.number().int().positive();
+const estimatedSetTimeSchema = z.number().int().positive().nullable().optional();
 
 const METRIC_ERROR = "Podaj dokładnie jedno z pól: reps lub duration_seconds.";
 const REST_ERROR =
@@ -57,6 +58,7 @@ const exerciseBaseSchema = z
     series: seriesSchema,
     rest_in_between_seconds: restSchema,
     rest_after_series_seconds: restSchema,
+    estimated_set_time_seconds: estimatedSetTimeSchema,
   })
   .strict();
 

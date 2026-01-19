@@ -78,6 +78,63 @@ export const workoutPlanExerciseUpdateSchema = z
   .strict();
 
 /**
+ * Schema dla ćwiczenia w trybie aktualizacji planu.
+ * Może być to aktualizacja istniejącego ćwiczenia (z id) lub dodanie nowego (bez id).
+ * Jeśli id jest podane, to jest aktualizacja (wszystkie pola opcjonalne).
+ * Jeśli id nie jest podane, to jest dodanie (wymaga exercise_id, section_type, section_order).
+ */
+export const workoutPlanExerciseUpdateOrCreateSchema = z
+  .object({
+    id: z
+      .string()
+      .refine(
+        (val) => uuidRegex.test(val),
+        "id musi być prawidłowym UUID ćwiczenia w planie"
+      )
+      .optional(),
+    exercise_id: z
+      .string()
+      .refine(
+        (val) => uuidRegex.test(val),
+        "exercise_id musi być prawidłowym UUID"
+      )
+      .optional(),
+    section_type: sectionTypeSchema.optional(),
+    section_order: sectionOrderSchema.optional(),
+    planned_sets: plannedSetsSchema,
+    planned_reps: plannedRepsSchema,
+    planned_duration_seconds: plannedDurationSchema,
+    planned_rest_seconds: plannedRestSchema,
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    // Jeśli nie ma id, to jest nowe ćwiczenie - wymaga exercise_id, section_type, section_order
+    if (!data.id) {
+      if (!data.exercise_id) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Nowe ćwiczenie musi mieć exercise_id",
+          path: ["exercise_id"],
+        });
+      }
+      if (!data.section_type) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Nowe ćwiczenie musi mieć section_type",
+          path: ["section_type"],
+        });
+      }
+      if (!data.section_order) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Nowe ćwiczenie musi mieć section_order",
+          path: ["section_order"],
+        });
+      }
+    }
+  });
+
+/**
  * Schema dla tworzenia planu treningowego.
  */
 export const workoutPlanCreateSchema = z
@@ -103,8 +160,8 @@ export const workoutPlanCreateSchema = z
 
 /**
  * Schema dla aktualizacji planu treningowego (partial version of create).
- * Pozwala na częściową aktualizację ćwiczeń - każde ćwiczenie musi mieć id
- * i tylko wybrane pola będą zaktualizowane.
+ * Pozwala na częściową aktualizację ćwiczeń - ćwiczenia mogą mieć id (aktualizacja)
+ * lub nie mieć id (dodanie nowego ćwiczenia).
  */
 export const workoutPlanUpdateSchema = z
   .object({
@@ -112,23 +169,57 @@ export const workoutPlanUpdateSchema = z
     description: descriptionSchema,
     part: partSchema,
     exercises: z
-      .array(workoutPlanExerciseUpdateSchema)
-      .min(1, "Lista ćwiczeń do aktualizacji nie może być pusta")
+      .array(workoutPlanExerciseUpdateOrCreateSchema)
+      .min(1, "Lista ćwiczeń nie może być pusta")
       .optional(),
   })
   .strict()
   .superRefine((data, ctx) => {
     if (data.exercises !== undefined && data.exercises.length > 0) {
-      // Sprawdź czy wszystkie ćwiczenia mają id
+      // Walidacja reguł biznesowych dla wszystkich ćwiczeń
+      const exercisesForBusinessRules: WorkoutPlanExerciseInput[] = [];
+      
       for (let i = 0; i < data.exercises.length; i++) {
         const exercise = data.exercises[i];
+        
+        // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego
+        // Jeśli nie ma id, to jest nowym ćwiczeniem i wymaga wszystkich pól
         if (!exercise.id) {
+          // Nowe ćwiczenie - sprawdź czy ma wszystkie wymagane pola
+          if (!exercise.exercise_id || !exercise.section_type || !exercise.section_order) {
+            ctx.addIssue({
+              code: "custom",
+              message: `Nowe ćwiczenie na pozycji ${i} musi mieć exercise_id, section_type i section_order.`,
+              path: ["exercises", i],
+            });
+          } else {
+            exercisesForBusinessRules.push({
+              exercise_id: exercise.exercise_id,
+              section_type: exercise.section_type,
+              section_order: exercise.section_order,
+              planned_sets: exercise.planned_sets,
+              planned_reps: exercise.planned_reps,
+              planned_duration_seconds: exercise.planned_duration_seconds,
+              planned_rest_seconds: exercise.planned_rest_seconds,
+            });
+          }
+        } else {
+          // Istniejące ćwiczenie - użyj wartości z aktualizacji lub istniejących
+          // Dla walidacji reguł biznesowych potrzebujemy pełnych danych
+          // Ale w trybie aktualizacji nie wszystkie pola są wymagane
+          // Więc pomijamy walidację reguł biznesowych dla aktualizacji
+        }
+      }
+      
+      // Walidacja reguł biznesowych tylko dla nowych ćwiczeń
+      if (exercisesForBusinessRules.length > 0) {
+        const errors = validateWorkoutPlanBusinessRules(exercisesForBusinessRules);
+        errors.forEach((message) =>
           ctx.addIssue({
             code: "custom",
-            message: `Ćwiczenie na pozycji ${i} musi mieć pole 'id'.`,
-            path: ["exercises", i, "id"],
-          });
-        }
+            message,
+          })
+        );
       }
     }
   });

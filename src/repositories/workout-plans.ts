@@ -2,6 +2,8 @@ import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/db/database.types";
 import type {
+  ExercisePart,
+  ExerciseType,
   PlanQueryParams,
   WorkoutPlanCreateCommand,
   WorkoutPlanDTO,
@@ -306,12 +308,13 @@ export async function listWorkoutPlanExercises(
 ) {
   const { data, error } = await client
     .from("workout_plan_exercises")
-    .select("*, exercises(title)")
+    .select("*, exercises(title, type, part, estimated_set_time_seconds, rest_after_series_seconds)")
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
     .order("section_order", { ascending: true });
 
   if (error) {
+    console.error("[listWorkoutPlanExercises] Error:", error);
     return { data: null, error };
   }
 
@@ -358,14 +361,21 @@ export function mapToDTO(row: WorkoutPlanRow | WorkoutPlanSelectResult): Omit<Wo
  */
 export function mapExerciseToDTO(
   row: WorkoutPlanExerciseRow & {
-    exercises?: { title: string } | null;
+    exercises?: { title: string; type?: string; part?: string; estimated_set_time_seconds?: number | null; rest_after_series_seconds?: number | null } | null;
   }
 ): WorkoutPlanExerciseDTO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { plan_id, created_at, exercises, ...rest } = row;
+  
+  const exerciseRestAfterSeries = exercises?.rest_after_series_seconds ?? null;
+  
   return {
     ...rest,
     exercise_title: exercises?.title ?? null,
+    exercise_type: (exercises?.type as ExerciseType | undefined) ?? null,
+    exercise_part: (exercises?.part as ExercisePart | undefined) ?? null,
+    exercise_estimated_set_time_seconds: exercises?.estimated_set_time_seconds ?? null,
+    exercise_rest_after_series_seconds: exerciseRestAfterSeries,
   };
 }
 
