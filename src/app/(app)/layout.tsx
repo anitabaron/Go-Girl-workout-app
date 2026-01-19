@@ -28,7 +28,7 @@ export default async function AppLayout({
       </div>
 
       {/* Content with bottom padding on mobile to prevent overlap with bottom navigation */}
-      <div className="pb-16 md:pb-0">
+      <div className=" md:pb-0">
         {children}
       </div>
 

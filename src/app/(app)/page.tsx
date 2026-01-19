@@ -74,7 +74,7 @@ export default async function Home({
       </main>
 
       {/* Footer */}
-      <footer className="bg-primary text-white">
+      <footer className="bg-primary text-white pb-16">
         <div className="mx-auto w-full max-w-5xl px-6 py-6 text-center sm:px-10">
           <p className="text-lg font-bold">
             &quot;Strong today, unstoppable tomorrow.&quot;
