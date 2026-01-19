@@ -122,6 +122,17 @@ export function WorkoutSessionAssistant({
     return errors;
   }, []);
 
+  // Automatyczne ukrywanie toasta "Zapisano" po 3 sekundach
+  useEffect(() => {
+    if (autosaveStatus === "saved") {
+      const timer = setTimeout(() => {
+        setAutosaveStatus("idle");
+      }, 3000); // 3 sekundy
+
+      return () => clearTimeout(timer);
+    }
+  }, [autosaveStatus]);
+
   // Aktualizacja formData przy zmianie ćwiczenia
   useEffect(() => {
     if (currentExercise) {
@@ -472,6 +483,30 @@ export function WorkoutSessionAssistant({
 
   const canGoPrevious = currentExerciseIndex > 0;
 
+  // Renderowanie timera ćwiczenia jako prop do WorkoutTimer
+  const exerciseTimerContent = useMemo(
+    () => (
+      <ExerciseTimer
+        exercise={currentExercise}
+        currentSetNumber={currentSetNumber}
+        isPaused={isPaused}
+        onSetComplete={handleSetComplete}
+        onRestBetweenComplete={handleRestBetweenComplete}
+        onRestAfterSeriesComplete={handleRestAfterSeriesComplete}
+        onRepsComplete={handleRepsComplete}
+      />
+    ),
+    [
+      currentExercise,
+      currentSetNumber,
+      isPaused,
+      handleSetComplete,
+      handleRestBetweenComplete,
+      handleRestAfterSeriesComplete,
+      handleRepsComplete,
+    ]
+  );
+
   if (!currentExercise) {
     return (
       <div className="fixed inset-x-0 top-0 bottom-16 md:bottom-0 flex items-center justify-center bg-secondary">
@@ -491,7 +526,7 @@ export function WorkoutSessionAssistant({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto md:pt-16">
         <div className="mx-auto w-full max-w-4xl px-4 py-6 space-y-6">
-          {/* Timer globalny sesji */}
+          {/* Timer globalny sesji z timerem ćwiczenia */}
           <WorkoutTimer
             startedAt={session.started_at}
             isPaused={isPaused}
@@ -499,17 +534,7 @@ export function WorkoutSessionAssistant({
             currentSetNumber={currentSetNumber}
             currentExerciseIndex={currentExerciseIndex}
             totalExercises={session.exercises.length}
-          />
-
-          {/* Timer ćwiczenia */}
-          <ExerciseTimer
-            exercise={currentExercise}
-            currentSetNumber={currentSetNumber}
-            isPaused={isPaused}
-            onSetComplete={handleSetComplete}
-            onRestBetweenComplete={handleRestBetweenComplete}
-            onRestAfterSeriesComplete={handleRestAfterSeriesComplete}
-            onRepsComplete={handleRepsComplete}
+            exerciseTimerContent={exerciseTimerContent}
           />
 
           {/* Exercise info */}

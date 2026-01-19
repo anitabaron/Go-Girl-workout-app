@@ -50,12 +50,6 @@ export function RestBetweenSetsTimer({
           </div>
         )}
       </CountdownCircleTimer>
-
-      <div className="text-center">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Status: {isPaused ? "Pauza" : "W trakcie"}
-        </p>
-      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
 type WorkoutTimerProps = {
@@ -11,6 +11,7 @@ type WorkoutTimerProps = {
   currentExerciseIndex: number; // indeks bieżącego ćwiczenia (0-based)
   totalExercises: number; // całkowita liczba ćwiczeń w sesji
   restSeconds?: number; // opcjonalna liczba sekund przerwy do odliczania
+  exerciseTimerContent?: ReactNode; // zawartość timera ćwiczenia (RepsDisplay, SetCountdownTimer, itp.)
 };
 
 /**
@@ -25,6 +26,7 @@ export function WorkoutTimer({
   currentExerciseIndex,
   totalExercises,
   restSeconds,
+  exerciseTimerContent,
 }: WorkoutTimerProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const pausedAtRef = useRef<number | null>(null);
@@ -119,7 +121,7 @@ export function WorkoutTimer({
 
   // Timer globalny sesji
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-6">
+    <div className="flex flex-col items-center justify-center gap-4 pt-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
           Ćwiczenie: {currentExerciseName}
@@ -129,27 +131,28 @@ export function WorkoutTimer({
         </p>
       </div>
 
+      {/* Timer/powtórzenia ćwiczenia - wyświetlane bezpośrednio pod nazwą ćwiczenia */}
+      {exerciseTimerContent}
+
       <div
-        className={`flex flex-col items-center transition-opacity ${
+        className={`flex gap-2 items-center transition-opacity ${
           !isPaused ? "animate-pulse" : ""
         }`}
       >
-        <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
+        <div className="text-sm text-zinc-600 dark:text-zinc-400">
+      Łączny czas treningu
+    </div>
+        <div className="text-xl font-semibold text-zinc-700 dark:text-zinc-300">
           {formatTime(elapsedSeconds)}
         </div>
-        <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Czas treningu
-        </div>
-      </div>
-
+        
       <div className="text-center">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Status: {isPaused ? "Pauza" : "W trakcie"}
-        </p>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
         </p>
       </div>
+      </div>
+
     </div>
   );
 }
