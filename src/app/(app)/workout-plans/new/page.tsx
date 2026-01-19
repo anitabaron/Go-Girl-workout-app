@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/auth";
 import { WorkoutPlanForm } from "@/components/workout-plans/form/workout-plan-form";
 import { PageHeader } from "@/components/navigation/page-header";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 export default async function NewWorkoutPlanPage() {
   // Weryfikacja autoryzacji - automatyczne przekierowanie niezalogowanych użytkowników
@@ -11,18 +12,10 @@ export default async function NewWorkoutPlanPage() {
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-4xl md:text-5xl">
-              Dodaj plan treningowy
-            </h1>
-            <p className="mt-2 text-xl font-semibold text-destructive sm:text-2xl">
-              Utwórz nowy plan treningowy z ćwiczeniami
-            </p>
-          </div>
-        </div>
-      </header>
+      <PageHeaderSection
+        title="Dodaj plan treningowy"
+        description="Utwórz nowy plan treningowy z ćwiczeniami"
+      />
       <PageHeader backHref="/workout-plans" />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">

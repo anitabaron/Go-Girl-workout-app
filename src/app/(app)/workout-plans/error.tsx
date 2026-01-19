@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 export default function WorkoutPlansError({
   error,
@@ -25,13 +26,7 @@ export default function WorkoutPlansError({
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
-          <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-4xl md:text-5xl">
-            Plany treningowe
-          </h1>
-        </div>
-      </header>
+      <PageHeaderSection title="Plany treningowe" />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         <Card className="mx-auto max-w-md rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950">

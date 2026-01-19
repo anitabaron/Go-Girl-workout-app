@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { navigationItems } from "./navigation-items";
 import { QuickStartButton } from "./quick-start-button";
@@ -59,8 +60,25 @@ export function BottomNavigation({
       aria-label="Nawigacja mobilna"
     >
       <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-around px-4">
-        {/* Left side navigation items */}
+        {/* Left side - Logo and navigation items */}
         <div className="flex flex-1 items-center justify-around">
+          {/* Logo */}
+          <Link
+            href="/"
+            className="flex items-center px-2 py-2 transition-colors hover:opacity-80"
+            aria-label="Strona główna"
+          >
+            <Image
+              src="/logo-pin.png"
+              alt="Go Girl"
+              width={58}
+              height={28}
+              className="h-9 w-auto"
+              priority
+            />
+          </Link>
+
+          {/* Navigation items */}
           {navItemsForBottom.slice(0, 2).map((item) => {
             const isActive = currentSection === item.id;
             const Icon = item.icon;

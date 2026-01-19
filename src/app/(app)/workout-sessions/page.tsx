@@ -4,6 +4,7 @@ import { sessionListQuerySchema } from "@/lib/validation/workout-sessions";
 import type { SessionListQueryParams } from "@/types";
 import { WorkoutSessionsList } from "@/components/workout-sessions/workout-sessions-list";
 import { PageHeader } from "@/components/navigation/page-header";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 /**
  * Widok listy sesji treningowych.
@@ -75,18 +76,10 @@ export default async function WorkoutSessionsPage({
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-4xl md:text-5xl">
-              Historia sesji treningowych
-            </h1>
-            <p className="mt-2 text-xl font-semibold text-destructive sm:text-2xl">
-              Przeglądaj historię swoich treningów
-            </p>
-          </div>
-        </div>
-      </header>
+      <PageHeaderSection
+        title="Historia sesji treningowych"
+        description="Przeglądaj historię swoich treningów"
+      />
       <PageHeader showBack={false} />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">

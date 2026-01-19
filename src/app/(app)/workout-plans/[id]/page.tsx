@@ -5,6 +5,7 @@ import type { ExercisePart } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { WorkoutPlanActions } from "@/components/workout-plans/details/workout-plan-actions";
 import { PageHeader } from "@/components/navigation/page-header";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 type WorkoutPlanDetailsPageProps = {
   params: Promise<{
@@ -77,18 +78,10 @@ export default async function WorkoutPlanDetailsPage({
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-4xl md:text-5xl">
-              {workoutPlan.name}
-            </h1>
-            <p className="mt-2 text-xl font-semibold text-destructive sm:text-2xl">
-              Szczegóły planu treningowego
-            </p>
-          </div>
-        </div>
-      </header>
+      <PageHeaderSection
+        title={workoutPlan.name}
+        description="Szczegóły planu treningowego"
+      />
       <PageHeader backHref="/workout-plans" />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">

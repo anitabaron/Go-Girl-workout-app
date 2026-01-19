@@ -1,14 +1,15 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 export default function WorkoutSessionDetailsLoading() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
+      <PageHeaderSection title="Szczegóły sesji treningowej">
+        <div>
           <Skeleton className="h-10 w-64" />
           <Skeleton className="mt-2 h-6 w-48" />
         </div>
-      </header>
+      </PageHeaderSection>
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         {/* Skeleton dla metadanych sesji */}

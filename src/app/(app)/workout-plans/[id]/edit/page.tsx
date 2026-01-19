@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
 import { WorkoutPlanForm } from "@/components/workout-plans/form/workout-plan-form";
 import { PageHeader } from "@/components/navigation/page-header";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 type EditWorkoutPlanPageProps = {
   params: Promise<{
@@ -40,18 +41,10 @@ export default async function EditWorkoutPlanPage({
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-4xl md:text-5xl">
-              Edytuj plan treningowy
-            </h1>
-            <p className="mt-2 text-xl font-semibold text-destructive sm:text-2xl">
-              {workoutPlan.name}
-            </p>
-          </div>
-        </div>
-      </header>
+      <PageHeaderSection
+        title="Edytuj plan treningowy"
+        description={workoutPlan.name}
+      />
       <PageHeader backHref={`/workout-plans/${id}`} />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">

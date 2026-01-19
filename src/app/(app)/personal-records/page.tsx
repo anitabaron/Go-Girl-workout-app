@@ -9,6 +9,7 @@ import { PersonalRecordFilters } from "@/components/personal-records/personal-re
 import { PersonalRecordSort } from "@/components/personal-records/personal-record-sort";
 import { PersonalRecordsList } from "@/components/personal-records/personal-records-list";
 import { PageHeader } from "@/components/navigation/page-header";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 export default async function PersonalRecordsPage({
   searchParams,
@@ -71,11 +72,9 @@ export default async function PersonalRecordsPage({
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
-          <PersonalRecordsHeader />
-        </div>
-      </header>
+      <PageHeaderSection>
+        <PersonalRecordsHeader />
+      </PageHeaderSection>
       <PageHeader showBack={false} />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">

@@ -5,6 +5,7 @@ import {
   ServiceError,
 } from "@/services/workout-sessions";
 import { PageHeader } from "@/components/navigation/page-header";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 import {
   WorkoutSessionMetadata,
   WorkoutSessionActions,
@@ -52,18 +53,10 @@ export default async function WorkoutSessionDetailsPage({
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-4xl md:text-5xl">
-              {planName}
-            </h1>
-            <p className="mt-2 text-xl font-semibold text-destructive sm:text-2xl">
-              Szczegóły sesji treningowej
-            </p>
-          </div>
-        </div>
-      </header>
+      <PageHeaderSection
+        title={planName}
+        description="Szczegóły sesji treningowej"
+      />
       <PageHeader backHref="/workout-sessions" />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">

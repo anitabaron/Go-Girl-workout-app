@@ -1,13 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 export default function ExerciseDetailsLoading() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-0 md:pt-[34px]">
-        <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
-          <Skeleton className="h-10 w-64" />
-        </div>
-      </header>
+      <PageHeaderSection title="Szczegóły ćwiczenia">
+        <Skeleton className="h-10 w-64" />
+      </PageHeaderSection>
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         <section className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
