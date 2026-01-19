@@ -81,6 +81,42 @@ export const sessionStatusUpdateSchema = z
   .strict();
 
 /**
+ * Schema dla aktualizacji timera sesji (PATCH /api/workout-sessions/{id}/timer).
+ */
+export const sessionTimerUpdateSchema = z
+  .object({
+    active_duration_seconds: z
+      .number()
+      .int()
+      .nonnegative("active_duration_seconds musi być >= 0")
+      .optional(),
+    last_timer_started_at: z
+      .string()
+      .refine(
+        (val) => !Number.isNaN(Date.parse(val)),
+        "last_timer_started_at musi być prawidłowym timestampem ISO 8601"
+      )
+      .optional(),
+    last_timer_stopped_at: z
+      .string()
+      .refine(
+        (val) => !Number.isNaN(Date.parse(val)),
+        "last_timer_stopped_at musi być prawidłowym timestampem ISO 8601"
+      )
+      .optional(),
+  })
+  .strict()
+  .refine(
+    (data) =>
+      data.active_duration_seconds !== undefined ||
+      data.last_timer_started_at !== undefined ||
+      data.last_timer_stopped_at !== undefined,
+    {
+      message: "Co najmniej jedno pole musi być podane w body żądania.",
+    }
+  );
+
+/**
  * Schema dla pojedynczej serii ćwiczenia w autosave.
  */
 const sessionExerciseSetSchema = z

@@ -28,7 +28,7 @@ type SortField = (typeof sessionSortFields)[number];
 type SortOrder = (typeof sessionOrderValues)[number];
 
 const sessionSelectColumns =
-  "id,workout_plan_id,status,plan_name_at_time,started_at,completed_at,current_position,user_id,last_action_at";
+  "id,workout_plan_id,status,plan_name_at_time,started_at,completed_at,current_position,user_id,last_action_at,active_duration_seconds,last_timer_started_at,last_timer_stopped_at";
 
 type CursorPayload = {
   sort: SortField;
@@ -267,6 +267,124 @@ export async function updateWorkoutSessionStatus(
   return {
     data: data ? mapToSummaryDTO(data as WorkoutSessionRow) : null,
     error,
+  };
+}
+
+/**
+ * Aktualizuje timer sesji treningowej.
+ * Obsługuje cumulative updates dla active_duration_seconds i oblicza elapsed time.
+ */
+export async function updateWorkoutSessionTimer(
+  client: DbClient,
+  userId: string,
+  sessionId: string,
+  updates: {
+    active_duration_seconds?: number;
+    last_timer_started_at?: string;
+    last_timer_stopped_at?: string;
+  }
+): Promise<{
+  data: {
+    id: string;
+    active_duration_seconds: number;
+    last_timer_started_at: string | null;
+    last_timer_stopped_at: string | null;
+  } | null;
+  error: PostgrestError | null;
+}> {
+  // Pobierz aktualną sesję z pełnymi danymi timera
+  const { data: existingSession, error: fetchError } =
+    await findWorkoutSessionById(client, userId, sessionId);
+
+  if (fetchError) {
+    return { data: null, error: fetchError };
+  }
+
+  if (!existingSession) {
+    return { data: null, error: null };
+  }
+
+  // Przygotuj dane do aktualizacji
+  const sessionWithTimer = existingSession as WorkoutSessionRow & {
+    active_duration_seconds: number | null;
+    last_timer_started_at: string | null;
+    last_timer_stopped_at: string | null;
+  };
+
+  const currentActiveDuration = sessionWithTimer.active_duration_seconds ?? 0;
+  const currentLastTimerStartedAt = sessionWithTimer.last_timer_started_at;
+
+  let newActiveDuration = currentActiveDuration;
+  let elapsedFromTimer = 0;
+
+  // Jeśli last_timer_stopped_at jest podane i last_timer_started_at istnieje, oblicz elapsed
+  if (
+    updates.last_timer_stopped_at &&
+    currentLastTimerStartedAt
+  ) {
+    const startedAt = new Date(currentLastTimerStartedAt).getTime();
+    const stoppedAt = new Date(updates.last_timer_stopped_at).getTime();
+    elapsedFromTimer = Math.max(0, Math.floor((stoppedAt - startedAt) / 1000));
+  }
+
+  // Dodaj elapsed time do active_duration_seconds
+  newActiveDuration += elapsedFromTimer;
+
+  // Jeśli active_duration_seconds jest podane w updates, dodaj do cumulative
+  if (updates.active_duration_seconds !== undefined) {
+    newActiveDuration += updates.active_duration_seconds;
+  }
+
+  // Przygotuj obiekt aktualizacji
+  const updateData: Database["public"]["Tables"]["workout_sessions"]["Update"] =
+    {
+      last_action_at: new Date().toISOString(),
+    };
+
+  if (updates.active_duration_seconds !== undefined || elapsedFromTimer > 0) {
+    updateData.active_duration_seconds = newActiveDuration;
+  }
+
+  if (updates.last_timer_started_at !== undefined) {
+    updateData.last_timer_started_at = updates.last_timer_started_at;
+  }
+
+  if (updates.last_timer_stopped_at !== undefined) {
+    updateData.last_timer_stopped_at = updates.last_timer_stopped_at;
+  }
+
+  // Wykonaj aktualizację
+  const { data: updated, error: updateError } = await client
+    .from("workout_sessions")
+    .update(updateData)
+    .eq("user_id", userId)
+    .eq("id", sessionId)
+    .select("id,active_duration_seconds,last_timer_started_at,last_timer_stopped_at")
+    .single();
+
+  if (updateError) {
+    return { data: null, error: updateError };
+  }
+
+  if (!updated) {
+    return { data: null, error: null };
+  }
+
+  const updatedWithTimer = updated as {
+    id: string;
+    active_duration_seconds: number | null;
+    last_timer_started_at: string | null;
+    last_timer_stopped_at: string | null;
+  };
+
+  return {
+    data: {
+      id: updatedWithTimer.id,
+      active_duration_seconds: updatedWithTimer.active_duration_seconds ?? 0,
+      last_timer_started_at: updatedWithTimer.last_timer_started_at ?? null,
+      last_timer_stopped_at: updatedWithTimer.last_timer_stopped_at ?? null,
+    },
+    error: null,
   };
 }
 

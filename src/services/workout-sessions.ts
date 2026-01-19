@@ -13,6 +13,7 @@ import {
   sessionListQuerySchema,
   sessionStatusUpdateSchema,
   sessionExerciseAutosaveSchema,
+  sessionTimerUpdateSchema,
 } from "@/lib/validation/workout-sessions";
 import {
   findInProgressSession,
@@ -21,6 +22,7 @@ import {
   insertWorkoutSession,
   insertWorkoutSessionExercises,
   updateWorkoutSessionStatus,
+  updateWorkoutSessionTimer,
   findWorkoutSessionExercises,
   findWorkoutSessionSets,
   mapToDetailDTO,
@@ -339,6 +341,83 @@ export async function updateWorkoutSessionStatusService(
     throw new ServiceError(
       "INTERNAL",
       "Nie udało się zaktualizować statusu sesji."
+    );
+  }
+
+  return updated;
+}
+
+/**
+ * Aktualizuje timer sesji treningowej.
+ */
+export async function updateWorkoutSessionTimerService(
+  userId: string,
+  sessionId: string,
+  payload: unknown
+): Promise<{
+  id: string;
+  active_duration_seconds: number;
+  last_timer_started_at: string | null;
+  last_timer_stopped_at: string | null;
+}> {
+  assertUser(userId);
+
+  // Walidacja UUID
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(sessionId)) {
+    throw new ServiceError(
+      "BAD_REQUEST",
+      "Nieprawidłowy format UUID identyfikatora sesji."
+    );
+  }
+
+  // Walidacja request body
+  const parsed = parseOrThrow(sessionTimerUpdateSchema, payload);
+  const supabase = await createClient();
+
+  // Sprawdź istnienie sesji i status
+  const { data: existing, error: fetchError } = await findWorkoutSessionById(
+    supabase,
+    userId,
+    sessionId
+  );
+
+  if (fetchError) {
+    throw mapDbError(fetchError);
+  }
+
+  if (!existing) {
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Sesja treningowa nie została znaleziona."
+    );
+  }
+
+  // Sprawdź status sesji (musi być in_progress)
+  if (existing.status !== "in_progress") {
+    throw new ServiceError(
+      "CONFLICT",
+      "Sesja treningowa nie jest w statusie 'in_progress'."
+    );
+  }
+
+  // Wywołaj funkcję repository
+  const { data: updated, error: updateError } =
+    await updateWorkoutSessionTimer(supabase, userId, sessionId, {
+      active_duration_seconds: parsed.active_duration_seconds,
+      last_timer_started_at: parsed.last_timer_started_at,
+      last_timer_stopped_at: parsed.last_timer_stopped_at,
+    });
+
+  if (updateError) {
+    throw mapDbError(updateError);
+  }
+
+  if (!updated) {
+    throw new ServiceError(
+      "INTERNAL",
+      "Nie udało się zaktualizować timera sesji."
     );
   }
 
