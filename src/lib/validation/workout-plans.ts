@@ -25,6 +25,8 @@ const plannedSetsSchema = z.number().int().positive().nullable().optional();
 const plannedRepsSchema = z.number().int().positive().nullable().optional();
 const plannedDurationSchema = z.number().int().positive().nullable().optional();
 const plannedRestSchema = z.number().int().nonnegative().nullable().optional();
+const plannedRestAfterSeriesSchema = z.number().int().nonnegative().nullable().optional();
+const estimatedSetTimeSchema = z.number().int().positive().nullable().optional();
 
 /**
  * Schema dla pojedynczego ćwiczenia w planie treningowym.
@@ -46,6 +48,8 @@ export const workoutPlanExerciseInputSchema = z
     planned_reps: plannedRepsSchema,
     planned_duration_seconds: plannedDurationSchema,
     planned_rest_seconds: plannedRestSchema,
+    planned_rest_after_series_seconds: plannedRestAfterSeriesSchema,
+    estimated_set_time_seconds: estimatedSetTimeSchema,
   })
   .strict();
 
@@ -74,6 +78,8 @@ export const workoutPlanExerciseUpdateSchema = z
     planned_reps: plannedRepsSchema,
     planned_duration_seconds: plannedDurationSchema,
     planned_rest_seconds: plannedRestSchema,
+    planned_rest_after_series_seconds: plannedRestAfterSeriesSchema,
+    estimated_set_time_seconds: estimatedSetTimeSchema,
   })
   .strict();
 
@@ -105,6 +111,8 @@ export const workoutPlanExerciseUpdateOrCreateSchema = z
     planned_reps: plannedRepsSchema,
     planned_duration_seconds: plannedDurationSchema,
     planned_rest_seconds: plannedRestSchema,
+    planned_rest_after_series_seconds: plannedRestAfterSeriesSchema,
+    estimated_set_time_seconds: estimatedSetTimeSchema,
   })
   .strict()
   .superRefine((data, ctx) => {
@@ -201,6 +209,8 @@ export const workoutPlanUpdateSchema = z
               planned_reps: exercise.planned_reps,
               planned_duration_seconds: exercise.planned_duration_seconds,
               planned_rest_seconds: exercise.planned_rest_seconds,
+              planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds,
+              estimated_set_time_seconds: exercise.estimated_set_time_seconds,
             });
           }
         } else {
@@ -318,6 +328,26 @@ export function validateWorkoutPlanBusinessRules(
     ) {
       errors.push(
         `planned_rest_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+      );
+    }
+
+    if (
+      exercise.planned_rest_after_series_seconds !== undefined &&
+      exercise.planned_rest_after_series_seconds !== null &&
+      exercise.planned_rest_after_series_seconds < 0
+    ) {
+      errors.push(
+        `planned_rest_after_series_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+      );
+    }
+
+    if (
+      exercise.estimated_set_time_seconds !== undefined &&
+      exercise.estimated_set_time_seconds !== null &&
+      exercise.estimated_set_time_seconds <= 0
+    ) {
+      errors.push(
+        `estimated_set_time_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
       );
     }
   }

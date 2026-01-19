@@ -326,8 +326,10 @@ export async function updateWorkoutPlanService(
       }
 
       // Przygotuj dane do aktualizacji (tylko podane pola)
-      const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] =
-        {};
+      const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] & {
+        planned_rest_after_series_seconds?: number | null;
+        estimated_set_time_seconds?: number | null;
+      } = {};
 
       if (exerciseUpdate.exercise_id !== undefined) {
         updateData.exercise_id = exerciseUpdate.exercise_id;
@@ -352,6 +354,14 @@ export async function updateWorkoutPlanService(
       if (exerciseUpdate.planned_rest_seconds !== undefined) {
         updateData.planned_rest_seconds =
           exerciseUpdate.planned_rest_seconds ?? null;
+      }
+      if (exerciseUpdate.planned_rest_after_series_seconds !== undefined) {
+        updateData.planned_rest_after_series_seconds =
+          exerciseUpdate.planned_rest_after_series_seconds ?? null;
+      }
+      if (exerciseUpdate.estimated_set_time_seconds !== undefined) {
+        updateData.estimated_set_time_seconds =
+          exerciseUpdate.estimated_set_time_seconds ?? null;
       }
 
       // Aktualizuj ćwiczenie
@@ -409,6 +419,8 @@ export async function updateWorkoutPlanService(
           planned_reps: exercise.planned_reps ?? null,
           planned_duration_seconds: exercise.planned_duration_seconds ?? null,
           planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+          planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
+          estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
         }));
 
       // Wstaw nowe ćwiczenia

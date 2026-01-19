@@ -22,9 +22,9 @@ const partLabels: Record<ExercisePart, string> = {
 };
 
 const sectionTypeLabels: Record<string, string> = {
-  Warm_up: "Rozgrzewka",
-  Main_workout: "Główny trening",
-  Cool_down: "Schłodzenie",
+  "Warm-up": "Rozgrzewka",
+  "Main Workout": "Główny trening",
+  "Cool-down": "Schłodzenie",
 };
 
 function formatDuration(seconds: number | null | undefined): string {
@@ -77,9 +77,18 @@ export default async function WorkoutPlanDetailsPage({
 
   // Sortowanie ćwiczeń według section_type i section_order
   const sortedExercises = [...workoutPlan.exercises].sort((a, b) => {
-    if (a.section_type !== b.section_type) {
-      return a.section_type.localeCompare(b.section_type);
-    }
+    // Najpierw sortuj według section_type (Warm-up, Main Workout, Cool-down)
+    const typeOrder: Record<string, number> = {
+      "Warm-up": 1,
+      "Main Workout": 2,
+      "Cool-down": 3,
+    };
+    const typeDiff =
+      (typeOrder[a.section_type] || 999) -
+      (typeOrder[b.section_type] || 999);
+    if (typeDiff !== 0) return typeDiff;
+
+    // Następnie sortuj według section_order
     return a.section_order - b.section_order;
   });
 

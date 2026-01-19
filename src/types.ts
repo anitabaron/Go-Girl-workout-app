@@ -90,7 +90,10 @@ export type WorkoutPlanExerciseInput = Pick<
   | "planned_reps"
   | "planned_duration_seconds"
   | "planned_rest_seconds"
->;
+> & {
+  planned_rest_after_series_seconds?: number | null;
+  estimated_set_time_seconds?: number | null;
+};
 
 export type WorkoutPlanCreateCommand = Pick<
   TablesInsert<"workout_plans">,
@@ -118,6 +121,7 @@ export type WorkoutPlanExerciseDTO = Omit<
   exercise_part?: ExercisePart | null;
   exercise_estimated_set_time_seconds?: number | null;
   exercise_rest_after_series_seconds?: number | null;
+  planned_rest_after_series_seconds?: number | null;
 };
 
 export type WorkoutPlanDTO = Omit<WorkoutPlanEntity, "user_id"> & {

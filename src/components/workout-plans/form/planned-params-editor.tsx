@@ -36,6 +36,8 @@ export function PlannedParamsEditor({
 
   const estimatedTimeId = useId();
   const estimatedTimeErrorId = useId();
+  const restAfterSeriesId = useId();
+  const restAfterSeriesErrorId = useId();
 
   return (
     <div className="space-y-4">
@@ -176,41 +178,77 @@ export function PlannedParamsEditor({
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
-        {/* Estimated Set Time */}
-      <div>
-        <label
-          htmlFor={estimatedTimeId}
-          className="block text-xs font-medium text-muted-foreground"
-        >
-          Szacunkowy czas zestawu (s)
-        </label>
-        <Input
-          id={estimatedTimeId}
-          type="number"
-          min="1"
-          step="1"
-          value={params.estimated_set_time_seconds ?? ""}
-          onChange={(e) =>
-            handleNumberChange("estimated_set_time_seconds", e.target.value)
-          }
-          disabled={disabled}
-          placeholder="—"
-          className="mt-1"
-          aria-invalid={errors.estimated_set_time_seconds ? "true" : "false"}
-          aria-describedby={
-            errors.estimated_set_time_seconds ? estimatedTimeErrorId : undefined
-          }
-        />
-        {errors.estimated_set_time_seconds && (
-          <p
-            id={estimatedTimeErrorId}
-            className="mt-1 text-xs text-destructive"
-            role="alert"
+        {/* Planned Rest After Series */}
+        <div>
+          <label
+            htmlFor={restAfterSeriesId}
+            className="block text-xs font-medium text-muted-foreground"
           >
-            {errors.estimated_set_time_seconds}
-          </p>
-        )}
-      </div>
+            Odpoczynek po seriach (s)
+          </label>
+          <Input
+            id={restAfterSeriesId}
+            type="number"
+            min="0"
+            step="1"
+            value={params.planned_rest_after_series_seconds ?? ""}
+            onChange={(e) =>
+              handleNumberChange("planned_rest_after_series_seconds", e.target.value)
+            }
+            disabled={disabled}
+            placeholder="—"
+            className="mt-1"
+            aria-invalid={errors.planned_rest_after_series_seconds ? "true" : "false"}
+            aria-describedby={
+              errors.planned_rest_after_series_seconds ? restAfterSeriesErrorId : undefined
+            }
+          />
+          {errors.planned_rest_after_series_seconds && (
+            <p
+              id={restAfterSeriesErrorId}
+              className="mt-1 text-xs text-destructive"
+              role="alert"
+            >
+              {errors.planned_rest_after_series_seconds}
+            </p>
+          )}
+        </div>
+
+        {/* Estimated Set Time */}
+        <div>
+          <label
+            htmlFor={estimatedTimeId}
+            className="block text-xs font-medium text-muted-foreground"
+          >
+            Szacunkowy czas zestawu (s)
+          </label>
+          <Input
+            id={estimatedTimeId}
+            type="number"
+            min="1"
+            step="1"
+            value={params.estimated_set_time_seconds ?? ""}
+            onChange={(e) =>
+              handleNumberChange("estimated_set_time_seconds", e.target.value)
+            }
+            disabled={disabled}
+            placeholder="—"
+            className="mt-1"
+            aria-invalid={errors.estimated_set_time_seconds ? "true" : "false"}
+            aria-describedby={
+              errors.estimated_set_time_seconds ? estimatedTimeErrorId : undefined
+            }
+          />
+          {errors.estimated_set_time_seconds && (
+            <p
+              id={estimatedTimeErrorId}
+              className="mt-1 text-xs text-destructive"
+              role="alert"
+            >
+              {errors.estimated_set_time_seconds}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

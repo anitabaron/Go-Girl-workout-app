@@ -160,6 +160,22 @@ export function useWorkoutPlanForm({
       exerciseErrors[`${exerciseKey}.planned_rest_seconds`] = restError;
     }
 
+    const restAfterSeriesError = validatePlannedParam(
+      "planned_rest_after_series_seconds",
+      exercise.planned_rest_after_series_seconds
+    );
+    if (restAfterSeriesError) {
+      exerciseErrors[`${exerciseKey}.planned_rest_after_series_seconds`] = restAfterSeriesError;
+    }
+
+    const estimatedTimeError = validatePlannedParam(
+      "estimated_set_time_seconds",
+      exercise.estimated_set_time_seconds
+    );
+    if (estimatedTimeError) {
+      exerciseErrors[`${exerciseKey}.estimated_set_time_seconds`] = estimatedTimeError;
+    }
+
     return exerciseErrors;
   };
 
@@ -276,6 +292,7 @@ export function useWorkoutPlanForm({
           planned_reps: exercise.reps ?? null,
           planned_duration_seconds: exercise.duration_seconds ?? null,
           planned_rest_seconds: exercise.rest_in_between_seconds ?? null,
+          planned_rest_after_series_seconds: exercise.rest_after_series_seconds ?? null,
           estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
         };
 
@@ -502,8 +519,8 @@ export function useWorkoutPlanForm({
         planned_reps: exercise.planned_reps ?? undefined,
         planned_duration_seconds: exercise.planned_duration_seconds ?? undefined,
         planned_rest_seconds: exercise.planned_rest_seconds ?? undefined,
-        // estimated_set_time_seconds nie jest przechowywane w workout_plan_exercises
-        // jest tylko w formularzu dla wyświetlania (pochodzi z metadanych ćwiczenia)
+        planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? undefined,
+        estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? undefined,
       })
     );
 
@@ -526,6 +543,8 @@ export function useWorkoutPlanForm({
         planned_reps: exercise.planned_reps ?? null,
         planned_duration_seconds: exercise.planned_duration_seconds ?? null,
         planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+        planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
+        estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
       };
 
       // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego

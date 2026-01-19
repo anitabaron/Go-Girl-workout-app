@@ -88,6 +88,26 @@ export const workoutPlanPlannedRestSchema = z
   .optional();
 
 /**
+ * Schema dla walidacji planned_rest_after_series_seconds
+ */
+export const workoutPlanPlannedRestAfterSeriesSchema = z
+  .number()
+  .int("Czas odpoczynku po seriach musi być liczbą całkowitą")
+  .nonnegative("Czas odpoczynku po seriach nie może być ujemny")
+  .nullable()
+  .optional();
+
+/**
+ * Schema dla walidacji estimated_set_time_seconds
+ */
+export const workoutPlanEstimatedSetTimeSchema = z
+  .number()
+  .int("Szacunkowy czas zestawu musi być liczbą całkowitą")
+  .positive("Szacunkowy czas zestawu musi być większy od zera")
+  .nullable()
+  .optional();
+
+/**
  * Schema dla walidacji exercise_id (UUID)
  */
 const uuidRegex =
@@ -258,10 +278,10 @@ export function validateWorkoutPlanFormField(
 }
 
 /**
- * Walidacja pojedynczego parametru planned_*
+ * Walidacja pojedynczego parametru planned_* lub estimated_set_time_seconds
  */
 export function validatePlannedParam(
-  field: "planned_sets" | "planned_reps" | "planned_duration_seconds" | "planned_rest_seconds",
+  field: "planned_sets" | "planned_reps" | "planned_duration_seconds" | "planned_rest_seconds" | "planned_rest_after_series_seconds" | "estimated_set_time_seconds",
   value: number | null
 ): string | undefined {
   try {
@@ -277,6 +297,12 @@ export function validatePlannedParam(
         break;
       case "planned_rest_seconds":
         workoutPlanPlannedRestSchema.parse(value);
+        break;
+      case "planned_rest_after_series_seconds":
+        workoutPlanPlannedRestAfterSeriesSchema.parse(value);
+        break;
+      case "estimated_set_time_seconds":
+        workoutPlanEstimatedSetTimeSchema.parse(value);
         break;
     }
     return undefined;

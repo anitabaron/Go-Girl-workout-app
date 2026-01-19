@@ -167,7 +167,12 @@ export async function insertWorkoutPlanExercises(
   planId: string,
   exercises: WorkoutPlanExerciseInput[]
 ) {
-  const   exercisesToInsert = exercises.map((exercise) => ({
+  const exercisesToInsert: Array<
+    Database["public"]["Tables"]["workout_plan_exercises"]["Insert"] & {
+      planned_rest_after_series_seconds?: number | null;
+      estimated_set_time_seconds?: number | null;
+    }
+  > = exercises.map((exercise) => ({
     plan_id: planId,
     exercise_id: exercise.exercise_id,
     section_type: exercise.section_type,
@@ -176,11 +181,17 @@ export async function insertWorkoutPlanExercises(
     planned_reps: exercise.planned_reps ?? null,
     planned_duration_seconds: exercise.planned_duration_seconds ?? null,
     planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+    ...(exercise.planned_rest_after_series_seconds !== undefined && {
+      planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds,
+    }),
+    ...(exercise.estimated_set_time_seconds !== undefined && {
+      estimated_set_time_seconds: exercise.estimated_set_time_seconds,
+    }),
   }));
 
   const { data, error } = await client
     .from("workout_plan_exercises")
-    .insert(exercisesToInsert)
+    .insert(exercisesToInsert as Database["public"]["Tables"]["workout_plan_exercises"]["Insert"][])
     .select();
 
   return { data, error };
@@ -245,9 +256,14 @@ export async function updateWorkoutPlanExercise(
     planned_reps?: number | null;
     planned_duration_seconds?: number | null;
     planned_rest_seconds?: number | null;
+    planned_rest_after_series_seconds?: number | null;
+    estimated_set_time_seconds?: number | null;
   }
 ) {
-  const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] = {};
+  const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] & {
+    planned_rest_after_series_seconds?: number | null;
+    estimated_set_time_seconds?: number | null;
+  } = {};
 
   if (input.exercise_id !== undefined) {
     updateData.exercise_id = input.exercise_id;
@@ -269,6 +285,12 @@ export async function updateWorkoutPlanExercise(
   }
   if (input.planned_rest_seconds !== undefined) {
     updateData.planned_rest_seconds = input.planned_rest_seconds;
+  }
+  if (input.planned_rest_after_series_seconds !== undefined) {
+    updateData.planned_rest_after_series_seconds = input.planned_rest_after_series_seconds;
+  }
+  if (input.estimated_set_time_seconds !== undefined) {
+    updateData.estimated_set_time_seconds = input.estimated_set_time_seconds;
   }
 
   if (Object.keys(updateData).length === 0) {
@@ -312,6 +334,10 @@ export async function listWorkoutPlanExercises(
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
     .order("section_order", { ascending: true });
+  
+  // Note: estimated_set_time_seconds from workout_plan_exercises will be included
+  // if the column exists in the database. The mapExerciseToDTO function will prioritize
+  // the override value from workout_plan_exercises over the default from exercises.
 
   if (error) {
     console.error("[listWorkoutPlanExercises] Error:", error);
@@ -362,20 +388,30 @@ export function mapToDTO(row: WorkoutPlanRow | WorkoutPlanSelectResult): Omit<Wo
 export function mapExerciseToDTO(
   row: WorkoutPlanExerciseRow & {
     exercises?: { title: string; type?: string; part?: string; estimated_set_time_seconds?: number | null; rest_after_series_seconds?: number | null } | null;
+    estimated_set_time_seconds?: number | null; // Override value from workout_plan_exercises
+    planned_rest_after_series_seconds?: number | null; // Override value from workout_plan_exercises
   }
 ): WorkoutPlanExerciseDTO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { plan_id, created_at, exercises, ...rest } = row;
+  const { plan_id, created_at, exercises, estimated_set_time_seconds, planned_rest_after_series_seconds, ...rest } = row;
   
-  const exerciseRestAfterSeries = exercises?.rest_after_series_seconds ?? null;
+  // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
+  const finalEstimatedSetTime = estimated_set_time_seconds !== undefined 
+    ? estimated_set_time_seconds 
+    : exercises?.estimated_set_time_seconds ?? null;
+  
+  const finalRestAfterSeries = planned_rest_after_series_seconds !== undefined
+    ? planned_rest_after_series_seconds
+    : exercises?.rest_after_series_seconds ?? null;
   
   return {
     ...rest,
     exercise_title: exercises?.title ?? null,
     exercise_type: (exercises?.type as ExerciseType | undefined) ?? null,
     exercise_part: (exercises?.part as ExercisePart | undefined) ?? null,
-    exercise_estimated_set_time_seconds: exercises?.estimated_set_time_seconds ?? null,
-    exercise_rest_after_series_seconds: exerciseRestAfterSeries,
+    exercise_estimated_set_time_seconds: finalEstimatedSetTime,
+    exercise_rest_after_series_seconds: exercises?.rest_after_series_seconds ?? null,
+    planned_rest_after_series_seconds: finalRestAfterSeries,
   };
 }
 

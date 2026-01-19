@@ -24,6 +24,7 @@ export type WorkoutPlanExerciseItemState = {
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
+  planned_rest_after_series_seconds: number | null;
   estimated_set_time_seconds: number | null;
 };
 
@@ -35,6 +36,7 @@ export type PlannedParamsState = {
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
+  planned_rest_after_series_seconds: number | null;
   estimated_set_time_seconds: number | null;
 };
 
@@ -198,6 +200,7 @@ export function dtoToFormState(
       planned_reps: exercise.planned_reps,
       planned_duration_seconds: exercise.planned_duration_seconds,
       planned_rest_seconds: exercise.planned_rest_seconds,
+      planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? exercise.exercise_rest_after_series_seconds ?? null,
       estimated_set_time_seconds: exercise.exercise_estimated_set_time_seconds ?? null,
     })),
   };
@@ -217,12 +220,13 @@ export function exerciseDtoToItemState(
     exercise_title: exerciseMetadata?.title,
     exercise_type: exerciseMetadata?.type,
     exercise_part: exerciseMetadata?.part,
-      section_type: exerciseDto.section_type,
-      section_order: exerciseDto.section_order,
-      planned_sets: exerciseDto.planned_sets,
-      planned_reps: exerciseDto.planned_reps,
-      planned_duration_seconds: exerciseDto.planned_duration_seconds,
-      planned_rest_seconds: exerciseDto.planned_rest_seconds,
-      estimated_set_time_seconds: exerciseMetadata?.estimated_set_time_seconds ?? null,
-    };
-  }
+    section_type: exerciseDto.section_type,
+    section_order: exerciseDto.section_order,
+    planned_sets: exerciseDto.planned_sets,
+    planned_reps: exerciseDto.planned_reps,
+    planned_duration_seconds: exerciseDto.planned_duration_seconds,
+    planned_rest_seconds: exerciseDto.planned_rest_seconds,
+    planned_rest_after_series_seconds: exerciseDto.planned_rest_after_series_seconds ?? null,
+    estimated_set_time_seconds: exerciseMetadata?.estimated_set_time_seconds ?? null,
+  };
+}
