@@ -284,11 +284,21 @@ export function useResetPasswordConfirmForm() {
       }
 
       // Sukces - hasło zostało zmienione
+      // Supabase automatycznie loguje użytkownika po updateUser, więc musimy go wylogować
+      // aby użytkownik mógł się zalogować z nowym hasłem
+      const { error: signOutError } = await supabase.auth.signOut();
+
+      if (signOutError) {
+        console.error("Error signing out after password reset:", signOutError);
+        // Kontynuujemy mimo błędu wylogowania - przekierowanie do /login
+      }
+
       toast.success("Hasło zostało pomyślnie zmienione. Możesz się teraz zalogować.");
       
       // Przekierowanie do /login po krótkim opóźnieniu
       setTimeout(() => {
         router.push("/login");
+        router.refresh(); // Odświeżenie routera, aby upewnić się, że sesja została usunięta
       }, 1500);
     } catch (error) {
       // Obsługa błędów sieciowych
