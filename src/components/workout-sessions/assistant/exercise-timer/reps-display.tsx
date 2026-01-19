@@ -23,7 +23,7 @@ export function RepsDisplay({
         <div className="relative flex items-center justify-center">
           {/* Różowe kółko jako tło */}
           <div className="absolute w-60 h-60 sm:w-70 sm:h-70 md:w-80 md:h-80 rounded-full bg-[#ffbdc8] opacity-30"></div>
-          <div className="relative text-8xl font-bold text-destructive sm:text-9xl md:text-[12rem]">
+          <div className="relative text-7xl font-bold text-destructive sm:text-8xl md:text-8xl">
             {reps}
           </div>
         </div>

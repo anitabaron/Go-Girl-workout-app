@@ -2,6 +2,7 @@
 
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { RestBetweenSetsTimerProps } from "@/types/workout-session-assistant";
+import { Button } from "@/components/ui/button";
 
 /**
  * Komponent wyświetlający odliczanie przerwy między seriami.
@@ -20,8 +21,6 @@ export function RestBetweenSetsTimer({
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6">
-    
-
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={restSeconds}
@@ -46,6 +45,14 @@ export function RestBetweenSetsTimer({
           </div>
         )}
       </CountdownCircleTimer>
+      
+      <Button
+        onClick={onComplete}
+        size="lg"
+        className="min-w-[120px] text-md font-light "
+      >
+        Pomiń przerwę
+      </Button>
     </div>
   );
 }

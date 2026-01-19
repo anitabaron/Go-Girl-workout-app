@@ -2,6 +2,7 @@
 
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { RestAfterSeriesTimerProps } from "@/types/workout-session-assistant";
+import { Button } from "@/components/ui/button";
 
 /**
  * Komponent wyświetlający odliczanie przerwy po zakończonych seriach ćwiczenia.
@@ -54,7 +55,13 @@ export function RestAfterSeriesTimer({
         )}
       </CountdownCircleTimer>
 
-    
+      <Button
+        onClick={onComplete}
+        size="lg"
+        className="min-w-[120px] text-md font-light "
+      >
+        Pomiń przerwę
+      </Button>
     </div>
   );
 }
