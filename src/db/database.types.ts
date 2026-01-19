@@ -453,10 +453,13 @@ export type Database = {
       }
       workout_sessions: {
         Row: {
+          active_duration_seconds: number | null
           completed_at: string | null
           current_position: number | null
           id: string
           last_action_at: string
+          last_timer_started_at: string | null
+          last_timer_stopped_at: string | null
           plan_name_at_time: string | null
           started_at: string
           status: Database["public"]["Enums"]["workout_session_status"]
@@ -464,10 +467,13 @@ export type Database = {
           workout_plan_id: string | null
         }
         Insert: {
+          active_duration_seconds?: number | null
           completed_at?: string | null
           current_position?: number | null
           id?: string
           last_action_at?: string
+          last_timer_started_at?: string | null
+          last_timer_stopped_at?: string | null
           plan_name_at_time?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["workout_session_status"]
@@ -475,10 +481,13 @@ export type Database = {
           workout_plan_id?: string | null
         }
         Update: {
+          active_duration_seconds?: number | null
           completed_at?: string | null
           current_position?: number | null
           id?: string
           last_action_at?: string
+          last_timer_started_at?: string | null
+          last_timer_stopped_at?: string | null
           plan_name_at_time?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["workout_session_status"]

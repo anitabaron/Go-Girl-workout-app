@@ -132,11 +132,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log("POST /api/workout-sessions request body:", JSON.stringify(body, null, 2));
-
     const { session, isNew } = await startWorkoutSessionService(userId, body);
-
-    console.log("POST /api/workout-sessions success, isNew:", isNew, "sessionId:", session.id);
 
     return NextResponse.json(session, { status: isNew ? 201 : 200 });
   } catch (error) {
@@ -173,9 +169,6 @@ export async function POST(request: Request) {
     }
 
     console.error("POST /api/workout-sessions unexpected error", error);
-    if (error instanceof Error) {
-      console.error("Error stack:", error.stack);
-    }
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",

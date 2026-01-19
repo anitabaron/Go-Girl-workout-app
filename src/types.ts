@@ -148,6 +148,19 @@ export type SessionStatusUpdateCommand = Pick<
   "status"
 >;
 
+export type SessionTimerUpdateCommand = {
+  active_duration_seconds?: number; // Dodaj do istniejącej wartości (cumulative)
+  last_timer_started_at?: string;
+  last_timer_stopped_at?: string;
+};
+
+export type SessionTimerUpdateResponse = {
+  id: string;
+  active_duration_seconds: number;
+  last_timer_started_at: string | null;
+  last_timer_stopped_at: string | null;
+};
+
 export type SessionListQueryParams = {
   status?: WorkoutSessionStatus;
   plan_id?: WorkoutPlanEntity["id"];
@@ -162,7 +175,12 @@ export type SessionListQueryParams = {
 export type SessionSummaryDTO = Omit<
   WorkoutSessionEntity,
   "user_id" | "last_action_at"
->;
+> & {
+  // Timer fields (included in summary for active sessions)
+  active_duration_seconds?: number | null;
+  last_timer_started_at?: string | null;
+  last_timer_stopped_at?: string | null;
+};
 
 export type SessionExerciseSetDTO = Omit<
   WorkoutSessionSetEntity,

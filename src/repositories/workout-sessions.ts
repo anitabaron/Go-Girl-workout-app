@@ -28,7 +28,7 @@ type SortField = (typeof sessionSortFields)[number];
 type SortOrder = (typeof sessionOrderValues)[number];
 
 const sessionSelectColumns =
-  "id,workout_plan_id,status,plan_name_at_time,started_at,completed_at,current_position,user_id,last_action_at";
+  "id,workout_plan_id,status,plan_name_at_time,started_at,completed_at,current_position,user_id,last_action_at,active_duration_seconds,last_timer_started_at,last_timer_stopped_at";
 
 type CursorPayload = {
   sort: SortField;
@@ -271,6 +271,124 @@ export async function updateWorkoutSessionStatus(
 }
 
 /**
+ * Aktualizuje timer sesji treningowej.
+ * Obsługuje cumulative updates dla active_duration_seconds i oblicza elapsed time.
+ */
+export async function updateWorkoutSessionTimer(
+  client: DbClient,
+  userId: string,
+  sessionId: string,
+  updates: {
+    active_duration_seconds?: number;
+    last_timer_started_at?: string;
+    last_timer_stopped_at?: string;
+  }
+): Promise<{
+  data: {
+    id: string;
+    active_duration_seconds: number;
+    last_timer_started_at: string | null;
+    last_timer_stopped_at: string | null;
+  } | null;
+  error: PostgrestError | null;
+}> {
+  // Pobierz aktualną sesję z pełnymi danymi timera
+  const { data: existingSession, error: fetchError } =
+    await findWorkoutSessionById(client, userId, sessionId);
+
+  if (fetchError) {
+    return { data: null, error: fetchError };
+  }
+
+  if (!existingSession) {
+    return { data: null, error: null };
+  }
+
+  // Przygotuj dane do aktualizacji
+  const sessionWithTimer = existingSession as WorkoutSessionRow & {
+    active_duration_seconds: number | null;
+    last_timer_started_at: string | null;
+    last_timer_stopped_at: string | null;
+  };
+
+  const currentActiveDuration = sessionWithTimer.active_duration_seconds ?? 0;
+  const currentLastTimerStartedAt = sessionWithTimer.last_timer_started_at;
+
+  let newActiveDuration = currentActiveDuration;
+  let elapsedFromTimer = 0;
+
+  // Jeśli last_timer_stopped_at jest podane i last_timer_started_at istnieje, oblicz elapsed
+  if (
+    updates.last_timer_stopped_at &&
+    currentLastTimerStartedAt
+  ) {
+    const startedAt = new Date(currentLastTimerStartedAt).getTime();
+    const stoppedAt = new Date(updates.last_timer_stopped_at).getTime();
+    elapsedFromTimer = Math.max(0, Math.floor((stoppedAt - startedAt) / 1000));
+  }
+
+  // Dodaj elapsed time do active_duration_seconds
+  newActiveDuration += elapsedFromTimer;
+
+  // Jeśli active_duration_seconds jest podane w updates, dodaj do cumulative
+  if (updates.active_duration_seconds !== undefined) {
+    newActiveDuration += updates.active_duration_seconds;
+  }
+
+  // Przygotuj obiekt aktualizacji
+  const updateData: Database["public"]["Tables"]["workout_sessions"]["Update"] =
+    {
+      last_action_at: new Date().toISOString(),
+    };
+
+  if (updates.active_duration_seconds !== undefined || elapsedFromTimer > 0) {
+    updateData.active_duration_seconds = newActiveDuration;
+  }
+
+  if (updates.last_timer_started_at !== undefined) {
+    updateData.last_timer_started_at = updates.last_timer_started_at;
+  }
+
+  if (updates.last_timer_stopped_at !== undefined) {
+    updateData.last_timer_stopped_at = updates.last_timer_stopped_at;
+  }
+
+  // Wykonaj aktualizację
+  const { data: updated, error: updateError } = await client
+    .from("workout_sessions")
+    .update(updateData)
+    .eq("user_id", userId)
+    .eq("id", sessionId)
+    .select("id,active_duration_seconds,last_timer_started_at,last_timer_stopped_at")
+    .single();
+
+  if (updateError) {
+    return { data: null, error: updateError };
+  }
+
+  if (!updated) {
+    return { data: null, error: null };
+  }
+
+  const updatedWithTimer = updated as {
+    id: string;
+    active_duration_seconds: number | null;
+    last_timer_started_at: string | null;
+    last_timer_stopped_at: string | null;
+  };
+
+  return {
+    data: {
+      id: updatedWithTimer.id,
+      active_duration_seconds: updatedWithTimer.active_duration_seconds ?? 0,
+      last_timer_started_at: updatedWithTimer.last_timer_started_at ?? null,
+      last_timer_stopped_at: updatedWithTimer.last_timer_stopped_at ?? null,
+    },
+    error: null,
+  };
+}
+
+/**
  * Pobiera wszystkie ćwiczenia sesji treningowej posortowane po order.
  * Dołącza wartości rest_in_between_seconds i rest_after_series_seconds z tabeli exercises.
  */
@@ -483,12 +601,6 @@ export async function findWorkoutSessionExerciseByOrder(
   sessionId: string,
   order: number
 ) {
-  console.log("[findWorkoutSessionExerciseByOrder] Starting", {
-    sessionId,
-    order,
-    orderType: typeof order,
-  });
-
   const { data, error } = await client
     .from("workout_session_exercises")
     .select("*, exercises(rest_in_between_seconds, rest_after_series_seconds)")
@@ -498,14 +610,6 @@ export async function findWorkoutSessionExerciseByOrder(
 
   if (error) {
     console.error("[findWorkoutSessionExerciseByOrder] Error:", error);
-    console.error("[findWorkoutSessionExerciseByOrder] Error details:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
-  } else {
-    console.log("[findWorkoutSessionExerciseByOrder] Success, found exercise:", data ? "yes" : "no");
   }
 
   return { data, error };
@@ -607,17 +711,6 @@ export async function callSaveWorkoutSessionExercise(
     }> | null;
   }
 ) {
-  console.log("[callSaveWorkoutSessionExercise] Starting with params:", {
-    p_session_id: params.p_session_id,
-    p_exercise_id: params.p_exercise_id,
-    p_exercise_order: params.p_exercise_order,
-    p_actual_sets: params.p_actual_sets,
-    p_actual_reps: params.p_actual_reps,
-    p_actual_duration_seconds: params.p_actual_duration_seconds,
-    p_is_skipped: params.p_is_skipped,
-    p_sets_data_length: params.p_sets_data?.length ?? null,
-  });
-
   // Mapuj sets na format JSONB (bez set_number, bo funkcja DB nie potrzebuje)
   // Jeśli p_sets_data jest pustą tablicą [], wyślij [] aby wyczyścić serie
   // Jeśli p_sets_data jest null lub undefined, wyślij null (nie zmieniaj serii)
@@ -630,18 +723,15 @@ export async function callSaveWorkoutSessionExercise(
 
   if (params.p_sets_data === null || params.p_sets_data === undefined) {
     setsDataJson = null;
-    console.log("[callSaveWorkoutSessionExercise] Sets data is null/undefined, keeping null");
   } else if (params.p_sets_data.length > 0) {
     setsDataJson = params.p_sets_data.map((set) => ({
       reps: set.reps ?? null,
       duration_seconds: set.duration_seconds ?? null,
       weight_kg: set.weight_kg ?? null,
     }));
-    console.log("[callSaveWorkoutSessionExercise] Sets data mapped:", setsDataJson);
   } else {
     // Pusta tablica = wyczyść wszystkie serie
     setsDataJson = [];
-    console.log("[callSaveWorkoutSessionExercise] Sets data is empty array, clearing sets");
   }
 
   const rpcParams = {
@@ -655,31 +745,18 @@ export async function callSaveWorkoutSessionExercise(
     p_is_skipped: params.p_is_skipped ?? false,
     p_sets_data: setsDataJson !== null ? setsDataJson : undefined,
   };
-  console.log("[callSaveWorkoutSessionExercise] Calling RPC save_workout_session_exercise with:", {
-    ...rpcParams,
-    p_sets_data: setsDataJson ? `Array(${setsDataJson.length})` : null,
-  });
 
   const { data, error } = await client.rpc("save_workout_session_exercise", rpcParams);
 
   if (error) {
     console.error("[callSaveWorkoutSessionExercise] RPC error:", error);
-    console.error("[callSaveWorkoutSessionExercise] RPC error details:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
     return { data: null, error };
   }
-
-  console.log("[callSaveWorkoutSessionExercise] RPC success, data:", data);
 
   // Funkcja DB zwraca session_exercise_id jako string (UUID)
   const result = {
     data: data ? String(data) : null,
     error: null,
   };
-  console.log("[callSaveWorkoutSessionExercise] Returning:", result);
   return result;
 }

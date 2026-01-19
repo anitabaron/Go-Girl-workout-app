@@ -16,7 +16,6 @@ export default async function WorkoutSessionsPage({
 }>) {
   const params = await searchParams;
 
-  console.log("[WorkoutSessionsPage] Raw searchParams:", params);
 
   // Walidacja i parsowanie query params
   const parseResult = sessionListQuerySchema.safeParse({
@@ -24,18 +23,13 @@ export default async function WorkoutSessionsPage({
     limit: params.limit ? Number(params.limit) : undefined,
   });
 
-  console.log("[WorkoutSessionsPage] Parse result:", {
-    success: parseResult.success,
-    data: parseResult.success ? parseResult.data : null,
-    error: parseResult.success ? null : parseResult.error.issues,
-  });
+
 
   // Fallback do domyślnych wartości przy błędzie walidacji
   const parsedQuery: SessionListQueryParams = parseResult.success
     ? parseResult.data
     : sessionListQuerySchema.parse({});
 
-  console.log("[WorkoutSessionsPage] Final parsedQuery:", parsedQuery);
 
   // Weryfikacja autoryzacji - automatyczne przekierowanie niezalogowanych użytkowników
   const userId = await requireAuth();
@@ -48,18 +42,8 @@ export default async function WorkoutSessionsPage({
 
   try {
     // Pobierz wszystkie sesje (lub zgodnie z filtrami)
-    console.log("[WorkoutSessionsPage] Fetching sessions with query:", parsedQuery);
     const result = await listWorkoutSessionsService(userId, parsedQuery);
-    console.log("[WorkoutSessionsPage] Received sessions:", {
-      count: result.items.length,
-      items: result.items.map((s) => ({
-        id: s.id,
-        status: s.status,
-        started_at: s.started_at,
-        completed_at: s.completed_at,
-      })),
-      nextCursor: result.nextCursor,
-    });
+
     sessionsData = result;
   } catch (error) {
     // Loguj błędy dla debugowania

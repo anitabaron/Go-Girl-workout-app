@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 
 import { respondWithServiceError } from "@/lib/http/errors";
 import {
-  updateWorkoutSessionStatusService,
+  updateWorkoutSessionTimerService,
   ServiceError,
 } from "@/services/workout-sessions";
 import { createClient } from "@/db/supabase.server";
@@ -37,15 +37,35 @@ type RouteContext = {
   }>;
 };
 
+/**
+ * PATCH /api/workout-sessions/{id}/timer
+ * 
+ * Aktualizuje timer sesji treningowej.
+ * Obsługuje start/resume, pause/exit i ręczną aktualizację czasu aktywnego.
+ * 
+ * Request body:
+ * - active_duration_seconds?: number (cumulative - dodaje do istniejącej wartości)
+ * - last_timer_started_at?: string (ISO 8601 timestamp)
+ * - last_timer_stopped_at?: string (ISO 8601 timestamp)
+ * 
+ * Co najmniej jedno pole musi być podane.
+ * 
+ * Success: 200 OK z danymi timera
+ * Errors: 400 (walidacja), 401 (brak autoryzacji), 404 (sesja nie znaleziona), 409 (sesja nie in_progress), 500 (błąd serwera)
+ */
 export async function PATCH(request: Request, { params }: RouteContext) {
+
   try {
     const userId = await getUserIdFromSession();
 
     const { id } = await params;
     const sessionId = id ?? new URL(request.url).searchParams.get("id");
+ 
 
     if (!sessionId) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] Missing sessionId");
+      console.error(
+        "[PATCH /api/workout-sessions/[id]/timer] Missing sessionId"
+      );
       return NextResponse.json(
         { message: "Brak identyfikatora sesji treningowej w ścieżce." },
         { status: 400 }
@@ -53,7 +73,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     if (!isUuid(sessionId)) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] Invalid sessionId format:", sessionId);
+      console.error(
+        "[PATCH /api/workout-sessions/[id]/timer] Invalid sessionId format:",
+        sessionId
+      );
       return NextResponse.json(
         { message: "Nieprawidłowy format UUID identyfikatora sesji." },
         { status: 400 }
@@ -64,7 +87,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] JSON parse error:", jsonError);
+      console.error(
+        "[PATCH /api/workout-sessions/[id]/timer] JSON parse error:",
+        jsonError
+      );
       return NextResponse.json(
         {
           message: "Nieprawidłowy format JSON w body żądania.",
@@ -74,25 +100,31 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
-    const updated = await updateWorkoutSessionStatusService(
+    const updated = await updateWorkoutSessionTimerService(
       userId,
       sessionId,
       body
     );
 
-    return NextResponse.json(updated, { status: 200 });
+    return NextResponse.json({ data: updated }, { status: 200 });
   } catch (error) {
-    console.error("[PATCH /api/workout-sessions/[id]/status] Error caught:", error);
-    
+    console.error(
+      "[PATCH /api/workout-sessions/[id]/timer] Error caught:",
+      error
+    );
+
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
         { status: 401 }
       );
     }
-    
+
     if (error instanceof ServiceError) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] ServiceError:", {
+      console.error("[PATCH /api/workout-sessions/[id]/timer] ServiceError:", {
         code: error.code,
         message: error.message,
         details: error.details,
@@ -101,7 +133,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     if (error instanceof ZodError) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] ZodError:", {
+      console.error("[PATCH /api/workout-sessions/[id]/timer] ZodError:", {
         issues: error.issues,
         formatted: error.issues.map((issue) => ({
           path: issue.path.join("."),
@@ -119,7 +151,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     console.error(
-      "[PATCH /api/workout-sessions/[id]/status] Unexpected error:",
+      "[PATCH /api/workout-sessions/[id]/timer] Unexpected error:",
       error
     );
     return NextResponse.json(

@@ -119,6 +119,16 @@ Notes:
   - Success: `200`.
   - Errors: `400` invalid transition, `404`, `401/403`.
 
+- `PATCH /api/workout-sessions/{id}/timer`
+  - Update timer state for active session tracking.
+  - Body: `{ active_duration_seconds?: number, last_timer_started_at?: string, last_timer_stopped_at?: string }`.
+  - Logic:
+    - On start/resume: set `last_timer_started_at`, do not change `active_duration_seconds`.
+    - On pause/exit: calculate elapsed time since `last_timer_started_at`, add to `active_duration_seconds`, set `last_timer_stopped_at`.
+    - `active_duration_seconds` is cumulative (adds to existing value).
+  - Success: `200`.
+  - Errors: `400` validation, `404` session not found, `409` session not in_progress, `401/403`.
+
 ### 2.4 Session Exercise Autosave (next/previous/skip)
 
 - `PATCH /api/workout-sessions/{id}/exercises/{order}`
@@ -226,7 +236,7 @@ Notes:
 
 - Exercise item: `{ id, title, type, part, level?, details?, reps?, duration_seconds?, series, rest_in_between_seconds?, rest_after_series_seconds?, created_at, updated_at }`
 - Plan item: `{ id, name, description?, part?, exercises: [{ id, exercise_id, section_type, section_order, planned_sets?, planned_reps?, planned_duration_seconds?, planned_rest_seconds? }] , created_at, updated_at }`
-- Session summary: `{ id, workout_plan_id?, plan_name_at_time?, status, started_at, completed_at?, current_position }`
+- Session summary: `{ id, workout_plan_id?, plan_name_at_time?, status, started_at, completed_at?, current_position, active_duration_seconds?, last_timer_started_at?, last_timer_stopped_at? }`
 - Session detail: `{ ...summary, exercises: [{ id, order, exercise_id, exercise_title_at_time, exercise_type_at_time, exercise_part_at_time, planned_*, actual_count_sets?, actual_sum_reps?, actual_duration_seconds?, is_skipped, sets: [{ set_number, reps?, duration_seconds?, weight_kg? }] }] }`
 - Personal record item: `{ id, exercise_id, metric_type, value, achieved_at, achieved_in_session_id?, achieved_in_set_number?, created_at, updated_at }`
 - AI usage: `{ month_year, usage_count, remaining }`

@@ -13,13 +13,6 @@ export function WorkoutPlanForm({
   initialData,
   mode,
 }: Readonly<WorkoutPlanFormProps>) {
-  // Debug: logowanie initialData przed przekazaniem do hooka
-  console.log("[WorkoutPlanForm] initialData:", initialData?.exercises?.map(e => ({
-    exerciseId: e.exercise_id,
-    exercise_title: e.exercise_title,
-    exercise_rest_after_series_seconds: e.exercise_rest_after_series_seconds,
-  })));
-
   const {
     fields,
     errors,
@@ -36,12 +29,6 @@ export function WorkoutPlanForm({
     initialData,
     mode,
   });
-
-  // Debug: logowanie fields po inicjalizacji
-  console.log("[WorkoutPlanForm] fields.exercises:", fields.exercises?.map(e => ({
-    exerciseId: e.exercise_id,
-    exercise_title: e.exercise_title,
-  })));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

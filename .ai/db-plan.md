@@ -138,6 +138,10 @@ CREATE TABLE workout_sessions (
     -- Śledzenie wznowienia sesji
     current_position INTEGER DEFAULT 0 CHECK (current_position >= 0),
     last_action_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- Śledzenie czasu aktywnego timera
+    active_duration_seconds INTEGER DEFAULT 0 CHECK (active_duration_seconds >= 0),
+    last_timer_started_at TIMESTAMPTZ,
+    last_timer_stopped_at TIMESTAMPTZ,
 
     -- Ograniczenie: tylko jedna sesja in_progress per użytkownik
     CONSTRAINT workout_sessions_one_in_progress
@@ -959,66 +963,74 @@ workout_session_exercises
 - **Partial unique index** na `workout_sessions(user_id) WHERE status = 'in_progress'` zapewnia na poziomie bazy, że użytkownik może mieć tylko jedną aktywną sesję
 - Dodatkowo constraint `UNIQUE (user_id) WHERE status = 'in_progress'` jako zabezpieczenie
 
-### 7.3 Normalizacja tytułu ćwiczenia
+### 7.3 Śledzenie czasu aktywnego timera
+
+- **`active_duration_seconds`**: Suma czasu, gdy timer działał (asystent był otwarty i nie był w pauzie). Wartość kumulatywna, dodawana przy każdej pauzie/wyjściu.
+- **`last_timer_started_at`**: Timestamp ostatniego uruchomienia timera (przy starcie sesji lub resume). Używane do obliczenia czasu od ostatniego startu.
+- **`last_timer_stopped_at`**: Timestamp ostatniego zatrzymania timera (przy pause lub wyjściu z asystenta).
+- **Logika**: Timer działa tylko gdy asystent jest otwarty. Przy starcie/resume zapisujemy `last_timer_started_at`. Przy pause/wyjściu obliczamy różnicę czasu i dodajemy do `active_duration_seconds`, zapisujemy `last_timer_stopped_at`.
+- **Endpoint**: `PATCH /api/workout-sessions/{id}/timer` aktualizuje te pola. `active_duration_seconds` jest kumulatywny (dodaje do istniejącej wartości).
+
+### 7.4 Normalizacja tytułu ćwiczenia
 
 - **Generated column `title_normalized`**: Automatyczna normalizacja (trim + lowercase + redukcja wielokrotnych spacji)
 - **Unique constraint** na `(user_id, title_normalized)` zapewnia unikalność case-insensitive
 - Aplikacja powinna walidować przed zapisem, ale baza zapewnia integralność
 
-### 7.4 Materializacja PR
+### 7.5 Materializacja PR
 
 - **Tabela `personal_records`**: Przechowuje obliczone rekordy zamiast liczenia w locie
 - **Funkcja `recalculate_pr_for_exercise()`**: Automatyczne przeliczanie po zapisie/edycji serii
 - **Typy metryk**: `total_reps` (suma), `max_duration` (maksimum z serii), `max_weight` (maksimum z serii)
 - **Metadane rekordu**: `achieved_at`, `achieved_in_session_id`, `achieved_in_set_number` dla śledzenia pochodzenia
 
-### 7.5 Walidacja metryk
+### 7.6 Walidacja metryk
 
 - **Ćwiczenia**: CHECK constraint wymaga `reps` LUB `duration` (nie oba)
 - **Serie**: CHECK constraint wymaga co najmniej jednej metryki niepustej
 - **Spójność**: Aplikacja powinna zapewnić, że metryki w seriach są spójne z typem ćwiczenia
 
-### 7.6 Blokada usuwania ćwiczeń
+### 7.7 Blokada usuwania ćwiczeń
 
 - **FK RESTRICT**: `exercises` ma `ON DELETE RESTRICT` w relacjach z `workout_plan_exercises`, `workout_session_exercises`, `personal_records`
 - Zapobiega usunięciu ćwiczenia, które ma historię (sesje lub PR)
 - Aplikacja powinna sprawdzać przed próbą usunięcia i wyświetlać czytelny komunikat
 
-### 7.7 Limit AI (5/miesiąc)
+### 7.8 Limit AI (5/miesiąc)
 
 - **Tabela `ai_usage`**: Przechowuje licznik per użytkownik per miesiąc
 - **Funkcja `check_and_increment_ai_usage()`**: Atomowe sprawdzenie i zwiększenie limitu
 - **Reset automatyczny**: Nowy miesiąc tworzy nowy wiersz z `usage_count = 0`
 - **System errors**: `is_system_error` w `ai_requests` pozwala na rozróżnienie błędów systemowych (nie liczą się do limitu)
 
-### 7.8 Kolejność ćwiczeń w planie
+### 7.9 Kolejność ćwiczeń w planie
 
 - **`section_type` + `section_order`**: Umożliwia organizację ćwiczeń w sekcje (Warm-up, Main, Cool-down)
 - **Unique constraint**: `(plan_id, section_type, section_order)` zapewnia unikalność kolejności w sekcji
 - **Kolejność w sesji**: `order` w `workout_session_exercises` determinuje kolejność wykonywania
 
-### 7.9 Jednostki i typy danych
+### 7.10 Jednostki i typy danych
 
 - **Czas**: `duration_seconds`, `rest_seconds` jako `INTEGER` (sekundy)
 - **Waga**: `weight_kg` jako `NUMERIC(6, 2)` (kilogramy z dokładnością do 0.01)
 - **Powtórzenia**: `reps` jako `INTEGER`
 - **CHECK constraints**: Wszystkie wartości >= 0 (z wyjątkiem wymaganych > 0)
 
-### 7.10 Funkcje RPC (SECURITY DEFINER)
+### 7.11 Funkcje RPC (SECURITY DEFINER)
 
 - **`save_workout_session_exercise()`**: Atomowy zapis ćwiczenia w sesji z walidacją i przeliczeniem PR
 - **`recalculate_pr_for_exercise()`**: Przeliczenie wszystkich typów PR dla ćwiczenia
 - **`check_and_increment_ai_usage()`**: Atomowe sprawdzenie i zwiększenie limitu AI
 - Wszystkie funkcje używają `SECURITY DEFINER` dla atomowości i kontroli dostępu
 
-### 7.11 Row-Level Security (RLS)
+### 7.12 Row-Level Security (RLS)
 
 - **Wszystkie tabele domenowe** mają włączone RLS
 - **Policies**: Każda tabela ma osobne policy dla SELECT, INSERT, UPDATE, DELETE
 - **Filtrowanie**: Wszystkie policies używają `user_id = auth.uid()` lub sprawdzają własność przez relacje
 - **Bezpieczeństwo**: RLS działa niezależnie od UI, zapewniając izolację danych na poziomie bazy
 
-### 7.12 Architektura gotowa na skalowanie
+### 7.13 Architektura gotowa na skalowanie
 
 - **Indeksy strategiczne**: Zoptymalizowane pod najczęstsze zapytania (listy per użytkownik, sortowanie po dacie)
 - **Materializacja PR**: Unika kosztownych obliczeń w locie
