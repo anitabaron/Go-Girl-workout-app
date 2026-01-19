@@ -8,10 +8,12 @@ import {
   type ExerciseFormData,
   type FormErrors,
   type AutosaveStatus,
+  type SetLogFormData,
   exerciseToFormData,
   formDataToAutosaveCommand,
 } from "@/types/workout-session-assistant";
 import { WorkoutTimer } from "./workout-timer";
+import { ExerciseTimer } from "./exercise-timer";
 import { CurrentExerciseInfo } from "./current-exercise-info";
 import { ExerciseExecutionForm } from "./exercise-execution-form";
 import { NavigationButtons } from "./navigation-buttons";
@@ -54,6 +56,7 @@ export function WorkoutSessionAssistant({
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
   const [autosaveError, setAutosaveError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [currentSetNumber, setCurrentSetNumber] = useState<number>(1);
 
   // Bieżące ćwiczenie
   const currentExercise = useMemo(
@@ -122,8 +125,19 @@ export function WorkoutSessionAssistant({
   // Aktualizacja formData przy zmianie ćwiczenia
   useEffect(() => {
     if (currentExercise) {
-      setFormData(exerciseToFormData(currentExercise));
+      const newFormData = exerciseToFormData(currentExercise);
+      setFormData(newFormData);
       setFormErrors({});
+      // Reset numeru serii przy zmianie ćwiczenia
+      setCurrentSetNumber(1);
+      // Upewnij się, że formularz ma pierwszą serię (jeśli nie ma serii, ale są planowane)
+      if (
+        newFormData.sets.length === 0 &&
+        (currentExercise.planned_sets ?? 0) > 0
+      ) {
+        // Formularz automatycznie utworzy serie w ExerciseExecutionForm
+        // Nie musimy tutaj nic robić
+      }
     }
   }, [currentExercise]);
 
@@ -368,6 +382,81 @@ export function WorkoutSessionAssistant({
     router.push("/workout-sessions");
   }, [router]);
 
+  // Funkcja pomocnicza do upewnienia się, że formularz ma serię dla danego numeru
+  // (używana przez updateSetInForm, więc nie jest już potrzebna jako osobna funkcja)
+
+  // Funkcja aktualizująca serię w formularzu na podstawie numeru serii
+  const updateSetInForm = useCallback(
+    (setNumber: number, updates: Partial<SetLogFormData>) => {
+      setFormData((prev) => {
+        const setIndex = prev.sets.findIndex((set) => set.set_number === setNumber);
+        
+        if (setIndex === -1) {
+          // Jeśli seria nie istnieje, dodaj ją
+          const newSet: SetLogFormData = {
+            set_number: setNumber,
+            reps: currentExercise.planned_reps ?? null,
+            duration_seconds: currentExercise.planned_duration_seconds ?? null,
+            weight_kg: null,
+            ...updates,
+          };
+          const newSets = [...prev.sets, newSet].sort(
+            (a, b) => a.set_number - b.set_number
+          );
+          return { ...prev, sets: newSets };
+        }
+
+        // Aktualizuj istniejącą serię
+        const newSets = [...prev.sets];
+        newSets[setIndex] = { ...newSets[setIndex], ...updates };
+        return { ...prev, sets: newSets };
+      });
+    },
+    [currentExercise.planned_reps, currentExercise.planned_duration_seconds]
+  );
+
+  // Callback: zakończenie serii (odliczanie czasu lub powtórzenia)
+  // Timer automatycznie przejdzie do odpowiedniej przerwy w komponencie ExerciseTimer
+  const handleSetComplete = useCallback(() => {
+    // Jeśli to ćwiczenie z czasem, aktualizuj duration_seconds w formularzu
+    if (
+      currentExercise.planned_duration_seconds &&
+      currentExercise.planned_duration_seconds > 0
+    ) {
+      updateSetInForm(currentSetNumber, {
+        duration_seconds: currentExercise.planned_duration_seconds,
+      });
+    }
+  }, [currentSetNumber, currentExercise.planned_duration_seconds, updateSetInForm]);
+
+  // Callback: zakończenie przerwy między seriami
+  const handleRestBetweenComplete = useCallback(() => {
+    const nextSetNumber = currentSetNumber + 1;
+    const plannedSets = currentExercise.planned_sets ?? 1;
+
+    if (nextSetNumber <= plannedSets) {
+      setCurrentSetNumber(nextSetNumber);
+      // Upewnij się, że formularz ma serię dla następnego numeru
+      updateSetInForm(nextSetNumber, {});
+    }
+  }, [currentSetNumber, currentExercise.planned_sets, updateSetInForm]);
+
+  // Callback: zakończenie przerwy po seriach
+  const handleRestAfterSeriesComplete = useCallback(() => {
+    // Zapisz ćwiczenie i przejdź do następnego
+    void handleNext();
+  }, [handleNext]);
+
+  // Callback: zakończenie powtórzeń (kliknięcie OK)
+  const handleRepsComplete = useCallback(() => {
+    // Jeśli to ćwiczenie z powtórzeniami, aktualizuj reps w formularzu
+    if (currentExercise.planned_reps && currentExercise.planned_reps > 0) {
+      updateSetInForm(currentSetNumber, {
+        reps: currentExercise.planned_reps,
+      });
+    }
+  }, [currentSetNumber, currentExercise.planned_reps, updateSetInForm]);
+
   // Obliczanie czy można przejść dalej
   const canGoNext = useMemo(() => {
     // Jeśli ćwiczenie jest pominięte, zawsze można przejść dalej
@@ -402,18 +491,25 @@ export function WorkoutSessionAssistant({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto md:pt-16">
         <div className="mx-auto w-full max-w-4xl px-4 py-6 space-y-6">
-          {/* Timer */}
+          {/* Timer globalny sesji */}
           <WorkoutTimer
             startedAt={session.started_at}
             isPaused={isPaused}
             currentExerciseName={currentExercise.exercise_title_at_time}
-            currentSetNumber={
-              formData.sets.length > 0
-                ? formData.sets.at(-1)?.set_number ?? 1
-                : 1
-            }
+            currentSetNumber={currentSetNumber}
             currentExerciseIndex={currentExerciseIndex}
             totalExercises={session.exercises.length}
+          />
+
+          {/* Timer ćwiczenia */}
+          <ExerciseTimer
+            exercise={currentExercise}
+            currentSetNumber={currentSetNumber}
+            isPaused={isPaused}
+            onSetComplete={handleSetComplete}
+            onRestBetweenComplete={handleRestBetweenComplete}
+            onRestAfterSeriesComplete={handleRestAfterSeriesComplete}
+            onRepsComplete={handleRepsComplete}
           />
 
           {/* Exercise info */}

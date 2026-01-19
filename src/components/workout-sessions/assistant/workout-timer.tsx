@@ -89,6 +89,7 @@ export function WorkoutTimer({
           duration={restSeconds}
           colors={["#ef4444", "#f87171", "#fca5a5"]}
           colorsTime={[restSeconds, restSeconds * 0.5, 0]}
+          trailColor="#ffbdc8"
           size={240}
           strokeWidth={12}
         >

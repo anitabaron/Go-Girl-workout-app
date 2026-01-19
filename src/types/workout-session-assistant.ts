@@ -56,6 +56,69 @@ export type WorkoutSessionAssistantState = {
 };
 
 /**
+ * Typy dla timera ćwiczenia.
+ */
+
+/**
+ * Stan timera ćwiczenia (discriminated union).
+ */
+export type ExerciseTimerState =
+  | { type: "waiting" } // Oczekiwanie na rozpoczęcie
+  | { type: "set_countdown"; setNumber: number; remainingSeconds: number } // Odliczanie czasu serii
+  | { type: "reps_display"; setNumber: number; reps: number } // Wyświetlanie powtórzeń
+  | { type: "rest_between_sets"; remainingSeconds: number } // Przerwa między seriami
+  | { type: "rest_after_series"; remainingSeconds: number }; // Przerwa po seriach
+
+/**
+ * Props głównego komponentu timera ćwiczenia.
+ */
+export type ExerciseTimerProps = {
+  exercise: SessionExerciseDTO;
+  currentSetNumber: number;
+  isPaused: boolean;
+  onSetComplete: () => void;
+  onRestBetweenComplete: () => void;
+  onRestAfterSeriesComplete: () => void;
+  onRepsComplete: () => void;
+};
+
+/**
+ * Props komponentu odliczania czasu serii.
+ */
+export type SetCountdownTimerProps = {
+  durationSeconds: number;
+  isPaused: boolean;
+  onComplete: () => void;
+};
+
+/**
+ * Props komponentu wyświetlania powtórzeń.
+ */
+export type RepsDisplayProps = {
+  reps: number;
+  setNumber: number;
+  onComplete: () => void;
+};
+
+/**
+ * Props komponentu odliczania przerwy między seriami.
+ */
+export type RestBetweenSetsTimerProps = {
+  restSeconds: number;
+  isPaused: boolean;
+  onComplete: () => void;
+};
+
+/**
+ * Props komponentu odliczania przerwy po seriach.
+ */
+export type RestAfterSeriesTimerProps = {
+  restSeconds: number;
+  isPaused: boolean;
+  onComplete: () => void;
+};
+
+/**
  * Funkcje pomocnicze do konwersji między DTO a ViewModel.
  */
 
