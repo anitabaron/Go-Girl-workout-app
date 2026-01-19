@@ -405,13 +405,39 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 
   - Timer startuje przy rozpoczęciu sesji.
   - Pause zatrzymuje timer, a wznowienie kontynuuje od zatrzymanego czasu.
+  - Wyjście z aktywnego asystenta trening zatrzymuje timer
+  - Tylko w momencie otwartego asystenta treningu w aplikacji timer odlicza czas
+  - Wyświetlony jest czas globalny (sumaryczny) całej sesji
+
+- ID: US-031
+  Tytuł: Timer ćwiczenia
+  Opis: Jako użytkowniczka chcę widzieć czas aktualnie wykonywanego ćwiczenia, aby kontrolować trening.
+  Kryteria akceptacji:
+
+  - Timer startuje przy rozpoczęciu setu ćwiczeń i odlicza od planowanego czasu do 0.
+  - Jeśli ćwiczenie posiada planowane 20 sekund w jednej serii to czas odlicza się od 20 do 0
+  - Przerwa pomiędzy ćwiczeniami odliczana jest od planowanego czasu odpoczynku pomiędzy seriami do 0
+  - Po zakończeniu planowanych serii odliczany jest czas odpoczynku po zakończonych seriach do 0
+  - Pause zatrzymuje timer, a wznowienie kontynuuje od zatrzymanego czasu.
+  - Wyjście z aktywnego asystenta trening zatrzymuje timer
+  - Tylko w momencie otwartego asystenta treningu w aplikacji timer odlicza czas
+  - Wyświetlony jest czas dla danej serii ćwiczenia lub odpoczynku z nim związanym
+  - Dla ćwiczeń które nie posiadają planowanych wartości w sekundach, ale w liczbie powtórzeń, w miejscu timera aktualnej serii wyświetlana jest liczba powtórzeń. Poniewaz nie ma wtedy odliczania to przejście od wykonywania powórzeń do odliczania odpoczynku odbywa się poprzez naciśnięcie dodatkowego przycisku OK umieszczonego przy biezącej liczbie powtorzeń ćwiczenia  
 
 - ID: US-032
   Tytuł: Wyświetlenie bieżącego ćwiczenia z parametrami planowanymi
   Opis: Jako użytkowniczka chcę widzieć planowane parametry ćwiczenia, aby wiedzieć co wykonać.
   Kryteria akceptacji:
 
-  - Widok bieżącego ćwiczenia pokazuje title, type, part i planned\_\*.
+  - Widok bieżącego ćwiczenia pokazuje:
+    - tytuł ćwiczenia
+    - typ ćwiczenia (Warm-up | Main Workout | Cool-down)
+    - partia ćwiczenia (np. Legs | Core | Back | Arms | Chest)
+    - liczba serii planowanych
+    - liczba powtórzeń planowanych
+    - czas trwania planowany (w sekundach)
+    - przerwa między seriami (w sekundach)
+    - przerwa po zakończonych seriach (w sekundach)
   - Jeśli ćwiczenie jest unilateralne, UI może wskazywać “wykonaj na prawo i lewo”, ale dane nie rozróżniają stron.
 
 - ID: US-033
@@ -419,9 +445,14 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Opis: Jako użytkowniczka chcę móc wpisać faktyczne wykonanie, gdy różni się od planu.
   Kryteria akceptacji:
 
-  - Użytkowniczka może wprowadzić actual\_\* dla ćwiczenia (np. actual_sets/reps/duration/weight/rest, zgodnie z formatem set logs).
+  - Użytkowniczka wprowadza dane wykonania przez set logs (dla każdej serii: powtórzenia, czas trwania, waga).
+  - Wartości faktyczne są obliczane automatycznie z set logs:
+    - liczba serii faktycznych = liczba wprowadzonych serii
+    - suma powtórzeń faktycznych = suma powtórzeń ze wszystkich serii
+    - czas trwania faktyczny = maksymalny czas trwania z serii
+  - Użytkowniczka może oznaczyć ćwiczenie jako pominięte.
   - Dane są zapisywane w sesji przy użyciu next lub pause (autosave).
-  - Jeśli dane nie są nadpisywane kopiują wartości z pola planned\_\* do actual\_\*
+  - Zapisane są: liczba serii faktycznych, suma powtórzeń faktycznych, czas trwania faktyczny, flaga pominięcia oraz szczegółowe dane serii (powtórzenia, czas trwania, waga dla każdej serii).
 
 - ID: US-034
   Tytuł: Nawigacja next zapisuje stan ćwiczenia
