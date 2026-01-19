@@ -49,6 +49,11 @@ function WorkoutPlanCardComponent({
     [plan.created_at]
   );
 
+  const formattedUpdatedDate = useMemo(
+    () => formatDate(plan.updated_at),
+    [plan.updated_at]
+  );
+
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -159,9 +164,14 @@ function WorkoutPlanCardComponent({
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Utworzono: {formattedDate}
-              </p>
+              <div className="space-y-1">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Utworzono: {formattedDate}
+                </p>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Zaktualizowano: {formattedUpdatedDate}
+                </p>
+              </div>
               {plan.description && (
                 <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
                   {plan.description}
