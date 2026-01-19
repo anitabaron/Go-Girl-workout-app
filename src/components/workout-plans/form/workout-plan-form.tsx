@@ -99,7 +99,7 @@ export function WorkoutPlanForm({
       </section>
 
       {/* Przyciski akcji */}
-      <div className="flex flex-col-reverse gap-4 border-t pt-6 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-4 pt-6 sm:flex-row sm:justify-end">
         <CancelButton
           hasUnsavedChanges={hasUnsavedChanges}
           onCancel={() => {

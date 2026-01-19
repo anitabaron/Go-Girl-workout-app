@@ -2,7 +2,7 @@ import { ZodError } from "zod";
 
 import { createClient } from "@/db/supabase.server";
 import type { Database } from "@/db/database.types";
-import type { PlanQueryParams, WorkoutPlanDTO, WorkoutPlanExerciseInput } from "@/types";
+import type { PlanQueryParams, WorkoutPlanDTO, WorkoutPlanExerciseInput, WorkoutPlanExerciseDTO } from "@/types";
 import {
   workoutPlanQuerySchema,
   validateWorkoutPlanBusinessRules,
@@ -20,6 +20,24 @@ import {
   updateWorkoutPlanExercise,
 } from "@/repositories/workout-plans";
 import type { PostgrestError } from "@supabase/supabase-js";
+
+/**
+ * Oblicza szacunkowy całkowity czas treningu na podstawie ćwiczeń.
+ * Sumuje exercise_estimated_set_time_seconds ze wszystkich ćwiczeń.
+ */
+function calculateEstimatedTotalTime(
+  exercises: WorkoutPlanExerciseDTO[]
+): number | null {
+  const total = exercises.reduce((sum, exercise) => {
+    const estimatedSetTime = exercise.exercise_estimated_set_time_seconds;
+    if (estimatedSetTime !== null && estimatedSetTime !== undefined) {
+      return sum + estimatedSetTime;
+    }
+    return sum;
+  }, 0);
+
+  return total > 0 ? total : null;
+}
 
 export type ServiceErrorCode =
   | "BAD_REQUEST"
@@ -122,8 +140,33 @@ export async function createWorkoutPlanService(
     throw mapDbError(fetchError);
   }
 
+  // Oblicz i zaktualizuj szacunkowy całkowity czas treningu
+  const estimatedTotalTime = calculateEstimatedTotalTime(planWithExercises ?? []);
+  const { error: updateTimeError } = await updateWorkoutPlan(
+    supabase,
+    userId,
+    plan.id,
+    { estimated_total_time_seconds: estimatedTotalTime }
+  );
+
+  if (updateTimeError) {
+    // Logujemy błąd, ale nie przerywamy - plan został już utworzony
+    console.error("[createWorkoutPlanService] Failed to update estimated_total_time_seconds:", updateTimeError);
+  }
+
+  // Pobierz zaktualizowany plan z estimated_total_time_seconds
+  const { data: updatedPlan, error: fetchUpdatedError } = await findWorkoutPlanById(
+    supabase,
+    userId,
+    plan.id
+  );
+
+  if (fetchUpdatedError) {
+    throw mapDbError(fetchUpdatedError);
+  }
+
   return {
-    ...plan,
+    ...(updatedPlan ?? plan),
     exercises: planWithExercises ?? [],
   };
 }
@@ -464,6 +507,22 @@ export async function updateWorkoutPlanService(
 
   if (fetchUpdatedError) {
     throw mapDbError(fetchUpdatedError);
+  }
+
+  // Oblicz i zaktualizuj szacunkowy całkowity czas treningu (tylko jeśli ćwiczenia zostały zaktualizowane)
+  if (patch.exercises !== undefined) {
+    const estimatedTotalTime = calculateEstimatedTotalTime(planWithExercises ?? []);
+    const { error: updateTimeError } = await updateWorkoutPlan(
+      supabase,
+      userId,
+      id,
+      { estimated_total_time_seconds: estimatedTotalTime }
+    );
+
+    if (updateTimeError) {
+      // Logujemy błąd, ale nie przerywamy - ćwiczenia zostały już zaktualizowane
+      console.error("[updateWorkoutPlanService] Failed to update estimated_total_time_seconds:", updateTimeError);
+    }
   }
 
   // Pobierz aktualne metadane planu

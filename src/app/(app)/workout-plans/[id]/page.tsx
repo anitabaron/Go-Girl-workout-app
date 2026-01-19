@@ -92,16 +92,8 @@ export default async function WorkoutPlanDetailsPage({
     return a.section_order - b.section_order;
   });
 
-  // Obliczanie szacunkowego czasu treningu (suma estimated_set_time_seconds dla wszystkich ćwiczeń, które mają to pole)
-  const estimatedTotalTime = sortedExercises.reduce((total, exercise) => {
-    const estimatedSetTime = exercise.exercise_estimated_set_time_seconds;
-    
-    if (estimatedSetTime !== null && estimatedSetTime !== undefined) {
-      return total + estimatedSetTime;
-    }
-    
-    return total;
-  }, 0);
+  // Użyj szacunkowego czasu treningu z bazy danych
+  const estimatedTotalTime = workoutPlan.estimated_total_time_seconds ?? 0;
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">

@@ -26,7 +26,7 @@ type WorkoutPlanExerciseRow =
 type SortField = (typeof workoutPlanSortFields)[number];
 type SortOrder = (typeof workoutPlanOrderValues)[number];
 
-const planSelectColumns = "id,name,description,part,created_at,updated_at";
+const planSelectColumns = "id,name,description,part,estimated_total_time_seconds,created_at,updated_at";
 
 type CursorPayload = {
   sort: SortField;
@@ -143,7 +143,9 @@ export async function findWorkoutPlansByUserId(
 export async function insertWorkoutPlan(
   client: DbClient,
   userId: string,
-  input: Pick<WorkoutPlanCreateCommand, "name" | "description" | "part">
+  input: Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
+    estimated_total_time_seconds?: number | null;
+  }
 ) {
   const { data, error } = await client
     .from("workout_plans")
@@ -151,6 +153,7 @@ export async function insertWorkoutPlan(
       name: input.name,
       description: input.description ?? null,
       part: input.part ?? null,
+      estimated_total_time_seconds: input.estimated_total_time_seconds ?? null,
       user_id: userId,
     })
     .select(planSelectColumns)
@@ -204,12 +207,15 @@ export async function updateWorkoutPlan(
   client: DbClient,
   userId: string,
   id: string,
-  input: Partial<Pick<WorkoutPlanCreateCommand, "name" | "description" | "part">>
+  input: Partial<Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
+    estimated_total_time_seconds?: number | null;
+  }>
 ) {
   const updateData: {
     name?: string;
     description?: string | null;
     part?: "Legs" | "Core" | "Back" | "Arms" | "Chest" | null;
+    estimated_total_time_seconds?: number | null;
   } = {};
 
   if (input.name !== undefined) {
@@ -222,6 +228,10 @@ export async function updateWorkoutPlan(
 
   if (input.part !== undefined) {
     updateData.part = input.part;
+  }
+
+  if (input.estimated_total_time_seconds !== undefined) {
+    updateData.estimated_total_time_seconds = input.estimated_total_time_seconds;
   }
 
   if (Object.keys(updateData).length === 0) {
