@@ -281,6 +281,7 @@ export function useWorkoutPlanForm({
             exercise.rest_in_between_seconds ??
             exercise.rest_after_series_seconds ??
             null,
+          estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
         };
 
         newExercises.push(newExercise);

@@ -98,6 +98,10 @@ export function WorkoutPlanExerciseItem({
     plannedParamsErrors.planned_rest_seconds =
       errors[`${exerciseKey}.planned_rest_seconds`];
   }
+  if (errors[`${exerciseKey}.estimated_set_time_seconds`]) {
+    plannedParamsErrors.estimated_set_time_seconds =
+      errors[`${exerciseKey}.estimated_set_time_seconds`];
+  }
 
   return (
     <Card>
@@ -225,6 +229,7 @@ export function WorkoutPlanExerciseItem({
               planned_reps: exercise.planned_reps,
               planned_duration_seconds: exercise.planned_duration_seconds,
               planned_rest_seconds: exercise.planned_rest_seconds,
+              estimated_set_time_seconds: exercise.estimated_set_time_seconds,
             }}
             onChange={(field, value) => onChange({ [field]: value })}
             errors={plannedParamsErrors}

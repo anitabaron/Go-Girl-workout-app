@@ -333,6 +333,44 @@ export function ExerciseFormFields({
           </p>
         )}
       </div>
+
+      {/* Estimated set time */}
+      <div className="space-y-2">
+        <label
+          htmlFor="estimated_set_time_seconds"
+          className="text-sm font-medium"
+        >
+          Szacunkowy czas zestawu (sekundy)
+        </label>
+        <Input
+          id="estimated_set_time_seconds"
+          type="number"
+          min="1"
+          value={fields.estimated_set_time_seconds}
+          onChange={(e) =>
+            onChange("estimated_set_time_seconds", e.target.value)
+          }
+          onBlur={() => onBlur("estimated_set_time_seconds")}
+          disabled={disabled}
+          aria-invalid={
+            errors.estimated_set_time_seconds ? "true" : "false"
+          }
+          aria-describedby={
+            errors.estimated_set_time_seconds
+              ? "estimated_set_time_seconds-error"
+              : undefined
+          }
+        />
+        {errors.estimated_set_time_seconds && (
+          <p
+            id="estimated_set_time_seconds-error"
+            className="text-sm text-destructive"
+            role="alert"
+          >
+            {errors.estimated_set_time_seconds}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

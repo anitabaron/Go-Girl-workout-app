@@ -193,6 +193,18 @@ export default async function WorkoutPlanDetailsPage({
                           </p>
                         </div>
                       )}
+
+                    {exercise.exercise_estimated_set_time_seconds !== null &&
+                      exercise.exercise_estimated_set_time_seconds !== undefined && (
+                        <div>
+                          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Szacunkowy czas zestawu
+                          </p>
+                          <p className="text-lg font-semibold">
+                            {formatDuration(exercise.exercise_estimated_set_time_seconds)}
+                          </p>
+                        </div>
+                      )}
                   </div>
                 </div>
               ))}

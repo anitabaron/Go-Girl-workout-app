@@ -24,6 +24,7 @@ export type WorkoutPlanExerciseItemState = {
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
+  estimated_set_time_seconds: number | null;
 };
 
 /**
@@ -34,6 +35,7 @@ export type PlannedParamsState = {
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
+  estimated_set_time_seconds: number | null;
 };
 
 /**
@@ -196,6 +198,7 @@ export function dtoToFormState(
       planned_reps: exercise.planned_reps,
       planned_duration_seconds: exercise.planned_duration_seconds,
       planned_rest_seconds: exercise.planned_rest_seconds,
+      estimated_set_time_seconds: null, // To pole nie jest przechowywane w workout_plan_exercises, tylko w exercises
     })),
   };
 }
@@ -214,11 +217,12 @@ export function exerciseDtoToItemState(
     exercise_title: exerciseMetadata?.title,
     exercise_type: exerciseMetadata?.type,
     exercise_part: exerciseMetadata?.part,
-    section_type: exerciseDto.section_type,
-    section_order: exerciseDto.section_order,
-    planned_sets: exerciseDto.planned_sets,
-    planned_reps: exerciseDto.planned_reps,
-    planned_duration_seconds: exerciseDto.planned_duration_seconds,
-    planned_rest_seconds: exerciseDto.planned_rest_seconds,
-  };
-}
+      section_type: exerciseDto.section_type,
+      section_order: exerciseDto.section_order,
+      planned_sets: exerciseDto.planned_sets,
+      planned_reps: exerciseDto.planned_reps,
+      planned_duration_seconds: exerciseDto.planned_duration_seconds,
+      planned_rest_seconds: exerciseDto.planned_rest_seconds,
+      estimated_set_time_seconds: exerciseMetadata?.estimated_set_time_seconds ?? null,
+    };
+  }

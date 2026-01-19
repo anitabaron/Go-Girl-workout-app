@@ -61,6 +61,7 @@ export type ExerciseCreateCommand = Pick<
   | "series"
   | "rest_in_between_seconds"
   | "rest_after_series_seconds"
+  | "estimated_set_time_seconds"
 >;
 
 export type ExerciseUpdateCommand = Partial<ExerciseCreateCommand>;
@@ -111,6 +112,7 @@ export type WorkoutPlanExerciseDTO = Omit<
   exercise_title?: string | null;
   exercise_type?: ExerciseType | null;
   exercise_part?: ExercisePart | null;
+  exercise_estimated_set_time_seconds?: number | null;
 };
 
 export type WorkoutPlanDTO = Omit<WorkoutPlanEntity, "user_id"> & {
