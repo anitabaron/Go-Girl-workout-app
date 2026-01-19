@@ -2,12 +2,16 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { getPersonalRecordsByExerciseService, ServiceError } from "@/services/personal-records";
 import { getExerciseService } from "@/services/exercises";
-import { mapExercisePersonalRecordsToViewModel, typeLabels, partLabels } from "@/lib/personal-records/view-model";
+import { mapExercisePersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
 import type { ExerciseType, ExercisePart } from "@/types";
 import { ExerciseInfo } from "@/components/personal-records/exercise-info";
 import { PersonalRecordDetails } from "@/components/personal-records/personal-record-details";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 type ExercisePersonalRecordsPageProps = {
   params: Promise<{ exercise_id: string }>;
@@ -46,8 +50,8 @@ export default async function ExercisePersonalRecordsPage({
         exercise: {
           id: exercise.id,
           title: exercise.title,
-          type: typeLabels[exercise.type as ExerciseType],
-          part: partLabels[exercise.part as ExercisePart],
+          type: EXERCISE_TYPE_LABELS[exercise.type as ExerciseType],
+          part: EXERCISE_PART_LABELS[exercise.part as ExercisePart],
         },
         records: [],
       };

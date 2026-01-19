@@ -11,14 +11,7 @@ import {
 } from "@/components/ui/select";
 import type { ExercisePart } from "@/types";
 import { exercisePartValues } from "@/lib/validation/exercises";
-
-const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
-};
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
 
 export function WorkoutPlanFilters() {
   const searchParams = useSearchParams();
@@ -77,7 +70,7 @@ export function WorkoutPlanFilters() {
             <SelectItem value="all">Wszystkie części</SelectItem>
             {exercisePartValues.map((part) => (
               <SelectItem key={part} value={part}>
-                {partLabels[part]}
+                {EXERCISE_PART_LABELS[part]}
               </SelectItem>
             ))}
           </SelectContent>

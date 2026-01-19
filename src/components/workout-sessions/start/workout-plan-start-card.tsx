@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
 
 type WorkoutPlanStartCardProps = {
   plan: Omit<WorkoutPlanDTO, "exercises">;
@@ -30,15 +31,7 @@ function getPartLabel(part: ExercisePart | null): string | null {
     return null;
   }
 
-  const labels: Record<ExercisePart, string> = {
-    Legs: "Nogi",
-    Arms: "Ręce",
-    Back: "Plecy",
-    Chest: "Klatka",
-    Core: "Brzuch",
-  };
-
-  return labels[part] ?? part;
+  return EXERCISE_PART_LABELS[part] ?? part;
 }
 
 /**

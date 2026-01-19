@@ -4,7 +4,7 @@ import React, { memo, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Edit, Trash2 } from "lucide-react";
-import type { WorkoutPlanDTO, ExercisePart } from "@/types";
+import type { WorkoutPlanDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,19 +17,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
 
 type WorkoutPlanCardProps = {
   readonly plan: Omit<WorkoutPlanDTO, "exercises">;
   readonly exerciseCount?: number;
   readonly onDelete?: (planId: string) => Promise<void>;
-};
-
-const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
 };
 
 function formatDate(dateString: string): string {
@@ -154,7 +147,7 @@ function WorkoutPlanCardComponent({
                     variant="outline"
                     className="border-destructive text-destructive"
                   >
-                    {partLabels[plan.part]}
+                    {EXERCISE_PART_LABELS[plan.part]}
                   </Badge>
                 )}
                 {exerciseCount !== undefined && (

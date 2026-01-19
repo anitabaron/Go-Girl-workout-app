@@ -14,20 +14,10 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
-
-const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
-};
-
-const typeLabels: Record<ExerciseType, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
-};
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 export function ExerciseFilters() {
   const searchParams = useSearchParams();
@@ -90,7 +80,7 @@ export function ExerciseFilters() {
             <SelectItem value="all">Wszystkie części</SelectItem>
             {exercisePartValues.map((part) => (
               <SelectItem key={part} value={part}>
-                {partLabels[part]}
+                {EXERCISE_PART_LABELS[part]}
               </SelectItem>
             ))}
           </SelectContent>
@@ -109,7 +99,7 @@ export function ExerciseFilters() {
             <SelectItem value="all">Wszystkie typy</SelectItem>
             {exerciseTypeValues.map((type) => (
               <SelectItem key={type} value={type}>
-                {typeLabels[type]}
+                {EXERCISE_TYPE_LABELS[type]}
               </SelectItem>
             ))}
           </SelectContent>

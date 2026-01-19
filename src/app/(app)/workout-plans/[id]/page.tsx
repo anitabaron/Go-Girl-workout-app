@@ -1,30 +1,19 @@
 import { notFound, redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
-import type { ExercisePart } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { WorkoutPlanActions } from "@/components/workout-plans/details/workout-plan-actions";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 type WorkoutPlanDetailsPageProps = {
   params: Promise<{
     id: string;
   }>;
-};
-
-const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
-};
-
-const sectionTypeLabels: Record<string, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
 };
 
 function formatDuration(seconds: number | null | undefined): string {
@@ -113,7 +102,7 @@ export default async function WorkoutPlanDetailsPage({
                   variant="outline"
                   className="border-destructive text-destructive"
                 >
-                  {partLabels[workoutPlan.part]}
+                  {EXERCISE_PART_LABELS[workoutPlan.part]}
                 </Badge>
               )}
               <Badge variant="secondary">
@@ -161,7 +150,7 @@ export default async function WorkoutPlanDetailsPage({
                     <div className="flex-1">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <Badge variant="outline">
-                          {sectionTypeLabels[exercise.section_type] ||
+                          {EXERCISE_TYPE_LABELS[exercise.section_type] ||
                             exercise.section_type}
                         </Badge>
                         <span className="text-sm text-zinc-600 dark:text-zinc-400">

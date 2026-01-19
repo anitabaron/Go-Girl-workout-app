@@ -1,23 +1,13 @@
-import type { ExerciseDTO, ExercisePart, ExerciseType } from "@/types";
+import type { ExerciseDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 type ExerciseDetailsProps = {
   readonly exercise: ExerciseDTO;
-};
-
-const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
-};
-
-const typeLabels: Record<ExerciseType, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
 };
 
 export function ExerciseDetails({ exercise }: ExerciseDetailsProps) {
@@ -39,13 +29,13 @@ export function ExerciseDetails({ exercise }: ExerciseDetailsProps) {
               variant="secondary"
               className="bg-secondary text-destructive hover:bg-primary"
             >
-              {typeLabels[exercise.type]}
+              {EXERCISE_TYPE_LABELS[exercise.type]}
             </Badge>
             <Badge
               variant="outline"
               className="border-destructive text-destructive"
             >
-              {partLabels[exercise.part]}
+              {EXERCISE_PART_LABELS[exercise.part]}
             </Badge>
             {exercise.level && (
               <Badge

@@ -1,21 +1,11 @@
 "use client";
 
-import type { SessionExerciseDTO, ExerciseType, ExercisePart } from "@/types";
+import type { SessionExerciseDTO } from "@/types";
 import { Badge } from "@/components/ui/badge";
-
-const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
-};
-
-const typeLabels: Record<ExerciseType, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
-};
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 type CurrentExerciseInfoProps = {
   exercise: SessionExerciseDTO;
@@ -50,7 +40,7 @@ export function CurrentExerciseInfo({ exercise }: CurrentExerciseInfoProps) {
             variant="secondary"
             className="bg-secondary text-destructive hover:bg-primary"
           >
-            {typeLabels[exercise.exercise_type_at_time] ||
+            {EXERCISE_TYPE_LABELS[exercise.exercise_type_at_time] ||
               exercise.exercise_type_at_time}
           </Badge>
         )}
@@ -59,7 +49,7 @@ export function CurrentExerciseInfo({ exercise }: CurrentExerciseInfoProps) {
             variant="outline"
             className="border-destructive text-destructive"
           >
-            {partLabels[exercise.exercise_part_at_time] ||
+            {EXERCISE_PART_LABELS[exercise.exercise_part_at_time] ||
               exercise.exercise_part_at_time}
           </Badge>
         )}

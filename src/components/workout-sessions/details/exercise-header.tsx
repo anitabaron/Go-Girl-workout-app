@@ -1,24 +1,14 @@
-import type { SessionExerciseDTO, ExerciseType, ExercisePart } from "@/types";
+import type { SessionExerciseDTO } from "@/types";
 import { Badge } from "@/components/ui/badge";
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 type ExerciseHeaderProps = {
   readonly exercise: SessionExerciseDTO;
   readonly index: number;
   readonly total: number;
-};
-
-const typeLabels: Record<ExerciseType, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
-};
-
-const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
 };
 
 export function ExerciseHeader({
@@ -40,11 +30,11 @@ export function ExerciseHeader({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">
-          {typeLabels[exercise.exercise_type_at_time] ||
+          {EXERCISE_TYPE_LABELS[exercise.exercise_type_at_time] ||
             exercise.exercise_type_at_time}
         </Badge>
         <Badge variant="outline">
-          {partLabels[exercise.exercise_part_at_time] ||
+          {EXERCISE_PART_LABELS[exercise.exercise_part_at_time] ||
             exercise.exercise_part_at_time}
         </Badge>
       </div>

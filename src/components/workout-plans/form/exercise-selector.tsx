@@ -19,20 +19,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-
-const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
-};
-
-const typeLabels: Record<ExerciseType, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
-};
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 export function ExerciseSelector({
   selectedExerciseIds,
@@ -118,7 +108,7 @@ export function ExerciseSelector({
               <SelectItem value="all">Wszystkie części</SelectItem>
               {exercisePartValues.map((p) => (
                 <SelectItem key={p} value={p}>
-                  {partLabels[p]}
+                  {EXERCISE_PART_LABELS[p]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -135,7 +125,7 @@ export function ExerciseSelector({
               <SelectItem value="all">Wszystkie typy</SelectItem>
               {exerciseTypeValues.map((t) => (
                 <SelectItem key={t} value={t}>
-                  {typeLabels[t]}
+                  {EXERCISE_TYPE_LABELS[t]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -204,10 +194,10 @@ export function ExerciseSelector({
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="secondary" className="text-xs">
-                        {typeLabels[exercise.type]}
+                        {EXERCISE_TYPE_LABELS[exercise.type]}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
-                        {partLabels[exercise.part]}
+                        {EXERCISE_PART_LABELS[exercise.part]}
                       </Badge>
                       {exercise.level && (
                         <Badge variant="outline" className="text-xs">

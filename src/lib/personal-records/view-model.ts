@@ -1,9 +1,11 @@
 import type {
   PersonalRecordWithExerciseDTO,
   PRMetricType,
-  ExerciseType,
-  ExercisePart,
 } from "@/types";
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 /**
  * ViewModel dla pojedynczej metryki rekordu osobistego.
@@ -59,20 +61,6 @@ export type PersonalRecordGroupVM = {
 export type PersonalRecordsPageResponse = {
   items: PersonalRecordGroupVM[]; // Lista grup rekordów per ćwiczenie
   nextCursor: string | null; // Kursor paginacji lub null
-};
-
-export const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
-};
-
-export const typeLabels: Record<ExerciseType, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
 };
 
 const metricTypeLabels: Record<PRMetricType, string> = {
@@ -154,8 +142,8 @@ export function mapPersonalRecordsToViewModel(
     items.push({
       exerciseId,
       title: exercise.title,
-      type: typeLabels[exercise.type],
-      part: partLabels[exercise.part],
+      type: EXERCISE_TYPE_LABELS[exercise.type],
+      part: EXERCISE_PART_LABELS[exercise.part],
       metrics,
     });
   }
@@ -188,8 +176,8 @@ export function mapExercisePersonalRecordsToViewModel(
   const exercise = firstRecord.exercise;
 
   // Przetłumacz typ i partię ćwiczenia
-  const translatedType = typeLabels[exercise.type];
-  const translatedPart = partLabels[exercise.part];
+  const translatedType = EXERCISE_TYPE_LABELS[exercise.type];
+  const translatedPart = EXERCISE_PART_LABELS[exercise.part];
 
   // Mapuj wszystkie rekordy do PersonalRecordMetricViewModel[]
   const mappedRecords: PersonalRecordMetricViewModel[] = records.map(

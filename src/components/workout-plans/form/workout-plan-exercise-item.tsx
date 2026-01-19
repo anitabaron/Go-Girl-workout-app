@@ -15,20 +15,10 @@ import { exerciseTypeValues } from "@/lib/validation/exercises";
 import type { WorkoutPlanExerciseItemProps } from "@/types/workout-plan-form";
 import { PlannedParamsEditor } from "./planned-params-editor";
 import { useId, useMemo } from "react";
-
-const partLabels: Record<string, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
-};
-
-const typeLabels: Record<string, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
-};
+import {
+  EXERCISE_PART_LABELS,
+  EXERCISE_TYPE_LABELS,
+} from "@/lib/constants";
 
 export function WorkoutPlanExerciseItem({
   exercise,
@@ -116,12 +106,12 @@ export function WorkoutPlanExerciseItem({
             <div className="mt-2 flex flex-wrap gap-2">
               {exercise.exercise_type && (
                 <Badge variant="secondary" className="text-xs">
-                  {typeLabels[exercise.exercise_type] || exercise.exercise_type}
+                  {EXERCISE_TYPE_LABELS[exercise.exercise_type] || exercise.exercise_type}
                 </Badge>
               )}
               {exercise.exercise_part && (
                 <Badge variant="outline" className="text-xs">
-                  {partLabels[exercise.exercise_part] || exercise.exercise_part}
+                  {EXERCISE_PART_LABELS[exercise.exercise_part] || exercise.exercise_part}
                 </Badge>
               )}
             </div>
@@ -162,7 +152,7 @@ export function WorkoutPlanExerciseItem({
               <SelectContent>
                 {exerciseTypeValues.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {typeLabels[type] || type}
+                    {EXERCISE_TYPE_LABELS[type] || type}
                   </SelectItem>
                 ))}
               </SelectContent>
