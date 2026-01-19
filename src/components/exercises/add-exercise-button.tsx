@@ -20,7 +20,7 @@ export function AddExerciseButton({
         <Link
           href="/exercises/new"
           className={cn(
-            "fixed bottom-6 right-6 z-50",
+            "fixed bottom-20 right-6 md:bottom-6 z-50",
             "flex h-14 w-14 items-center justify-center rounded-full",
             "bg-destructive text-destructive-foreground shadow-lg",
             "transition-all hover:scale-110 hover:bg-destructive/90 hover:shadow-xl",
@@ -50,7 +50,7 @@ export function AddExerciseButton({
       <Link
         href="/exercises/new"
         className={cn(
-          "fixed bottom-6 right-6 z-50",
+          "fixed bottom-20 right-6 md:bottom-6 z-50",
           "flex h-14 w-14 items-center justify-center rounded-full",
           "bg-destructive text-destructive-foreground shadow-lg",
           "transition-all hover:scale-110 hover:bg-destructive/90 hover:shadow-xl",

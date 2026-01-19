@@ -5,7 +5,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       {/* Hero Section */}
-      <header className="bg-primary pt-16 md:pt-0">
+      <header className="bg-primary pt-0 md:pt-16">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-10 text-center sm:px-10">
           <Image
             src="/logo.png"

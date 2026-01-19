@@ -145,7 +145,7 @@ export function BottomNavigation({
               className="flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors text-muted-foreground hover:text-primary"
               aria-label="Wyloguj"
             >
-              <span className="text-xs">WYloguj</span>
+              <span className="text-xs">Wyloguj</span>
             </button>
           ) : (
             <Link

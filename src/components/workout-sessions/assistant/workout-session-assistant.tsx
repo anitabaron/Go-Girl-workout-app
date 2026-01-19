@@ -385,14 +385,14 @@ export function WorkoutSessionAssistant({
 
   if (!currentExercise) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-secondary">
+      <div className="fixed inset-x-0 top-0 bottom-16 md:bottom-0 flex items-center justify-center bg-secondary">
         <p className="text-lg">Brak ćwiczeń w sesji</p>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-secondary overflow-hidden">
+    <div className="fixed inset-x-0 top-0 bottom-16 md:bottom-0 flex flex-col bg-secondary overflow-hidden">
       {/* Exit button */}
       <ExitSessionButton onExit={handleExit} />
 

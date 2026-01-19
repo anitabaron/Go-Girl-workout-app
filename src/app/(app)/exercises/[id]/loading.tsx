@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ExerciseDetailsLoading() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <header className="bg-primary pt-[34px]">
+      <header className="bg-primary pt-0 md:pt-[34px]">
         <div className="mx-auto w-full max-w-5xl px-6 pt-[52px] pb-8 sm:px-10">
           <Skeleton className="h-10 w-64" />
         </div>

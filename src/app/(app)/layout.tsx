@@ -27,7 +27,10 @@ export default async function AppLayout({
         <TopNavigation user={user} />
       </div>
 
-      {children}
+      {/* Content with bottom padding on mobile to prevent overlap with bottom navigation */}
+      <div className="pb-16 md:pb-0">
+        {children}
+      </div>
 
       {/* Bottom Navigation - Mobile only */}
       <div className="md:hidden">
