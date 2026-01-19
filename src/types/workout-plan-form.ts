@@ -94,6 +94,7 @@ export type WorkoutPlanExercisesListProps = {
     index: number,
     exercise: Partial<WorkoutPlanExerciseItemState>
   ) => void;
+  onMoveExercise: (index: number, direction: "up" | "down") => void;
   errors: Record<string, string>;
   disabled: boolean;
 };
@@ -104,8 +105,11 @@ export type WorkoutPlanExercisesListProps = {
 export type WorkoutPlanExerciseItemProps = {
   exercise: WorkoutPlanExerciseItemState;
   index: number;
+  exercises: WorkoutPlanExerciseItemState[]; // Wszystkie ćwiczenia, aby sprawdzić możliwość przesunięcia
   onChange: (updates: Partial<WorkoutPlanExerciseItemState>) => void;
   onRemove: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   errors: Record<string, string>;
   disabled: boolean;
 };

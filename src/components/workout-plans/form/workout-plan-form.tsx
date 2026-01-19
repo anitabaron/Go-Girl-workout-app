@@ -23,6 +23,7 @@ export function WorkoutPlanForm({
     handleAddExercise,
     handleRemoveExercise,
     handleUpdateExercise,
+    handleMoveExercise,
     handleSubmit,
   } = useWorkoutPlanForm({
     initialData,
@@ -77,6 +78,7 @@ export function WorkoutPlanForm({
             exercises={fields.exercises}
             onRemoveExercise={handleRemoveExercise}
             onUpdateExercise={handleUpdateExercise}
+            onMoveExercise={handleMoveExercise}
             errors={errors.exercises || {}}
             disabled={isLoading}
           />

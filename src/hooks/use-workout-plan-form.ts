@@ -356,6 +356,87 @@ export function useWorkoutPlanForm({
     });
   };
 
+  const handleMoveExercise = (index: number, direction: "up" | "down") => {
+    setFields((prev) => {
+      const currentExercise = prev.exercises[index];
+      if (!currentExercise) return prev;
+
+      // Znajdź wszystkie ćwiczenia w tej samej sekcji
+      const exercisesInSection = prev.exercises
+        .map((ex, i) => ({ exercise: ex, originalIndex: i }))
+        .filter(
+          ({ exercise }) => exercise.section_type === currentExercise.section_type
+        )
+        .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
+
+      // Znajdź pozycję bieżącego ćwiczenia w posortowanej liście sekcji
+      const currentPosition = exercisesInSection.findIndex(
+        ({ originalIndex }) => originalIndex === index
+      );
+
+      if (currentPosition === -1) return prev;
+
+      // Sprawdź czy można przesunąć
+      if (direction === "up" && currentPosition === 0) return prev;
+      if (
+        direction === "down" &&
+        currentPosition === exercisesInSection.length - 1
+      )
+        return prev;
+
+      // Znajdź ćwiczenie do zamiany
+      const targetPosition =
+        direction === "up" ? currentPosition - 1 : currentPosition + 1;
+      const targetItem = exercisesInSection[targetPosition];
+      const currentItem = exercisesInSection[currentPosition];
+
+      // Zamień section_order
+      const newExercises = [...prev.exercises];
+      newExercises[currentItem.originalIndex] = {
+        ...currentItem.exercise,
+        section_order: targetItem.exercise.section_order,
+      };
+      newExercises[targetItem.originalIndex] = {
+        ...targetItem.exercise,
+        section_order: currentItem.exercise.section_order,
+      };
+
+      // Przepisz section_order dla wszystkich ćwiczeń w sekcji, aby były kolejne (1, 2, 3...)
+      const updatedExercisesInSection = newExercises
+        .map((ex, i) => ({ exercise: ex, originalIndex: i }))
+        .filter(
+          ({ exercise }) =>
+            exercise.section_type === currentExercise.section_type
+        )
+        .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
+
+      updatedExercisesInSection.forEach(({ exercise, originalIndex }, orderIndex) => {
+        newExercises[originalIndex] = {
+          ...exercise,
+          section_order: orderIndex + 1,
+        };
+      });
+
+      return {
+        ...prev,
+        exercises: newExercises,
+      };
+    });
+
+    // Wyczyść błędy związane z kolejnością
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      if (newErrors.exercises) {
+        const exerciseErrors = { ...newErrors.exercises };
+        const key = `exercise_${index}.section_order`;
+        delete exerciseErrors[key];
+        newErrors.exercises =
+          Object.keys(exerciseErrors).length > 0 ? exerciseErrors : undefined;
+      }
+      return newErrors;
+    });
+  };
+
   // Konwersja formState na Command dla API
   const formStateToCreateCommand = (): WorkoutPlanCreateCommand => {
     const exercises: WorkoutPlanExerciseInput[] = fields.exercises.map(
@@ -567,6 +648,7 @@ export function useWorkoutPlanForm({
     handleAddExercise,
     handleRemoveExercise,
     handleUpdateExercise,
+    handleMoveExercise,
     handleSubmit,
   };
 }
