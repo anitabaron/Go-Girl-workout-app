@@ -68,7 +68,7 @@ export default async function WorkoutSessionActivePage({
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeader backHref="/workout-sessions" />
-      <WorkoutSessionAssistant sessionId={id} initialSession={session} />
+      <WorkoutSessionAssistant key={id} sessionId={id} initialSession={session} />
     </div>
   );
 }

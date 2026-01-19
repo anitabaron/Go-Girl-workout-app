@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef, type ReactNode } from "react";
+import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
 type WorkoutTimerProps = {
-  startedAt: string; // ISO timestamp rozpoczęcia sesji
+  activeDurationSeconds: number; // skumulowany czas aktywności sesji (z bazy danych)
+  lastTimerStartedAt: string | null; // timestamp ostatniego uruchomienia timera
+  lastTimerStoppedAt: string | null; // timestamp ostatniego zatrzymania timera
   isPaused: boolean; // czy sesja jest w pauzie
   currentExerciseName: string; // nazwa bieżącego ćwiczenia
   currentSetNumber: number; // numer bieżącej serii (domyślnie 1)
@@ -12,6 +14,7 @@ type WorkoutTimerProps = {
   totalExercises: number; // całkowita liczba ćwiczeń w sesji
   restSeconds?: number; // opcjonalna liczba sekund przerwy do odliczania
   exerciseTimerContent?: ReactNode; // zawartość timera ćwiczenia (RepsDisplay, SetCountdownTimer, itp.)
+  onTimerStop?: () => void; // callback wywoływany przy unmount (wyjście z asystenta)
 };
 
 /**
@@ -19,7 +22,9 @@ type WorkoutTimerProps = {
  * Timer jest widoczny z odległości 1,5m, z największymi sekundami.
  */
 export function WorkoutTimer({
-  startedAt,
+  activeDurationSeconds,
+  lastTimerStartedAt,
+  lastTimerStoppedAt,
   isPaused,
   currentExerciseName,
   currentSetNumber,
@@ -27,39 +32,61 @@ export function WorkoutTimer({
   totalExercises,
   restSeconds,
   exerciseTimerContent,
-}: WorkoutTimerProps) {
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const pausedAtRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number>(new Date(startedAt).getTime());
-  const elapsedSecondsRef = useRef<number>(0);
+  onTimerStop,
+}: Readonly<WorkoutTimerProps>) {
+  // Oblicz bazowy czas (skumulowany czas aktywności z bazy)
+  const baseSeconds = useMemo(() => activeDurationSeconds || 0, [activeDurationSeconds]);
 
-  // Obliczanie elapsedSeconds z startedAt
+  // Sprawdź, czy timer jest zatrzymany
+  const isTimerStopped = useMemo(() => {
+    return lastTimerStoppedAt !== null && 
+      (lastTimerStartedAt === null || 
+       new Date(lastTimerStoppedAt).getTime() > new Date(lastTimerStartedAt).getTime());
+  }, [lastTimerStoppedAt, lastTimerStartedAt]);
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(baseSeconds);
+
+  // Obliczanie elapsedSeconds na podstawie active_duration_seconds i last_timer_started_at
   useEffect(() => {
-    if (isPaused) {
-      // Zatrzymaj timer, zapamiętaj czas pauzy
-      if (pausedAtRef.current === null) {
-        pausedAtRef.current = elapsedSecondsRef.current;
-      }
-      return;
+    // Jeśli timer jest zatrzymany lub w pauzie, ustaw tylko bazowy czas
+    if (isPaused || isTimerStopped || !lastTimerStartedAt) {
+      // Użyj requestAnimationFrame, aby uniknąć synchronicznego setState w efekcie
+      const rafId = requestAnimationFrame(() => {
+        setElapsedSeconds(baseSeconds);
+      });
+      return () => cancelAnimationFrame(rafId);
     }
 
-    // Wznów timer od zapamiętanego czasu
-    if (pausedAtRef.current !== null) {
-      startTimeRef.current = Date.now() - pausedAtRef.current * 1000;
-      pausedAtRef.current = null;
-    } else {
-      startTimeRef.current = new Date(startedAt).getTime();
-    }
-
-    const interval = setInterval(() => {
+    // Timer jest aktywny - aktualizuj co sekundę
+    const updateElapsed = () => {
       const now = Date.now();
-      const elapsed = Math.floor((now - startTimeRef.current) / 1000);
-      elapsedSecondsRef.current = elapsed;
-      setElapsedSeconds(elapsed);
-    }, 1000);
+      const startedAt = new Date(lastTimerStartedAt).getTime();
+      const currentElapsed = Math.floor((now - startedAt) / 1000);
+      const totalElapsed = baseSeconds + currentElapsed;
+      setElapsedSeconds(totalElapsed);
+    };
 
-    return () => clearInterval(interval);
-  }, [startedAt, isPaused]);
+    // Aktualizuj od razu przy pierwszym uruchomieniu (w callback, nie synchronicznie)
+    const immediateRafId = requestAnimationFrame(updateElapsed);
+
+    // Aktualizuj co sekundę
+    const interval = setInterval(updateElapsed, 1000);
+
+    return () => {
+      cancelAnimationFrame(immediateRafId);
+      clearInterval(interval);
+    };
+  }, [baseSeconds, lastTimerStartedAt, isPaused, isTimerStopped]);
+
+  // Cleanup przy unmount - zatrzymaj timer przy wyjściu z asystenta
+  useEffect(() => {
+    return () => {
+      // Wywołaj callback, jeśli timer był aktywny
+      if (lastTimerStartedAt && !lastTimerStoppedAt && !isPaused && onTimerStop) {
+        onTimerStop();
+      }
+    };
+  }, [lastTimerStartedAt, lastTimerStoppedAt, isPaused, onTimerStop]);
 
   // Formatowanie czasu: MM:SS lub HH:MM:SS
   const formatTime = (totalSeconds: number): string => {
@@ -136,7 +163,7 @@ export function WorkoutTimer({
 
       <div
         className={`flex gap-2 items-center transition-opacity ${
-          !isPaused ? "animate-pulse" : ""
+          isPaused ? "" : "animate-pulse"
         }`}
       >
         <div className="text-sm text-zinc-600 dark:text-zinc-400">

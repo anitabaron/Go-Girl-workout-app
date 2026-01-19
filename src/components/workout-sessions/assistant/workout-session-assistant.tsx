@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { SessionDetailDTO } from "@/types";
@@ -57,6 +57,44 @@ export function WorkoutSessionAssistant({
   const [autosaveError, setAutosaveError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [currentSetNumber, setCurrentSetNumber] = useState<number>(1);
+  
+  // Ref do śledzenia, czy timer został już uruchomiony (zapobiega pętli)
+  const timerInitializedRef = useRef(false);
+  
+  // Ref do przechowywania aktualnych wartości timera (używane w stopTimer, aby uniknąć zależności)
+  const timerStateRef = useRef({
+    lastTimerStartedAt: initialSession.last_timer_started_at,
+    lastTimerStoppedAt: initialSession.last_timer_stopped_at,
+  });
+  
+  // Ref do śledzenia poprzedniego sessionId (do resetowania przy zmianie sesji)
+  const previousSessionIdRef = useRef<string>(sessionId);
+  
+  // Resetuj refy i aktualizuj stan przy zmianie sessionId (nowa sesja)
+  useEffect(() => {
+    // Jeśli sessionId się zmienił, resetuj wszystko dla nowej sesji
+    if (previousSessionIdRef.current !== sessionId) {
+      previousSessionIdRef.current = sessionId;
+      timerInitializedRef.current = false; // Resetuj flagę inicjalizacji
+      
+      // Zaktualizuj stan sesji na podstawie nowego initialSession
+      setSession(initialSession);
+      
+      // Zaktualizuj refy timera
+      timerStateRef.current = {
+        lastTimerStartedAt: initialSession.last_timer_started_at,
+        lastTimerStoppedAt: initialSession.last_timer_stopped_at,
+      };
+    }
+  }, [sessionId, initialSession]);
+  
+  // Aktualizuj ref przy zmianie stanu sesji (dla bieżącej sesji)
+  useEffect(() => {
+    timerStateRef.current = {
+      lastTimerStartedAt: session.last_timer_started_at,
+      lastTimerStoppedAt: session.last_timer_stopped_at,
+    };
+  }, [session.last_timer_started_at, session.last_timer_stopped_at]);
 
   // Bieżące ćwiczenie
   const currentExercise = useMemo(
@@ -123,13 +161,21 @@ export function WorkoutSessionAssistant({
   }, []);
 
   // Uruchomienie timera przy wejściu do asystenta (jeśli nie jest już uruchomiony)
+  // Resetuje się przy zmianie sessionId dzięki timerInitializedRef.current = false w poprzednim useEffect
   useEffect(() => {
-    // Sprawdź, czy timer jest już uruchomiony
-    const timerStarted = session.last_timer_started_at !== null;
-    const timerStopped = session.last_timer_stopped_at !== null;
+    // Jeśli timer został już zainicjalizowany dla tej sesji, nie uruchamiaj ponownie
+    if (timerInitializedRef.current) {
+      return;
+    }
+
+    // Sprawdź, czy timer jest już uruchomiony (używamy ref, aby uniknąć zależności od session)
+    const timerStarted = timerStateRef.current.lastTimerStartedAt !== null;
+    const timerStopped = timerStateRef.current.lastTimerStoppedAt !== null;
     
     // Jeśli timer nie jest uruchomiony lub został zatrzymany, uruchom go
     if (!timerStarted || (timerStarted && timerStopped)) {
+      timerInitializedRef.current = true; // Oznacz jako zainicjalizowany przed wywołaniem API
+      
       const now = new Date().toISOString();
       fetch(`/api/workout-sessions/${sessionId}/timer`, {
         method: "PATCH",
@@ -139,11 +185,33 @@ export function WorkoutSessionAssistant({
         body: JSON.stringify({
           last_timer_started_at: now,
         }),
-      }).catch((error) => {
-        console.error("[WorkoutSessionAssistant] Error starting timer:", error);
-      });
+      })
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          }
+          throw new Error("Failed to start timer");
+        })
+        .then((result) => {
+          // Aktualizuj stan sesji z odpowiedzi API
+          if (result.data) {
+            setSession((prev) => ({
+              ...prev,
+              active_duration_seconds: result.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
+              last_timer_started_at: result.data.last_timer_started_at ?? prev.last_timer_started_at,
+              last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+            }));
+          }
+        })
+        .catch((error) => {
+          console.error("[WorkoutSessionAssistant] Error starting timer:", error);
+          timerInitializedRef.current = false; // W przypadku błędu, pozwól na ponowną próbę
+        });
+    } else {
+      // Timer jest już uruchomiony, oznacz jako zainicjalizowany
+      timerInitializedRef.current = true;
     }
-  }, [sessionId, session.last_timer_started_at, session.last_timer_stopped_at]);
+  }, [sessionId]); // Tylko sessionId w zależnościach - stan sprawdzamy przez ref
 
   // Automatyczne ukrywanie toasta "Zapisano" po 3 sekundach
   useEffect(() => {
@@ -297,50 +365,77 @@ export function WorkoutSessionAssistant({
     // Zapisz stan bez przesuwania kursora
     await saveExercise(formData, false);
 
-    // Aktualizuj status sesji
+    // Zatrzymaj timer przez API
+    const now = new Date().toISOString();
     try {
-      const response = await fetch(
-        `/api/workout-sessions/${sessionId}/status`,
+      const timerResponse = await fetch(
+        `/api/workout-sessions/${sessionId}/timer`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "in_progress" }),
+          body: JSON.stringify({
+            last_timer_stopped_at: now,
+          }),
         }
       );
 
-      if (response.ok) {
+      if (timerResponse.ok) {
+        const timerResult = await timerResponse.json();
+        // Aktualizuj stan sesji z odpowiedzi API
+        if (timerResult.data) {
+          setSession((prev) => ({
+            ...prev,
+            active_duration_seconds: timerResult.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
+            last_timer_started_at: timerResult.data.last_timer_started_at ?? prev.last_timer_started_at,
+            last_timer_stopped_at: timerResult.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+          }));
+        }
         setIsPaused(true);
       } else {
-        toast.error("Błąd podczas pauzowania sesji");
+        toast.error("Błąd podczas pauzowania timera");
       }
     } catch {
-      toast.error("Błąd podczas pauzowania sesji");
+      toast.error("Błąd podczas pauzowania timera");
     }
   }, [formData, saveExercise, sessionId]);
 
   // Obsługa resume
   const handleResume = useCallback(async () => {
+    // Wznów timer przez API
+    const now = new Date().toISOString();
     try {
-      const response = await fetch(
-        `/api/workout-sessions/${sessionId}/status`,
+      const timerResponse = await fetch(
+        `/api/workout-sessions/${sessionId}/timer`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "in_progress" }),
+          body: JSON.stringify({
+            last_timer_started_at: now,
+          }),
         }
       );
 
-      if (response.ok) {
+      if (timerResponse.ok) {
+        const timerResult = await timerResponse.json();
+        // Aktualizuj stan sesji z odpowiedzi API
+        if (timerResult.data) {
+          setSession((prev) => ({
+            ...prev,
+            active_duration_seconds: timerResult.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
+            last_timer_started_at: timerResult.data.last_timer_started_at ?? prev.last_timer_started_at,
+            last_timer_stopped_at: timerResult.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+          }));
+        }
         setIsPaused(false);
       } else {
-        toast.error("Błąd podczas wznawiania sesji");
+        toast.error("Błąd podczas wznawiania timera");
       }
     } catch {
-      toast.error("Błąd podczas wznawiania sesji");
+      toast.error("Błąd podczas wznawiania timera");
     }
   }, [sessionId]);
 
@@ -396,6 +491,45 @@ export function WorkoutSessionAssistant({
     router,
   ]);
 
+  // Funkcja zatrzymująca timer (używana przy wyjściu i unmount)
+  // Używamy ref do przechowywania aktualnych wartości, aby uniknąć zależności od session.last_timer_*
+  const stopTimer = useCallback(async () => {
+    // Użyj ref do sprawdzenia aktualnego stanu bez zależności
+    const timerStarted = timerStateRef.current.lastTimerStartedAt !== null;
+    const timerStopped = timerStateRef.current.lastTimerStoppedAt !== null;
+    
+    // Jeśli timer jest uruchomiony i nie jest zatrzymany, zatrzymaj go
+    if (timerStarted && !timerStopped) {
+      const now = new Date().toISOString();
+      try {
+        const response = await fetch(`/api/workout-sessions/${sessionId}/timer`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            last_timer_stopped_at: now,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          // Aktualizuj stan sesji z odpowiedzi API
+          if (result.data) {
+            setSession((prev) => ({
+              ...prev,
+              active_duration_seconds: result.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
+              last_timer_started_at: result.data.last_timer_started_at ?? prev.last_timer_started_at,
+              last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("[WorkoutSessionAssistant.stopTimer] Error:", error);
+      }
+    }
+  }, [sessionId]);
+
   // Obsługa wyjścia
   const handleExit = useCallback(async () => {
     try {
@@ -403,16 +537,7 @@ export function WorkoutSessionAssistant({
       await saveExercise(formData, false);
 
       // Zatrzymaj timer przez API
-      const now = new Date().toISOString();
-      await fetch(`/api/workout-sessions/${sessionId}/timer`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          last_timer_stopped_at: now,
-        }),
-      });
+      await stopTimer();
 
       // Przekieruj do listy sesji
       router.push("/workout-sessions");
@@ -421,7 +546,15 @@ export function WorkoutSessionAssistant({
       // Nawet jeśli wystąpi błąd, przekieruj użytkownika
       router.push("/workout-sessions");
     }
-  }, [router, sessionId, formData, saveExercise]);
+  }, [router, formData, saveExercise, stopTimer]);
+
+  // Cleanup przy unmount - zatrzymaj timer przy wyjściu z asystenta
+  useEffect(() => {
+    return () => {
+      // Zatrzymaj timer przy unmount (wyjście z asystenta)
+      void stopTimer();
+    };
+  }, [stopTimer]);
 
   // Funkcja pomocnicza do upewnienia się, że formularz ma serię dla danego numeru
   // (używana przez updateSetInForm, więc nie jest już potrzebna jako osobna funkcja)
@@ -558,13 +691,16 @@ export function WorkoutSessionAssistant({
         <div className="mx-auto w-full max-w-4xl px-4 py-6 space-y-6">
           {/* Timer globalny sesji z timerem ćwiczenia */}
           <WorkoutTimer
-            startedAt={session.started_at}
+            activeDurationSeconds={session.active_duration_seconds ?? 0}
+            lastTimerStartedAt={session.last_timer_started_at ?? null}
+            lastTimerStoppedAt={session.last_timer_stopped_at ?? null}
             isPaused={isPaused}
             currentExerciseName={currentExercise.exercise_title_at_time}
             currentSetNumber={currentSetNumber}
             currentExerciseIndex={currentExerciseIndex}
             totalExercises={session.exercises.length}
             exerciseTimerContent={exerciseTimerContent}
+            onTimerStop={stopTimer}
           />
 
           {/* Exercise info */}
