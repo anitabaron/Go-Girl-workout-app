@@ -19,16 +19,16 @@ export interface QuickStartButtonProps {
 export function QuickStartButton({
   variant = "button",
   className,
-}: QuickStartButtonProps) {
+}: Readonly<QuickStartButtonProps>) {
   if (variant === "fab") {
     return (
       <Link href={QUICK_START_HREF}>
         <Button
           size="icon"
-          className={`h-14 w-14 rounded-full shadow-lg ${className ?? ""}`}
+          className={`h-10 w-10 rounded-full shadow-lg ${className ?? ""}`}
           aria-label="Start treningu"
         >
-          <Play className="h-6 w-6" />
+          <Play className="h-5 w-5" />
         </Button>
       </Link>
     );

@@ -9,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/db/supabase.client";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "sonner";
+import { LogOut } from "lucide-react";
 
 export interface BottomNavigationProps {
   user?: User | null;
@@ -59,13 +60,13 @@ export function BottomNavigation({
       role="navigation"
       aria-label="Nawigacja mobilna"
     >
-      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-around px-4">
+      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-around px-2">
         {/* Left side - Logo and navigation items */}
         <div className="flex flex-1 items-center justify-around">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center px-2 py-2 transition-colors hover:opacity-80"
+            className="flex items-center px-1 py-2 transition-colors hover:opacity-80"
             aria-label="Strona główna"
           >
             <Image
@@ -73,7 +74,7 @@ export function BottomNavigation({
               alt="Go Girl"
               width={58}
               height={28}
-              className="h-9 w-auto"
+              className="h-7 w-auto"
               priority
             />
           </Link>
@@ -86,7 +87,7 @@ export function BottomNavigation({
               <Link
                 key={item.id}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 px-1 py-2 transition-colors ${
                   isActive
                     ? "text-primary font-semibold"
                     : "text-muted-foreground"
@@ -104,7 +105,7 @@ export function BottomNavigation({
         </div>
 
         {/* Center FAB */}
-        <div className="flex items-center justify-center px-2">
+        <div className="flex items-center justify-center px-1">
           <QuickStartButton variant="fab" />
         </div>
 
@@ -113,7 +114,7 @@ export function BottomNavigation({
           {/* Historia sesji */}
           <Link
             href="/workout-sessions"
-            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors ${
+            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-2 transition-colors ${
               currentSection === "workout-sessions"
                 ? "text-primary font-semibold"
                 : "text-muted-foreground"
@@ -140,7 +141,7 @@ export function BottomNavigation({
               <Link
                 key={item.id}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 px-1 py-2 transition-colors ${
                   isActive
                     ? "text-primary font-semibold"
                     : "text-muted-foreground"
@@ -160,15 +161,15 @@ export function BottomNavigation({
           {user ? (
             <button
               onClick={handleSignOut}
-              className="flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors text-muted-foreground hover:text-primary"
+              className="flex flex-col items-center justify-center gap-0.5 px-1 py-2 transition-colors text-muted-foreground hover:text-primary"
               aria-label="Wyloguj"
             >
-              <span className="text-xs">Wyloguj</span>
+              <LogOut className="h-5 w-5" />
             </button>
           ) : (
             <Link
               href="/login"
-              className="flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors text-muted-foreground hover:text-primary"
+              className="flex flex-col items-center justify-center gap-0.5 px-1 py-2 transition-colors text-muted-foreground hover:text-primary"
               aria-label="Zaloguj"
             >
               <span className="text-xs">Zaloguj</span>

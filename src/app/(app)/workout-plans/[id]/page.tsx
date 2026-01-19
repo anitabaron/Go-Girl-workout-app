@@ -29,12 +29,7 @@ const sectionTypeLabels: Record<string, string> = {
 
 function formatDuration(seconds: number | null | undefined): string {
   if (!seconds) return "-";
-  const minutes = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (minutes > 0) {
-    return `${minutes}min ${secs}s`;
-  }
-  return `${secs}s`;
+  return `${seconds}s`;
 }
 
 export default async function WorkoutPlanDetailsPage({
@@ -84,7 +79,7 @@ export default async function WorkoutPlanDetailsPage({
       />
       <PageHeader backHref="/workout-plans" />
 
-      <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
+      <main className="mx-auto w-full max-w-5xl px-6 pb-10 pt-0 sm:px-10 md:pt-10">
         {/* Metadane planu */}
         <section className="mb-6 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
           <div className="space-y-4">
@@ -145,12 +140,12 @@ export default async function WorkoutPlanDetailsPage({
                         </span>
                       </div>
                       <h3 className="text-lg font-semibold">
-                        Ćwiczenie #{index + 1}
+                        {exercise.exercise_title || `Ćwiczenie #${index + 1}`}
                       </h3>
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-3 gap-4">
                     {exercise.planned_sets !== null &&
                       exercise.planned_sets !== undefined && (
                         <div>

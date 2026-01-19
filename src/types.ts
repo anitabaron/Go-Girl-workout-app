@@ -107,7 +107,9 @@ export type WorkoutPlanUpdateCommand = Partial<
 export type WorkoutPlanExerciseDTO = Omit<
   WorkoutPlanExerciseEntity,
   "plan_id" | "created_at"
->;
+> & {
+  exercise_title?: string | null;
+};
 
 export type WorkoutPlanDTO = Omit<WorkoutPlanEntity, "user_id"> & {
   exercises: WorkoutPlanExerciseDTO[];

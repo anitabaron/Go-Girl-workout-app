@@ -306,7 +306,7 @@ export async function listWorkoutPlanExercises(
 ) {
   const { data, error } = await client
     .from("workout_plan_exercises")
-    .select("*")
+    .select("*, exercises(title)")
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
     .order("section_order", { ascending: true });
@@ -357,11 +357,16 @@ export function mapToDTO(row: WorkoutPlanRow | WorkoutPlanSelectResult): Omit<Wo
  * Mapuje wiersz z bazy danych na DTO ćwiczenia w planie.
  */
 export function mapExerciseToDTO(
-  row: WorkoutPlanExerciseRow
+  row: WorkoutPlanExerciseRow & {
+    exercises?: { title: string } | null;
+  }
 ): WorkoutPlanExerciseDTO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { plan_id, created_at, ...rest } = row;
-  return rest;
+  const { plan_id, created_at, exercises, ...rest } = row;
+  return {
+    ...rest,
+    exercise_title: exercises?.title ?? null,
+  };
 }
 
 /**

@@ -59,7 +59,7 @@ export default async function WorkoutSessionDetailsPage({
       />
       <PageHeader backHref="/workout-sessions" />
 
-      <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
+      <main className="mx-auto w-full max-w-5xl px-6 pb-10 pt-0 md:pt-10 sm:px-10">
         {/* Metadane sesji */}
         <section
           className="mb-6"
