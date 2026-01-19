@@ -55,7 +55,7 @@ export function ExerciseSort() {
   return (
     <div className="flex items-center gap-2">
       <Select value={currentSort} onValueChange={handleSortChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger size="sm" className="w-[140px]">
           <SelectValue placeholder="Sortuj według" />
         </SelectTrigger>
         <SelectContent>
@@ -70,6 +70,7 @@ export function ExerciseSort() {
       <Button
         variant="outline"
         size="icon"
+        className="h-8 w-8"
         onClick={handleOrderToggle}
         aria-label={`Sortuj ${currentOrder === "asc" ? "rosnąco" : "malejąco"}`}
         title={currentOrder === "asc" ? "Sortuj malejąco" : "Sortuj rosnąco"}

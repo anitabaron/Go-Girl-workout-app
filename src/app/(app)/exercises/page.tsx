@@ -33,6 +33,12 @@ export default async function ExercisesPage({
   // Wywołanie service do pobrania danych
   const result = await listExercisesService(userId, parsedQuery);
 
+  // Sprawdź czy są aktywne filtry/wyszukiwanie
+  const hasActiveFilters =
+    Boolean(parsedQuery.search) ||
+    Boolean(parsedQuery.part) ||
+    Boolean(parsedQuery.type);
+
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeaderSection
@@ -55,6 +61,7 @@ export default async function ExercisesPage({
             exercises={result.items}
             nextCursor={result.nextCursor}
             hasMore={result.nextCursor !== null}
+            hasActiveFilters={hasActiveFilters}
           />
         </section>
       </main>

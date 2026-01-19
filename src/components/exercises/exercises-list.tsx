@@ -3,17 +3,28 @@ import { ExerciseCard } from "./exercise-card";
 import { EmptyState } from "./empty-state";
 
 type ExercisesListProps = {
-  exercises: ExerciseDTO[];
-  nextCursor?: string | null;
-  hasMore: boolean;
+  readonly exercises: ExerciseDTO[];
+  readonly nextCursor?: string | null;
+  readonly hasMore: boolean;
+  readonly hasActiveFilters?: boolean;
 };
 
 export function ExercisesList({
   exercises,
   nextCursor,
   hasMore,
+  hasActiveFilters = false,
 }: ExercisesListProps) {
   if (exercises.length === 0) {
+    if (hasActiveFilters) {
+      return (
+        <div className="rounded-lg border border-dashed border-border p-8 text-center">
+          <p className="text-muted-foreground">
+            Brak ćwiczeń spełniających kryteria
+          </p>
+        </div>
+      );
+    }
     return <EmptyState />;
   }
 

@@ -132,31 +132,7 @@ export async function findWorkoutSessionsByUserId(
     .order("id", { ascending: order === "asc" })
     .limit(limit + 1);
 
-  console.log("[findWorkoutSessionsByUserId] Executing query", {
-    userId,
-    params: {
-      status: params.status,
-      plan_id: params.plan_id,
-      from: params.from,
-      to: params.to,
-      sort,
-      order,
-      limit,
-      cursor: params.cursor ? "present" : null,
-    },
-  });
-
-  const { data, error } = await query;
-
-  console.log("[findWorkoutSessionsByUserId] Query result", {
-    dataCount: data?.length ?? 0,
-    error: error ? {
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      hint: error.hint,
-    } : null,
-  });
+  const { data, error } = await query; 
 
   if (error) {
     return { error };
@@ -177,16 +153,6 @@ export async function findWorkoutSessionsByUserId(
   }
 
   const mappedData = items.map(mapToSummaryDTO);
-
-  console.log("[findWorkoutSessionsByUserId] Returning", {
-    itemsCount: mappedData.length,
-    nextCursor,
-    sampleItem: mappedData[0] ? {
-      id: mappedData[0].id,
-      status: mappedData[0].status,
-      started_at: mappedData[0].started_at,
-    } : null,
-  });
 
   return {
     data: mappedData,

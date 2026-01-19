@@ -1,7 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,6 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ExercisePart, ExerciseType } from "@/types";
 import {
   exercisePartValues,
@@ -26,6 +35,46 @@ export function ExerciseFilters() {
 
   const currentPart = searchParams.get("part") as ExercisePart | null;
   const currentType = searchParams.get("type") as ExerciseType | null;
+  const currentSearch = searchParams.get("search") || "";
+
+  const [searchValue, setSearchValue] = useState(currentSearch);
+
+  // Synchronizuj wartość inputa z URL przy inicjalizacji i zmianie searchParams z zewnątrz
+  useEffect(() => {
+    const urlSearch = searchParams.get("search") || "";
+    if (urlSearch !== searchValue) {
+      setSearchValue(urlSearch);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Debounce dla wyszukiwania - aktualizacja URL po 500ms od ostatniego wpisania
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      const trimmedSearch = searchValue.trim();
+
+      if (trimmedSearch) {
+        params.set("search", trimmedSearch);
+      } else {
+        params.delete("search");
+      }
+
+      // Reset cursor przy zmianie wyszukiwania
+      params.delete("cursor");
+
+      const newUrl = `${pathname}?${params.toString()}`;
+      const currentUrl = `${pathname}?${searchParams.toString()}`;
+
+      // Aktualizuj URL tylko jeśli się zmienił
+      if (newUrl !== currentUrl) {
+        router.push(newUrl);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue]);
 
   const handleFilterChange = (
     filterType: "part" | "type",
@@ -58,22 +107,33 @@ export function ExerciseFilters() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("part");
     params.delete("type");
+    params.delete("search");
     params.delete("cursor");
+    setSearchValue("");
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const hasActiveFilters = currentPart !== null || currentType !== null;
+  const hasActiveFilters =
+    currentPart !== null || currentType !== null || currentSearch !== "";
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <div className="flex flex-wrap gap-4">
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap gap-3">
+        <Input
+          placeholder="Wyszukaj po nazwie..."
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          className="h-8 w-full sm:w-[180px] text-sm"
+          aria-label="Wyszukaj ćwiczenie po nazwie"
+        />
+
         <Select
           value={currentPart || "all"}
           onValueChange={(value) =>
             handleFilterChange("part", value === "all" ? null : value)
           }
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger size="sm" className="w-[140px]">
             <SelectValue placeholder="Część ciała" />
           </SelectTrigger>
           <SelectContent>
@@ -92,7 +152,7 @@ export function ExerciseFilters() {
             handleFilterChange("type", value === "all" ? null : value)
           }
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger size="sm" className="w-[140px]">
             <SelectValue placeholder="Typ ćwiczenia" />
           </SelectTrigger>
           <SelectContent>
@@ -107,13 +167,24 @@ export function ExerciseFilters() {
       </div>
 
       {hasActiveFilters && (
-        <Button
-          variant="outline"
-          onClick={handleClearFilters}
-          aria-label="Wyczyść filtry"
-        >
-          Wyczyść filtry
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleClearFilters}
+                aria-label="Wyczyść filtry"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Wyczyść filtry</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </div>
   );
