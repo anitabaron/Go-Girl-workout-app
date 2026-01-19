@@ -32,6 +32,18 @@ function formatDuration(seconds: number | null | undefined): string {
   return `${seconds}s`;
 }
 
+function formatTotalDuration(seconds: number): string {
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (remainingSeconds === 0) {
+    return `${minutes}min`;
+  }
+  return `${minutes}min ${remainingSeconds}s`;
+}
+
 export default async function WorkoutPlanDetailsPage({
   params,
 }: WorkoutPlanDetailsPageProps) {
@@ -71,6 +83,17 @@ export default async function WorkoutPlanDetailsPage({
     return a.section_order - b.section_order;
   });
 
+  // Obliczanie szacunkowego czasu treningu (suma estimated_set_time_seconds dla wszystkich ćwiczeń, które mają to pole)
+  const estimatedTotalTime = sortedExercises.reduce((total, exercise) => {
+    const estimatedSetTime = exercise.exercise_estimated_set_time_seconds;
+    
+    if (estimatedSetTime !== null && estimatedSetTime !== undefined) {
+      return total + estimatedSetTime;
+    }
+    
+    return total;
+  }, 0);
+
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeaderSection
@@ -96,6 +119,11 @@ export default async function WorkoutPlanDetailsPage({
                 {workoutPlan.exercises.length}{" "}
                 {workoutPlan.exercises.length === 1 ? "ćwiczenie" : "ćwiczeń"}
               </Badge>
+              {estimatedTotalTime > 0 && (
+                <Badge variant="secondary">
+                  Szacunkowy czas treningu: {formatTotalDuration(estimatedTotalTime)}
+                </Badge>
+              )}
             </div>
 
             {workoutPlan.description && (
@@ -145,7 +173,7 @@ export default async function WorkoutPlanDetailsPage({
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-3 gap-4">
+                  <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                     {exercise.planned_sets !== null &&
                       exercise.planned_sets !== undefined && (
                         <div>
@@ -182,29 +210,40 @@ export default async function WorkoutPlanDetailsPage({
                         </div>
                       )}
 
-                    {exercise.planned_rest_seconds !== null &&
-                      exercise.planned_rest_seconds !== undefined && (
-                        <div>
-                          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                            Odpoczynek
-                          </p>
-                          <p className="text-lg font-semibold">
-                            {formatDuration(exercise.planned_rest_seconds)}
-                          </p>
-                        </div>
-                      )}
+                    <div>
+                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                        Odpoczynek między seriami
+                      </p>
+                      <p className="text-lg font-semibold">
+                        {exercise.planned_rest_seconds !== null &&
+                        exercise.planned_rest_seconds !== undefined
+                          ? formatDuration(exercise.planned_rest_seconds)
+                          : "-"}
+                      </p>
+                    </div>
 
-                    {exercise.exercise_estimated_set_time_seconds !== null &&
-                      exercise.exercise_estimated_set_time_seconds !== undefined && (
-                        <div>
-                          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                            Szacunkowy czas zestawu
-                          </p>
-                          <p className="text-lg font-semibold">
-                            {formatDuration(exercise.exercise_estimated_set_time_seconds)}
-                          </p>
-                        </div>
-                      )}
+                    <div>
+                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                        Odpoczynek po seriach
+                      </p>
+                      <p className="text-lg font-semibold">
+                        {exercise.exercise_rest_after_series_seconds !== null && exercise.exercise_rest_after_series_seconds !== undefined
+                          ? formatDuration(exercise.exercise_rest_after_series_seconds)
+                          : "-"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                        Szacunkowy czas zestawu
+                      </p>
+                      <p className="text-lg font-semibold">
+                        {exercise.exercise_estimated_set_time_seconds !== null &&
+                        exercise.exercise_estimated_set_time_seconds !== undefined
+                          ? formatDuration(exercise.exercise_estimated_set_time_seconds)
+                          : "-"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}

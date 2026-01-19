@@ -275,12 +275,7 @@ export function useWorkoutPlanForm({
           planned_sets: exercise.series ?? null,
           planned_reps: exercise.reps ?? null,
           planned_duration_seconds: exercise.duration_seconds ?? null,
-          // Używamy rest_in_between_seconds jako głównego odpoczynku
-          // Jeśli nie ma, używamy rest_after_series_seconds
-          planned_rest_seconds:
-            exercise.rest_in_between_seconds ??
-            exercise.rest_after_series_seconds ??
-            null,
+          planned_rest_seconds: exercise.rest_in_between_seconds ?? null,
           estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
         };
 
@@ -334,12 +329,59 @@ export function useWorkoutPlanForm({
     index: number,
     updates: Partial<WorkoutPlanExerciseItemState>
   ) => {
-    setFields((prev) => ({
-      ...prev,
-      exercises: prev.exercises.map((exercise, i) =>
-        i === index ? { ...exercise, ...updates } : exercise
-      ),
-    }));
+    setFields((prev) => {
+      const currentExercise = prev.exercises[index];
+      if (!currentExercise) return prev;
+
+      // Jeśli zmienia się section_type, musimy ustawić section_order na następną dostępną pozycję w nowej sekcji
+      const finalUpdates = { ...updates };
+      if (updates.section_type && updates.section_type !== currentExercise.section_type) {
+        // Znajdź wszystkie ćwiczenia w nowej sekcji
+        const exercisesInNewSection = prev.exercises.filter(
+          (ex, i) => i !== index && ex.section_type === updates.section_type
+        );
+        
+        // Oblicz następną dostępną pozycję
+        const nextOrder =
+          exercisesInNewSection.length > 0
+            ? Math.max(...exercisesInNewSection.map((e) => e.section_order)) + 1
+            : 1;
+        
+        finalUpdates.section_order = nextOrder;
+      }
+
+      // Jeśli zmienia się tylko section_order (bez zmiany section_type), sprawdź czy nie ma duplikatu
+      if (
+        updates.section_order !== undefined &&
+        (!updates.section_type || updates.section_type === currentExercise.section_type)
+      ) {
+        const targetSection = updates.section_type || currentExercise.section_type;
+        const exercisesInSection = prev.exercises.filter(
+          (ex, i) => i !== index && ex.section_type === targetSection
+        );
+        
+        // Sprawdź czy nowa pozycja już istnieje
+        const orderExists = exercisesInSection.some(
+          (ex) => ex.section_order === updates.section_order
+        );
+        
+        if (orderExists) {
+          // Jeśli pozycja już istnieje, znajdź następną dostępną
+          const maxOrder =
+            exercisesInSection.length > 0
+              ? Math.max(...exercisesInSection.map((e) => e.section_order))
+              : 0;
+          finalUpdates.section_order = maxOrder + 1;
+        }
+      }
+
+      return {
+        ...prev,
+        exercises: prev.exercises.map((exercise, i) =>
+          i === index ? { ...exercise, ...finalUpdates } : exercise
+        ),
+      };
+    });
 
     // Wyczyść błędy dla zaktualizowanego ćwiczenia
     setErrors((prev) => {
@@ -353,6 +395,15 @@ export function useWorkoutPlanForm({
         newErrors.exercises =
           Object.keys(exerciseErrors).length > 0 ? exerciseErrors : undefined;
       }
+      // Wyczyść błędy formularza związane z duplikatami pozycji
+      if (newErrors._form) {
+        newErrors._form = newErrors._form.filter(
+          (error) => !error.includes("Duplikat kolejności") && !error.includes("Duplikat pozycji")
+        );
+        if (newErrors._form.length === 0) {
+          delete newErrors._form;
+        }
+      }
       return newErrors;
     });
   };
@@ -362,7 +413,7 @@ export function useWorkoutPlanForm({
       const currentExercise = prev.exercises[index];
       if (!currentExercise) return prev;
 
-      // Znajdź wszystkie ćwiczenia w tej samej sekcji
+      // Znajdź wszystkie ćwiczenia w tej samej sekcji i posortuj je według aktualnego section_order
       const exercisesInSection = prev.exercises
         .map((ex, i) => ({ exercise: ex, originalIndex: i }))
         .filter(
@@ -385,35 +436,23 @@ export function useWorkoutPlanForm({
       )
         return prev;
 
-      // Znajdź ćwiczenie do zamiany
-      const targetPosition =
+      // Oblicz nową pozycję w posortowanej liście
+      const newPosition =
         direction === "up" ? currentPosition - 1 : currentPosition + 1;
-      const targetItem = exercisesInSection[targetPosition];
-      const currentItem = exercisesInSection[currentPosition];
 
-      // Zamień section_order
+      // Utwórz nową tablicę ćwiczeń w sekcji z przesuniętym ćwiczeniem
+      const reorderedSection = [...exercisesInSection];
+      const [movedItem] = reorderedSection.splice(currentPosition, 1);
+      reorderedSection.splice(newPosition, 0, movedItem);
+
+      // Utwórz nową tablicę wszystkich ćwiczeń
       const newExercises = [...prev.exercises];
-      newExercises[currentItem.originalIndex] = {
-        ...currentItem.exercise,
-        section_order: targetItem.exercise.section_order,
-      };
-      newExercises[targetItem.originalIndex] = {
-        ...targetItem.exercise,
-        section_order: currentItem.exercise.section_order,
-      };
 
       // Przepisz section_order dla wszystkich ćwiczeń w sekcji, aby były kolejne (1, 2, 3...)
-      const updatedExercisesInSection = newExercises
-        .map((ex, i) => ({ exercise: ex, originalIndex: i }))
-        .filter(
-          ({ exercise }) =>
-            exercise.section_type === currentExercise.section_type
-        )
-        .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
-
-      updatedExercisesInSection.forEach(({ exercise, originalIndex }, orderIndex) => {
+      // Używamy nowej kolejności z reorderedSection
+      reorderedSection.forEach(({ originalIndex }, orderIndex) => {
         newExercises[originalIndex] = {
-          ...exercise,
+          ...newExercises[originalIndex],
           section_order: orderIndex + 1,
         };
       });
@@ -424,15 +463,29 @@ export function useWorkoutPlanForm({
       };
     });
 
-    // Wyczyść błędy związane z kolejnością
+    // Wyczyść błędy związane z kolejnością i duplikatami pozycji
     setErrors((prev) => {
       const newErrors = { ...prev };
+      // Wyczyść błędy ćwiczeń związane z section_order
       if (newErrors.exercises) {
         const exerciseErrors = { ...newErrors.exercises };
-        const key = `exercise_${index}.section_order`;
-        delete exerciseErrors[key];
+        // Usuń błędy section_order dla wszystkich ćwiczeń w tej sekcji
+        Object.keys(exerciseErrors).forEach((key) => {
+          if (key.endsWith(".section_order")) {
+            delete exerciseErrors[key];
+          }
+        });
         newErrors.exercises =
           Object.keys(exerciseErrors).length > 0 ? exerciseErrors : undefined;
+      }
+      // Wyczyść błędy formularza związane z duplikatami pozycji
+      if (newErrors._form) {
+        newErrors._form = newErrors._form.filter(
+          (error) => !error.includes("Duplikat kolejności") && !error.includes("Duplikat pozycji")
+        );
+        if (newErrors._form.length === 0) {
+          delete newErrors._form;
+        }
       }
       return newErrors;
     });
@@ -449,6 +502,8 @@ export function useWorkoutPlanForm({
         planned_reps: exercise.planned_reps ?? undefined,
         planned_duration_seconds: exercise.planned_duration_seconds ?? undefined,
         planned_rest_seconds: exercise.planned_rest_seconds ?? undefined,
+        // estimated_set_time_seconds nie jest przechowywane w workout_plan_exercises
+        // jest tylko w formularzu dla wyświetlania (pochodzi z metadanych ćwiczenia)
       })
     );
 
@@ -461,18 +516,30 @@ export function useWorkoutPlanForm({
   };
 
   const formStateToUpdateCommand = (): WorkoutPlanUpdateCommand => {
-    // W trybie edycji, zgodnie z planem, używamy workoutPlanExerciseUpdateSchema
-    // który wymaga id dla każdego ćwiczenia
-    const exercises = fields.exercises.map((exercise) => ({
-      id: exercise.id!,
-      exercise_id: exercise.exercise_id,
-      section_type: exercise.section_type,
-      section_order: exercise.section_order,
-      planned_sets: exercise.planned_sets ?? null,
-      planned_reps: exercise.planned_reps ?? null,
-      planned_duration_seconds: exercise.planned_duration_seconds ?? null,
-      planned_rest_seconds: exercise.planned_rest_seconds ?? null,
-    }));
+    // W trybie edycji rozdzielamy ćwiczenia na istniejące (z id) i nowe (bez id)
+    const exercises = fields.exercises.map((exercise) => {
+      const baseExercise = {
+        exercise_id: exercise.exercise_id,
+        section_type: exercise.section_type,
+        section_order: exercise.section_order,
+        planned_sets: exercise.planned_sets ?? null,
+        planned_reps: exercise.planned_reps ?? null,
+        planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+        planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+      };
+
+      // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego
+      if (exercise.id) {
+        return {
+          ...baseExercise,
+          id: exercise.id,
+        };
+      } else {
+        // Jeśli ćwiczenie nie ma id, to jest nowym ćwiczeniem
+        // id nie jest podane dla nowych ćwiczeń
+        return baseExercise;
+      }
+    });
 
     return {
       name: fields.name.trim(),
@@ -580,6 +647,8 @@ export function useWorkoutPlanForm({
 
     if (onSuccess) {
       onSuccess();
+    } else if (mode === "edit" && initialData?.id) {
+      router.push(`/workout-plans/${initialData.id}`);
     } else {
       router.push("/workout-plans");
     }

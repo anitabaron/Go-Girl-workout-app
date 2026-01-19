@@ -198,7 +198,7 @@ export function dtoToFormState(
       planned_reps: exercise.planned_reps,
       planned_duration_seconds: exercise.planned_duration_seconds,
       planned_rest_seconds: exercise.planned_rest_seconds,
-      estimated_set_time_seconds: null, // To pole nie jest przechowywane w workout_plan_exercises, tylko w exercises
+      estimated_set_time_seconds: exercise.exercise_estimated_set_time_seconds ?? null,
     })),
   };
 }

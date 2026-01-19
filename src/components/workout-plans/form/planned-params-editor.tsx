@@ -140,13 +140,13 @@ export function PlannedParamsEditor({
           )}
         </div>
 
-        {/* Planned Rest */}
+        {/* Planned Rest Between Sets */}
         <div>
           <label
             htmlFor={restId}
             className="block text-xs font-medium text-muted-foreground"
           >
-            Odpoczynek (s)
+            Odpoczynek między seriami (s)
           </label>
           <Input
             id={restId}
@@ -161,7 +161,7 @@ export function PlannedParamsEditor({
             placeholder="—"
             className="mt-1"
             aria-invalid={errors.planned_rest_seconds ? "true" : "false"}
-            aria-describedby={errors.planned_rest_seconds ? restErrorId : undefined}
+            aria-describedby={errors.planned_rest_seconds ? restId : undefined}
           />
           {errors.planned_rest_seconds && (
             <p
@@ -175,7 +175,8 @@ export function PlannedParamsEditor({
         </div>
       </div>
 
-      {/* Estimated Set Time */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
+        {/* Estimated Set Time */}
       <div>
         <label
           htmlFor={estimatedTimeId}
@@ -209,6 +210,7 @@ export function PlannedParamsEditor({
             {errors.estimated_set_time_seconds}
           </p>
         )}
+      </div>
       </div>
     </div>
   );

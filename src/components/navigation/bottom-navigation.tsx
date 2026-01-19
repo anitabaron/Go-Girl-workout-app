@@ -74,7 +74,7 @@ export function BottomNavigation({
               alt="Go Girl"
               width={58}
               height={28}
-              className="h-7 w-auto"
+              className="h-8 w-auto"
               priority
             />
           </Link>
