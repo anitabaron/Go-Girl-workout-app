@@ -54,19 +54,13 @@ type RouteContext = {
  * Errors: 400 (walidacja), 401 (brak autoryzacji), 404 (sesja nie znaleziona), 409 (sesja nie in_progress), 500 (błąd serwera)
  */
 export async function PATCH(request: Request, { params }: RouteContext) {
-  console.log("[PATCH /api/workout-sessions/[id]/timer] Starting request");
 
   try {
     const userId = await getUserIdFromSession();
-    console.log("[PATCH /api/workout-sessions/[id]/timer] userId:", userId);
 
     const { id } = await params;
     const sessionId = id ?? new URL(request.url).searchParams.get("id");
-    console.log("[PATCH /api/workout-sessions/[id]/timer] Params - id:", id);
-    console.log(
-      "[PATCH /api/workout-sessions/[id]/timer] Parsed sessionId:",
-      sessionId
-    );
+ 
 
     if (!sessionId) {
       console.error(
@@ -92,10 +86,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     let body;
     try {
       body = await request.json();
-      console.log(
-        "[PATCH /api/workout-sessions/[id]/timer] Request body:",
-        JSON.stringify(body, null, 2)
-      );
     } catch (jsonError) {
       console.error(
         "[PATCH /api/workout-sessions/[id]/timer] JSON parse error:",
@@ -110,17 +100,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
-    console.log(
-      "[PATCH /api/workout-sessions/[id]/timer] Calling updateWorkoutSessionTimerService"
-    );
     const updated = await updateWorkoutSessionTimerService(
       userId,
       sessionId,
       body
-    );
-    console.log(
-      "[PATCH /api/workout-sessions/[id]/timer] Service returned successfully:",
-      JSON.stringify(updated, null, 2)
     );
 
     return NextResponse.json({ data: updated }, { status: 200 });
@@ -171,20 +154,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       "[PATCH /api/workout-sessions/[id]/timer] Unexpected error:",
       error
     );
-    if (error instanceof Error) {
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/timer] Error stack:",
-        error.stack
-      );
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/timer] Error name:",
-        error.name
-      );
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/timer] Error message:",
-        error.message
-      );
-    }
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",

@@ -35,11 +35,9 @@ export function WorkoutPlanActions({
   };
 
   const handleStartWorkout = async () => {
-    console.log("handleStartWorkout called, planId:", planId);
     setIsStarting(true);
 
     try {
-      console.log("Sending POST request to /api/workout-sessions");
       const response = await fetch("/api/workout-sessions", {
         method: "POST",
         headers: {
@@ -49,8 +47,6 @@ export function WorkoutPlanActions({
           workout_plan_id: planId,
         }),
       });
-
-      console.log("Response status:", response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -74,9 +70,7 @@ export function WorkoutPlanActions({
       }
 
       const data = await response.json();
-      console.log("Success response data:", data);
       const sessionId = data.id || data.data?.id;
-      console.log("Extracted sessionId:", sessionId);
 
       if (sessionId) {
         toast.success("Sesja treningowa została rozpoczęta");

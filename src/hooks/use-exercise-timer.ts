@@ -30,6 +30,10 @@ export function useExerciseTimer(
   // Hook zarządza tylko stanem - CountdownCircleTimer w komponentach odlicza czas
   // Pozostały czas jest przechowywany w stanie timera
 
+  // Ref do śledzenia, czy jesteśmy w trakcie przejścia (np. z reps_display do rest)
+  // Zapobiega resetowaniu stanu przez useEffect podczas przejścia
+  const isTransitioningRef = useRef(false);
+
   // Rozpoczęcie odliczania czasu serii
   const startSetTimer = useCallback(() => {
     if (!exercise.planned_duration_seconds || exercise.planned_duration_seconds <= 0) {
@@ -55,11 +59,17 @@ export function useExerciseTimer(
       return;
     }
 
+    // Oznacz, że jesteśmy w trakcie przejścia
+    isTransitioningRef.current = true;
     const restSeconds = exercise.planned_rest_seconds;
     setTimerState({
       type: "rest_between_sets",
       remainingSeconds: restSeconds,
     });
+    // Zresetuj flagę przejścia po krótkim opóźnieniu
+    setTimeout(() => {
+      isTransitioningRef.current = false;
+    }, 100);
   }, [
     exercise.planned_rest_seconds,
     onRestBetweenComplete,
@@ -75,10 +85,16 @@ export function useExerciseTimer(
       return;
     }
 
+    // Oznacz, że jesteśmy w trakcie przejścia
+    isTransitioningRef.current = true;
     setTimerState({
       type: "rest_after_series",
       remainingSeconds: restSeconds,
     });
+    // Zresetuj flagę przejścia po krótkim opóźnieniu
+    setTimeout(() => {
+      isTransitioningRef.current = false;
+    }, 100);
   }, [
     exercise.planned_rest_after_series_seconds,
     onRestAfterSeriesComplete,
@@ -104,33 +120,6 @@ export function useExerciseTimer(
 
   // Ref do śledzenia, czy to pierwszy mount
   const isFirstMountRef = useRef(true);
-
-  // Funkcja pomocnicza do inicjalizacji stanu timera
-  const initializeTimerState = useCallback(() => {
-    if (
-      (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) ||
-      (exercise.planned_reps && exercise.planned_reps > 0)
-    ) {
-      // Sprawdź, czy to ćwiczenie z czasem czy powtórzeniami
-      if (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) {
-        setTimerState({
-          type: "set_countdown",
-          setNumber: currentSetNumber,
-          remainingSeconds: exercise.planned_duration_seconds,
-        });
-      } else {
-        // Ćwiczenie z powtórzeniami - wyświetl powtórzenia
-        setTimerState({
-          type: "reps_display",
-          setNumber: currentSetNumber,
-          reps: exercise.planned_reps ?? 0,
-        });
-      }
-    } else {
-      // Jeśli ćwiczenie nie ma planowanych wartości, ustaw stan oczekiwania
-      setTimerState({ type: "waiting" });
-    }
-  }, [exercise.planned_duration_seconds, exercise.planned_reps, currentSetNumber]);
 
   // Automatyczne rozpoczęcie serii przy zmianie ćwiczenia lub numeru serii
   useEffect(() => {
@@ -160,11 +149,59 @@ export function useExerciseTimer(
 
       // Oblicz nowy stan timera na podstawie ćwiczenia
       // Używamy queueMicrotask, aby uniknąć synchronicznego setState w efekcie
+      // Sprawdzamy aktualny stan przed resetowaniem, aby nie nadpisać stanu przerwy
+      // ALE tylko wtedy, gdy wartości się nie zmieniły (chroni przed resetowaniem po kliknięciu OK)
+      // Jeśli wartości się zmieniły (np. currentSetNumber), zawsze resetuj stan (po pominięciu przerwy)
+      const shouldReset = hasChanged; // Zapisz wartość hasChanged przed wywołaniem queueMicrotask
       queueMicrotask(() => {
-        initializeTimerState();
+        setTimerState((currentState) => {
+          // Jeśli jesteśmy w trakcie przejścia (np. z reps_display do rest), nie resetuj stanu
+          if (isTransitioningRef.current) {
+            return currentState;
+          }
+
+          // Jeśli wartości się zmieniły (np. currentSetNumber po pominięciu przerwy),
+          // zawsze resetuj stan, nawet jeśli timer jest w przerwie
+          // Jeśli wartości się NIE zmieniły, ale timer jest w przerwie, nie resetuj
+          // (chroni przed resetowaniem po kliknięciu OK w reps_display)
+          const isInRestState = 
+            currentState.type === "rest_between_sets" || 
+            currentState.type === "rest_after_series";
+          
+          // Jeśli timer jest w przerwie i wartości się NIE zmieniły, nie resetuj
+          // (chroni przed resetowaniem po kliknięciu OK w reps_display)
+          if (isInRestState && !shouldReset) {
+            return currentState;
+          }
+          
+          // W przeciwnym razie zresetuj stan (wartości się zmieniły lub timer nie jest w przerwie)
+          if (
+            (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) ||
+            (exercise.planned_reps && exercise.planned_reps > 0)
+          ) {
+            // Sprawdź, czy to ćwiczenie z czasem czy powtórzeniami
+            if (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) {
+              return {
+                type: "set_countdown",
+                setNumber: currentSetNumber,
+                remainingSeconds: exercise.planned_duration_seconds,
+              };
+            } else {
+              // Ćwiczenie z powtórzeniami - wyświetl powtórzenia
+              return {
+                type: "reps_display",
+                setNumber: currentSetNumber,
+                reps: exercise.planned_reps ?? 0,
+              };
+            }
+          } else {
+            // Jeśli ćwiczenie nie ma planowanych wartości, ustaw stan oczekiwania
+            return { type: "waiting" };
+          }
+        });
       });
     }
-  }, [exercise.id, currentSetNumber, exercise.planned_duration_seconds, exercise.planned_reps, initializeTimerState]);
+  }, [exercise.id, currentSetNumber, exercise.planned_duration_seconds, exercise.planned_reps]);
 
 
   return {

@@ -38,16 +38,11 @@ type RouteContext = {
 };
 
 export async function PATCH(request: Request, { params }: RouteContext) {
-  console.log("[PATCH /api/workout-sessions/[id]/status] Starting request");
-  
   try {
     const userId = await getUserIdFromSession();
-    console.log("[PATCH /api/workout-sessions/[id]/status] userId:", userId);
 
     const { id } = await params;
     const sessionId = id ?? new URL(request.url).searchParams.get("id");
-    console.log("[PATCH /api/workout-sessions/[id]/status] Params - id:", id);
-    console.log("[PATCH /api/workout-sessions/[id]/status] Parsed sessionId:", sessionId);
 
     if (!sessionId) {
       console.error("[PATCH /api/workout-sessions/[id]/status] Missing sessionId");
@@ -68,7 +63,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     let body;
     try {
       body = await request.json();
-      console.log("[PATCH /api/workout-sessions/[id]/status] Request body:", JSON.stringify(body, null, 2));
     } catch (jsonError) {
       console.error("[PATCH /api/workout-sessions/[id]/status] JSON parse error:", jsonError);
       return NextResponse.json(
@@ -80,13 +74,11 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
-    console.log("[PATCH /api/workout-sessions/[id]/status] Calling updateWorkoutSessionStatusService");
     const updated = await updateWorkoutSessionStatusService(
       userId,
       sessionId,
       body
     );
-    console.log("[PATCH /api/workout-sessions/[id]/status] Service returned successfully:", JSON.stringify(updated, null, 2));
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
@@ -130,11 +122,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       "[PATCH /api/workout-sessions/[id]/status] Unexpected error:",
       error
     );
-    if (error instanceof Error) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] Error stack:", error.stack);
-      console.error("[PATCH /api/workout-sessions/[id]/status] Error name:", error.name);
-      console.error("[PATCH /api/workout-sessions/[id]/status] Error message:", error.message);
-    }
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",

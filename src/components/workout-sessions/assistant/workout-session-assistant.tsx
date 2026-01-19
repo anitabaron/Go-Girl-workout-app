@@ -122,6 +122,29 @@ export function WorkoutSessionAssistant({
     return errors;
   }, []);
 
+  // Uruchomienie timera przy wejściu do asystenta (jeśli nie jest już uruchomiony)
+  useEffect(() => {
+    // Sprawdź, czy timer jest już uruchomiony
+    const timerStarted = session.last_timer_started_at !== null;
+    const timerStopped = session.last_timer_stopped_at !== null;
+    
+    // Jeśli timer nie jest uruchomiony lub został zatrzymany, uruchom go
+    if (!timerStarted || (timerStarted && timerStopped)) {
+      const now = new Date().toISOString();
+      fetch(`/api/workout-sessions/${sessionId}/timer`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          last_timer_started_at: now,
+        }),
+      }).catch((error) => {
+        console.error("[WorkoutSessionAssistant] Error starting timer:", error);
+      });
+    }
+  }, [sessionId, session.last_timer_started_at, session.last_timer_stopped_at]);
+
   // Automatyczne ukrywanie toasta "Zapisano" po 3 sekundach
   useEffect(() => {
     if (autosaveStatus === "saved") {
@@ -158,22 +181,13 @@ export function WorkoutSessionAssistant({
       data: ExerciseFormData,
       advanceCursor: boolean
     ): Promise<boolean> => {
-      console.log("[WorkoutSessionAssistant.saveExercise] Starting", {
-        sessionId,
-        exerciseOrder: currentExercise.exercise_order,
-        advanceCursor,
-        formData: data,
-      });
-
       setAutosaveStatus("saving");
       setAutosaveError(undefined);
 
       try {
         const command = formDataToAutosaveCommand(data, advanceCursor);
-        console.log("[WorkoutSessionAssistant.saveExercise] Command prepared:", JSON.stringify(command, null, 2));
 
         const url = `/api/workout-sessions/${sessionId}/exercises/${currentExercise.exercise_order}`;
-        console.log("[WorkoutSessionAssistant.saveExercise] Fetching URL:", url);
 
         const response = await fetch(url, {
           method: "PATCH",
@@ -183,9 +197,6 @@ export function WorkoutSessionAssistant({
           body: JSON.stringify(command),
         });
 
-        console.log("[WorkoutSessionAssistant.saveExercise] Response status:", response.status, response.statusText);
-        console.log("[WorkoutSessionAssistant.saveExercise] Response ok:", response.ok);
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           console.error("[WorkoutSessionAssistant.saveExercise] Error response:", errorData);
@@ -193,7 +204,6 @@ export function WorkoutSessionAssistant({
         }
 
         const result = await response.json();
-        console.log("[WorkoutSessionAssistant.saveExercise] Success response:", JSON.stringify(result, null, 2));
         const updatedExercise = result.data;
 
         // Aktualizuj sesję z odpowiedzi
@@ -206,14 +216,12 @@ export function WorkoutSessionAssistant({
             result.data.cursor?.current_position ?? prev.current_position,
         }));
 
-        console.log("[WorkoutSessionAssistant.saveExercise] Session updated successfully");
         setAutosaveStatus("saved");
         return true;
       } catch (error) {
         console.error("[WorkoutSessionAssistant.saveExercise] Error:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Błąd zapisu ćwiczenia";
-        console.error("[WorkoutSessionAssistant.saveExercise] Error message:", errorMessage);
         setAutosaveError(errorMessage);
         setAutosaveStatus("error");
         toast.error(errorMessage);
@@ -389,9 +397,31 @@ export function WorkoutSessionAssistant({
   ]);
 
   // Obsługa wyjścia
-  const handleExit = useCallback(() => {
-    router.push("/workout-sessions");
-  }, [router]);
+  const handleExit = useCallback(async () => {
+    try {
+      // Zapisz postępy przed wyjściem
+      await saveExercise(formData, false);
+
+      // Zatrzymaj timer przez API
+      const now = new Date().toISOString();
+      await fetch(`/api/workout-sessions/${sessionId}/timer`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          last_timer_stopped_at: now,
+        }),
+      });
+
+      // Przekieruj do listy sesji
+      router.push("/workout-sessions");
+    } catch (error) {
+      console.error("[WorkoutSessionAssistant.handleExit] Error:", error);
+      // Nawet jeśli wystąpi błąd, przekieruj użytkownika
+      router.push("/workout-sessions");
+    }
+  }, [router, sessionId, formData, saveExercise]);
 
   // Funkcja pomocnicza do upewnienia się, że formularz ma serię dla danego numeru
   // (używana przez updateSetInForm, więc nie jest już potrzebna jako osobna funkcja)

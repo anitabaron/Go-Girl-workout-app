@@ -19,12 +19,18 @@ export function RestAfterSeriesTimer({
     return null;
   }
 
+  // Walidacja: onComplete musi być funkcją
+  if (typeof onComplete !== "function") {
+    return null;
+  }
+
+  const handleSkip = () => {
+    onComplete();
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-6">
+    <div className="flex flex-col items-center justify-center gap-4 ">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
-          Przerwa po seriach
-        </h3>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Przygotuj się do następnego ćwiczenia
         </p>
@@ -56,7 +62,7 @@ export function RestAfterSeriesTimer({
       </CountdownCircleTimer>
 
       <Button
-        onClick={onComplete}
+        onClick={handleSkip}
         size="lg"
         className="min-w-[120px] text-md font-light "
       >

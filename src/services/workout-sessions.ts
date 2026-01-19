@@ -200,26 +200,11 @@ export async function listWorkoutSessionsService(
   const supabase = await createClient();
 
   try {
-    console.log("[listWorkoutSessionsService] Fetching sessions", {
-      userId,
-      query: parsed,
-    });
-
     const { data, nextCursor, error } = await findWorkoutSessionsByUserId(
       supabase,
       userId,
       parsed
     );
-
-    console.log("[listWorkoutSessionsService] Query result", {
-      dataCount: data?.length ?? 0,
-      nextCursor,
-      error: error ? {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-      } : null,
-    });
 
     if (error) {
       throw mapDbError(error);
@@ -229,11 +214,6 @@ export async function listWorkoutSessionsService(
       items: data ?? [],
       nextCursor: nextCursor ?? null,
     };
-
-    console.log("[listWorkoutSessionsService] Returning", {
-      itemsCount: result.items.length,
-      nextCursor: result.nextCursor,
-    });
 
     return result;
   } catch (error) {
@@ -958,39 +938,23 @@ export async function autosaveWorkoutSessionExerciseService(
   order: number,
   payload: unknown
 ): Promise<SessionExerciseAutosaveResponse> {
-  console.log("[autosaveWorkoutSessionExerciseService] Starting", {
-    userId,
-    sessionId,
-    order,
-    payloadType: typeof payload,
-  });
-
   assertUser(userId);
   validateAutosavePathParams(sessionId, order);
-  console.log("[autosaveWorkoutSessionExerciseService] Validation passed");
 
   const parsed = parseOrThrow(sessionExerciseAutosaveSchema, payload);
-  console.log("[autosaveWorkoutSessionExerciseService] Payload parsed:", JSON.stringify(parsed, null, 2));
   
   const supabase = await createClient();
-  console.log("[autosaveWorkoutSessionExerciseService] Supabase client created");
 
   await validateSessionForAutosave(supabase, userId, sessionId);
-  console.log("[autosaveWorkoutSessionExerciseService] Session validated");
   
   const exercise = await validateExerciseForAutosave(
     supabase,
     sessionId,
     order
   );
-  console.log("[autosaveWorkoutSessionExerciseService] Exercise validated:", {
-    exercise_id: exercise.exercise_id,
-    exercise_order: exercise.exercise_order,
-  });
 
   // Oblicz agregaty z serii, jeśli nie zostały podane ręcznie (Opcja A)
   const aggregates = calculateAggregatesFromSets(parsed);
-  console.log("[autosaveWorkoutSessionExerciseService] Aggregates calculated:", aggregates);
 
   // Przygotuj sets dla bazy danych:
   // - Jeśli sets nie jest puste, wyślij zmapowane sets
@@ -1008,13 +972,9 @@ export async function autosaveWorkoutSessionExerciseService(
       duration_seconds: set.duration_seconds ?? null,
       weight_kg: set.weight_kg ?? null,
     }));
-    console.log("[autosaveWorkoutSessionExerciseService] Sets data prepared:", setsDataForDb);
   } else if (parsed.is_skipped === true) {
     // Pusta tablica = wyczyść wszystkie istniejące serie
     setsDataForDb = [];
-    console.log("[autosaveWorkoutSessionExerciseService] Exercise skipped, clearing sets");
-  } else {
-    console.log("[autosaveWorkoutSessionExerciseService] Sets data remains null (no changes)");
   }
   // else: setsDataForDb pozostaje null (nie zmieniaj istniejących serii)
 
@@ -1029,10 +989,6 @@ export async function autosaveWorkoutSessionExerciseService(
     p_is_skipped: parsed.is_skipped ?? false,
     p_sets_data: setsDataForDb,
   };
-  console.log("[autosaveWorkoutSessionExerciseService] Calling callSaveWorkoutSessionExercise with params:", {
-    ...saveParams,
-    p_sets_data: setsDataForDb ? `Array(${setsDataForDb.length})` : null,
-  });
 
   const { data: sessionExerciseId, error: saveError } =
     await callSaveWorkoutSessionExercise(supabase, saveParams);
@@ -1050,11 +1006,8 @@ export async function autosaveWorkoutSessionExerciseService(
     );
   }
 
-  console.log("[autosaveWorkoutSessionExerciseService] Exercise saved, sessionExerciseId:", sessionExerciseId);
-
   const plannedUpdates = preparePlannedUpdates(parsed);
   if (plannedUpdates) {
-    console.log("[autosaveWorkoutSessionExerciseService] Updating planned values:", plannedUpdates);
     const { error: updateError } = await updateWorkoutSessionExercise(
       supabase,
       sessionExerciseId,
@@ -1065,21 +1018,15 @@ export async function autosaveWorkoutSessionExerciseService(
       console.error("[autosaveWorkoutSessionExerciseService] Planned update error:", updateError);
       throw mapDbError(updateError);
     }
-    console.log("[autosaveWorkoutSessionExerciseService] Planned values updated");
-  } else {
-    console.log("[autosaveWorkoutSessionExerciseService] No planned updates needed");
   }
 
-  console.log("[autosaveWorkoutSessionExerciseService] Updating cursor, advance_cursor_to_next:", parsed.advance_cursor_to_next);
   await updateCursorIfNeeded(
     supabase,
     sessionId,
     order,
     parsed.advance_cursor_to_next === true
   );
-  console.log("[autosaveWorkoutSessionExerciseService] Cursor updated");
 
-  console.log("[autosaveWorkoutSessionExerciseService] Fetching updated exercise");
   const result = await fetchUpdatedExerciseWithCursor(
     supabase,
     userId,
@@ -1087,7 +1034,6 @@ export async function autosaveWorkoutSessionExerciseService(
     sessionExerciseId,
     order
   );
-  console.log("[autosaveWorkoutSessionExerciseService] Success, returning result");
   
   return result;
 }

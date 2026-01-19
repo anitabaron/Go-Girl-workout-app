@@ -19,7 +19,7 @@ export function SetCountdownTimer({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-6">
+    <div className="flex flex-col items-center justify-center gap-4 ">
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={durationSeconds}

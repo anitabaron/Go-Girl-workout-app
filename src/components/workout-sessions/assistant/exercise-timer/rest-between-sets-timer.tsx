@@ -19,6 +19,15 @@ export function RestBetweenSetsTimer({
     return null;
   }
 
+  // Walidacja: onComplete musi być funkcją
+  if (typeof onComplete !== "function") {
+    return null;
+  }
+
+  const handleSkip = () => {
+    onComplete();
+  };
+
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6">
       <CountdownCircleTimer
@@ -47,7 +56,7 @@ export function RestBetweenSetsTimer({
       </CountdownCircleTimer>
       
       <Button
-        onClick={onComplete}
+        onClick={handleSkip}
         size="lg"
         className="min-w-[120px] text-md font-light "
       >

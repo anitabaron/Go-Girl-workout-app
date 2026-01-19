@@ -39,18 +39,14 @@ type RouteContext = {
 };
 
 export async function PATCH(request: Request, { params }: RouteContext) {
-  console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Starting request");
   
   try {
     const userId = await getUserIdFromSession();
-    console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] userId:", userId);
 
     const { id, order } = await params;
     const sessionId = id ?? new URL(request.url).searchParams.get("id");
     const orderParam = order ?? new URL(request.url).searchParams.get("order");
     
-    console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Params - id:", id, "order:", order);
-    console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Parsed - sessionId:", sessionId, "orderParam:", orderParam);
 
     if (!sessionId) {
       console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Missing sessionId");
@@ -77,7 +73,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     const orderNumber = Number.parseInt(orderParam, 10);
-    console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Parsed orderNumber:", orderNumber);
 
     if (Number.isNaN(orderNumber) || orderNumber <= 0) {
       console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Invalid orderNumber:", orderNumber);
@@ -90,7 +85,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     let body;
     try {
       body = await request.json();
-      console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Request body:", JSON.stringify(body, null, 2));
     } catch (jsonError) {
       console.error(
         "[PATCH /api/workout-sessions/[id]/exercises/[order]] JSON parse error",
@@ -105,13 +99,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
-    console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Calling autosaveWorkoutSessionExerciseService");
-    console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Parameters:", {
-      userId,
-      sessionId,
-      order: orderNumber,
-      bodyKeys: Object.keys(body),
-    });
+
 
     const result = await autosaveWorkoutSessionExerciseService(
       userId,
@@ -120,8 +108,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       body
     );
 
-    console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Service returned successfully");
-    console.log("[PATCH /api/workout-sessions/[id]/exercises/[order]] Result:", JSON.stringify(result, null, 2));
 
     return NextResponse.json({ data: result }, { status: 200 });
   } catch (error) {
@@ -171,11 +157,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       "[PATCH /api/workout-sessions/[id]/exercises/[order]] Unexpected error:",
       error
     );
-    if (error instanceof Error) {
-      console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Error stack:", error.stack);
-      console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Error name:", error.name);
-      console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Error message:", error.message);
-    }
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",

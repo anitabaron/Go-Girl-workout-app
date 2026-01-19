@@ -601,12 +601,6 @@ export async function findWorkoutSessionExerciseByOrder(
   sessionId: string,
   order: number
 ) {
-  console.log("[findWorkoutSessionExerciseByOrder] Starting", {
-    sessionId,
-    order,
-    orderType: typeof order,
-  });
-
   const { data, error } = await client
     .from("workout_session_exercises")
     .select("*, exercises(rest_in_between_seconds, rest_after_series_seconds)")
@@ -616,14 +610,6 @@ export async function findWorkoutSessionExerciseByOrder(
 
   if (error) {
     console.error("[findWorkoutSessionExerciseByOrder] Error:", error);
-    console.error("[findWorkoutSessionExerciseByOrder] Error details:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
-  } else {
-    console.log("[findWorkoutSessionExerciseByOrder] Success, found exercise:", data ? "yes" : "no");
   }
 
   return { data, error };
@@ -725,17 +711,6 @@ export async function callSaveWorkoutSessionExercise(
     }> | null;
   }
 ) {
-  console.log("[callSaveWorkoutSessionExercise] Starting with params:", {
-    p_session_id: params.p_session_id,
-    p_exercise_id: params.p_exercise_id,
-    p_exercise_order: params.p_exercise_order,
-    p_actual_sets: params.p_actual_sets,
-    p_actual_reps: params.p_actual_reps,
-    p_actual_duration_seconds: params.p_actual_duration_seconds,
-    p_is_skipped: params.p_is_skipped,
-    p_sets_data_length: params.p_sets_data?.length ?? null,
-  });
-
   // Mapuj sets na format JSONB (bez set_number, bo funkcja DB nie potrzebuje)
   // Jeśli p_sets_data jest pustą tablicą [], wyślij [] aby wyczyścić serie
   // Jeśli p_sets_data jest null lub undefined, wyślij null (nie zmieniaj serii)
@@ -748,18 +723,15 @@ export async function callSaveWorkoutSessionExercise(
 
   if (params.p_sets_data === null || params.p_sets_data === undefined) {
     setsDataJson = null;
-    console.log("[callSaveWorkoutSessionExercise] Sets data is null/undefined, keeping null");
   } else if (params.p_sets_data.length > 0) {
     setsDataJson = params.p_sets_data.map((set) => ({
       reps: set.reps ?? null,
       duration_seconds: set.duration_seconds ?? null,
       weight_kg: set.weight_kg ?? null,
     }));
-    console.log("[callSaveWorkoutSessionExercise] Sets data mapped:", setsDataJson);
   } else {
     // Pusta tablica = wyczyść wszystkie serie
     setsDataJson = [];
-    console.log("[callSaveWorkoutSessionExercise] Sets data is empty array, clearing sets");
   }
 
   const rpcParams = {
@@ -773,31 +745,18 @@ export async function callSaveWorkoutSessionExercise(
     p_is_skipped: params.p_is_skipped ?? false,
     p_sets_data: setsDataJson !== null ? setsDataJson : undefined,
   };
-  console.log("[callSaveWorkoutSessionExercise] Calling RPC save_workout_session_exercise with:", {
-    ...rpcParams,
-    p_sets_data: setsDataJson ? `Array(${setsDataJson.length})` : null,
-  });
 
   const { data, error } = await client.rpc("save_workout_session_exercise", rpcParams);
 
   if (error) {
     console.error("[callSaveWorkoutSessionExercise] RPC error:", error);
-    console.error("[callSaveWorkoutSessionExercise] RPC error details:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
     return { data: null, error };
   }
-
-  console.log("[callSaveWorkoutSessionExercise] RPC success, data:", data);
 
   // Funkcja DB zwraca session_exercise_id jako string (UUID)
   const result = {
     data: data ? String(data) : null,
     error: null,
   };
-  console.log("[callSaveWorkoutSessionExercise] Returning:", result);
   return result;
 }
