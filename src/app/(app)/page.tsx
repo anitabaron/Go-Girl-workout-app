@@ -1,7 +1,49 @@
 import Image from "next/image";
+import { redirect } from "next/navigation";
+import { createClient } from "@/db/supabase.server";
 import { FeaturesOverview } from "@/components/home/features-overview";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}>) {
+  const params = await searchParams;
+  const code = params.code;
+
+  // Obsługa parametru `code` z Supabase Auth (reset hasła, potwierdzenie emaila)
+  // Supabase może przekierowywać z parametrem `code` zamiast hash fragmentu
+  if (code && typeof code === "string") {
+    const supabase = await createClient();
+
+    try {
+      // Wymiana kodu na sesję
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error || !session) {
+        // Błąd wymiany kodu - przekierowanie do resetu hasła z komunikatem błędu
+        redirect("/reset-password?error=invalid_token");
+      }
+
+      // Sprawdzenie typu sesji - jeśli to recovery (reset hasła), przekieruj do /reset-password/confirm
+      // W Supabase, sesja recovery jest ustawiana automatycznie po wymianie kodu dla resetu hasła
+      // Możemy sprawdzić przez próbę zmiany hasła lub przez sprawdzenie typu sesji
+      // Dla uproszczenia, jeśli sesja istnieje i użytkownik nie jest w pełni zalogowany,
+      // zakładamy, że to sesja recovery
+      
+      // Po wymianie kodu na sesję, przekierowujemy do /reset-password/confirm
+      // Hook w Client Component zweryfikuje typ sesji (recovery vs normal)
+      // i obsłuży odpowiednio (reset hasła vs potwierdzenie emaila)
+      redirect("/reset-password/confirm");
+    } catch (error) {
+      console.error("Error exchanging code for session:", error);
+      redirect("/reset-password?error=invalid_token");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       {/* Hero Section */}

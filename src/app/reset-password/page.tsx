@@ -8,7 +8,14 @@ export const metadata: Metadata = {
   description: "Zresetuj swoje hasło do konta Go Girl Workout App",
 };
 
-export default function ResetPasswordPage() {
+export default async function ResetPasswordPage({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}>) {
+  const params = await searchParams;
+  const error = params.error === "invalid_token";
+
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeader showBack={false} />
@@ -21,6 +28,13 @@ export default function ResetPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-4 rounded-md bg-destructive/10 p-3">
+                <p className="text-sm text-destructive">
+                  Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link.
+                </p>
+              </div>
+            )}
             <ResetPasswordForm />
           </CardContent>
         </Card>

@@ -6,58 +6,65 @@ import { ConfirmPasswordInput } from "@/components/auth/register/confirm-passwor
 import { ResetPasswordConfirmButton } from "./reset-password-confirm-button";
 import { ResetPasswordConfirmInstructions } from "./reset-password-confirm-instructions";
 import { BackToLoginLink } from "@/components/reset-password/back-to-login-link";
+import { useResetPasswordConfirmForm } from "@/hooks/use-reset-password-confirm-form";
 
 /**
  * Główny komponent formularza potwierdzenia resetu hasła.
  * Zarządza stanem formularza z polami: newPassword, confirmPassword.
  * 
- * Uwaga: Logika backendowa (weryfikacja tokenu, updateUser) będzie zaimplementowana później.
+ * Używa hooka useResetPasswordConfirmForm do:
+ * - Walidacji pól (minimum 6 znaków, zgodność haseł)
+ * - Weryfikacji tokenu recovery
+ * - Wywołania supabase.auth.updateUser({ password }) do zmiany hasła
+ * - Obsługi błędów i przekierowania do /login po sukcesie
  */
 export function ResetPasswordConfirmForm() {
-  // Stan formularza
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  // Błędy walidacji
-  const [errors, setErrors] = useState<{
-    newPassword?: string;
-    confirmPassword?: string;
-    _form?: string[];
-  }>({});
-
-  // Stan ładowania
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    newPassword,
+    confirmPassword,
+    errors,
+    isLoading,
+    isTokenValid,
+    handleNewPasswordChange,
+    handleConfirmPasswordChange,
+    handleNewPasswordBlur,
+    handleConfirmPasswordBlur,
+    handleSubmit,
+  } = useResetPasswordConfirmForm();
 
   // Widoczność haseł
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
 
-  // Handler submit formularza
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // TODO: Implementacja walidacji i logiki backendowej w dalszej kolejności
-    // Na razie tylko UI - formularz nie wykonuje żadnych akcji
-    setIsLoading(true);
-    
-    // Symulacja opóźnienia dla UX
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-  };
+  // Jeśli token jest nieprawidłowy, formularz jest wyłączony
+  const isFormDisabled = isLoading || isTokenValid === false || isTokenValid === null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <ResetPasswordConfirmInstructions />
 
+      {isTokenValid === false && (
+        <div className="rounded-md bg-destructive/10 p-3">
+          <p className="text-sm text-destructive">
+            Link resetu hasła jest nieprawidłowy lub wygasł. Przekierowujemy Cię do strony resetu hasła...
+          </p>
+        </div>
+      )}
+
+      {isTokenValid === null && (
+        <div className="rounded-md bg-muted p-3">
+          <p className="text-sm text-muted-foreground">
+            Weryfikacja tokenu...
+          </p>
+        </div>
+      )}
+
       <PasswordInput
         value={newPassword}
         error={errors.newPassword}
-        onChange={(value) => setNewPassword(value)}
-        onBlur={() => {
-          // TODO: Walidacja pola
-        }}
-        disabled={isLoading}
+        onChange={handleNewPasswordChange}
+        onBlur={handleNewPasswordBlur}
+        disabled={isFormDisabled}
         isVisible={isNewPasswordVisible}
         onToggleVisibility={() => setIsNewPasswordVisible((prev) => !prev)}
       />
@@ -66,11 +73,9 @@ export function ResetPasswordConfirmForm() {
         value={confirmPassword}
         password={newPassword}
         error={errors.confirmPassword}
-        onChange={(value) => setConfirmPassword(value)}
-        onBlur={() => {
-          // TODO: Walidacja pola
-        }}
-        disabled={isLoading}
+        onChange={handleConfirmPasswordChange}
+        onBlur={handleConfirmPasswordBlur}
+        disabled={isFormDisabled}
         isVisible={isConfirmPasswordVisible}
         onToggleVisibility={() => setIsConfirmPasswordVisible((prev) => !prev)}
       />
@@ -78,14 +83,14 @@ export function ResetPasswordConfirmForm() {
       {errors._form && errors._form.length > 0 && (
         <div className="rounded-md bg-destructive/10 p-3">
           <ul className="list-disc list-inside space-y-1 text-sm text-destructive">
-            {errors._form.map((error, index) => (
-              <li key={index}>{error}</li>
+            {errors._form.map((error) => (
+              <li key={error}>{error}</li>
             ))}
           </ul>
         </div>
       )}
 
-      <ResetPasswordConfirmButton isLoading={isLoading} disabled={isLoading} />
+      <ResetPasswordConfirmButton isLoading={isLoading} disabled={isFormDisabled} />
 
       <BackToLoginLink />
     </form>

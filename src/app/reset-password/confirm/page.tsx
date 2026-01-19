@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { createClient } from "@/db/supabase.server";
 import { ResetPasswordConfirmForm } from "@/components/reset-password/confirm/reset-password-confirm-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/navigation/page-header";
@@ -13,33 +11,20 @@ export const metadata: Metadata = {
 /**
  * Strona potwierdzenia resetu hasła.
  * 
- * Weryfikuje token resetu hasła z URL (hash fragment #access_token=...).
- * Token jest automatycznie przetwarzany przez @supabase/ssr i sesja recovery
- * jest ustawiana w cookies. Sprawdzamy, czy sesja recovery istnieje.
+ * Uwaga: Hash fragment (#access_token=...) jest dostępny tylko po stronie klienta.
+ * Weryfikacja tokenu odbywa się w Client Component (ResetPasswordConfirmForm)
+ * przez hook useResetPasswordConfirmForm, który sprawdza sesję recovery.
  * 
- * Jeśli token jest nieprawidłowy/wygasły, przekierowuje do /reset-password.
+ * Server Component renderuje tylko layout - weryfikacja tokenu i obsługa błędów
+ * są wykonywane w Client Component po stronie klienta.
  */
 export default async function ResetPasswordConfirmPage() {
-  const supabase = await createClient();
-
-  // Sprawdzenie sesji - jeśli istnieje sesja recovery, token jest ważny
-  // Supabase automatycznie przetwarza hash fragment (#access_token=...) i ustawia sesję w cookies
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-
-  // Jeśli brak sesji lub błąd, token jest nieprawidłowy/wygasły
-  // Przekierowanie do /reset-password z komunikatem
-  if (error || !session) {
-    redirect("/reset-password?error=invalid_token");
-  }
-
-  // Sprawdzenie, czy sesja jest sesją recovery (reset hasła)
-  // W Supabase, sesja recovery ma specjalny typ - sprawdzamy przez sprawdzenie, czy użytkownik może zmienić hasło
-  // Alternatywnie, możemy sprawdzić przez sprawdzenie, czy użytkownik jest w trybie recovery
-  // Dla uproszczenia, jeśli sesja istnieje, pozwalamy na zmianę hasła
-  // (Supabase automatycznie weryfikuje, czy sesja jest ważna dla resetu hasła)
+  // Nie sprawdzamy sesji w Server Component, ponieważ:
+  // 1. Hash fragment (#access_token=...) nie jest dostępny w Server Component
+  // 2. Supabase SSR może nie przetworzyć hash fragmentu przed renderowaniem Server Component
+  // 3. Weryfikacja tokenu odbywa się w Client Component (hook useResetPasswordConfirmForm)
+  
+  // Renderujemy formularz - hook w Client Component zweryfikuje token i obsłuży błędy
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
