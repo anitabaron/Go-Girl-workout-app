@@ -229,42 +229,68 @@ export function useWorkoutPlanForm({
     }
   };
 
-  const handleAddExercise = (exercise: ExerciseDTO) => {
-    // Użyj typu sekcji z ćwiczenia jako domyślnego (można później zmienić w planie)
-    const defaultSectionType = exercise.type;
+  const handleAddExercise = (exercises: ExerciseDTO | ExerciseDTO[]) => {
+    // Normalizuj do tablicy
+    const exercisesArray = Array.isArray(exercises) ? exercises : [exercises];
 
-    // Znajdź następną dostępną pozycję w sekcji tego samego typu co ćwiczenie
-    const exercisesInSection = fields.exercises.filter(
-      (e) => e.section_type === defaultSectionType
-    );
-    const nextOrder =
-      exercisesInSection.length > 0
-        ? Math.max(...exercisesInSection.map((e) => e.section_order)) + 1
-        : 1;
+    if (exercisesArray.length === 0) {
+      return;
+    }
 
-    // Kopiuj wartości z ćwiczenia do parametrów planowanych
-    const newExercise: WorkoutPlanExerciseItemState = {
-      exercise_id: exercise.id,
-      exercise_title: exercise.title,
-      exercise_type: exercise.type,
-      exercise_part: exercise.part,
-      section_type: defaultSectionType,
-      section_order: nextOrder,
-      // Mapowanie wartości z ćwiczenia do parametrów planowanych
-      planned_sets: exercise.series ?? null,
-      planned_reps: exercise.reps ?? null,
-      planned_duration_seconds: exercise.duration_seconds ?? null,
-      // Używamy rest_in_between_seconds jako głównego odpoczynku
-      // Jeśli nie ma, używamy rest_after_series_seconds
-      planned_rest_seconds:
-        exercise.rest_in_between_seconds ??
-        exercise.rest_after_series_seconds ??
-        null,
-    };
+    // Grupuj ćwiczenia według typu sekcji
+    const exercisesBySection = new Map<
+      ExerciseDTO["type"],
+      ExerciseDTO[]
+    >();
+    exercisesArray.forEach((exercise) => {
+      const sectionType = exercise.type;
+      if (!exercisesBySection.has(sectionType)) {
+        exercisesBySection.set(sectionType, []);
+      }
+      exercisesBySection.get(sectionType)!.push(exercise);
+    });
+
+    // Dla każdej sekcji, znajdź następną dostępną pozycję
+    const newExercises: WorkoutPlanExerciseItemState[] = [];
+
+    exercisesBySection.forEach((sectionExercises, sectionType) => {
+      const exercisesInSection = fields.exercises.filter(
+        (e) => e.section_type === sectionType
+      );
+      let nextOrder =
+        exercisesInSection.length > 0
+          ? Math.max(...exercisesInSection.map((e) => e.section_order)) + 1
+          : 1;
+
+      // Dodaj wszystkie ćwiczenia z tej sekcji
+      sectionExercises.forEach((exercise) => {
+        const newExercise: WorkoutPlanExerciseItemState = {
+          exercise_id: exercise.id,
+          exercise_title: exercise.title,
+          exercise_type: exercise.type,
+          exercise_part: exercise.part,
+          section_type: sectionType,
+          section_order: nextOrder,
+          // Mapowanie wartości z ćwiczenia do parametrów planowanych
+          planned_sets: exercise.series ?? null,
+          planned_reps: exercise.reps ?? null,
+          planned_duration_seconds: exercise.duration_seconds ?? null,
+          // Używamy rest_in_between_seconds jako głównego odpoczynku
+          // Jeśli nie ma, używamy rest_after_series_seconds
+          planned_rest_seconds:
+            exercise.rest_in_between_seconds ??
+            exercise.rest_after_series_seconds ??
+            null,
+        };
+
+        newExercises.push(newExercise);
+        nextOrder += 1;
+      });
+    });
 
     setFields((prev) => ({
       ...prev,
-      exercises: [...prev.exercises, newExercise],
+      exercises: [...prev.exercises, ...newExercises],
     }));
 
     // Wyczyść błędy ćwiczeń przy dodaniu

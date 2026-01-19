@@ -124,7 +124,7 @@ export type PlannedParamsEditorProps = {
  * Props dla AddExerciseDialog
  */
 export type AddExerciseDialogProps = {
-  onAddExercise: (exercise: ExerciseDTO) => void;
+  onAddExercise: (exercises: ExerciseDTO[]) => void;
   disabled: boolean;
   existingExerciseIds?: string[];
 };
@@ -133,7 +133,8 @@ export type AddExerciseDialogProps = {
  * Props dla ExerciseSelector
  */
 export type ExerciseSelectorProps = {
-  onSelectExercise: (exercise: ExerciseDTO) => void;
+  selectedExerciseIds: string[];
+  onToggleExercise: (exercise: ExerciseDTO) => void;
   excludedExerciseIds?: string[];
 };
 

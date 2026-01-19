@@ -18,6 +18,7 @@ import {
 } from "@/lib/validation/exercises";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const partLabels: Record<ExercisePart, string> = {
   Legs: "Nogi",
@@ -34,7 +35,8 @@ const typeLabels: Record<ExerciseType, string> = {
 };
 
 export function ExerciseSelector({
-  onSelectExercise,
+  selectedExerciseIds,
+  onToggleExercise,
   excludedExerciseIds = [],
 }: Readonly<ExerciseSelectorProps>) {
   const [search, setSearch] = useState("");
@@ -86,7 +88,11 @@ export function ExerciseSelector({
   }, [fetchExercises]);
 
   const handleExerciseClick = (exercise: ExerciseDTO) => {
-    onSelectExercise(exercise);
+    onToggleExercise(exercise);
+  };
+
+  const isSelected = (exerciseId: string) => {
+    return selectedExerciseIds.includes(exerciseId);
   };
 
   return (
@@ -169,35 +175,51 @@ export function ExerciseSelector({
         }
 
         return (
-        <div className="max-h-[400px] space-y-2 overflow-y-auto">
-          {exercises.map((exercise) => (
-            <Card
-              key={exercise.id}
-              className="cursor-pointer transition-all hover:shadow-md"
-              onClick={() => handleExerciseClick(exercise)}
-            >
-              <CardHeader className="pb-3">
-                <CardTitle className="line-clamp-2 text-base">
-                  {exercise.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {typeLabels[exercise.type]}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    {partLabels[exercise.part]}
-                  </Badge>
-                  {exercise.level && (
-                    <Badge variant="outline" className="text-xs">
-                      {exercise.level}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="max-h-[400px] overflow-y-auto">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+            {exercises.map((exercise) => {
+              const selected = isSelected(exercise.id);
+              return (
+                <Card
+                  key={exercise.id}
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    selected ? "ring-2 ring-primary" : ""
+                  }`}
+                  onClick={() => handleExerciseClick(exercise)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="line-clamp-2 flex-1 text-base">
+                        {exercise.title}
+                      </CardTitle>
+                      <Checkbox
+                        checked={selected}
+                        onCheckedChange={() => handleExerciseClick(exercise)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-0.5 shrink-0"
+                        aria-label={`Wybierz ${exercise.title}`}
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {typeLabels[exercise.type]}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {partLabels[exercise.part]}
+                      </Badge>
+                      {exercise.level && (
+                        <Badge variant="outline" className="text-xs">
+                          {exercise.level}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
         );
       })()}
