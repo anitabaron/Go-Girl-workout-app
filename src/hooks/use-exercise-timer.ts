@@ -90,62 +90,81 @@ export function useExerciseTimer(
   }, []);
 
   // Ref do śledzenia poprzednich wartości, aby uniknąć niepotrzebnych aktualizacji
-  const prevValuesRef = useRef({
-    exerciseId: exercise.id,
-    currentSetNumber,
-    plannedDurationSeconds: exercise.planned_duration_seconds,
-    plannedReps: exercise.planned_reps,
+  const prevValuesRef = useRef<{
+    exerciseId: string | null;
+    currentSetNumber: number | null;
+    plannedDurationSeconds: number | null;
+    plannedReps: number | null;
+  }>({
+    exerciseId: null,
+    currentSetNumber: null,
+    plannedDurationSeconds: null,
+    plannedReps: null,
   });
+
+  // Ref do śledzenia, czy to pierwszy mount
+  const isFirstMountRef = useRef(true);
+
+  // Funkcja pomocnicza do inicjalizacji stanu timera
+  const initializeTimerState = useCallback(() => {
+    if (
+      (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) ||
+      (exercise.planned_reps && exercise.planned_reps > 0)
+    ) {
+      // Sprawdź, czy to ćwiczenie z czasem czy powtórzeniami
+      if (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) {
+        setTimerState({
+          type: "set_countdown",
+          setNumber: currentSetNumber,
+          remainingSeconds: exercise.planned_duration_seconds,
+        });
+      } else {
+        // Ćwiczenie z powtórzeniami - wyświetl powtórzenia
+        setTimerState({
+          type: "reps_display",
+          setNumber: currentSetNumber,
+          reps: exercise.planned_reps ?? 0,
+        });
+      }
+    } else {
+      // Jeśli ćwiczenie nie ma planowanych wartości, ustaw stan oczekiwania
+      setTimerState({ type: "waiting" });
+    }
+  }, [exercise.planned_duration_seconds, exercise.planned_reps, currentSetNumber]);
 
   // Automatyczne rozpoczęcie serii przy zmianie ćwiczenia lub numeru serii
   useEffect(() => {
     const prev = prevValuesRef.current;
     const hasChanged =
+      prev.exerciseId === null ||
+      prev.currentSetNumber === null ||
       prev.exerciseId !== exercise.id ||
       prev.currentSetNumber !== currentSetNumber ||
       prev.plannedDurationSeconds !== exercise.planned_duration_seconds ||
       prev.plannedReps !== exercise.planned_reps;
 
-    if (!hasChanged) {
-      return;
-    }
+    // Jeśli to pierwszy mount lub wartości się zmieniły, zaktualizuj timer
+    if (isFirstMountRef.current || hasChanged) {
+      // Aktualizuj ref z nowymi wartościami
+      prevValuesRef.current = {
+        exerciseId: exercise.id,
+        currentSetNumber,
+        plannedDurationSeconds: exercise.planned_duration_seconds,
+        plannedReps: exercise.planned_reps,
+      };
 
-    // Aktualizuj ref z nowymi wartościami
-    prevValuesRef.current = {
-      exerciseId: exercise.id,
-      currentSetNumber,
-      plannedDurationSeconds: exercise.planned_duration_seconds,
-      plannedReps: exercise.planned_reps,
-    };
-
-    // Oblicz nowy stan timera na podstawie ćwiczenia
-    // Używamy queueMicrotask, aby uniknąć synchronicznego setState w efekcie
-    queueMicrotask(() => {
-      if (
-        (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) ||
-        (exercise.planned_reps && exercise.planned_reps > 0)
-      ) {
-        // Sprawdź, czy to ćwiczenie z czasem czy powtórzeniami
-        if (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) {
-          setTimerState({
-            type: "set_countdown",
-            setNumber: currentSetNumber,
-            remainingSeconds: exercise.planned_duration_seconds,
-          });
-        } else {
-          // Ćwiczenie z powtórzeniami - wyświetl powtórzenia
-          setTimerState({
-            type: "reps_display",
-            setNumber: currentSetNumber,
-            reps: exercise.planned_reps ?? 0,
-          });
-        }
-      } else {
-        // Jeśli ćwiczenie nie ma planowanych wartości, ustaw stan oczekiwania
-        setTimerState({ type: "waiting" });
+      // Oznacz, że pierwszy mount już minął
+      if (isFirstMountRef.current) {
+        isFirstMountRef.current = false;
       }
-    });
-  }, [exercise.id, currentSetNumber, exercise.planned_duration_seconds, exercise.planned_reps]);
+
+      // Oblicz nowy stan timera na podstawie ćwiczenia
+      // Używamy queueMicrotask, aby uniknąć synchronicznego setState w efekcie
+      queueMicrotask(() => {
+        initializeTimerState();
+      });
+    }
+  }, [exercise.id, currentSetNumber, exercise.planned_duration_seconds, exercise.planned_reps, initializeTimerState]);
 
 
   return {
