@@ -176,12 +176,12 @@ export function WorkoutPlanExerciseItem({
             <div className="mt-1 flex items-center gap-1.5">
               <div
                 id={sectionOrderId}
-                className="flex h-9 flex-1 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium transition-colors"
+                className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium transition-colors"
                 aria-invalid={exerciseErrors.section_order ? "true" : "false"}
               >
                 {exercise.section_order}
               </div>
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-row gap-0.5">
                 <Button
                   type="button"
                   variant="outline"

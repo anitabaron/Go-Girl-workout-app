@@ -18,12 +18,13 @@ export const emailSchema = z
  * Schemat walidacji dla pola hasła.
  * - Wymagane pole
  * - Minimum 6 znaków (zgodnie z konfiguracją Supabase: minimum_password_length = 6)
- * - Trim wartości przed walidacją (opcjonalnie, hasła zwykle nie są trimowane)
+ * - Nie może zawierać spacji
  */
 export const passwordSchema = z
   .string()
   .min(1, "Hasło jest wymagane")
-  .min(6, "Hasło musi mieć minimum 6 znaków");
+  .min(6, "Hasło musi mieć minimum 6 znaków")
+  .regex(/^[^\s]+$/, "Hasło nie może zawierać spacji");
 
 /**
  * Schemat walidacji dla pola potwierdzenia hasła.

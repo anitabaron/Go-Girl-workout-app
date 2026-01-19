@@ -187,6 +187,9 @@ export function dtoToFormState(
     exercises: dto.exercises.map((exercise) => ({
       id: exercise.id,
       exercise_id: exercise.exercise_id,
+      exercise_title: exercise.exercise_title ?? undefined,
+      exercise_type: exercise.exercise_type ?? undefined,
+      exercise_part: exercise.exercise_part ?? undefined,
       section_type: exercise.section_type,
       section_order: exercise.section_order,
       planned_sets: exercise.planned_sets,

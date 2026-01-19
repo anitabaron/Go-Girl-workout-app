@@ -14,7 +14,8 @@ const resetPasswordConfirmFormSchema = z
     newPassword: z
       .string()
       .min(1, "Hasło jest wymagane")
-      .min(6, "Hasło musi mieć minimum 6 znaków"),
+      .min(6, "Hasło musi mieć minimum 6 znaków")
+      .regex(/^[^\s]+$/, "Hasło nie może zawierać spacji"),
     confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {

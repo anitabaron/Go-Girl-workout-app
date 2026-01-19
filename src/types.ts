@@ -109,6 +109,8 @@ export type WorkoutPlanExerciseDTO = Omit<
   "plan_id" | "created_at"
 > & {
   exercise_title?: string | null;
+  exercise_type?: ExerciseType | null;
+  exercise_part?: ExercisePart | null;
 };
 
 export type WorkoutPlanDTO = Omit<WorkoutPlanEntity, "user_id"> & {
