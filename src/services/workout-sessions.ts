@@ -411,6 +411,7 @@ function createSessionSnapshots(
     planned_reps: number | null;
     planned_duration_seconds: number | null;
     planned_rest_seconds: number | null;
+    planned_rest_after_series_seconds?: number | null;
   }>,
   exercisesMap: Map<
     string,
@@ -435,6 +436,7 @@ function createSessionSnapshots(
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
+  planned_rest_after_series_seconds: number | null;
   exercise_order: number;
 }> {
   // Sortuj ćwiczenia planu: najpierw Warm-up, potem Main Workout, potem Cool-down
@@ -478,6 +480,9 @@ function createSessionSnapshots(
     const plannedRest =
       planExercise.planned_rest_seconds ??
       exercise.rest_in_between_seconds ??
+      null;
+    const plannedRestAfterSeries =
+      planExercise.planned_rest_after_series_seconds ??
       exercise.rest_after_series_seconds ??
       null;
 
@@ -490,6 +495,7 @@ function createSessionSnapshots(
       planned_reps: plannedReps,
       planned_duration_seconds: plannedDuration,
       planned_rest_seconds: plannedRest,
+      planned_rest_after_series_seconds: plannedRestAfterSeries,
       exercise_order: index + 1, // Flattened order starting from 1
     };
   });

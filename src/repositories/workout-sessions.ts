@@ -205,6 +205,7 @@ export async function insertWorkoutSessionExercises(
     planned_reps: number | null;
     planned_duration_seconds: number | null;
     planned_rest_seconds: number | null;
+    planned_rest_after_series_seconds: number | null;
     exercise_order: number;
   }>
 ) {
@@ -218,6 +219,7 @@ export async function insertWorkoutSessionExercises(
     planned_reps: exercise.planned_reps,
     planned_duration_seconds: exercise.planned_duration_seconds,
     planned_rest_seconds: exercise.planned_rest_seconds,
+    planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds,
     exercise_order: exercise.exercise_order,
     actual_sets: null,
     actual_reps: null,
@@ -270,6 +272,7 @@ export async function updateWorkoutSessionStatus(
 
 /**
  * Pobiera wszystkie ćwiczenia sesji treningowej posortowane po order.
+ * Dołącza wartości rest_in_between_seconds i rest_after_series_seconds z tabeli exercises.
  */
 export async function findWorkoutSessionExercises(
   client: DbClient,
@@ -277,7 +280,7 @@ export async function findWorkoutSessionExercises(
 ) {
   const { data, error } = await client
     .from("workout_session_exercises")
-    .select("*")
+    .select("*, exercises(rest_in_between_seconds, rest_after_series_seconds)")
     .eq("session_id", sessionId)
     .order("exercise_order", { ascending: true });
 
@@ -356,7 +359,14 @@ export function mapToSummaryDTO(row: WorkoutSessionRow): SessionSummaryDTO {
  */
 export function mapToDetailDTO(
   session: WorkoutSessionRow,
-  exercises: WorkoutSessionExerciseRow[],
+  exercises: Array<
+    WorkoutSessionExerciseRow & {
+      exercises?: {
+        rest_in_between_seconds: number | null;
+        rest_after_series_seconds: number | null;
+      } | null;
+    }
+  >,
   sets: WorkoutSessionSetRow[]
 ): SessionDetailDTO {
   const sessionSummary = mapToSummaryDTO(session);
@@ -373,7 +383,7 @@ export function mapToDetailDTO(
 
   const exerciseDTOs: SessionExerciseDTO[] = exercises.map((exercise) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { session_id, created_at, updated_at, actual_sets, actual_reps, ...exerciseRest } = exercise;
+    const { session_id, created_at, updated_at, actual_sets, actual_reps, exercises: exerciseData, ...exerciseRest } = exercise;
 
     const setDTOs: SessionExerciseSetDTO[] = (
       setsByExerciseId.get(exercise.id) ?? []
@@ -383,12 +393,19 @@ export function mapToDetailDTO(
       return setRest;
     });
 
+    // Wyciągnij wartości rest z zjoinowanej tabeli exercises
+    const restInBetweenSeconds = exerciseData?.rest_in_between_seconds ?? null;
+    const restAfterSeriesSeconds = exerciseData?.rest_after_series_seconds ?? null;
+
     return {
       ...exerciseRest,
       // Mapowanie nazw z bazy danych na nazwy API
       actual_count_sets: actual_sets,
       actual_sum_reps: actual_reps,
       sets: setDTOs,
+      // Wartości rest z ćwiczenia
+      rest_in_between_seconds: restInBetweenSeconds,
+      rest_after_series_seconds: restAfterSeriesSeconds,
     };
   });
 
@@ -403,11 +420,16 @@ export function mapToDetailDTO(
  * Mapuje nazwy z bazy danych (actual_sets, actual_reps) na nazwy API (actual_count_sets, actual_sum_reps).
  */
 export function mapExerciseToDTO(
-  exercise: WorkoutSessionExerciseRow,
+  exercise: WorkoutSessionExerciseRow & {
+    exercises?: {
+      rest_in_between_seconds: number | null;
+      rest_after_series_seconds: number | null;
+    } | null;
+  },
   sets: WorkoutSessionSetRow[]
 ): SessionExerciseDTO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { session_id, created_at, updated_at, actual_sets, actual_reps, ...exerciseRest } = exercise;
+  const { session_id, created_at, updated_at, actual_sets, actual_reps, exercises: exerciseData, ...exerciseRest } = exercise;
 
   const setDTOs: SessionExerciseSetDTO[] = sets
     .filter((set) => set.session_exercise_id === exercise.id)
@@ -418,12 +440,19 @@ export function mapExerciseToDTO(
     })
     .sort((a, b) => a.set_number - b.set_number);
 
+  // Wyciągnij wartości rest z zjoinowanej tabeli exercises
+  const restInBetweenSeconds = exerciseData?.rest_in_between_seconds ?? null;
+  const restAfterSeriesSeconds = exerciseData?.rest_after_series_seconds ?? null;
+
   return {
     ...exerciseRest,
     // Mapowanie nazw z bazy danych na nazwy API
     actual_count_sets: actual_sets,
     actual_sum_reps: actual_reps,
     sets: setDTOs,
+    // Wartości rest z ćwiczenia
+    rest_in_between_seconds: restInBetweenSeconds,
+    rest_after_series_seconds: restAfterSeriesSeconds,
   };
 }
 
@@ -462,7 +491,7 @@ export async function findWorkoutSessionExerciseByOrder(
 
   const { data, error } = await client
     .from("workout_session_exercises")
-    .select("*")
+    .select("*, exercises(rest_in_between_seconds, rest_after_series_seconds)")
     .eq("session_id", sessionId)
     .eq("exercise_order", order)
     .maybeSingle();

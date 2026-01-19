@@ -18,12 +18,7 @@ type CurrentExerciseInfoProps = {
 export function CurrentExerciseInfo({ exercise }: CurrentExerciseInfoProps) {
   const formatDuration = (seconds: number | null | undefined): string => {
     if (!seconds) return "-";
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    if (minutes > 0) {
-      return `${minutes}min ${secs}s`;
-    }
-    return `${secs}s`;
+    return `${seconds}s`;
   };
 
   return (
@@ -93,17 +88,29 @@ export function CurrentExerciseInfo({ exercise }: CurrentExerciseInfoProps) {
             </div>
           )}
 
-        {exercise.planned_rest_seconds !== null &&
-          exercise.planned_rest_seconds !== undefined && (
-            <div>
-              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                Przerwa planowana
-              </p>
-              <p className="text-lg font-semibold">
-                {formatDuration(exercise.planned_rest_seconds)}
-              </p>
-            </div>
-          )}
+        {(exercise.rest_in_between_seconds !== null &&
+          exercise.rest_in_between_seconds !== undefined) && (
+          <div>
+            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              Przerwa między seriami
+            </p>
+            <p className="text-lg font-semibold">
+              {formatDuration(exercise.rest_in_between_seconds)}
+            </p>
+          </div>
+        )}
+
+        {(exercise.rest_after_series_seconds !== null &&
+          exercise.rest_after_series_seconds !== undefined) && (
+          <div>
+            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              Przerwa po zakończonych seriach
+            </p>
+            <p className="text-lg font-semibold">
+              {formatDuration(exercise.rest_after_series_seconds)}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
