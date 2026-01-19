@@ -20,11 +20,7 @@ export function RestBetweenSetsTimer({
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
-          Przerwa między seriami
-        </h3>
-      </div>
+    
 
       <CountdownCircleTimer
         isPlaying={!isPaused}

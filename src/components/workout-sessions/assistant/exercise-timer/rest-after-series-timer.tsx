@@ -32,7 +32,7 @@ export function RestAfterSeriesTimer({
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={restSeconds}
-        colors={["#10b981", "#34d399", "#6ee7b7"]}
+        colors={["#be123c", "#e11d48", "#f43f5e"]}
         colorsTime={[restSeconds, restSeconds * 0.5, 0]}
         trailColor="#ffbdc8"
         size={240}
@@ -44,7 +44,7 @@ export function RestAfterSeriesTimer({
       >
         {({ remainingTime }) => (
           <div className="flex flex-col items-center">
-            <div className="text-6xl font-bold text-green-600 sm:text-7xl md:text-8xl dark:text-green-400">
+            <div className="text-6xl font-bold text-rose-700 sm:text-7xl md:text-8xl dark:text-rose-500">
               {remainingTime}
             </div>
             <div className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -54,11 +54,7 @@ export function RestAfterSeriesTimer({
         )}
       </CountdownCircleTimer>
 
-      <div className="text-center">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Status: {isPaused ? "Pauza" : "W trakcie"}
-        </p>
-      </div>
+    
     </div>
   );
 }

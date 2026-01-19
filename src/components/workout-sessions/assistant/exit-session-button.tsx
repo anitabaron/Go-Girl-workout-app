@@ -37,7 +37,7 @@ export function ExitSessionButton({ onExit }: ExitSessionButtonProps) {
         variant="ghost"
         size="icon"
         onClick={() => setIsDialogOpen(true)}
-        className="fixed left-4 top-4 z-50 h-10 w-10 rounded-full bg-white/90 shadow-sm hover:bg-white dark:bg-zinc-950/90 dark:hover:bg-zinc-950"
+        className="fixed left-4 md:top-20 top-4 z-50 h-10 w-10 rounded-full bg-white/90 shadow-sm hover:bg-white dark:bg-zinc-950/90 dark:hover:bg-zinc-950"
         aria-label="Wyjdź z sesji treningowej"
       >
         <X className="size-5" />
