@@ -42,7 +42,7 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration = true
           </div>
 
           {/* Pola metryk */}
-          <div className={`grid grid-cols-1 gap-3 ${showDuration ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+          <div className={`grid grid-cols-2 gap-3 ${showDuration ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
             <div>
               <label
                 htmlFor={`reps-${set.set_number}`}

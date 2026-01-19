@@ -22,7 +22,7 @@ export function AutosaveIndicator({
         return {
           icon: Loader2,
           text: "Zapisywanie...",
-          className: "text-zinc-600 dark:text-zinc-400 animate-spin",
+          className: "text-zinc-600 dark:text-zinc-400 ",
         };
       case "saved":
         return {

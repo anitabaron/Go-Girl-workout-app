@@ -208,7 +208,7 @@ export function ExerciseExecutionForm({
       </h3>
 
       {/* Podsumowanie - wartości obliczane z serii (tylko do wyświetlenia) */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-3 gap-4 md:grid-cols-3">
         <div>
           <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Liczba serii
