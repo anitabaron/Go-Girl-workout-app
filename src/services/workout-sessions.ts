@@ -871,6 +871,9 @@ async function fetchUpdatedExerciseWithCursor(
  * Oblicza agregaty z serii, jeśli nie zostały podane ręcznie.
  * Opcja A: Automatyczne obliczanie z fallbackiem na wartości ręczne.
  * Mapuje nazwy API (actual_count_sets, actual_sum_reps) na nazwy bazy danych (actual_sets, actual_reps).
+ * 
+ * Uwaga: Oblicza actual_reps tylko jeśli planned_reps nie jest null (ćwiczenie oparte na powtórzeniach).
+ * Oblicza actual_duration_seconds tylko jeśli planned_duration_seconds nie jest null (ćwiczenie oparte na czasie).
  */
 function calculateAggregatesFromSets(
   parsed: {
@@ -882,7 +885,9 @@ function calculateAggregatesFromSets(
       duration_seconds?: number | null;
       weight_kg?: number | null;
     }> | null;
-  }
+  },
+  plannedReps?: number | null,
+  plannedDurationSeconds?: number | null
 ): {
   actual_sets: number | null; // Dla bazy danych
   actual_reps: number | null; // Dla bazy danych
@@ -896,23 +901,30 @@ function calculateAggregatesFromSets(
     actualSets = parsed.sets.length;
   }
 
-  // actual_sum_reps (API) → actual_reps (DB): jeśli nie podano, oblicz sumę reps z serii
+  // actual_sum_reps (API) → actual_reps (DB): oblicz tylko jeśli ćwiczenie ma planowane powtórzenia
+  // Jeśli planned_reps jest null, to ćwiczenie jest oparte na czasie, więc nie obliczamy sumy powtórzeń
   let actualReps: number | null = null;
   if (parsed.actual_sum_reps !== undefined) {
     actualReps = parsed.actual_sum_reps;
-  } else if (parsed.sets && parsed.sets.length > 0) {
-    const sum = parsed.sets.reduce((acc, set) => {
-      return acc + (set.reps ?? 0);
-    }, 0);
-    // Zwróć sumę tylko jeśli > 0 (null oznacza brak danych)
-    actualReps = sum > 0 ? sum : null;
+  } else if (parsed.sets && parsed.sets.length > 0 && plannedReps !== null && plannedReps !== undefined) {
+    // Oblicz sumę tylko jeśli ćwiczenie ma planowane powtórzenia
+    const repsWithValues = parsed.sets
+      .map((set) => set.reps)
+      .filter((r): r is number => r !== null && r !== undefined);
+    
+    if (repsWithValues.length > 0) {
+      const sum = repsWithValues.reduce((acc, reps) => acc + reps, 0);
+      actualReps = sum > 0 ? sum : null;
+    }
   }
 
-  // actual_duration_seconds: jeśli nie podano, oblicz max duration_seconds z serii
+  // actual_duration_seconds: oblicz tylko jeśli ćwiczenie ma planowany czas
+  // Jeśli planned_duration_seconds jest null, to ćwiczenie jest oparte na powtórzeniach, więc nie obliczamy czasu
   let actualDurationSeconds: number | null = null;
   if (parsed.actual_duration_seconds !== undefined) {
     actualDurationSeconds = parsed.actual_duration_seconds;
-  } else if (parsed.sets && parsed.sets.length > 0) {
+  } else if (parsed.sets && parsed.sets.length > 0 && plannedDurationSeconds !== null && plannedDurationSeconds !== undefined) {
+    // Oblicz maksymalny czas tylko jeśli ćwiczenie ma planowany czas
     const durations = parsed.sets
       .map((set) => set.duration_seconds)
       .filter((d): d is number => d !== null && d !== undefined);
@@ -954,7 +966,12 @@ export async function autosaveWorkoutSessionExerciseService(
   );
 
   // Oblicz agregaty z serii, jeśli nie zostały podane ręcznie (Opcja A)
-  const aggregates = calculateAggregatesFromSets(parsed);
+  // Przekazujemy planned_reps i planned_duration_seconds, aby funkcja wiedziała, czy obliczać powtórzenia czy czas
+  const aggregates = calculateAggregatesFromSets(
+    parsed,
+    exercise.planned_reps,
+    exercise.planned_duration_seconds
+  );
 
   // Przygotuj sets dla bazy danych:
   // - Jeśli sets nie jest puste, wyślij zmapowane sets

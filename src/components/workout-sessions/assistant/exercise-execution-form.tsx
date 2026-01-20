@@ -56,24 +56,40 @@ export function ExerciseExecutionForm({
   // Obliczanie actual_* z set logs (jeśli nie są ręcznie edytowane)
   const calculateActuals = useCallback((sets: SetLogFormData[]) => {
     const actualCountSets = sets.length;
-    const actualSumReps = sets.reduce(
-      (sum, set) => sum + (set.reps ?? 0),
-      0
-    );
-    const actualDurationSeconds = sets.reduce(
-      (max, set) => Math.max(max, set.duration_seconds ?? 0),
-      0
-    );
+    
+    // Oblicz sumę powtórzeń tylko jeśli ćwiczenie ma planowane powtórzenia
+    // Jeśli planned_reps jest null, to ćwiczenie jest oparte na czasie, więc nie obliczamy sumy powtórzeń
+    let actualSumReps: number | null = null;
+    if (exercise.planned_reps !== null && exercise.planned_reps !== undefined) {
+      const sum = sets.reduce(
+        (sum, set) => sum + (set.reps ?? 0),
+        0
+      );
+      actualSumReps = sum > 0 ? sum : null;
+    }
+    
+    // Oblicz maksymalny czas tylko jeśli ćwiczenie ma planowany czas
+    // Jeśli planned_duration_seconds jest null, to ćwiczenie jest oparte na powtórzeniach, więc nie obliczamy czasu
+    let actualDurationSeconds: number | null = null;
+    if (exercise.planned_duration_seconds !== null && exercise.planned_duration_seconds !== undefined) {
+      const durations = sets
+        .map((set) => set.duration_seconds)
+        .filter((d): d is number => d !== null && d !== undefined);
+      if (durations.length > 0) {
+        actualDurationSeconds = Math.max(...durations);
+      }
+    }
+    
     // actual_rest_seconds - można użyć planned_rest_seconds lub najdłuższej przerwy z serii
     const actualRestSeconds = exercise.planned_rest_seconds ?? null;
 
     return {
       actual_count_sets: actualCountSets > 0 ? actualCountSets : null,
-      actual_sum_reps: actualSumReps > 0 ? actualSumReps : null,
-      actual_duration_seconds: actualDurationSeconds > 0 ? actualDurationSeconds : null,
+      actual_sum_reps: actualSumReps,
+      actual_duration_seconds: actualDurationSeconds,
       actual_rest_seconds: actualRestSeconds,
     };
-  }, [exercise.planned_rest_seconds]);
+  }, [exercise.planned_reps, exercise.planned_duration_seconds, exercise.planned_rest_seconds]);
 
   // Aktualizuj formData gdy zmienia się ćwiczenie
   useEffect(() => {
@@ -136,6 +152,16 @@ export function ExerciseExecutionForm({
 
   // Obliczanie wartości podsumowania z serii (tylko do wyświetlenia)
   const summaryValues = useMemo(() => {
+    // Jeśli ćwiczenie jest pominięte, zwróć '-' dla wszystkich wartości
+    if (formData.is_skipped) {
+      return {
+        count_sets: '-',
+        sum_reps: '-',
+        duration_seconds: '-',
+        rest_seconds: '-',
+      };
+    }
+
     const countSets = formData.sets.length;
     const sumReps = formData.sets.reduce(
       (sum, set) => sum + (set.reps ?? 0),
@@ -153,7 +179,7 @@ export function ExerciseExecutionForm({
       duration_seconds: maxDuration > 0 ? maxDuration : 0,
       rest_seconds: restSeconds,
     };
-  }, [formData.sets, exercise.planned_rest_seconds]);
+  }, [formData.sets, formData.is_skipped, exercise.planned_rest_seconds]);
 
   // Obsługa dodania nowej serii
   const handleSetAdd = useCallback(() => {
