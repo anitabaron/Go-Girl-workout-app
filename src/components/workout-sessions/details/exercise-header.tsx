@@ -25,7 +25,7 @@ export function ExerciseHeader({
       <div className="mb-3 flex items-start justify-between">
         <h3 className="text-lg font-semibold">{exercise.exercise_title_at_time}</h3>
         <span className="text-sm text-zinc-600 dark:text-zinc-400">
-          Ćwiczenie {index + 1} z {total}
+          <span className="hidden sm:inline">Ćwiczenie</span> {index + 1} z {total}
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-2">

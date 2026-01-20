@@ -42,33 +42,33 @@ export function WorkoutSessionMetadata({
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm font-medium text-zinc-400 dark:text-zinc-400">
               Plan treningowy
             </p>
-            <p className="mt-1 text-lg font-semibold">{planName}</p>
+            <p className="mt-1 text-md font-semibold">{planName}</p>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm font-medium text-zinc-400 dark:text-zinc-400">
               Data rozpoczęcia
             </p>
-            <p className="mt-1 text-lg font-semibold">{formattedStartedAt}</p>
+            <p className="mt-1 text-md font-semibold">{formattedStartedAt}</p>
           </div>
 
           {formattedCompletedAt && (
             <div>
-              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              <p className="text-sm font-medium text-zinc-400 dark:text-zinc-400">
                 Data zakończenia
               </p>
-              <p className="mt-1 text-lg font-semibold">{formattedCompletedAt}</p>
+              <p className="mt-1 text-md font-semibold">{formattedCompletedAt}</p>
             </div>
           )}
 
           <div>
-            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Czas trwania
+            <p className="text-sm font-medium text-zinc-400 dark:text-zinc-400">
+              Czas trwania treningu
             </p>
-            <p className="mt-1 text-lg font-semibold">
+            <p className="mt-1 text-md font-semibold">
               <SessionDurationDisplay
                 startedAt={session.started_at}
                 completedAt={session.completed_at}

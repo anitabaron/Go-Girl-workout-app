@@ -1,10 +1,15 @@
-import type { SessionExerciseSetDTO } from "@/types";
+import type {
+  SessionExerciseSetDTO,
+  PersonalRecordWithExerciseDTO,
+} from "@/types";
 
 type SetLogsTableProps = {
   readonly sets: SessionExerciseSetDTO[];
   readonly isSkipped?: boolean;
   readonly plannedReps?: number | null;
   readonly plannedDurationSeconds?: number | null;
+  readonly sessionId?: string;
+  readonly personalRecords?: PersonalRecordWithExerciseDTO[];
 };
 
 function formatDuration(seconds: number | null): string {
@@ -21,7 +26,9 @@ export function SetLogsTable({
   sets, 
   isSkipped = false,
   plannedReps,
-  plannedDurationSeconds 
+  plannedDurationSeconds,
+  sessionId,
+  personalRecords = [],
 }: SetLogsTableProps) {
   if (isSkipped) {
     return null;
@@ -40,6 +47,18 @@ export function SetLogsTable({
 
   const showReps = plannedReps !== null && plannedReps !== undefined;
   const showDuration = plannedDurationSeconds !== null && plannedDurationSeconds !== undefined;
+
+  // Sprawdź czy seria to rekord osobisty
+  const isPersonalRecord = (setNumber: number): boolean => {
+    if (!sessionId || personalRecords.length === 0) {
+      return false;
+    }
+    return personalRecords.some(
+      (pr) =>
+        pr.achieved_in_session_id === sessionId &&
+        pr.achieved_in_set_number === setNumber
+    );
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -68,29 +87,50 @@ export function SetLogsTable({
           </tr>
         </thead>
         <tbody>
-          {sortedSets.map((set) => (
-            <tr
-              key={set.set_number}
-              className="border-b border-border last:border-b-0"
-            >
-              <td className="px-4 py-3 text-sm">
-                {set.set_number}
-              </td>
-              {showReps && (
-                <td className="px-4 py-3 text-sm">
-                  {set.reps !== null ? set.reps : "-"}
+          {sortedSets.map((set) => {
+            const isPR = isPersonalRecord(set.set_number);
+            return (
+              <tr
+                key={set.set_number}
+                className={`border-b border-border last:border-b-0 ${
+                  isPR ? "bg-destructive/10" : ""
+                }`}
+              >
+                <td
+                  className={`px-4 py-3 text-sm ${
+                    isPR ? "font-bold text-destructive" : ""
+                  }`}
+                >
+                  {set.set_number}
                 </td>
-              )}
-              {showDuration && (
-                <td className="px-4 py-3 text-sm">
-                  {formatDuration(set.duration_seconds)}
+                {showReps && (
+                  <td
+                    className={`px-4 py-3 text-sm ${
+                      isPR ? "font-bold text-destructive" : ""
+                    }`}
+                  >
+                    {set.reps !== null ? set.reps : "-"}
+                  </td>
+                )}
+                {showDuration && (
+                  <td
+                    className={`px-4 py-3 text-sm ${
+                      isPR ? "font-bold text-destructive" : ""
+                    }`}
+                  >
+                    {formatDuration(set.duration_seconds)}
+                  </td>
+                )}
+                <td
+                  className={`px-4 py-3 text-sm ${
+                    isPR ? "font-bold text-destructive" : ""
+                  }`}
+                >
+                  {set.weight_kg !== null ? `${set.weight_kg} kg` : "-"}
                 </td>
-              )}
-              <td className="px-4 py-3 text-sm">
-                {set.weight_kg !== null ? `${set.weight_kg} kg` : "-"}
-              </td>
-            </tr>
-          ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
