@@ -26,7 +26,7 @@ export function PlannedSection({ params }: PlannedSectionProps) {
       <dl className="space-y-3">
         <div>
           <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Serii
+            Serie
           </dt>
           <dd className="mt-1 text-lg font-semibold">
             {params.sets !== null ? params.sets : "-"}

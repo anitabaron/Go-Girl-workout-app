@@ -41,7 +41,12 @@ export function WorkoutSessionExerciseItem({
               is_skipped: exercise.is_skipped,
             }}
           />
-          <SetLogsTable sets={exercise.sets} isSkipped={exercise.is_skipped} />
+          <SetLogsTable 
+            sets={exercise.sets} 
+            isSkipped={exercise.is_skipped}
+            plannedReps={exercise.planned_reps}
+            plannedDurationSeconds={exercise.planned_duration_seconds}
+          />
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 type PlannedParams = {
   sets: number | null;
@@ -33,11 +34,14 @@ function formatDuration(seconds: number | null): string {
 function compareValues(
   planned: number | null,
   actual: number | null
-): "match" | "diff" | "na" {
+): "up" | "down" | "match" | "na" {
   if (planned === null || actual === null) {
     return "na";
   }
-  return planned === actual ? "match" : "diff";
+  if (planned === actual) {
+    return "match";
+  }
+  return actual > planned ? "up" : "down";
 }
 
 export function ActualSection({ params, planned }: ActualSectionProps) {
@@ -46,7 +50,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
       <div className="rounded-lg border border-border bg-muted/50 p-4 opacity-60">
         <div className="mb-4 flex items-center justify-between">
           <h4 className="text-lg font-semibold">Wykonanie</h4>
-          <Badge variant="secondary" className="bg-zinc-500">
+          <Badge variant="secondary" className="bg-zinc-500 hidden sm:block">
             Pominięte
           </Badge>
         </div>
@@ -65,11 +69,21 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
   );
   const restComparison = compareValues(planned.rest_seconds, params.rest_seconds);
 
-  const getTextColor = (comparison: "match" | "diff" | "na") => {
-    if (comparison === "diff") {
+  const getTextColor = (comparison: "up" | "down" | "match" | "na") => {
+    if (comparison === "up" || comparison === "down") {
       return "text-destructive";
     }
     return "";
+  };
+
+  const getArrowIcon = (comparison: "up" | "down" | "match" | "na") => {
+    if (comparison === "up") {
+      return <ArrowUp className="ml-1 inline-block size-4" />;
+    }
+    if (comparison === "down") {
+      return <ArrowDown className="ml-1 inline-block size-4" />;
+    }
+    return null;
   };
 
   return (
@@ -78,12 +92,13 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
       <dl className="space-y-3">
         <div>
           <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Serii
+            Serie
           </dt>
           <dd
             className={`mt-1 rounded text-lg font-semibold ${getTextColor(setsComparison)}`}
           >
             {params.count_sets !== null ? params.count_sets : "-"}
+            {getArrowIcon(setsComparison)}
           </dd>
         </div>
         {/* Pokaż powtórzenia tylko jeśli ćwiczenie ma planowane powtórzenia */}
@@ -96,6 +111,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
               className={`mt-1 rounded  text-lg font-semibold ${getTextColor(repsComparison)}`}
             >
               {params.sum_reps !== null ? params.sum_reps : "-"}
+              {getArrowIcon(repsComparison)}
             </dd>
           </div>
         )}
@@ -109,6 +125,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
               className={`mt-1 rounded text-lg font-semibold ${getTextColor(durationComparison)}`}
             >
               {formatDuration(params.duration_seconds)}
+              {getArrowIcon(durationComparison)}
             </dd>
           </div>
         )}
@@ -120,6 +137,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
             className={`mt-1 rounded  text-lg font-semibold ${getTextColor(restComparison)}`}
           >
             {params.rest_seconds !== null ? `${params.rest_seconds} s` : "-"}
+            {getArrowIcon(restComparison)}
           </dd>
         </div>
       </dl>

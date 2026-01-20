@@ -3,6 +3,8 @@ import type { SessionExerciseSetDTO } from "@/types";
 type SetLogsTableProps = {
   readonly sets: SessionExerciseSetDTO[];
   readonly isSkipped?: boolean;
+  readonly plannedReps?: number | null;
+  readonly plannedDurationSeconds?: number | null;
 };
 
 function formatDuration(seconds: number | null): string {
@@ -15,7 +17,16 @@ function formatDuration(seconds: number | null): string {
   return `${secs}s`;
 }
 
-export function SetLogsTable({ sets, isSkipped = false }: SetLogsTableProps) {
+export function SetLogsTable({ 
+  sets, 
+  isSkipped = false,
+  plannedReps,
+  plannedDurationSeconds 
+}: SetLogsTableProps) {
+  if (isSkipped) {
+    return null;
+  }
+
   if (sets.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border p-4 text-center">
@@ -26,6 +37,9 @@ export function SetLogsTable({ sets, isSkipped = false }: SetLogsTableProps) {
 
   // Sortowanie serii po set_number
   const sortedSets = [...sets].sort((a, b) => a.set_number - b.set_number);
+
+  const showReps = plannedReps !== null && plannedReps !== undefined;
+  const showDuration = plannedDurationSeconds !== null && plannedDurationSeconds !== undefined;
 
   return (
     <div className="overflow-x-auto">
@@ -38,12 +52,16 @@ export function SetLogsTable({ sets, isSkipped = false }: SetLogsTableProps) {
             <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               Seria
             </th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-              Powtórzenia
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-              Czas
-            </th>
+            {showReps && (
+              <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Powtórzenia
+              </th>
+            )}
+            {showDuration && (
+              <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Czas
+              </th>
+            )}
             <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               Obciążenie
             </th>
@@ -56,16 +74,20 @@ export function SetLogsTable({ sets, isSkipped = false }: SetLogsTableProps) {
               className="border-b border-border last:border-b-0"
             >
               <td className="px-4 py-3 text-sm">
-                {isSkipped ? "-" : set.set_number}
+                {set.set_number}
               </td>
+              {showReps && (
+                <td className="px-4 py-3 text-sm">
+                  {set.reps !== null ? set.reps : "-"}
+                </td>
+              )}
+              {showDuration && (
+                <td className="px-4 py-3 text-sm">
+                  {formatDuration(set.duration_seconds)}
+                </td>
+              )}
               <td className="px-4 py-3 text-sm">
-                {isSkipped ? "-" : set.reps !== null ? set.reps : "-"}
-              </td>
-              <td className="px-4 py-3 text-sm">
-                {isSkipped ? "-" : formatDuration(set.duration_seconds)}
-              </td>
-              <td className="px-4 py-3 text-sm">
-                {isSkipped ? "-" : set.weight_kg !== null ? `${set.weight_kg} kg` : "-"}
+                {set.weight_kg !== null ? `${set.weight_kg} kg` : "-"}
               </td>
             </tr>
           ))}
