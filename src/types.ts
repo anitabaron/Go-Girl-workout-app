@@ -180,6 +180,9 @@ export type SessionSummaryDTO = Omit<
   active_duration_seconds?: number | null;
   last_timer_started_at?: string | null;
   last_timer_stopped_at?: string | null;
+  // Exercise information
+  exercise_count?: number;
+  exercise_names?: string[];
 };
 
 export type SessionExerciseSetDTO = Omit<

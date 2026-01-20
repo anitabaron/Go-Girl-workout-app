@@ -33,6 +33,7 @@ import {
   findNextExerciseOrder,
   callSaveWorkoutSessionExercise,
   mapExerciseToDTO,
+  deleteWorkoutSession,
 } from "@/repositories/workout-sessions";
 import {
   findWorkoutPlanById,
@@ -1053,4 +1054,37 @@ export async function autosaveWorkoutSessionExerciseService(
   );
   
   return result;
+}
+
+/**
+ * Usuwa sesję treningową użytkownika.
+ */
+export async function deleteWorkoutSessionService(userId: string, id: string) {
+  assertUser(userId);
+  const supabase = await createClient();
+
+  // Sprawdź, czy sesja istnieje i należy do użytkownika
+  const { data: existing, error: fetchError } = await findWorkoutSessionById(
+    supabase,
+    userId,
+    id
+  );
+
+  if (fetchError) {
+    throw mapDbError(fetchError);
+  }
+
+  if (!existing) {
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Sesja treningowa nie została znaleziona."
+    );
+  }
+
+  // Usuń sesję (ćwiczenia i serie zostaną usunięte automatycznie przez CASCADE)
+  const { error } = await deleteWorkoutSession(supabase, userId, id);
+
+  if (error) {
+    throw mapDbError(error);
+  }
 }

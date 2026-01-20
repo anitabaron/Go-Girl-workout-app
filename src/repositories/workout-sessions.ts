@@ -70,6 +70,24 @@ export async function findWorkoutSessionById(
 }
 
 /**
+ * Usuwa sesję treningową użytkownika.
+ * Usunięcie sesji automatycznie usuwa wszystkie ćwiczenia i serie (CASCADE).
+ */
+export async function deleteWorkoutSession(
+  client: DbClient,
+  userId: string,
+  id: string
+) {
+  const { error } = await client
+    .from("workout_sessions")
+    .delete()
+    .eq("user_id", userId)
+    .eq("id", id);
+
+  return { error };
+}
+
+/**
  * Pobiera listę sesji treningowych użytkownika z filtrami, sortowaniem i paginacją.
  */
 export async function findWorkoutSessionsByUserId(
@@ -152,7 +170,35 @@ export async function findWorkoutSessionsByUserId(
     });
   }
 
-  const mappedData = items.map(mapToSummaryDTO);
+  // Fetch exercise names for all sessions
+  const sessionIds = items.map((item) => item.id);
+  const exercisesBySessionId = new Map<string, string[]>();
+  
+  if (sessionIds.length > 0) {
+    const { data: exercisesData, error: exercisesError } = await client
+      .from("workout_session_exercises")
+      .select("session_id, exercise_title_at_time")
+      .in("session_id", sessionIds)
+      .order("exercise_order", { ascending: true });
+
+    if (!exercisesError && exercisesData) {
+      for (const exercise of exercisesData) {
+        const sessionId = exercise.session_id;
+        if (!exercisesBySessionId.has(sessionId)) {
+          exercisesBySessionId.set(sessionId, []);
+        }
+        exercisesBySessionId.get(sessionId)!.push(exercise.exercise_title_at_time);
+      }
+    }
+  }
+
+  const mappedData = items.map((item) => {
+    const exerciseNames = exercisesBySessionId.get(item.id) ?? [];
+    return mapToSummaryDTO(item, {
+      exercise_count: exerciseNames.length,
+      exercise_names: exerciseNames,
+    });
+  });
 
   return {
     data: mappedData,
@@ -466,10 +512,17 @@ export async function findExercisesByIdsForSnapshots(
 /**
  * Mapuje wiersz z bazy danych na SessionSummaryDTO.
  */
-export function mapToSummaryDTO(row: WorkoutSessionRow): SessionSummaryDTO {
+export function mapToSummaryDTO(
+  row: WorkoutSessionRow,
+  exerciseInfo?: { exercise_count: number; exercise_names: string[] }
+): SessionSummaryDTO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user_id, last_action_at, ...rest } = row;
-  return rest;
+  return {
+    ...rest,
+    exercise_count: exerciseInfo?.exercise_count,
+    exercise_names: exerciseInfo?.exercise_names,
+  };
 }
 
 /**
