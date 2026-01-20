@@ -41,7 +41,7 @@ export function WorkoutSessionExerciseItem({
               is_skipped: exercise.is_skipped,
             }}
           />
-          <SetLogsTable sets={exercise.sets} />
+          <SetLogsTable sets={exercise.sets} isSkipped={exercise.is_skipped} />
         </div>
       </CardContent>
     </Card>

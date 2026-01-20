@@ -26,7 +26,7 @@ export function PlannedVsActualComparison({
   actual,
 }: PlannedVsActualComparisonProps) {
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 grid-cols-2">
       <PlannedSection params={planned} />
       <ActualSection params={actual} planned={planned} />
     </div>

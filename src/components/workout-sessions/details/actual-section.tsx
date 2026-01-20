@@ -45,7 +45,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
     return (
       <div className="rounded-lg border border-border bg-muted/50 p-4 opacity-60">
         <div className="mb-4 flex items-center justify-between">
-          <h4 className="text-lg font-semibold">Wykonane</h4>
+          <h4 className="text-lg font-semibold">Wykonanie</h4>
           <Badge variant="secondary" className="bg-zinc-500">
             Pominięte
           </Badge>
@@ -65,58 +65,61 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
   );
   const restComparison = compareValues(planned.rest_seconds, params.rest_seconds);
 
-  const getBackgroundColor = (comparison: "match" | "diff" | "na") => {
-    if (comparison === "match") {
-      return "bg-green-50 dark:bg-green-950/20";
-    }
+  const getTextColor = (comparison: "match" | "diff" | "na") => {
     if (comparison === "diff") {
-      return "bg-yellow-50 dark:bg-yellow-950/20";
+      return "text-destructive";
     }
     return "";
   };
 
   return (
     <div className="rounded-lg border border-border bg-secondary/50 p-4">
-      <h4 className="mb-4 text-lg font-semibold">Wykonane</h4>
+      <h4 className="mb-4 text-lg font-semibold">Wykonanie</h4>
       <dl className="space-y-3">
         <div>
           <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             Serii
           </dt>
           <dd
-            className={`mt-1 rounded px-2 py-1 text-lg font-semibold ${getBackgroundColor(setsComparison)}`}
+            className={`mt-1 rounded text-lg font-semibold ${getTextColor(setsComparison)}`}
           >
             {params.count_sets !== null ? params.count_sets : "-"}
           </dd>
         </div>
+        {/* Pokaż powtórzenia tylko jeśli ćwiczenie ma planowane powtórzenia */}
+        {planned.reps !== null && planned.reps !== undefined && (
+          <div>
+            <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              Powtórzeń
+            </dt>
+            <dd
+              className={`mt-1 rounded  text-lg font-semibold ${getTextColor(repsComparison)}`}
+            >
+              {params.sum_reps !== null ? params.sum_reps : "-"}
+            </dd>
+          </div>
+        )}
+        {/* Pokaż czas trwania tylko jeśli ćwiczenie ma planowany czas */}
+        {planned.duration_seconds !== null && planned.duration_seconds !== undefined && (
+          <div>
+            <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              Czas trwania
+            </dt>
+            <dd
+              className={`mt-1 rounded text-lg font-semibold ${getTextColor(durationComparison)}`}
+            >
+              {formatDuration(params.duration_seconds)}
+            </dd>
+          </div>
+        )}
         <div>
           <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Powtórzeń
+            Przerwa między seriami
           </dt>
           <dd
-            className={`mt-1 rounded px-2 py-1 text-lg font-semibold ${getBackgroundColor(repsComparison)}`}
+            className={`mt-1 rounded  text-lg font-semibold ${getTextColor(restComparison)}`}
           >
-            {params.sum_reps !== null ? params.sum_reps : "-"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Czas trwania
-          </dt>
-          <dd
-            className={`mt-1 rounded px-2 py-1 text-lg font-semibold ${getBackgroundColor(durationComparison)}`}
-          >
-            {formatDuration(params.duration_seconds)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Odpoczynek
-          </dt>
-          <dd
-            className={`mt-1 rounded px-2 py-1 text-lg font-semibold ${getBackgroundColor(restComparison)}`}
-          >
-            {formatDuration(params.rest_seconds)}
+            {params.rest_seconds !== null ? `${params.rest_seconds} s` : "-"}
           </dd>
         </div>
       </dl>

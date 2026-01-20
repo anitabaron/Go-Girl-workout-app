@@ -2,6 +2,7 @@ import type { SessionExerciseSetDTO } from "@/types";
 
 type SetLogsTableProps = {
   readonly sets: SessionExerciseSetDTO[];
+  readonly isSkipped?: boolean;
 };
 
 function formatDuration(seconds: number | null): string {
@@ -14,7 +15,7 @@ function formatDuration(seconds: number | null): string {
   return `${secs}s`;
 }
 
-export function SetLogsTable({ sets }: SetLogsTableProps) {
+export function SetLogsTable({ sets, isSkipped = false }: SetLogsTableProps) {
   if (sets.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border p-4 text-center">
@@ -54,15 +55,17 @@ export function SetLogsTable({ sets }: SetLogsTableProps) {
               key={set.set_number}
               className="border-b border-border last:border-b-0"
             >
-              <td className="px-4 py-3 text-sm">{set.set_number}</td>
               <td className="px-4 py-3 text-sm">
-                {set.reps !== null ? set.reps : "-"}
+                {isSkipped ? "-" : set.set_number}
               </td>
               <td className="px-4 py-3 text-sm">
-                {formatDuration(set.duration_seconds)}
+                {isSkipped ? "-" : set.reps !== null ? set.reps : "-"}
               </td>
               <td className="px-4 py-3 text-sm">
-                {set.weight_kg !== null ? `${set.weight_kg} kg` : "-"}
+                {isSkipped ? "-" : formatDuration(set.duration_seconds)}
+              </td>
+              <td className="px-4 py-3 text-sm">
+                {isSkipped ? "-" : set.weight_kg !== null ? `${set.weight_kg} kg` : "-"}
               </td>
             </tr>
           ))}
