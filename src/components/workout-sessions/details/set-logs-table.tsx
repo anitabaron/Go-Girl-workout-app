@@ -68,20 +68,20 @@ export function SetLogsTable({
       >
         <thead>
           <tr className="border-b border-border">
-            <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            <th className="px-4 py-1 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               Seria
             </th>
             {showReps && (
-              <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+              <th className="px-4 py-1 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                 Powtórzenia
               </th>
             )}
             {showDuration && (
-              <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+              <th className="px-4 py-1 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                 Czas
               </th>
             )}
-            <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            <th className="px-4 py-1 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               Obciążenie
             </th>
           </tr>
@@ -97,7 +97,7 @@ export function SetLogsTable({
                 }`}
               >
                 <td
-                  className={`px-4 py-3 text-sm ${
+                  className={`px-4 py-1 text-center text-sm ${
                     isPR ? "font-bold text-destructive" : ""
                   }`}
                 >
@@ -105,7 +105,7 @@ export function SetLogsTable({
                 </td>
                 {showReps && (
                   <td
-                    className={`px-4 py-3 text-sm ${
+                    className={`px-4 text-center text-sm ${
                       isPR ? "font-bold text-destructive" : ""
                     }`}
                   >
@@ -114,7 +114,7 @@ export function SetLogsTable({
                 )}
                 {showDuration && (
                   <td
-                    className={`px-4 py-3 text-sm ${
+                    className={`px-4 text-center text-sm ${
                       isPR ? "font-bold text-destructive" : ""
                     }`}
                   >
@@ -122,7 +122,7 @@ export function SetLogsTable({
                   </td>
                 )}
                 <td
-                  className={`px-4 py-3 text-sm ${
+                  className={`px-4 text-center text-sm ${
                     isPR ? "font-bold text-destructive" : ""
                   }`}
                 >

@@ -105,7 +105,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
         {planned.reps !== null && planned.reps !== undefined && (
           <div>
             <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Powtórzeń
+              Suma powtórzeń
             </dt>
             <dd
               className={`mt-1 rounded  text-lg font-semibold ${getTextColor(repsComparison)}`}
