@@ -11,6 +11,7 @@ type SetLogItemProps = {
   onRemove: () => void;
   error?: string;
   showDuration?: boolean; // czy pokazać pole czasu trwania
+  isSkipped?: boolean; // czy ćwiczenie jest pominięte
 };
 
 /**
@@ -18,7 +19,7 @@ type SetLogItemProps = {
  * Zawiera pola: set_number (read-only), reps, duration_seconds, weight_kg.
  * Walidacja: co najmniej jedna metryka (reps/duration/weight) z wartością >= 0.
  */
-export function SetLogItem({ set, onChange, onRemove, error, showDuration = true }: SetLogItemProps) {
+export function SetLogItem({ set, onChange, onRemove, error, showDuration = true, isSkipped = false }: SetLogItemProps) {
   const handleChange = (field: keyof SetLogFormData, value: string) => {
     const numValue = value === "" ? null : Number.parseFloat(value);
     onChange({
@@ -30,7 +31,7 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration = true
   return (
     <div className="rounded-lg border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-zinc-950">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 space-y-2">
           {/* Numer serii (read-only badge) */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
@@ -58,6 +59,7 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration = true
                 value={set.reps ?? ""}
                 onChange={(e) => handleChange("reps", e.target.value)}
                 placeholder="0"
+                disabled={isSkipped}
                 aria-label={`Powtórzenia dla serii ${set.set_number}`}
                 aria-invalid={error ? "true" : "false"}
                 aria-describedby={error ? `error-${set.set_number}` : undefined}
@@ -80,6 +82,7 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration = true
                   value={set.duration_seconds ?? ""}
                   onChange={(e) => handleChange("duration_seconds", e.target.value)}
                   placeholder="0"
+                  disabled={isSkipped}
                   aria-label={`Czas trwania dla serii ${set.set_number}`}
                   aria-invalid={error ? "true" : "false"}
                   aria-describedby={error ? `error-${set.set_number}` : undefined}
@@ -102,6 +105,7 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration = true
                 value={set.weight_kg ?? ""}
                 onChange={(e) => handleChange("weight_kg", e.target.value)}
                 placeholder="0"
+                disabled={isSkipped}
                 aria-label={`Waga dla serii ${set.set_number}`}
                 aria-invalid={error ? "true" : "false"}
                 aria-describedby={error ? `error-${set.set_number}` : undefined}
@@ -127,6 +131,7 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration = true
           variant="ghost"
           size="icon"
           onClick={onRemove}
+          disabled={isSkipped}
           className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
           aria-label={`Usuń serię ${set.set_number}`}
         >

@@ -202,13 +202,27 @@ export function ExerciseExecutionForm({
   );
 
   return (
-    <div className="space-y-6 rounded-lg border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-zinc-950">
+    <div className="space-y-2 rounded-lg border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-zinc-950">
       <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
         Wykonanie ćwiczenia
       </h3>
 
-      {/* Podsumowanie - wartości obliczane z serii (tylko do wyświetlenia) */}
-      <div className="grid grid-cols-3 gap-4 md:grid-cols-3">
+      
+
+      {/* Lista serii */}
+      <SetLogsList
+        sets={formData.sets}
+        onAdd={handleSetAdd}
+        onUpdate={handleSetUpdate}
+        onRemove={handleSetRemove}
+        errors={errors?.sets}
+        showDuration={exercise.planned_duration_seconds !== null && exercise.planned_duration_seconds !== undefined}
+        isSkipped={formData.is_skipped}
+      />
+
+     
+{/* Podsumowanie - wartości obliczane z serii (tylko do wyświetlenia) */}
+<div className="grid grid-cols-2 gap-4 md:grid-cols-2">
         <div>
           <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Liczba serii
@@ -239,35 +253,15 @@ export function ExerciseExecutionForm({
               </div>
             </div>
           )}
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Przerwa (sekundy)
-          </label>
-          <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-zinc-900 dark:text-zinc-50">
-            {summaryValues.rest_seconds ?? "-"}
-          </div>
-        </div>
       </div>
-
-      {/* Lista serii */}
-      <SetLogsList
-        sets={formData.sets}
-        onAdd={handleSetAdd}
-        onUpdate={handleSetUpdate}
-        onRemove={handleSetRemove}
-        errors={errors?.sets}
-        showDuration={exercise.planned_duration_seconds !== null && exercise.planned_duration_seconds !== undefined}
-      />
-
-      {/* Checkbox "Pomiń ćwiczenie" */}
-      <div className="flex items-center gap-2">
+ {/* Checkbox "Pomiń ćwiczenie" */}
+ <div className="flex items-center gap-2">
         <input
           id="is_skipped"
           type="checkbox"
           checked={formData.is_skipped}
           onChange={(e) => handleSkipToggle(e.target.checked)}
-          className="h-4 w-4 rounded border-border text-destructive focus:ring-2 focus:ring-destructive focus:ring-offset-2"
+          className="h-4 w-4 rounded border-border accent-destructive focus:ring-2 focus:ring-destructive focus:ring-offset-2"
           aria-label="Pomiń ćwiczenie"
         />
         <label
@@ -277,7 +271,6 @@ export function ExerciseExecutionForm({
           Pomiń ćwiczenie
         </label>
       </div>
-
       {/* Błędy globalne formularza */}
       {errors?._form && errors._form.length > 0 && (
         <div className="rounded-lg border border-destructive bg-destructive/10 p-3">

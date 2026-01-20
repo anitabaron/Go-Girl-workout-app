@@ -107,11 +107,8 @@ export function WorkoutTimer({
       <div className="flex flex-col items-center justify-center gap-4 py-6">
         <div className="text-center">
           <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
-            Ćwiczenie: {currentExerciseName}
+          Seria {currentSetNumber}
           </h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Seria {currentSetNumber}
-          </p>
         </div>
 
         <CountdownCircleTimer
@@ -152,11 +149,8 @@ export function WorkoutTimer({
     <div className="flex flex-col items-center justify-center gap-4 pt-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
-          Ćwiczenie: {currentExerciseName}
+        Seria {currentSetNumber}
         </h3>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Seria {currentSetNumber}
-        </p>
       </div>
 
       {/* Timer/powtórzenia ćwiczenia - wyświetlane bezpośrednio pod nazwą ćwiczenia */}

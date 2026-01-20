@@ -12,6 +12,7 @@ type SetLogsListProps = {
   onRemove: (index: number) => void;
   errors?: Record<number, string>; // klucz: index serii, wartość: komunikat błędu
   showDuration?: boolean; // czy pokazać pole czasu trwania
+  isSkipped?: boolean; // czy ćwiczenie jest pominięte
 };
 
 /**
@@ -24,25 +25,10 @@ export function SetLogsList({
   onRemove,
   errors,
   showDuration = true,
+  isSkipped = false,
 }: SetLogsListProps) {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          Serie ćwiczenia
-        </h3>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onAdd}
-          aria-label="Dodaj nową serię"
-        >
-          <Plus className="size-4" />
-          <span className="ml-2">Dodaj serię</span>
-        </Button>
-      </div>
-
+    <div className={`space-y-4 ${isSkipped ? "opacity-50 grayscale pointer-events-none" : ""}`}>
       {sets.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border p-8 text-center">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -59,10 +45,24 @@ export function SetLogsList({
               onRemove={() => onRemove(index)}
               error={errors?.[index]}
               showDuration={showDuration}
+              isSkipped={isSkipped}
             />
           ))}
         </div>
       )}
+         <div className="flex items-center justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onAdd}
+          disabled={isSkipped}
+          aria-label="Dodaj nową serię"
+        >
+          <Plus className="size-4" />
+          <span className="ml-2">Dodaj serię</span>
+        </Button>
+      </div>
     </div>
   );
 }
