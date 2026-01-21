@@ -186,6 +186,25 @@ export async function listPersonalRecordsByExercise(
 }
 
 /**
+ * Usuwa wszystkie rekordy osobiste dla konkretnego ćwiczenia.
+ */
+export async function deletePersonalRecordsByExercise(
+  client: DbClient,
+  userId: string,
+  exerciseId: string
+): Promise<{
+  error?: PostgrestError | null;
+}> {
+  const { error } = await client
+    .from("personal_records")
+    .delete()
+    .eq("user_id", userId)
+    .eq("exercise_id", exerciseId);
+
+  return { error };
+}
+
+/**
  * Mapuje wiersz z bazy danych (z JOIN do exercises) na PersonalRecordWithExerciseDTO.
  */
 export function mapToDTO(

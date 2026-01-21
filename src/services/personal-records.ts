@@ -9,6 +9,7 @@ import type {
 import { personalRecordQuerySchema } from "@/lib/validation/personal-records";
 import { findById } from "@/repositories/exercises";
 import {
+  deletePersonalRecordsByExercise,
   listPersonalRecords,
   listPersonalRecordsByExercise,
 } from "@/repositories/personal-records";
@@ -124,6 +125,55 @@ export async function getPersonalRecordsByExerciseService(
   return {
     items: data ?? [],
   };
+}
+
+/**
+ * Usuwa wszystkie rekordy osobiste dla konkretnego ćwiczenia.
+ * Weryfikuje, że ćwiczenie należy do użytkownika przed usunięciem rekordów.
+ */
+export async function deletePersonalRecordsByExerciseService(
+  userId: string,
+  exerciseId: string
+): Promise<void> {
+  assertUser(userId);
+
+  // Walidacja UUID
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(exerciseId)) {
+    throw new ServiceError(
+      "BAD_REQUEST",
+      "Nieprawidłowy format UUID ćwiczenia."
+    );
+  }
+
+  const supabase = await createClient();
+
+  // Weryfikacja własności ćwiczenia
+  const { data: exercise, error: exerciseError } = await findById(
+    supabase,
+    userId,
+    exerciseId
+  );
+
+  if (exerciseError) {
+    throw mapDbError(exerciseError);
+  }
+
+  if (!exercise) {
+    throw new ServiceError("NOT_FOUND", "Ćwiczenie nie zostało znalezione.");
+  }
+
+  // Usunięcie rekordów dla ćwiczenia
+  const { error } = await deletePersonalRecordsByExercise(
+    supabase,
+    userId,
+    exerciseId
+  );
+
+  if (error) {
+    throw mapDbError(error);
+  }
 }
 
 function parseOrThrow<T>(
