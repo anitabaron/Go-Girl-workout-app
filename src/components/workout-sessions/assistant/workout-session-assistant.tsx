@@ -74,12 +74,23 @@ export function WorkoutSessionAssistant({
   // Ref do śledzenia, czy auto-pauza została już wykonana dla bieżącej ścieżki
   const autoPauseExecutedRef = useRef<string | null>(null);
   
+  // Ref do śledzenia, czy komponent został już zamontowany (zapobiega auto-pauzie przy pierwszym renderze)
+  const isMountedRef = useRef(false);
+  
+  // Ref do śledzenia, czy to pierwszy render (zapobiega auto-pauzie przy inicjalizacji)
+  const isFirstRenderRef = useRef(true);
+  
+  // Ref do śledzenia ostatniego czasu gdy strona była widoczna (zapobiega fałszywym alarmom visibilitychange)
+  const lastVisibleTimeRef = useRef<number>(Date.now());
+  
   // Resetuj refy i aktualizuj stan przy zmianie sessionId (nowa sesja)
   useEffect(() => {
     // Jeśli sessionId się zmienił, resetuj wszystko dla nowej sesji
     if (previousSessionIdRef.current !== sessionId) {
       previousSessionIdRef.current = sessionId;
       timerInitializedRef.current = false; // Resetuj flagę inicjalizacji
+      isMountedRef.current = false; // Resetuj flagę zamontowania dla nowej sesji
+      isFirstRenderRef.current = true; // Resetuj flagę pierwszego renderu dla nowej sesji
       
       // Zaktualizuj stan sesji na podstawie nowego initialSession
       setSession(initialSession);
@@ -167,8 +178,9 @@ export function WorkoutSessionAssistant({
   // Uruchomienie timera przy wejściu do asystenta (jeśli nie jest już uruchomiony)
   // Resetuje się przy zmianie sessionId dzięki timerInitializedRef.current = false w poprzednim useEffect
   useEffect(() => {
-    // Jeśli timer został już zainicjalizowany dla tej sesji, nie uruchamiaj ponownie
+    // Jeśli timer został już zainicjalizowany dla tej sesji, oznacz jako zamontowany i zakończ
     if (timerInitializedRef.current) {
+      isMountedRef.current = true;
       return;
     }
 
@@ -219,14 +231,22 @@ export function WorkoutSessionAssistant({
               last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
             }));
           }
+          // Oznacz komponent jako zamontowany dopiero po pomyślnym uruchomieniu timera
+          isMountedRef.current = true;
+          // Oznacz, że pierwszy render się zakończył
+          isFirstRenderRef.current = false;
         })
         .catch((error) => {
           console.error("[WorkoutSessionAssistant] Error starting timer:", error);
           timerInitializedRef.current = false; // W przypadku błędu, pozwól na ponowną próbę
+          // Nie ustawiaj isMountedRef na true w przypadku błędu
         });
     } else {
-      // Timer jest już uruchomiony, oznacz jako zainicjalizowany
+      // Timer jest już uruchomiony, oznacz jako zainicjalizowany i zamontowany
       timerInitializedRef.current = true;
+      isMountedRef.current = true;
+      // Oznacz, że pierwszy render się zakończył
+      isFirstRenderRef.current = false;
     }
   }, [sessionId]); // Tylko sessionId w zależnościach - stan sprawdzamy przez ref
 
@@ -511,8 +531,25 @@ export function WorkoutSessionAssistant({
   // Funkcja auto-pauzy (używana przy opuszczeniu strony/route change)
   // Pauzuje zarówno globalny timer jak i timer ćwiczenia
   const autoPause = useCallback(async (saveProgress = false) => {
+    // Jeśli to pierwszy render, nie wykonuj auto-pauzy
+    if (isFirstRenderRef.current) {
+      return;
+    }
+    
+    // Jeśli komponent nie został jeszcze zamontowany, nie wykonuj auto-pauzy
+    // (zapobiega auto-pauzie przy pierwszym renderze)
+    if (!isMountedRef.current) {
+      return;
+    }
+    
     // Jeśli już jest w pauzie, nie rób nic
     if (isPaused) {
+      return;
+    }
+    
+    // Jeśli timer nie został jeszcze zainicjalizowany, nie wykonuj auto-pauzy
+    // (zapobiega auto-pauzie przed uruchomieniem timera)
+    if (!timerInitializedRef.current) {
       return;
     }
 
@@ -627,12 +664,29 @@ export function WorkoutSessionAssistant({
 
   // Auto-pauza przy opuszczeniu strony (route change)
   useEffect(() => {
+    // Jeśli komponent nie został jeszcze zamontowany, nie wykonuj auto-pauzy
+    if (!isMountedRef.current) {
+      return;
+    }
+    
+    // Jeśli timer nie został jeszcze zainicjalizowany, nie wykonuj auto-pauzy
+    if (!timerInitializedRef.current) {
+      return;
+    }
+    
+    // Jeśli to pierwszy render, nie wykonuj auto-pauzy
+    if (isFirstRenderRef.current) {
+      return;
+    }
+    
     // Sprawdź, czy jesteśmy na stronie aktywnej sesji
     const activePagePath = `/workout-sessions/${sessionId}/active`;
     const isOnActivePage = pathname === activePagePath;
 
     // Jeśli nie jesteśmy na stronie aktywnej sesji i sesja nie jest w pauzie, pauzuj
-    if (!isOnActivePage && !isPaused) {
+    // Ważne: sprawdzamy czy pathname istnieje i czy nie jesteśmy na właściwej stronie
+    // Dodatkowo sprawdzamy czy pathname faktycznie się zmienił (nie jest pusty lub undefined)
+    if (!isOnActivePage && !isPaused && pathname && pathname !== activePagePath && pathname.trim() !== "") {
       // Sprawdź, czy auto-pauza nie została już wykonana dla tej ścieżki
       if (autoPauseExecutedRef.current !== pathname) {
         autoPauseExecutedRef.current = pathname;
@@ -721,8 +775,29 @@ export function WorkoutSessionAssistant({
   // Auto-pauza przy wygaszeniu ekranu na mobile (visibilitychange)
   useEffect(() => {
     const handleVisibilityChange = () => {
+      // Jeśli komponent nie został jeszcze zamontowany, nie wykonuj auto-pauzy
+      if (!isMountedRef.current) {
+        return;
+      }
+      
+      // Aktualizuj czas ostatniej widoczności
+      if (document.visibilityState === "visible") {
+        lastVisibleTimeRef.current = Date.now();
+        return;
+      }
+      
       // Gdy strona staje się niewidoczna (wygaszenie ekranu, przełączenie aplikacji, itp.)
       if (document.visibilityState === "hidden" && !isPaused) {
+        // Sprawdź, czy strona była widoczna przez co najmniej 1 sekundę przed ukryciem
+        // To zapobiega fałszywym alarmom podczas interakcji użytkownika (np. kliknięcie OK)
+        const timeSinceLastVisible = Date.now() - lastVisibleTimeRef.current;
+        const MIN_VISIBLE_TIME = 1000; // 1 sekunda
+        
+        if (timeSinceLastVisible < MIN_VISIBLE_TIME) {
+          // Zbyt szybka zmiana - prawdopodobnie fałszywy alarm, ignoruj
+          return;
+        }
+        
         // Zapisz postępy i pauzuj sesję
         // Dla visibilitychange używamy normalnego async zapisu (jest czas)
         void autoPause(true);
@@ -731,6 +806,11 @@ export function WorkoutSessionAssistant({
 
     // visibilitychange - działa na mobile gdy ekran się wygasi lub przełączenie aplikacji
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    // Inicjalizuj czas ostatniej widoczności
+    if (document.visibilityState === "visible") {
+      lastVisibleTimeRef.current = Date.now();
+    }
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
