@@ -11,6 +11,7 @@ Private workout planning and logging web app for women who train regularly (espe
 - [3. Tech stack](#3-tech-stack)
 - [4. Getting started locally](#4-getting-started-locally)
 - [4.1. Deployment to production (Vercel)](#41-deployment-to-production-vercel)
+- [4.2. Database maintenance tools](#42-database-maintenance-tools)
 - [5. Available scripts](#5-available-scripts)
 - [6. Project scope](#6-project-scope)
 - [7. Project status](#7-project-status)
@@ -157,6 +158,63 @@ supabase db push
 
 Or manually run the migration file:
 `supabase/migrations/20260116120000_enable_rls_for_production.sql`
+
+## 4.2. Database maintenance tools
+
+### Cleanup orphaned set logs
+
+If workout sessions were manually deleted from the database, their associated set logs may remain as orphaned records. Use the cleanup endpoint to remove them.
+
+**Endpoint:** `/api/admin/cleanup-orphaned-sets`
+
+**What it does:**
+- Finds set logs that reference non-existent workout sessions
+- A set log is considered orphaned if:
+  - Its `session_exercise_id` doesn't exist in `workout_session_exercises`, OR
+  - The `workout_session_exercises.session_id` doesn't exist in `workout_sessions`
+
+**Usage:**
+
+1. **Check how many orphaned set logs exist (GET):**
+   ```bash
+   # Local development
+   curl http://localhost:3000/api/admin/cleanup-orphaned-sets
+   
+   # Production (replace with your Vercel URL)
+   curl https://your-app.vercel.app/api/admin/cleanup-orphaned-sets
+   ```
+   
+   Response:
+   ```json
+   {
+     "message": "Found 5 orphaned set log(s)",
+     "count": 5,
+     "orphanedIds": ["id1", "id2", ...]
+   }
+   ```
+
+2. **Delete orphaned set logs (POST):**
+   ```bash
+   # Local development
+   curl -X POST http://localhost:3000/api/admin/cleanup-orphaned-sets
+   
+   # Production (replace with your Vercel URL)
+   curl -X POST https://your-app.vercel.app/api/admin/cleanup-orphaned-sets
+   ```
+   
+   Response:
+   ```json
+   {
+     "message": "Successfully deleted 5 orphaned set log(s)",
+     "deletedCount": 5
+   }
+   ```
+
+**Note:** The endpoint requires authentication. When using curl, you need to include session cookies. In a browser (while logged in), it works automatically.
+
+**Recommended workflow:**
+1. First, use GET to check how many records will be deleted
+2. If everything looks correct, use POST to delete them
 
 ## 5. Available scripts
 
