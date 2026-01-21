@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import type { SessionDetailDTO } from "@/types";
 import {
@@ -35,6 +35,7 @@ export function WorkoutSessionAssistant({
   initialSession,
 }: Readonly<WorkoutSessionAssistantProps>) {
   const router = useRouter();
+  const pathname = usePathname();
 
   // Stan sesji
   const [session, setSession] = useState<SessionDetailDTO>(initialSession);
@@ -70,12 +71,26 @@ export function WorkoutSessionAssistant({
   // Ref do śledzenia poprzedniego sessionId (do resetowania przy zmianie sesji)
   const previousSessionIdRef = useRef<string>(sessionId);
   
+  // Ref do śledzenia, czy auto-pauza została już wykonana dla bieżącej ścieżki
+  const autoPauseExecutedRef = useRef<string | null>(null);
+  
+  // Ref do śledzenia, czy komponent został już zamontowany (zapobiega auto-pauzie przy pierwszym renderze)
+  const isMountedRef = useRef(false);
+  
+  // Ref do śledzenia, czy to pierwszy render (zapobiega auto-pauzie przy inicjalizacji)
+  const isFirstRenderRef = useRef(true);
+  
+  // Ref do śledzenia ostatniego czasu gdy strona była widoczna (zapobiega fałszywym alarmom visibilitychange)
+  const lastVisibleTimeRef = useRef<number>(Date.now());
+  
   // Resetuj refy i aktualizuj stan przy zmianie sessionId (nowa sesja)
   useEffect(() => {
     // Jeśli sessionId się zmienił, resetuj wszystko dla nowej sesji
     if (previousSessionIdRef.current !== sessionId) {
       previousSessionIdRef.current = sessionId;
       timerInitializedRef.current = false; // Resetuj flagę inicjalizacji
+      isMountedRef.current = false; // Resetuj flagę zamontowania dla nowej sesji
+      isFirstRenderRef.current = true; // Resetuj flagę pierwszego renderu dla nowej sesji
       
       // Zaktualizuj stan sesji na podstawie nowego initialSession
       setSession(initialSession);
@@ -163,8 +178,9 @@ export function WorkoutSessionAssistant({
   // Uruchomienie timera przy wejściu do asystenta (jeśli nie jest już uruchomiony)
   // Resetuje się przy zmianie sessionId dzięki timerInitializedRef.current = false w poprzednim useEffect
   useEffect(() => {
-    // Jeśli timer został już zainicjalizowany dla tej sesji, nie uruchamiaj ponownie
+    // Jeśli timer został już zainicjalizowany dla tej sesji, oznacz jako zamontowany i zakończ
     if (timerInitializedRef.current) {
+      isMountedRef.current = true;
       return;
     }
 
@@ -215,14 +231,22 @@ export function WorkoutSessionAssistant({
               last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
             }));
           }
+          // Oznacz komponent jako zamontowany dopiero po pomyślnym uruchomieniu timera
+          isMountedRef.current = true;
+          // Oznacz, że pierwszy render się zakończył
+          isFirstRenderRef.current = false;
         })
         .catch((error) => {
           console.error("[WorkoutSessionAssistant] Error starting timer:", error);
           timerInitializedRef.current = false; // W przypadku błędu, pozwól na ponowną próbę
+          // Nie ustawiaj isMountedRef na true w przypadku błędu
         });
     } else {
-      // Timer jest już uruchomiony, oznacz jako zainicjalizowany
+      // Timer jest już uruchomiony, oznacz jako zainicjalizowany i zamontowany
       timerInitializedRef.current = true;
+      isMountedRef.current = true;
+      // Oznacz, że pierwszy render się zakończył
+      isFirstRenderRef.current = false;
     }
   }, [sessionId]); // Tylko sessionId w zależnościach - stan sprawdzamy przez ref
 
@@ -504,6 +528,75 @@ export function WorkoutSessionAssistant({
     router,
   ]);
 
+  // Funkcja auto-pauzy (używana przy opuszczeniu strony/route change)
+  // Pauzuje zarówno globalny timer jak i timer ćwiczenia
+  const autoPause = useCallback(async (saveProgress = false) => {
+    // Jeśli to pierwszy render, nie wykonuj auto-pauzy
+    if (isFirstRenderRef.current) {
+      return;
+    }
+    
+    // Jeśli komponent nie został jeszcze zamontowany, nie wykonuj auto-pauzy
+    // (zapobiega auto-pauzie przy pierwszym renderze)
+    if (!isMountedRef.current) {
+      return;
+    }
+    
+    // Jeśli już jest w pauzie, nie rób nic
+    if (isPaused) {
+      return;
+    }
+    
+    // Jeśli timer nie został jeszcze zainicjalizowany, nie wykonuj auto-pauzy
+    // (zapobiega auto-pauzie przed uruchomieniem timera)
+    if (!timerInitializedRef.current) {
+      return;
+    }
+
+    // Opcjonalnie zapisz postępy
+    if (saveProgress) {
+      try {
+        await saveExercise(formData, false);
+      } catch (error) {
+        console.error("[WorkoutSessionAssistant.autoPause] Error saving progress:", error);
+      }
+    }
+
+    // Zatrzymaj globalny timer przez API
+    const now = new Date().toISOString();
+    try {
+      const timerResponse = await fetch(
+        `/api/workout-sessions/${sessionId}/timer`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            last_timer_stopped_at: now,
+          }),
+        }
+      );
+
+      if (timerResponse.ok) {
+        const timerResult = await timerResponse.json();
+        // Aktualizuj stan sesji z odpowiedzi API
+        if (timerResult.data) {
+          setSession((prev) => ({
+            ...prev,
+            active_duration_seconds: timerResult.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
+            last_timer_started_at: timerResult.data.last_timer_started_at ?? prev.last_timer_started_at,
+            last_timer_stopped_at: timerResult.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+          }));
+        }
+        // Pauzuj timer ćwiczenia (ustaw isPaused na true)
+        setIsPaused(true);
+      }
+    } catch (error) {
+      console.error("[WorkoutSessionAssistant.autoPause] Error pausing timer:", error);
+    }
+  }, [isPaused, formData, saveExercise, sessionId]);
+
   // Funkcja zatrzymująca timer (używana przy wyjściu i unmount)
   // Używamy ref do przechowywania aktualnych wartości, aby uniknąć zależności od session.last_timer_*
   const stopTimer = useCallback(async () => {
@@ -557,28 +650,172 @@ export function WorkoutSessionAssistant({
   // Obsługa wyjścia
   const handleExit = useCallback(async () => {
     try {
-      // Zapisz postępy przed wyjściem
-      await saveExercise(formData, false);
+      // Automatycznie pauzuj sesję (zapisze postępy i pauzuje timery)
+      await autoPause(true);
 
-      // Zatrzymaj timer przez API
-      await stopTimer();
-
-      // Przekieruj do listy sesji
-      router.push("/workout-sessions");
+      // Przekieruj do strony głównej
+      router.push("/");
     } catch (error) {
       console.error("[WorkoutSessionAssistant.handleExit] Error:", error);
       // Nawet jeśli wystąpi błąd, przekieruj użytkownika
-      router.push("/workout-sessions");
+      router.push("/");
     }
-  }, [router, formData, saveExercise, stopTimer]);
+  }, [router, autoPause]);
 
-  // Cleanup przy unmount - zatrzymaj timer przy wyjściu z asystenta
+  // Auto-pauza przy opuszczeniu strony (route change)
+  useEffect(() => {
+    // Jeśli komponent nie został jeszcze zamontowany, nie wykonuj auto-pauzy
+    if (!isMountedRef.current) {
+      return;
+    }
+    
+    // Jeśli timer nie został jeszcze zainicjalizowany, nie wykonuj auto-pauzy
+    if (!timerInitializedRef.current) {
+      return;
+    }
+    
+    // Jeśli to pierwszy render, nie wykonuj auto-pauzy
+    if (isFirstRenderRef.current) {
+      return;
+    }
+    
+    // Sprawdź, czy jesteśmy na stronie aktywnej sesji
+    const activePagePath = `/workout-sessions/${sessionId}/active`;
+    const isOnActivePage = pathname === activePagePath;
+
+    // Jeśli nie jesteśmy na stronie aktywnej sesji i sesja nie jest w pauzie, pauzuj
+    // Ważne: sprawdzamy czy pathname istnieje i czy nie jesteśmy na właściwej stronie
+    // Dodatkowo sprawdzamy czy pathname faktycznie się zmienił (nie jest pusty lub undefined)
+    if (!isOnActivePage && !isPaused && pathname && pathname !== activePagePath && pathname.trim() !== "") {
+      // Sprawdź, czy auto-pauza nie została już wykonana dla tej ścieżki
+      if (autoPauseExecutedRef.current !== pathname) {
+        autoPauseExecutedRef.current = pathname;
+        // Zapisz postępy przed pauzą (gdy użytkownik przechodzi na inną stronę)
+        void autoPause(true);
+      }
+    } else if (isOnActivePage) {
+      // Resetuj ref, gdy wracamy na stronę aktywnej sesji
+      autoPauseExecutedRef.current = null;
+    }
+  }, [pathname, sessionId, isPaused, autoPause]);
+
+  // Cleanup przy unmount - pauzuj sesję przy wyjściu z asystenta
   useEffect(() => {
     return () => {
-      // Zatrzymaj timer przy unmount (wyjście z asystenta)
-      void stopTimer();
+      // Pauzuj sesję przy unmount (wyjście z asystenta)
+      // Zapisz postępy - dla route change w Next.js jest czas na async zapis
+      void autoPause(true);
     };
-  }, [stopTimer]);
+  }, [autoPause]);
+
+  // Funkcja do zapisu postępów przy zamknięciu przeglądarki/karty
+  // Używa sendBeacon dla niezawodnego zapisu nawet gdy strona się zamyka
+  const saveProgressOnUnload = useCallback(() => {
+    const currentFormData = formData;
+    const currentExerciseOrder = currentExercise.exercise_order;
+
+    // Zapisz postępy przez sendBeacon (działa nawet gdy strona się zamyka)
+    // Uwaga: sendBeacon obsługuje tylko GET i POST, więc używamy fetch z keepalive jako alternatywa
+    try {
+      const command = formDataToAutosaveCommand(currentFormData, false);
+      const url = `/api/workout-sessions/${sessionId}/exercises/${currentExerciseOrder}`;
+      
+      // Używamy fetch z keepalive zamiast sendBeacon, bo endpoint używa PATCH
+      fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(command),
+        keepalive: true, // Ważne: pozwala na wykonanie nawet po zamknięciu strony
+      }).catch(() => {
+        // Ignoruj błędy - próbujemy zapisać, ale nie blokujemy zamknięcia
+      });
+    } catch (error) {
+      console.error("[WorkoutSessionAssistant.saveProgressOnUnload] Error:", error);
+    }
+
+    // Pauzuj timer (użyj fetch z keepalive dla niezawodności)
+    const now = new Date().toISOString();
+    try {
+      fetch(`/api/workout-sessions/${sessionId}/timer`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          last_timer_stopped_at: now,
+        }),
+        keepalive: true, // Ważne: pozwala na wykonanie nawet po zamknięciu strony
+      }).catch(() => {
+        // Ignoruj błędy - sendBeacon już wysłał dane
+      });
+    } catch (error) {
+      console.error("[WorkoutSessionAssistant.saveProgressOnUnload] Error pausing timer:", error);
+    }
+  }, [formData, currentExercise.exercise_order, sessionId]);
+
+  // Auto-pauza przy zamknięciu przeglądarki/karty (beforeunload i pagehide)
+  useEffect(() => {
+    const handleUnload = () => {
+      if (!isPaused) {
+        saveProgressOnUnload();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+    };
+  }, [isPaused, saveProgressOnUnload]);
+
+  // Auto-pauza przy wygaszeniu ekranu na mobile (visibilitychange)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Jeśli komponent nie został jeszcze zamontowany, nie wykonuj auto-pauzy
+      if (!isMountedRef.current) {
+        return;
+      }
+      
+      // Aktualizuj czas ostatniej widoczności
+      if (document.visibilityState === "visible") {
+        lastVisibleTimeRef.current = Date.now();
+        return;
+      }
+      
+      // Gdy strona staje się niewidoczna (wygaszenie ekranu, przełączenie aplikacji, itp.)
+      if (document.visibilityState === "hidden" && !isPaused) {
+        // Sprawdź, czy strona była widoczna przez co najmniej 1 sekundę przed ukryciem
+        // To zapobiega fałszywym alarmom podczas interakcji użytkownika (np. kliknięcie OK)
+        const timeSinceLastVisible = Date.now() - lastVisibleTimeRef.current;
+        const MIN_VISIBLE_TIME = 1000; // 1 sekunda
+        
+        if (timeSinceLastVisible < MIN_VISIBLE_TIME) {
+          // Zbyt szybka zmiana - prawdopodobnie fałszywy alarm, ignoruj
+          return;
+        }
+        
+        // Zapisz postępy i pauzuj sesję
+        // Dla visibilitychange używamy normalnego async zapisu (jest czas)
+        void autoPause(true);
+      }
+    };
+
+    // visibilitychange - działa na mobile gdy ekran się wygasi lub przełączenie aplikacji
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    // Inicjalizuj czas ostatniej widoczności
+    if (document.visibilityState === "visible") {
+      lastVisibleTimeRef.current = Date.now();
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isPaused, autoPause]);
 
   // Funkcja pomocnicza do upewnienia się, że formularz ma serię dla danego numeru
   // (używana przez updateSetInForm, więc nie jest już potrzebna jako osobna funkcja)
