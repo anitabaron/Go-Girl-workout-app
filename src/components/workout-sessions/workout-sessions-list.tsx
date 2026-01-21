@@ -18,7 +18,7 @@ export function WorkoutSessionsList({
   initialSessions,
   initialNextCursor,
   initialHasMore,
-}: WorkoutSessionsListProps) {
+}: Readonly<WorkoutSessionsListProps>) {
   const searchParams = useSearchParams();
   const [sessions, setSessions] = useState(initialSessions);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
@@ -72,7 +72,7 @@ export function WorkoutSessionsList({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 ">
         {sessions.map((session) => (
           <WorkoutSessionCard key={session.id} session={session} />
         ))}

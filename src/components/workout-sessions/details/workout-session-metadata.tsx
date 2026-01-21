@@ -2,21 +2,13 @@ import type { SessionSummaryDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SessionStatusBadge } from "./session-status-badge";
 import { SessionDurationDisplay } from "./session-duration-display";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 type WorkoutSessionMetadataProps = {
   readonly session: SessionSummaryDTO;
 };
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
+
 
 export function WorkoutSessionMetadata({
   session,
@@ -25,9 +17,9 @@ export function WorkoutSessionMetadata({
     return null;
   }
 
-  const formattedStartedAt = formatDate(session.started_at);
+  const formattedStartedAt = formatDateTime(session.started_at);
   const formattedCompletedAt = session.completed_at
-    ? formatDate(session.completed_at)
+    ? formatDateTime(session.completed_at)
     : null;
   const planName = session.plan_name_at_time || "Plan usunięty";
 

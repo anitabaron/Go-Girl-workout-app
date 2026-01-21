@@ -183,6 +183,8 @@ export type SessionSummaryDTO = Omit<
   // Exercise information
   exercise_count?: number;
   exercise_names?: string[];
+  // Plan information
+  estimated_total_time_seconds?: number | null;
 };
 
 export type SessionExerciseSetDTO = Omit<

@@ -9,7 +9,7 @@ import { LoadMoreButton } from "./load-more-button";
 import { SkeletonLoader } from "./skeleton-loader";
 
 type WorkoutPlansListProps = {
-  initialPlans: Omit<WorkoutPlanDTO, "exercises">[];
+  initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number })[];
   initialNextCursor?: string | null;
   initialHasMore: boolean;
 };
@@ -18,7 +18,7 @@ export function WorkoutPlansList({
   initialPlans,
   initialNextCursor,
   initialHasMore,
-}: WorkoutPlansListProps) {
+}: Readonly<WorkoutPlansListProps>) {
   const searchParams = useSearchParams();
   const [plans, setPlans] = useState(initialPlans);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
@@ -92,6 +92,7 @@ export function WorkoutPlansList({
           <WorkoutPlanCard
             key={plan.id}
             plan={plan}
+            exerciseCount={plan.exercise_count}
             onDelete={handleDelete}
           />
         ))}

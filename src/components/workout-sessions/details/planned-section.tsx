@@ -1,3 +1,5 @@
+import { formatDuration } from "@/lib/utils/time-format";
+
 type PlannedParams = {
   sets: number | null;
   reps: number | null;
@@ -8,16 +10,6 @@ type PlannedParams = {
 type PlannedSectionProps = {
   readonly params: PlannedParams;
 };
-
-function formatDuration(seconds: number | null): string {
-  if (!seconds) return "-";
-  const minutes = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (minutes > 0) {
-    return `${minutes}min ${secs}s`;
-  }
-  return `${secs}s`;
-}
 
 export function PlannedSection({ params }: PlannedSectionProps) {
   return (

@@ -3,11 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Edit, Trash2 } from "lucide-react";
 import type { ExerciseDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { CardActionButtons } from "@/components/ui/card-action-buttons";
 import {
   EXERCISE_PART_LABELS,
   EXERCISE_TYPE_LABELS,
@@ -37,28 +36,13 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
   return (
     <>
       <Card className="group relative h-full rounded-xl border border-border bg-secondary/70 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card gap-3">
-        <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity group-hover:opacity-100">
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleEdit}
-              aria-label={`Edytuj ćwiczenie: ${exercise.title}`}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive"
-              onClick={handleDeleteClick}
-              aria-label={`Usuń ćwiczenie: ${exercise.title}`}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <CardActionButtons
+          onEdit={handleEdit}
+          onDelete={handleDeleteClick}
+          editAriaLabel={`Edytuj ćwiczenie: ${exercise.title}`}
+          deleteAriaLabel={`Usuń ćwiczenie: ${exercise.title}`}
+          positionClassName="right-2 top-2"
+        />
 
         <Link
           href={`/exercises/${exercise.id}`}

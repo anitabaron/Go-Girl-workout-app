@@ -3,64 +3,77 @@
 import React, { memo, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Calendar, Play, CheckCircle2, CalendarCheck, Dumbbell, Clock10, Trash2 } from "lucide-react";
+import { Calendar, Play, CheckCircle2, CalendarCheck, Dumbbell, Clock10 } from "lucide-react";
 import type { SessionSummaryDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CardActionButtons } from "@/components/ui/card-action-buttons";
 import { DeleteWorkoutSessionDialog } from "@/components/workout-sessions/delete-workout-session-dialog";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 type WorkoutSessionCardProps = {
   readonly session: SessionSummaryDTO;
 };
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function formatDuration(startedAt: string, completedAt: string | null): string {
-  if (!completedAt) return "W trakcie";
-  
-  const start = new Date(startedAt);
-  const end = new Date(completedAt);
-  const diffMs = end.getTime() - start.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const hours = Math.floor(diffMins / 60);
-  const minutes = diffMins % 60;
-  
-  if (hours > 0) {
-    return `${hours}h ${minutes}min`;
-  }
-  return `${minutes}min`;
-}
-
 function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
+  const isInProgress = session.status === "in_progress";
+  
   const formattedStartedAt = useMemo(
-    () => formatDate(session.started_at),
+    () => formatDateTime(session.started_at),
     [session.started_at]
   );
 
   const formattedCompletedAt = useMemo(
-    () => session.completed_at ? formatDate(session.completed_at) : null,
+    () => session.completed_at ? formatDateTime(session.completed_at) : null,
     [session.completed_at]
   );
 
-  const duration = useMemo(
-    () => formatDuration(session.started_at, session.completed_at),
-    [session.started_at, session.completed_at]
-  );
-
-  const isInProgress = session.status === "in_progress";
+  // Oblicz aktualny czas trwania dla treningów w trakcie
+  // Uwaga: czas jest aktualizowany tylko po odświeżeniu strony (używamy active_duration_seconds z serwera)
+  const duration = useMemo(() => {
+    if (isInProgress && !session.completed_at) {
+      // Użyj active_duration_seconds, które jest aktualizowane na serwerze
+      // Jeśli timer jest uruchomiony, serwer powinien już uwzględnić ten czas w active_duration_seconds
+      const activeDuration = session.active_duration_seconds ?? 0;
+      const currentSeconds = activeDuration;
+      const currentMinutes = Math.floor(currentSeconds / 60);
+      
+      // Jeśli planowany czas jest dostępny, pokaż format "X min z Y min"
+      const estimatedTotalTimeSeconds = session.estimated_total_time_seconds;
+      if (estimatedTotalTimeSeconds !== null && estimatedTotalTimeSeconds !== undefined) {
+        const plannedMinutes = Math.floor(estimatedTotalTimeSeconds / 60);
+        return `${currentMinutes} min z ${plannedMinutes} min`;
+      }
+      
+      return `${currentMinutes} min`;
+    }
+    
+    // Dla zakończonych treningów
+    if (!session.completed_at) return "W trakcie";
+    
+    const start = new Date(session.started_at);
+    const end = new Date(session.completed_at);
+    const diffMs = end.getTime() - start.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const hours = Math.floor(diffMins / 60);
+    const minutes = diffMins % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    }
+    return `${minutes}min`;
+  }, [
+    isInProgress,
+    session.completed_at,
+    session.started_at,
+    session.active_duration_seconds,
+    session.estimated_total_time_seconds
+  ]);
+  
   const planName = session.plan_name_at_time || "Plan usunięty";
 
   const exerciseCountText = useMemo(() => {
@@ -90,34 +103,29 @@ function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
   return (
     <>
       <Card className="group relative h-full rounded-xl border border-border bg-white transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card">
-        <div className="absolute right-1 top-4 z-10 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-destructive hover:text-destructive"
-            onClick={handleDeleteClick}
-            aria-label={`Usuń sesję treningową: ${planName}`}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+        <CardActionButtons
+          onDelete={handleDeleteClick}
+          editAriaLabel={`Edytuj sesję treningową: ${planName}`}
+          deleteAriaLabel={`Usuń sesję treningową: ${planName}`}
+          editDisabled
+        />
         <Link
           href={isInProgress ? `/workout-sessions/${session.id}/active` : `/workout-sessions/${session.id}`}
           className="block h-full"
           aria-label={`Zobacz szczegóły sesji: ${planName}`}
         >
           <CardHeader>
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col items-start gap-2">
               <CardTitle className="line-clamp-2 text-lg font-semibold flex-1">
                 {planName}
               </CardTitle>
             {isInProgress ? (
-              <Badge variant="default" className="ml-1 bg-destructive text-destructive-foreground">
+              <Badge variant="default" className=" bg-destructive text-destructive-foreground">
                 <Play className="mr-1 h-3 w-3" />
                 W trakcie
               </Badge>
             ) : (
-              <Badge variant="secondary" className="ml-1">
+              <Badge variant="secondary" >
                 <CheckCircle2 className="mr-1 h-3 w-3" />
                 Zakończony
               </Badge>

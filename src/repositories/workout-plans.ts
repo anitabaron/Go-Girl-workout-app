@@ -62,7 +62,7 @@ export async function findWorkoutPlansByUserId(
   params: Required<Pick<PlanQueryParams, "sort" | "order" | "limit">> &
     PlanQueryParams
 ): Promise<{
-  data?: Omit<WorkoutPlanDTO, "exercises">[];
+  data?: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number })[];
   nextCursor?: string | null;
   error?: PostgrestError | null;
 }> {
@@ -130,8 +130,30 @@ export async function findWorkoutPlansByUserId(
     });
   }
 
+  // Pobierz liczbę ćwiczeń dla wszystkich planów używając agregacji
+  const planIds = items.map((item) => item.id);
+  const exerciseCounts: Record<string, number> = {};
+  
+  if (planIds.length > 0) {
+    const { data: countsData, error: countsError } = await client
+      .from("workout_plan_exercises")
+      .select("plan_id")
+      .in("plan_id", planIds);
+
+    if (!countsError && countsData) {
+      // Policz ćwiczenia dla każdego planu
+      for (const row of countsData) {
+        const planId = row.plan_id;
+        exerciseCounts[planId] = (exerciseCounts[planId] ?? 0) + 1;
+      }
+    }
+  }
+
   return {
-    data: items.map(mapToDTO),
+    data: items.map((item) => ({
+      ...mapToDTO(item),
+      exercise_count: exerciseCounts[item.id] ?? 0,
+    })),
     nextCursor,
     error: null,
   };

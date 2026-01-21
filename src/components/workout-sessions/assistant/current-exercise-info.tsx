@@ -6,6 +6,7 @@ import {
   EXERCISE_PART_LABELS,
   EXERCISE_TYPE_LABELS,
 } from "@/lib/constants";
+import { formatDuration } from "@/lib/utils/time-format";
 
 type CurrentExerciseInfoProps = {
   exercise: SessionExerciseDTO;
@@ -15,12 +16,7 @@ type CurrentExerciseInfoProps = {
  * Komponent wyświetlający informacje o bieżącym ćwiczeniu:
  * tytuł, typ, partię oraz parametry planowane (planned_*).
  */
-export function CurrentExerciseInfo({ exercise }: CurrentExerciseInfoProps) {
-  const formatDuration = (seconds: number | null | undefined): string => {
-    if (!seconds) return "-";
-    return `${seconds}s`;
-  };
-
+export function CurrentExerciseInfo({ exercise }: Readonly<CurrentExerciseInfoProps>) {
   return (
     <div className="space-y-4 rounded-lg border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-zinc-950">
       {/* Tytuł ćwiczenia */}

@@ -109,7 +109,7 @@ export async function findWorkoutSessionsByUserId(
 
   let query = client
     .from("workout_sessions")
-    .select(sessionSelectColumns)
+    .select(`${sessionSelectColumns},workout_plans(estimated_total_time_seconds)`)
     .eq("user_id", userId);
 
   if (params.status) {
@@ -156,7 +156,9 @@ export async function findWorkoutSessionsByUserId(
     return { error };
   }
 
-  const items = (data ?? []) as WorkoutSessionRow[];
+  const items = (data ?? []) as Array<WorkoutSessionRow & {
+    workout_plans?: { estimated_total_time_seconds: number | null } | null;
+  }>;
   let nextCursor: string | null = null;
 
   if (items.length > limit) {
@@ -194,9 +196,13 @@ export async function findWorkoutSessionsByUserId(
 
   const mappedData = items.map((item) => {
     const exerciseNames = exercisesBySessionId.get(item.id) ?? [];
-    return mapToSummaryDTO(item, {
+    const estimatedTotalTimeSeconds = item.workout_plans?.estimated_total_time_seconds ?? null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { workout_plans, ...sessionRow } = item;
+    return mapToSummaryDTO(sessionRow, {
       exercise_count: exerciseNames.length,
       exercise_names: exerciseNames,
+      estimated_total_time_seconds: estimatedTotalTimeSeconds,
     });
   });
 
@@ -514,7 +520,11 @@ export async function findExercisesByIdsForSnapshots(
  */
 export function mapToSummaryDTO(
   row: WorkoutSessionRow,
-  exerciseInfo?: { exercise_count: number; exercise_names: string[] }
+  exerciseInfo?: { 
+    exercise_count: number; 
+    exercise_names: string[];
+    estimated_total_time_seconds?: number | null;
+  }
 ): SessionSummaryDTO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user_id, last_action_at, ...rest } = row;
@@ -522,6 +532,7 @@ export function mapToSummaryDTO(
     ...rest,
     exercise_count: exerciseInfo?.exercise_count,
     exercise_names: exerciseInfo?.exercise_names,
+    estimated_total_time_seconds: exerciseInfo?.estimated_total_time_seconds,
   };
 }
 

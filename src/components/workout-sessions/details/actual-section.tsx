@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { ArrowUp, ArrowDown } from "lucide-react";
+import { formatDuration } from "@/lib/utils/time-format";
 
 type PlannedParams = {
   sets: number | null;
@@ -20,16 +21,6 @@ type ActualSectionProps = {
   readonly params: ActualParams;
   readonly planned: PlannedParams;
 };
-
-function formatDuration(seconds: number | null): string {
-  if (!seconds) return "-";
-  const minutes = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (minutes > 0) {
-    return `${minutes}min ${secs}s`;
-  }
-  return `${secs}s`;
-}
 
 function compareValues(
   planned: number | null,
@@ -97,7 +88,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
           <dd
             className={`mt-1 rounded text-lg font-semibold ${getTextColor(setsComparison)}`}
           >
-            {params.count_sets !== null ? params.count_sets : "-"}
+            {params.count_sets === null ? "-" : params.count_sets}
             {getArrowIcon(setsComparison)}
           </dd>
         </div>
@@ -110,7 +101,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
             <dd
               className={`mt-1 rounded  text-lg font-semibold ${getTextColor(repsComparison)}`}
             >
-              {params.sum_reps !== null ? params.sum_reps : "-"}
+              {params.sum_reps === null ? "-" : params.sum_reps}
               {getArrowIcon(repsComparison)}
             </dd>
           </div>
@@ -136,7 +127,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
           <dd
             className={`mt-1 rounded  text-lg font-semibold ${getTextColor(restComparison)}`}
           >
-            {params.rest_seconds !== null ? `${params.rest_seconds} s` : "-"}
+            {params.rest_seconds === null ? "-" : `${params.rest_seconds} s`}
             {getArrowIcon(restComparison)}
           </dd>
         </div>

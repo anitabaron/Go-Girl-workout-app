@@ -2,6 +2,7 @@ import type {
   SessionExerciseSetDTO,
   PersonalRecordWithExerciseDTO,
 } from "@/types";
+import { formatDuration } from "@/lib/utils/time-format";
 
 type SetLogsTableProps = {
   readonly sets: SessionExerciseSetDTO[];
@@ -11,16 +12,6 @@ type SetLogsTableProps = {
   readonly sessionId?: string;
   readonly personalRecords?: PersonalRecordWithExerciseDTO[];
 };
-
-function formatDuration(seconds: number | null): string {
-  if (!seconds) return "-";
-  const minutes = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (minutes > 0) {
-    return `${minutes}min ${secs}s`;
-  }
-  return `${secs}s`;
-}
 
 export function SetLogsTable({ 
   sets, 

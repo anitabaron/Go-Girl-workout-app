@@ -178,7 +178,7 @@ export async function listWorkoutPlansService(
   userId: string,
   query: PlanQueryParams
 ): Promise<{
-  items: Omit<WorkoutPlanDTO, "exercises">[];
+  items: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number })[];
   nextCursor: string | null;
 }> {
   assertUser(userId);
