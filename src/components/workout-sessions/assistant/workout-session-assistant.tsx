@@ -649,10 +649,93 @@ export function WorkoutSessionAssistant({
   useEffect(() => {
     return () => {
       // Pauzuj sesję przy unmount (wyjście z asystenta)
-      // Nie zapisuj postępów przy unmount, bo może być zbyt późno
-      void autoPause(false);
+      // Zapisz postępy - dla route change w Next.js jest czas na async zapis
+      void autoPause(true);
     };
   }, [autoPause]);
+
+  // Funkcja do zapisu postępów przy zamknięciu przeglądarki/karty
+  // Używa sendBeacon dla niezawodnego zapisu nawet gdy strona się zamyka
+  const saveProgressOnUnload = useCallback(() => {
+    const currentFormData = formData;
+    const currentExerciseOrder = currentExercise.exercise_order;
+
+    // Zapisz postępy przez sendBeacon (działa nawet gdy strona się zamyka)
+    // Uwaga: sendBeacon obsługuje tylko GET i POST, więc używamy fetch z keepalive jako alternatywa
+    try {
+      const command = formDataToAutosaveCommand(currentFormData, false);
+      const url = `/api/workout-sessions/${sessionId}/exercises/${currentExerciseOrder}`;
+      
+      // Używamy fetch z keepalive zamiast sendBeacon, bo endpoint używa PATCH
+      fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(command),
+        keepalive: true, // Ważne: pozwala na wykonanie nawet po zamknięciu strony
+      }).catch(() => {
+        // Ignoruj błędy - próbujemy zapisać, ale nie blokujemy zamknięcia
+      });
+    } catch (error) {
+      console.error("[WorkoutSessionAssistant.saveProgressOnUnload] Error:", error);
+    }
+
+    // Pauzuj timer (użyj fetch z keepalive dla niezawodności)
+    const now = new Date().toISOString();
+    try {
+      fetch(`/api/workout-sessions/${sessionId}/timer`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          last_timer_stopped_at: now,
+        }),
+        keepalive: true, // Ważne: pozwala na wykonanie nawet po zamknięciu strony
+      }).catch(() => {
+        // Ignoruj błędy - sendBeacon już wysłał dane
+      });
+    } catch (error) {
+      console.error("[WorkoutSessionAssistant.saveProgressOnUnload] Error pausing timer:", error);
+    }
+  }, [formData, currentExercise.exercise_order, sessionId]);
+
+  // Auto-pauza przy zamknięciu przeglądarki/karty (beforeunload i pagehide)
+  useEffect(() => {
+    const handleUnload = () => {
+      if (!isPaused) {
+        saveProgressOnUnload();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+    };
+  }, [isPaused, saveProgressOnUnload]);
+
+  // Auto-pauza przy wygaszeniu ekranu na mobile (visibilitychange)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Gdy strona staje się niewidoczna (wygaszenie ekranu, przełączenie aplikacji, itp.)
+      if (document.visibilityState === "hidden" && !isPaused) {
+        // Zapisz postępy i pauzuj sesję
+        // Dla visibilitychange używamy normalnego async zapisu (jest czas)
+        void autoPause(true);
+      }
+    };
+
+    // visibilitychange - działa na mobile gdy ekran się wygasi lub przełączenie aplikacji
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isPaused, autoPause]);
 
   // Funkcja pomocnicza do upewnienia się, że formularz ma serię dla danego numeru
   // (używana przez updateSetInForm, więc nie jest już potrzebna jako osobna funkcja)
