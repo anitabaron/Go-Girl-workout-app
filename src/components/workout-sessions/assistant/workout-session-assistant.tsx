@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import type { SessionDetailDTO } from "@/types";
 import {
@@ -35,6 +35,7 @@ export function WorkoutSessionAssistant({
   initialSession,
 }: Readonly<WorkoutSessionAssistantProps>) {
   const router = useRouter();
+  const pathname = usePathname();
 
   // Stan sesji
   const [session, setSession] = useState<SessionDetailDTO>(initialSession);
@@ -69,6 +70,9 @@ export function WorkoutSessionAssistant({
   
   // Ref do śledzenia poprzedniego sessionId (do resetowania przy zmianie sesji)
   const previousSessionIdRef = useRef<string>(sessionId);
+  
+  // Ref do śledzenia, czy auto-pauza została już wykonana dla bieżącej ścieżki
+  const autoPauseExecutedRef = useRef<string | null>(null);
   
   // Resetuj refy i aktualizuj stan przy zmianie sessionId (nowa sesja)
   useEffect(() => {
@@ -504,6 +508,58 @@ export function WorkoutSessionAssistant({
     router,
   ]);
 
+  // Funkcja auto-pauzy (używana przy opuszczeniu strony/route change)
+  // Pauzuje zarówno globalny timer jak i timer ćwiczenia
+  const autoPause = useCallback(async (saveProgress = false) => {
+    // Jeśli już jest w pauzie, nie rób nic
+    if (isPaused) {
+      return;
+    }
+
+    // Opcjonalnie zapisz postępy
+    if (saveProgress) {
+      try {
+        await saveExercise(formData, false);
+      } catch (error) {
+        console.error("[WorkoutSessionAssistant.autoPause] Error saving progress:", error);
+      }
+    }
+
+    // Zatrzymaj globalny timer przez API
+    const now = new Date().toISOString();
+    try {
+      const timerResponse = await fetch(
+        `/api/workout-sessions/${sessionId}/timer`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            last_timer_stopped_at: now,
+          }),
+        }
+      );
+
+      if (timerResponse.ok) {
+        const timerResult = await timerResponse.json();
+        // Aktualizuj stan sesji z odpowiedzi API
+        if (timerResult.data) {
+          setSession((prev) => ({
+            ...prev,
+            active_duration_seconds: timerResult.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
+            last_timer_started_at: timerResult.data.last_timer_started_at ?? prev.last_timer_started_at,
+            last_timer_stopped_at: timerResult.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+          }));
+        }
+        // Pauzuj timer ćwiczenia (ustaw isPaused na true)
+        setIsPaused(true);
+      }
+    } catch (error) {
+      console.error("[WorkoutSessionAssistant.autoPause] Error pausing timer:", error);
+    }
+  }, [isPaused, formData, saveExercise, sessionId]);
+
   // Funkcja zatrzymująca timer (używana przy wyjściu i unmount)
   // Używamy ref do przechowywania aktualnych wartości, aby uniknąć zależności od session.last_timer_*
   const stopTimer = useCallback(async () => {
@@ -557,28 +613,46 @@ export function WorkoutSessionAssistant({
   // Obsługa wyjścia
   const handleExit = useCallback(async () => {
     try {
-      // Zapisz postępy przed wyjściem
-      await saveExercise(formData, false);
+      // Automatycznie pauzuj sesję (zapisze postępy i pauzuje timery)
+      await autoPause(true);
 
-      // Zatrzymaj timer przez API
-      await stopTimer();
-
-      // Przekieruj do listy sesji
-      router.push("/workout-sessions");
+      // Przekieruj do strony głównej
+      router.push("/");
     } catch (error) {
       console.error("[WorkoutSessionAssistant.handleExit] Error:", error);
       // Nawet jeśli wystąpi błąd, przekieruj użytkownika
-      router.push("/workout-sessions");
+      router.push("/");
     }
-  }, [router, formData, saveExercise, stopTimer]);
+  }, [router, autoPause]);
 
-  // Cleanup przy unmount - zatrzymaj timer przy wyjściu z asystenta
+  // Auto-pauza przy opuszczeniu strony (route change)
+  useEffect(() => {
+    // Sprawdź, czy jesteśmy na stronie aktywnej sesji
+    const activePagePath = `/workout-sessions/${sessionId}/active`;
+    const isOnActivePage = pathname === activePagePath;
+
+    // Jeśli nie jesteśmy na stronie aktywnej sesji i sesja nie jest w pauzie, pauzuj
+    if (!isOnActivePage && !isPaused) {
+      // Sprawdź, czy auto-pauza nie została już wykonana dla tej ścieżki
+      if (autoPauseExecutedRef.current !== pathname) {
+        autoPauseExecutedRef.current = pathname;
+        // Zapisz postępy przed pauzą (gdy użytkownik przechodzi na inną stronę)
+        void autoPause(true);
+      }
+    } else if (isOnActivePage) {
+      // Resetuj ref, gdy wracamy na stronę aktywnej sesji
+      autoPauseExecutedRef.current = null;
+    }
+  }, [pathname, sessionId, isPaused, autoPause]);
+
+  // Cleanup przy unmount - pauzuj sesję przy wyjściu z asystenta
   useEffect(() => {
     return () => {
-      // Zatrzymaj timer przy unmount (wyjście z asystenta)
-      void stopTimer();
+      // Pauzuj sesję przy unmount (wyjście z asystenta)
+      // Nie zapisuj postępów przy unmount, bo może być zbyt późno
+      void autoPause(false);
     };
-  }, [stopTimer]);
+  }, [autoPause]);
 
   // Funkcja pomocnicza do upewnienia się, że formularz ma serię dla danego numeru
   // (używana przez updateSetInForm, więc nie jest już potrzebna jako osobna funkcja)
