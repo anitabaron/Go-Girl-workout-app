@@ -87,7 +87,7 @@ export function WorkoutPlansList({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         {plans.map((plan) => (
           <WorkoutPlanCard
             key={plan.id}

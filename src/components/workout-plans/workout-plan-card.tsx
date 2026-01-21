@@ -3,7 +3,7 @@
 import React, { memo, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClockIcon } from "lucide-react";
+import { Clock10, Dumbbell } from "lucide-react";
 import type { WorkoutPlanDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,10 @@ import { formatTotalDuration } from "@/lib/utils/time-format";
 import { formatDateTime } from "@/lib/utils/date-format";
 
 type WorkoutPlanCardProps = {
-  readonly plan: Omit<WorkoutPlanDTO, "exercises">;
+  readonly plan: Omit<WorkoutPlanDTO, "exercises"> & {
+    exercise_count?: number;
+    exercise_names?: string[];
+  };
   readonly exerciseCount?: number;
   readonly onDelete?: (planId: string) => Promise<void>;
 };
@@ -39,6 +42,16 @@ function WorkoutPlanCardComponent({
     () => formatDateTime(plan.updated_at),
     [plan.updated_at]
   );
+
+  const exerciseCountText = useMemo(() => {
+    const count = exerciseCount ?? plan.exercise_count ?? 0;
+    if (count === 0) return "";
+    if (count === 1) return "ćwiczenie";
+    if (count < 5) return "ćwiczenia";
+    return "ćwiczeń";
+  }, [exerciseCount, plan.exercise_count]);
+
+  const finalExerciseCount = exerciseCount ?? plan.exercise_count ?? 0;
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -87,20 +100,27 @@ function WorkoutPlanCardComponent({
                     {EXERCISE_PART_LABELS[plan.part]}
                   </Badge>
                 )}
-                {plan.estimated_total_time_seconds && (
-                  <p className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
-                    <ClockIcon className="h-4 w-4" /> {formatTotalDuration(plan.estimated_total_time_seconds)}
-                  </p>
-                )}
-                {exerciseCount !== undefined && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-secondary text-destructive hover:bg-primary"
-                  >
-                    {exerciseCount} {exerciseCount === 1 ? "ćwiczenie" : "ćwiczeń"}
-                  </Badge>
-                )}
               </div>
+              {plan.estimated_total_time_seconds && (
+                <div className="flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                  <Clock10 className="h-4 w-4" /> <span>Czas trwania: {formatTotalDuration(plan.estimated_total_time_seconds)}</span>
+                </div>
+              )}
+              {finalExerciseCount > 0 && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    <Dumbbell className="h-4 w-4" />
+                    <span className="font-medium">
+                      {finalExerciseCount} {exerciseCountText}
+                    </span>
+                  </div>
+                  {plan.exercise_names && plan.exercise_names.length > 0 && (
+                    <div className="text-xs text-zinc-500 dark:text-zinc-500 ml-6">
+                      {plan.exercise_names.join(", ")}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="space-y-1">
                 <p className="text-xs text-zinc-600 dark:text-zinc-400">
                   Utworzono: {formattedDate}

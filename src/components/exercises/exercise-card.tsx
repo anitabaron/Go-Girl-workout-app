@@ -78,6 +78,15 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
                   </Badge>
                 )}
               </div>
+              <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                <span>Serie: {exercise.series}</span>
+                {exercise.reps && (
+                  <span className="ml-4">Powtórzenia: {exercise.reps}</span>
+                )}
+                {exercise.duration_seconds && (
+                  <span className="ml-4">Czas: {exercise.duration_seconds} sekund</span>
+                )}
+              </div>
               {exercise.details && (
                 <p className="text-sm font-light text-zinc-500 dark:text-zinc-500 line-clamp-2">
                   {exercise.details}

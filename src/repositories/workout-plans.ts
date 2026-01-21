@@ -62,7 +62,7 @@ export async function findWorkoutPlansByUserId(
   params: Required<Pick<PlanQueryParams, "sort" | "order" | "limit">> &
     PlanQueryParams
 ): Promise<{
-  data?: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number })[];
+  data?: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number; exercise_names?: string[] })[];
   nextCursor?: string | null;
   error?: PostgrestError | null;
 }> {
@@ -130,21 +130,34 @@ export async function findWorkoutPlansByUserId(
     });
   }
 
-  // Pobierz liczbę ćwiczeń dla wszystkich planów używając agregacji
+  // Pobierz liczbę ćwiczeń i nazwy ćwiczeń dla wszystkich planów
   const planIds = items.map((item) => item.id);
   const exerciseCounts: Record<string, number> = {};
+  const exercisesByPlanId = new Map<string, string[]>();
   
   if (planIds.length > 0) {
-    const { data: countsData, error: countsError } = await client
+    const { data: exercisesData, error: exercisesError } = await client
       .from("workout_plan_exercises")
-      .select("plan_id")
-      .in("plan_id", planIds);
+      .select("plan_id, exercises(title)")
+      .in("plan_id", planIds)
+      .order("section_type", { ascending: true })
+      .order("section_order", { ascending: true });
 
-    if (!countsError && countsData) {
-      // Policz ćwiczenia dla każdego planu
-      for (const row of countsData) {
+    if (!exercisesError && exercisesData) {
+      for (const row of exercisesData) {
         const planId = row.plan_id;
+        const exerciseTitle = (row.exercises as { title: string } | null)?.title;
+        
+        // Policz ćwiczenia
         exerciseCounts[planId] = (exerciseCounts[planId] ?? 0) + 1;
+        
+        // Zbierz nazwy ćwiczeń
+        if (exerciseTitle) {
+          if (!exercisesByPlanId.has(planId)) {
+            exercisesByPlanId.set(planId, []);
+          }
+          exercisesByPlanId.get(planId)!.push(exerciseTitle);
+        }
       }
     }
   }
@@ -153,6 +166,7 @@ export async function findWorkoutPlansByUserId(
     data: items.map((item) => ({
       ...mapToDTO(item),
       exercise_count: exerciseCounts[item.id] ?? 0,
+      exercise_names: exercisesByPlanId.get(item.id) ?? [],
     })),
     nextCursor,
     error: null,
