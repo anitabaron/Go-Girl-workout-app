@@ -83,6 +83,10 @@ export function WorkoutSessionAssistant({
   // Ref do śledzenia ostatniego czasu gdy strona była widoczna (zapobiega fałszywym alarmom visibilitychange)
   const lastVisibleTimeRef = useRef<number>(Date.now());
   
+  // Ref do śledzenia, czy jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia
+  // (zapobiega pauzowaniu podczas auto-transitions między ćwiczeniami)
+  const isAutoTransitioningRef = useRef<boolean>(false);
+  
   // Resetuj refy i aktualizuj stan przy zmianie sessionId (nowa sesja)
   useEffect(() => {
     // Jeśli sessionId się zmienił, resetuj wszystko dla nowej sesji
@@ -528,6 +532,20 @@ export function WorkoutSessionAssistant({
     router,
   ]);
 
+  // Funkcja do oznaczania automatycznego przejścia do następnego ćwiczenia
+  // Używana podczas automatycznego przejścia po zakończeniu wszystkich serii ćwiczenia
+  // Zapobiega pauzowaniu treningu przez visibilitychange podczas przejścia
+  const markAutoTransition = useCallback(() => {
+    // Oznacz, że jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia
+    isAutoTransitioningRef.current = true;
+    
+    // Resetuj flagę po opóźnieniu (daje czas na zakończenie eventów visibilitychange)
+    // Używamy 2 sekund aby pokryć cały okres przejścia między ćwiczeniami
+    setTimeout(() => {
+      isAutoTransitioningRef.current = false;
+    }, 2000);
+  }, []);
+
   // Funkcja auto-pauzy (używana przy opuszczeniu strony/route change)
   // Pauzuje zarówno globalny timer jak i timer ćwiczenia
   const autoPause = useCallback(async (saveProgress = false) => {
@@ -551,6 +569,20 @@ export function WorkoutSessionAssistant({
     // (zapobiega auto-pauzie przed uruchomieniem timera)
     if (!timerInitializedRef.current) {
       return;
+    }
+
+    // Jeśli jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia,
+    // nie pauzuj (tylko zapisz jeśli trzeba)
+    // To zapobiega pauzowaniu podczas automatycznych przejść między ćwiczeniami
+    if (isAutoTransitioningRef.current) {
+      if (saveProgress) {
+        try {
+          await saveExercise(formData, false);
+        } catch (error) {
+          console.error("[WorkoutSessionAssistant.autoPause] Error saving progress during auto-transition:", error);
+        }
+      }
+      return; // Nie pauzuj podczas automatycznych przejść między ćwiczeniami
     }
 
     // Opcjonalnie zapisz postępy
@@ -862,6 +894,7 @@ export function WorkoutSessionAssistant({
         duration_seconds: currentExercise.planned_duration_seconds,
       });
     }
+    // Nie zapisujemy po każdej serii - tylko po zakończeniu wszystkich serii ćwiczenia
   }, [currentSetNumber, currentExercise.planned_duration_seconds, updateSetInForm]);
 
   // Callback: zakończenie przerwy między seriami
@@ -874,13 +907,20 @@ export function WorkoutSessionAssistant({
       // Upewnij się, że formularz ma serię dla następnego numeru
       updateSetInForm(nextSetNumber, {});
     }
+    // Nie zapisujemy między seriami - tylko po zakończeniu wszystkich serii ćwiczenia
   }, [currentSetNumber, currentExercise.planned_sets, updateSetInForm]);
 
   // Callback: zakończenie przerwy po seriach
+  // To jest moment gdy wszystkie serie ćwiczenia są zakończone i przechodzimy do następnego ćwiczenia
   const handleRestAfterSeriesComplete = useCallback(() => {
+    // Oznacz, że jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia
+    // To zapobiega pauzowaniu przez visibilitychange podczas przejścia
+    markAutoTransition();
+    
     // Zapisz ćwiczenie i przejdź do następnego
+    // handleNext zapisuje ćwiczenie i przechodzi do następnego ćwiczenia
     void handleNext();
-  }, [handleNext]);
+  }, [handleNext, markAutoTransition]);
 
   // Callback: zakończenie powtórzeń (kliknięcie OK)
   const handleRepsComplete = useCallback(() => {
@@ -890,6 +930,7 @@ export function WorkoutSessionAssistant({
         reps: currentExercise.planned_reps,
       });
     }
+    // Nie zapisujemy po powtórzeniach - tylko po zakończeniu wszystkich serii ćwiczenia
   }, [currentSetNumber, currentExercise.planned_reps, updateSetInForm]);
 
   // Obliczanie czy można przejść dalej
