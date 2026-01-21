@@ -549,9 +549,14 @@ export function mapToDetailDTO(
       } | null;
     }
   >,
-  sets: WorkoutSessionSetRow[]
+  sets: WorkoutSessionSetRow[],
+  exerciseInfo?: {
+    exercise_count: number;
+    exercise_names: string[];
+    estimated_total_time_seconds?: number | null;
+  }
 ): SessionDetailDTO {
-  const sessionSummary = mapToSummaryDTO(session);
+  const sessionSummary = mapToSummaryDTO(session, exerciseInfo);
 
   // Grupuj serie po session_exercise_id
   const setsByExerciseId = new Map<string, WorkoutSessionSetRow[]>();

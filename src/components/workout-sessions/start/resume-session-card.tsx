@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Calendar, Play, X } from "lucide-react";
+import { Calendar, Play, X, Clock10, Dumbbell } from "lucide-react";
 
 import type { SessionDetailDTO } from "@/types";
 import {
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 type ResumeSessionCardProps = {
-  session: SessionDetailDTO;
+  readonly session: SessionDetailDTO;
 };
 
 /**
@@ -58,6 +58,73 @@ export function ResumeSessionCard({ session }: ResumeSessionCardProps) {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  // Oblicz aktualny czas trwania dla treningów w trakcie
+  // Uwaga: czas jest aktualizowany tylko po odświeżeniu strony (używamy active_duration_seconds z serwera)
+  const duration = useMemo(() => {
+    if (session.status === "in_progress" && !session.completed_at) {
+      // Użyj active_duration_seconds, które jest aktualizowane na serwerze
+      const activeDuration = session.active_duration_seconds ?? 0;
+      const currentSeconds = activeDuration;
+      const currentMinutes = Math.floor(currentSeconds / 60);
+      
+      // Jeśli planowany czas jest dostępny, pokaż format "X min z Y min"
+      const estimatedTotalTimeSeconds = session.estimated_total_time_seconds;
+      if (estimatedTotalTimeSeconds !== null && estimatedTotalTimeSeconds !== undefined) {
+        const plannedMinutes = Math.floor(estimatedTotalTimeSeconds / 60);
+        return `${currentMinutes} min z ${plannedMinutes} min`;
+      }
+      
+      return `${currentMinutes} min`;
+    }
+    
+    // Dla zakończonych treningów (nie powinno się zdarzyć w ResumeSessionCard, ale na wszelki wypadek)
+    if (!session.completed_at) return "W trakcie";
+    
+    const start = new Date(session.started_at);
+    const end = new Date(session.completed_at);
+    const diffMs = end.getTime() - start.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const hours = Math.floor(diffMins / 60);
+    const minutes = diffMins % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    }
+    return `${minutes}min`;
+  }, [
+    session.status,
+    session.completed_at,
+    session.started_at,
+    session.active_duration_seconds,
+    session.estimated_total_time_seconds
+  ]);
+
+  // Pobierz informacje o ćwiczeniach
+  const exerciseCount = useMemo(() => {
+    // Użyj exercise_count jeśli dostępne, w przeciwnym razie oblicz z exercises
+    if (session.exercise_count !== undefined && session.exercise_count > 0) {
+      return session.exercise_count;
+    }
+    return session.exercises.length;
+  }, [session.exercise_count, session.exercises.length]);
+
+  const exerciseNames = useMemo(() => {
+    // Użyj exercise_names jeśli dostępne, w przeciwnym razie wyciągnij z exercises
+    if (session.exercise_names && session.exercise_names.length > 0) {
+      return session.exercise_names;
+    }
+    return session.exercises
+      .map((ex) => ex.exercise_title_at_time)
+      .filter((name): name is string => name !== null && name !== undefined);
+  }, [session.exercise_names, session.exercises]);
+
+  const exerciseCountText = useMemo(() => {
+    if (exerciseCount === 0) return "";
+    if (exerciseCount === 1) return "ćwiczenie";
+    if (exerciseCount < 5) return "ćwiczenia";
+    return "ćwiczeń";
+  }, [exerciseCount]);
 
   const handleResume = async () => {
     setIsResuming(true);
@@ -134,8 +201,7 @@ export function ResumeSessionCard({ session }: ResumeSessionCardProps) {
   };
 
   return (
-    <>
-      <Card className="border-destructive bg-destructive/5">
+    <Card className="border-destructive bg-destructive/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -167,6 +233,30 @@ export function ResumeSessionCard({ session }: ResumeSessionCardProps) {
               {progressPercentage}%)
             </p>
           </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">
+              Czas trwania
+            </p>
+            <p className="text-base font-semibold flex items-center gap-2">
+              <Clock10 className="h-4 w-4" />
+              {duration}
+            </p>
+          </div>
+          {exerciseCount > 0 && (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <Dumbbell className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  {exerciseCount} {exerciseCountText}
+                </p>
+              </div>
+              {exerciseNames.length > 0 && (
+                <div className="text-xs text-muted-foreground ml-6">
+                  {exerciseNames.join(", ")}
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col gap-3 sm:flex-row">
           <Button
@@ -178,9 +268,7 @@ export function ResumeSessionCard({ session }: ResumeSessionCardProps) {
             aria-label="Wznów trening"
           >
             {isResuming ? (
-              <>
-                <span className="mr-2">Wznawianie...</span>
-              </>
+              <span className="mr-2">Wznawianie...</span>
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" />
@@ -225,6 +313,5 @@ export function ResumeSessionCard({ session }: ResumeSessionCardProps) {
           </AlertDialog>
         </CardFooter>
       </Card>
-    </>
   );
 }

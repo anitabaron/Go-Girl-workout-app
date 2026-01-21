@@ -430,6 +430,21 @@ async function getWorkoutSessionDetail(
     );
   }
 
+  // Pobierz estimated_total_time_seconds z planu, jeśli sesja ma przypisany plan
+  let estimatedTotalTimeSeconds: number | null = null;
+  if (session.workout_plan_id) {
+    const { data: plan, error: planError } = await supabase
+      .from("workout_plans")
+      .select("estimated_total_time_seconds")
+      .eq("id", session.workout_plan_id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!planError && plan) {
+      estimatedTotalTimeSeconds = plan.estimated_total_time_seconds;
+    }
+  }
+
   // Pobierz ćwiczenia sesji
   const { data: exercises, error: exercisesError } =
     await findWorkoutSessionExercises(supabase, sessionId);
@@ -456,7 +471,21 @@ async function getWorkoutSessionDetail(
     throw mapDbError(setsError);
   }
 
-  return mapToDetailDTO(session, exercises, sets ?? []);
+  // Pobierz nazwy ćwiczeń dla exerciseInfo
+  const exerciseNames = exercises
+    .map((ex) => ex.exercise_title_at_time)
+    .filter((name): name is string => name !== null && name !== undefined);
+
+  return mapToDetailDTO(
+    session,
+    exercises,
+    sets ?? [],
+    {
+      exercise_count: exerciseNames.length,
+      exercise_names: exerciseNames,
+      estimated_total_time_seconds: estimatedTotalTimeSeconds,
+    }
+  );
 }
 
 /**
