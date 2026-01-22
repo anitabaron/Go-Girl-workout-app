@@ -19,6 +19,8 @@ export function WorkoutPlanSelector({
   plans,
   nextCursor,
 }: Readonly<WorkoutPlanSelectorProps>) {
+
+  console.log("plans", plans);
   return (
     <div>
       <h2 className="mb-4 text-xl font-semibold">Wybierz plan treningowy</h2>

@@ -41,7 +41,7 @@ export function PlannedParamsEditor({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {/* Planned Sets */}
         <div>
           <label
@@ -75,6 +75,7 @@ export function PlannedParamsEditor({
         </div>
 
         {/* Planned Reps */}
+        {params.planned_reps && (
         <div>
           <label
             htmlFor={repsId}
@@ -102,11 +103,13 @@ export function PlannedParamsEditor({
               role="alert"
             >
               {errors.planned_reps}
-            </p>
-          )}
-        </div>
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Planned Duration */}
+        {params.planned_duration_seconds && (
         <div>
           <label
             htmlFor={durationId}
@@ -141,6 +144,7 @@ export function PlannedParamsEditor({
             </p>
           )}
         </div>
+        )}
 
         {/* Planned Rest Between Sets */}
         <div>

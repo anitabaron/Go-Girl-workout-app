@@ -58,6 +58,8 @@ export default async function WorkoutSessionsPage({
     // Error boundary lub error.tsx obsłuży błędy renderowania
   }
 
+  console.log("sessions page", sessionsData.items);
+
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeaderSection

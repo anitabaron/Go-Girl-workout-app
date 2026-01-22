@@ -33,6 +33,7 @@ export default async function WorkoutPlansPage({
   // Wywołanie service do pobrania danych
   const result = await listWorkoutPlansService(userId, parsedQuery);
 
+  console.log("plans page", result.items);
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeaderSection

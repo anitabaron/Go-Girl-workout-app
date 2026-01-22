@@ -11,7 +11,7 @@ type PersonalRecordMetricItemProps = {
 
 export function PersonalRecordMetricItem({
   metric,
-}: PersonalRecordMetricItemProps) {
+}: Readonly<PersonalRecordMetricItemProps>) {
   const handleSessionLinkClick = () => {
     toast.info("Przechodzisz do sesji treningowej");
   };
