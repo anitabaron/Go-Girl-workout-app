@@ -50,3 +50,10 @@ analyze
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# test outputs
+test-results/
+playwright-report/
+playwright/.cache/
+coverage/
+.nyc_output/
