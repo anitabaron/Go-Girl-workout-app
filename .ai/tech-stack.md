@@ -34,3 +34,22 @@ Security
 - RLS
 - auth-based access
 - brak logiki zaufania po stronie frontendu
+
+Testing
+
+- Vitest – framework testowy dla testów jednostkowych i integracyjnych:
+  - Szybki i wydajny (oparty na Vite), zapewnia szybkie uruchamianie testów i hot reload
+  - Natywne wsparcie dla ESM, TypeScript i Next.js
+  - Kompatybilny API z Jest, co ułatwia migrację i znajomość
+  - Doskonała integracja z React Testing Library
+  - Wbudowane wsparcie dla raportów pokrycia kodu (coverage)
+- Playwright – narzędzie do testów end-to-end:
+  - Automatyczne czekanie na elementy (auto-waiting) eliminuje flaky tests
+  - Wsparcie dla wielu przeglądarek (Chromium, Firefox, WebKit) z jednej konfiguracji
+  - Doskonałe wsparcie dla Next.js (SSR, API routes, App Router)
+  - Trace viewer i automatyczne screenshots przy błędach
+  - Parallel execution dla szybkiego uruchamiania testów
+  - Natywne wsparcie dla TypeScript
+  - Codegen do generowania testów poprzez nagrywanie interakcji
+- React Testing Library – testy komponentów React z naciskiem na dostępność i user-centric testing
+- Kombinacja Vitest + Playwright zapewnia szybkie testy jednostkowe dla szybkiego feedbacku podczas rozwoju oraz solidne testy E2E dla weryfikacji pełnych przepływów użytkownika
