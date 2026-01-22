@@ -22,7 +22,7 @@ type PersonalRecordMetricCardProps = {
  */
 export function PersonalRecordMetricCard({
   record,
-}: PersonalRecordMetricCardProps) {
+}: Readonly<PersonalRecordMetricCardProps>) {
   return (
     <Card className="rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950">
       <CardHeader>

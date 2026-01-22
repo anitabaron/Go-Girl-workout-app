@@ -15,16 +15,18 @@ type PersonalRecordDetailsProps = {
  */
 export function PersonalRecordDetails({
   records,
-}: PersonalRecordDetailsProps) {
+}: Readonly<PersonalRecordDetailsProps>) {
   // Obsługa pustego stanu
   if (records.length === 0) {
     return <EmptyRecordsState />;
   }
 
+  console.log("records", records);
+
   return (
     <div className="space-y-4">
       {records.map((record, index) => (
-        <PersonalRecordMetricCard key={index} record={record} />
+        <PersonalRecordMetricCard key={`${record.metricType}-${index}`} record={record} />
       ))}
     </div>
   );

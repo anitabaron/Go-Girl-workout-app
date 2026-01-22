@@ -16,6 +16,8 @@ export function PersonalRecordMetricItem({
     toast.info("Przechodzisz do sesji treningowej");
   };
 
+  console.log("metric", metric);
+
   return (
     <div className="flex items-center justify-between border-b border-border py-3 last:border-b-0">
       <div className="flex-1">
