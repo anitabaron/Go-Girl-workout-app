@@ -53,7 +53,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
   }
 
   const setsComparison = compareValues(planned.sets, params.count_sets);
-  const repsComparison = compareValues(planned.reps, params.sum_reps);
+  const repsComparison = compareValues(planned.reps !== null && planned.reps !== undefined && planned.sets !== null && planned.sets !== undefined ? planned.reps * planned.sets : null, params.sum_reps);
   const durationComparison = compareValues(
     planned.duration_seconds,
     params.duration_seconds
@@ -88,7 +88,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
           <dd
             className={`mt-1 rounded text-lg font-semibold ${getTextColor(setsComparison)}`}
           >
-            {params.count_sets === null ? "-" : params.count_sets}
+            {params.count_sets ?? "-"}
             {getArrowIcon(setsComparison)}
           </dd>
         </div>
@@ -101,7 +101,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
             <dd
               className={`mt-1 rounded  text-lg font-semibold ${getTextColor(repsComparison)}`}
             >
-              {params.sum_reps === null ? "-" : params.sum_reps}
+              {params.sum_reps ?? "-"}
               {getArrowIcon(repsComparison)}
             </dd>
           </div>
@@ -120,17 +120,6 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
             </dd>
           </div>
         )}
-        <div>
-          <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Przerwa między seriami
-          </dt>
-          <dd
-            className={`mt-1 rounded  text-lg font-semibold ${getTextColor(restComparison)}`}
-          >
-            {params.rest_seconds === null ? "-" : `${params.rest_seconds} s`}
-            {getArrowIcon(restComparison)}
-          </dd>
-        </div>
       </dl>
     </div>
   );

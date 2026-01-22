@@ -21,11 +21,12 @@ export function PlannedSection({ params }: PlannedSectionProps) {
             Serie
           </dt>
           <dd className="mt-1 text-lg font-semibold">
-            {params.sets !== null ? params.sets : "-"}
+            {params.sets ??  "-"}
           </dd>
         </div>
         {/* Pokaż powtórzenia tylko jeśli ćwiczenie ma planowane powtórzenia */}
-        {params.reps !== null && params.reps !== undefined && (
+        {params.reps !== null && params.reps !== undefined && params.sets !== null && params.sets !== undefined && (
+          <div className="grid grid-cols-2 gap-3">
           <div>
             <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
               Powtórzeń
@@ -34,6 +35,15 @@ export function PlannedSection({ params }: PlannedSectionProps) {
               {params.reps}
             </dd>
           </div>
+          <div>
+          <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            Suma powtórzeń 
+          </dt>
+          <dd className="mt-1 text-lg font-semibold">
+            {params.reps * params.sets}
+          </dd>
+        </div></div>
+          
         )}
         {/* Pokaż czas trwania tylko jeśli ćwiczenie ma planowany czas */}
         {params.duration_seconds !== null && params.duration_seconds !== undefined && (
@@ -51,7 +61,7 @@ export function PlannedSection({ params }: PlannedSectionProps) {
             Przerwa między seriami
           </dt>
           <dd className="mt-1 text-lg font-semibold">
-            {params.rest_seconds !== null ? `${params.rest_seconds} s` : "-"}
+           {formatDuration(params.rest_seconds)}
           </dd>
         </div>
       </dl>
