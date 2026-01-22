@@ -25,6 +25,15 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/db/supabase.client";
+import { WorkoutTimer } from "@/components/workout-sessions/assistant/workout-timer";
+import { SetCountdownTimer } from "@/components/workout-sessions/assistant/exercise-timer/set-countdown-timer";
+import { RestBetweenSetsTimer } from "@/components/workout-sessions/assistant/exercise-timer/rest-between-sets-timer";
+import { RestAfterSeriesTimer } from "@/components/workout-sessions/assistant/exercise-timer/rest-after-series-timer";
+import { RepsDisplay } from "@/components/workout-sessions/assistant/exercise-timer/reps-display";
+
+// Calculate date values outside component to avoid impure Date.now() calls during render
+const TIMER1_START_TIME = new Date(Date.now() - 120000).toISOString();
+const TIMER2_START_TIME = new Date(Date.now() - 60000).toISOString();
 
 export default function KitchenSinkPage() {
   const router = useRouter();
@@ -365,6 +374,105 @@ export default function KitchenSinkPage() {
                     <SelectItem value="disabled2">Wyłączona opcja 2</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Timers Section */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold">Timers</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>Workout Timers</CardTitle>
+              <CardDescription>
+                Wszystkie dostępne timery treningowe - widok obok siebie
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {/* WorkoutTimer - główny timer sesji */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-center">Workout Timer</h3>
+                  <div className="border rounded-lg p-4 bg-card">
+                    <WorkoutTimer
+                      activeDurationSeconds={930}
+                      lastTimerStartedAt={TIMER1_START_TIME}
+                      lastTimerStoppedAt={null}
+                      isPaused={false}
+                      currentExerciseName="Przysiady"
+                      currentSetNumber={2}
+                      currentExerciseIndex={1}
+                      totalExercises={5}
+                    />
+                  </div>
+                </div>
+
+                {/* SetCountdownTimer - odliczanie czasu serii */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-center">Set Countdown Timer</h3>
+                  <div className="border rounded-lg p-4 bg-card">
+                    <SetCountdownTimer
+                      durationSeconds={30}
+                      isPaused={false}
+                      onComplete={() => console.log("Set complete")}
+                    />
+                  </div>
+                </div>
+
+                {/* RestBetweenSetsTimer - przerwa między seriami */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-center">Rest Between Sets</h3>
+                  <div className="border rounded-lg p-4 bg-card">
+                    <RestBetweenSetsTimer
+                      restSeconds={60}
+                      isPaused={false}
+                      onComplete={() => console.log("Rest complete")}
+                    />
+                  </div>
+                </div>
+
+                {/* RestAfterSeriesTimer - przerwa po seriach */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-center">Rest After Series</h3>
+                  <div className="border rounded-lg p-4 bg-card">
+                    <RestAfterSeriesTimer
+                      restSeconds={90}
+                      isPaused={false}
+                      onComplete={() => console.log("Rest after series complete")}
+                    />
+                  </div>
+                </div>
+
+                {/* RepsDisplay - wyświetlacz powtórzeń */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-center">Reps Display</h3>
+                  <div className="border rounded-lg p-4 bg-card">
+                    <RepsDisplay
+                      reps={12}
+                      setNumber={1}
+                      onComplete={() => console.log("Reps complete")}
+                    />
+                  </div>
+                </div>
+
+                {/* WorkoutTimer z przerwą (restSeconds) */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-center">Workout Timer (Rest Mode)</h3>
+                  <div className="border rounded-lg p-4 bg-card">
+                    <WorkoutTimer
+                      activeDurationSeconds={450}
+                      lastTimerStartedAt={TIMER2_START_TIME}
+                      lastTimerStoppedAt={null}
+                      isPaused={false}
+                      currentExerciseName="Pompki"
+                      currentSetNumber={3}
+                      currentExerciseIndex={2}
+                      totalExercises={6}
+                      restSeconds={45}
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

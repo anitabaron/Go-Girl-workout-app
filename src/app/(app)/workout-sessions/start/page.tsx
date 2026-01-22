@@ -59,10 +59,10 @@ export default async function StartWorkoutSessionPage() {
     return (
       <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
         <PageHeader backHref="/workout-sessions" />
-        <div className="container mx-auto px-4 py-8">
+        <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
           <h1 className="mb-6 text-3xl font-bold">Rozpocznij trening</h1>
           <ResumeSessionCard session={inProgressSession} />
-        </div>
+        </main>
       </div>
     );
   }
@@ -95,10 +95,10 @@ export default async function StartWorkoutSessionPage() {
     return (
       <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
         <PageHeader backHref="/workout-sessions" />
-        <div className="container mx-auto px-4 py-8">
+        <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
           <h1 className="mb-6 text-3xl font-bold">Rozpocznij trening</h1>
           <EmptyState />
-        </div>
+        </main>
       </div>
     );
   }
@@ -107,13 +107,13 @@ export default async function StartWorkoutSessionPage() {
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeader backHref="/workout-sessions" />
-      <div className="container mx-auto px-4 py-8">
+      <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         <h1 className="mb-6 text-3xl font-bold">Rozpocznij trening</h1>
         <WorkoutPlanSelector
           plans={plansResult.items}
           nextCursor={plansResult.nextCursor}
         />
-      </div>
+      </main>
     </div>
   );
 }

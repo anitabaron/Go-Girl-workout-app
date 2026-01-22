@@ -1,6 +1,6 @@
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 
-import type { Database } from "@/db/database.types";
+import type { Database, Json } from "@/db/database.types";
 import type {
   SessionDetailDTO,
   SessionExerciseDTO,
@@ -677,10 +677,6 @@ export async function findWorkoutSessionExerciseByOrder(
     .eq("exercise_order", order)
     .maybeSingle();
 
-  if (error) {
-    console.error("[findWorkoutSessionExerciseByOrder] Error:", error);
-  }
-
   return { data, error };
 }
 
@@ -803,22 +799,27 @@ export async function callSaveWorkoutSessionExercise(
     setsDataJson = [];
   }
 
-  const rpcParams = {
+  // Przygotuj parametry RPC - funkcja DB oczekuje wszystkich parametrów w określonej kolejności
+  // Zgodnie z migracją 20260108120011 funkcja używa p_exercise_order (nie p_order)
+  // WAŻNE: p_sets_data musi być przekazane jako null lub tablica
+  // Funkcja DB sprawdza `p_sets_data IS NOT NULL`, więc musimy przekazać null zamiast undefined
+  // Jeśli setsDataJson jest null, przekaż undefined (funkcja DB nie zmieni istniejących serii)
+  // Jeśli setsDataJson jest tablicą (nawet pustą), przekaż tablicę (funkcja DB zastąpi serie)
+  const rpcParams: Database["public"]["Functions"]["save_workout_session_exercise"]["Args"] = {
     p_session_id: params.p_session_id,
     p_exercise_id: params.p_exercise_id,
     p_exercise_order: params.p_exercise_order,
-    p_actual_sets: params.p_actual_sets !== null && params.p_actual_sets !== undefined ? params.p_actual_sets : undefined,
-    p_actual_reps: params.p_actual_reps !== null && params.p_actual_reps !== undefined ? params.p_actual_reps : undefined,
-    p_actual_duration_seconds: params.p_actual_duration_seconds !== null && params.p_actual_duration_seconds !== undefined ? params.p_actual_duration_seconds : undefined,
-    p_actual_rest_seconds: params.p_actual_rest_seconds !== null && params.p_actual_rest_seconds !== undefined ? params.p_actual_rest_seconds : undefined,
+    p_actual_sets: params.p_actual_sets ?? undefined,
+    p_actual_reps: params.p_actual_reps ?? undefined,
+    p_actual_duration_seconds: params.p_actual_duration_seconds ?? undefined,
+    p_actual_rest_seconds: params.p_actual_rest_seconds ?? undefined,
     p_is_skipped: params.p_is_skipped ?? false,
-    p_sets_data: setsDataJson !== null ? setsDataJson : undefined,
+    p_sets_data: setsDataJson as Json | undefined,
   };
 
   const { data, error } = await client.rpc("save_workout_session_exercise", rpcParams);
 
   if (error) {
-    console.error("[callSaveWorkoutSessionExercise] RPC error:", error);
     return { data: null, error };
   }
 

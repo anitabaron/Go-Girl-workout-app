@@ -35,7 +35,7 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
 
   return (
     <>
-      <Card className="group relative h-full rounded-xl border border-border bg-secondary/70 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card gap-3">
+      <Card className="group relative h-full rounded-xl border border-border bg-secondary/30 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card gap-3">
         <CardActionButtons
           onEdit={handleEdit}
           onDelete={handleDeleteClick}

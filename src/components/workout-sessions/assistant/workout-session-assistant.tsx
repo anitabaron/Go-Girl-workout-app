@@ -49,11 +49,26 @@ export function WorkoutSessionAssistant({
     }
   );
   const [isPaused, setIsPaused] = useState(false);
-  const [formData, setFormData] = useState<ExerciseFormData>(() =>
+  const initialFormDataValue = useMemo(() => 
     exerciseToFormData(
       session.exercises[currentExerciseIndex] || session.exercises[0]
-    )
+    ),
+    [session.exercises, currentExerciseIndex]
   );
+  
+  const [formData, setFormDataState] = useState<ExerciseFormData>(initialFormDataValue);
+  
+  // Ref do przechowywania aktualnego stanu formularza (używane w handleNext, aby uniknąć problemów z closure)
+  const formDataRef = useRef<ExerciseFormData>(initialFormDataValue);
+  
+  // Wrapper dla setFormData, który aktualizuje również ref
+  const setFormData = useCallback((updater: ExerciseFormData | ((prev: ExerciseFormData) => ExerciseFormData)) => {
+    setFormDataState((prev) => {
+      const newFormData = typeof updater === 'function' ? updater(prev) : updater;
+      formDataRef.current = newFormData; // Aktualizuj ref
+      return newFormData;
+    });
+  }, []);
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
   const [autosaveError, setAutosaveError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -68,11 +83,17 @@ export function WorkoutSessionAssistant({
     lastTimerStoppedAt: initialSession.last_timer_stopped_at,
   });
   
+  // Ref do przechowywania aktualnego statusu sesji (używane w stopTimer, aby uniknąć zależności od closure)
+  const sessionStatusRef = useRef(initialSession.status);
+  
   // Ref do śledzenia poprzedniego sessionId (do resetowania przy zmianie sesji)
   const previousSessionIdRef = useRef<string>(sessionId);
   
   // Ref do śledzenia, czy auto-pauza została już wykonana dla bieżącej ścieżki
   const autoPauseExecutedRef = useRef<string | null>(null);
+  
+  // Ref do śledzenia poprzedniego pathname (używane do wykrywania faktycznej zmiany route)
+  const previousPathnameRef = useRef<string | null>(null);
   
   // Ref do śledzenia, czy komponent został już zamontowany (zapobiega auto-pauzie przy pierwszym renderze)
   const isMountedRef = useRef(false);
@@ -87,6 +108,9 @@ export function WorkoutSessionAssistant({
   // (zapobiega pauzowaniu podczas auto-transitions między ćwiczeniami)
   const isAutoTransitioningRef = useRef<boolean>(false);
   
+  // Ref do przechowywania aktualnej funkcji autoPause (używane w cleanup, aby uniknąć zależności)
+  const autoPauseRef = useRef<((saveProgress?: boolean) => Promise<void>) | null>(null);
+  
   // Resetuj refy i aktualizuj stan przy zmianie sessionId (nowa sesja)
   useEffect(() => {
     // Jeśli sessionId się zmienił, resetuj wszystko dla nowej sesji
@@ -99,11 +123,12 @@ export function WorkoutSessionAssistant({
       // Zaktualizuj stan sesji na podstawie nowego initialSession
       setSession(initialSession);
       
-      // Zaktualizuj refy timera
+      // Zaktualizuj refy timera i statusu sesji
       timerStateRef.current = {
         lastTimerStartedAt: initialSession.last_timer_started_at,
         lastTimerStoppedAt: initialSession.last_timer_stopped_at,
       };
+      sessionStatusRef.current = initialSession.status;
     }
   }, [sessionId, initialSession]);
   
@@ -113,7 +138,8 @@ export function WorkoutSessionAssistant({
       lastTimerStartedAt: session.last_timer_started_at,
       lastTimerStoppedAt: session.last_timer_stopped_at,
     };
-  }, [session.last_timer_started_at, session.last_timer_stopped_at]);
+    sessionStatusRef.current = session.status;
+  }, [session.last_timer_started_at, session.last_timer_stopped_at, session.status]);
 
   // Bieżące ćwiczenie
   const currentExercise = useMemo(
@@ -240,8 +266,7 @@ export function WorkoutSessionAssistant({
           // Oznacz, że pierwszy render się zakończył
           isFirstRenderRef.current = false;
         })
-        .catch((error) => {
-          console.error("[WorkoutSessionAssistant] Error starting timer:", error);
+        .catch(() => {
           timerInitializedRef.current = false; // W przypadku błędu, pozwól na ponowną próbę
           // Nie ustawiaj isMountedRef na true w przypadku błędu
         });
@@ -265,11 +290,12 @@ export function WorkoutSessionAssistant({
     }
   }, [autosaveStatus]);
 
+
   // Aktualizacja formData przy zmianie ćwiczenia
   useEffect(() => {
     if (currentExercise) {
       const newFormData = exerciseToFormData(currentExercise);
-      setFormData(newFormData);
+      setFormData(newFormData); // setFormData już aktualizuje ref
       setFormErrors({});
       // Reset numeru serii przy zmianie ćwiczenia
       setCurrentSetNumber(1);
@@ -282,7 +308,10 @@ export function WorkoutSessionAssistant({
         // Nie musimy tutaj nic robić
       }
     }
-  }, [currentExercise]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExercise]); // setFormData jest stabilne (useCallback), nie potrzebuje być w zależnościach
+  
+  // Ref jest aktualizowany w setFormData i updateSetInForm, więc nie potrzebujemy osobnego useEffect
 
   // Zapisywanie stanu ćwiczenia przez API
   const saveExercise = useCallback(
@@ -307,9 +336,16 @@ export function WorkoutSessionAssistant({
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error("[WorkoutSessionAssistant.saveExercise] Error response:", errorData);
-          throw new Error(errorData.message || "Błąd zapisu ćwiczenia");
+          let errorData: { message?: string; details?: string; code?: string } = {};
+          try {
+            const text = await response.text();
+            if (text) {
+              errorData = JSON.parse(text);
+            }
+          } catch {
+            // Jeśli nie można sparsować JSON, użyj pustego obiektu
+          }
+          throw new Error(errorData.message || `Błąd zapisu ćwiczenia (${response.status})`);
         }
 
         const result = await response.json();
@@ -328,7 +364,6 @@ export function WorkoutSessionAssistant({
         setAutosaveStatus("saved");
         return true;
       } catch (error) {
-        console.error("[WorkoutSessionAssistant.saveExercise] Error:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Błąd zapisu ćwiczenia";
         setAutosaveError(errorMessage);
@@ -342,16 +377,19 @@ export function WorkoutSessionAssistant({
 
   // Obsługa nawigacji next
   const handleNext = useCallback(async () => {
+    // Użyj aktualnego stanu formularza z ref (aby uniknąć problemów z closure)
+    const currentFormData = formDataRef.current;
+    
     // Walidacja przed zapisem
-    const errors = validateForm(formData);
-    if (Object.keys(errors).length > 0 && !formData.is_skipped) {
+    const errors = validateForm(currentFormData);
+    if (Object.keys(errors).length > 0 && !currentFormData.is_skipped) {
       setFormErrors(errors);
       toast.error("Popraw błędy w formularzu przed zapisem");
       return;
     }
 
     // Zapisz i przejdź dalej
-    const success = await saveExercise(formData, true);
+    const success = await saveExercise(currentFormData, true);
     if (!success) {
       return;
     }
@@ -374,6 +412,14 @@ export function WorkoutSessionAssistant({
         );
 
         if (response.ok) {
+          const result = await response.json();
+          // Aktualizuj lokalny stan sesji - zmień status na 'completed'
+          // To zapobiega próbom zapisania podczas cleanup, gdy sesja już nie jest 'in_progress'
+          setSession((prev) => ({
+            ...prev,
+            status: "completed" as const,
+            completed_at: result.data?.completed_at ?? prev.completed_at,
+          }));
           toast.success("Sesja treningowa zakończona!");
           router.push(`/workout-sessions/${sessionId}`);
         } else {
@@ -384,7 +430,6 @@ export function WorkoutSessionAssistant({
       }
     }
   }, [
-    formData,
     validateForm,
     saveExercise,
     currentExerciseIndex,
@@ -403,8 +448,10 @@ export function WorkoutSessionAssistant({
 
   // Obsługa pause
   const handlePause = useCallback(async () => {
+    // Użyj aktualnego stanu formularza z ref
+    const currentFormData = formDataRef.current;
     // Zapisz stan bez przesuwania kursora
-    await saveExercise(formData, false);
+    await saveExercise(currentFormData, false);
 
     // Zatrzymaj timer przez API
     const now = new Date().toISOString();
@@ -440,7 +487,7 @@ export function WorkoutSessionAssistant({
     } catch {
       toast.error("Błąd podczas pauzowania timera");
     }
-  }, [formData, saveExercise, sessionId]);
+  }, [saveExercise, sessionId]);
 
   // Obsługa resume
   const handleResume = useCallback(async () => {
@@ -515,6 +562,14 @@ export function WorkoutSessionAssistant({
         );
 
         if (response.ok) {
+          const result = await response.json();
+          // Aktualizuj lokalny stan sesji - zmień status na 'completed'
+          // To zapobiega próbom zapisania podczas cleanup, gdy sesja już nie jest 'in_progress'
+          setSession((prev) => ({
+            ...prev,
+            status: "completed" as const,
+            completed_at: result.data?.completed_at ?? prev.completed_at,
+          }));
           toast.success("Sesja treningowa zakończona!");
           router.push(`/workout-sessions/${sessionId}`);
         } else {
@@ -560,6 +615,12 @@ export function WorkoutSessionAssistant({
       return;
     }
     
+    // Jeśli sesja nie jest w statusie 'in_progress', nie wykonuj auto-pauzy
+    // (sesja może być już zakończona, np. po zakończeniu ostatniego ćwiczenia)
+    if (session.status !== 'in_progress') {
+      return;
+    }
+    
     // Jeśli już jest w pauzie, nie rób nic
     if (isPaused) {
       return;
@@ -575,11 +636,17 @@ export function WorkoutSessionAssistant({
     // nie pauzuj (tylko zapisz jeśli trzeba)
     // To zapobiega pauzowaniu podczas automatycznych przejść między ćwiczeniami
     if (isAutoTransitioningRef.current) {
-      if (saveProgress) {
+      if (saveProgress && session.status === 'in_progress') {
         try {
-          await saveExercise(formData, false);
+          // Użyj aktualnego stanu formularza z ref
+          const currentFormData = formDataRef.current;
+          await saveExercise(currentFormData, false);
         } catch (error) {
-          console.error("[WorkoutSessionAssistant.autoPause] Error saving progress during auto-transition:", error);
+          // Jeśli błąd 409 (sesja nie jest in_progress), to jest oczekiwane
+          // gdy trening został zakończony przed unmount - nie logujemy jako błąd
+          if (!(error instanceof Error && error.message.includes("nie jest w statusie 'in_progress'"))) {
+            console.error("[WorkoutSessionAssistant.autoPause] Error saving progress during auto-transition:", error);
+          }
         }
       }
       return; // Nie pauzuj podczas automatycznych przejść między ćwiczeniami
@@ -588,9 +655,15 @@ export function WorkoutSessionAssistant({
     // Opcjonalnie zapisz postępy
     if (saveProgress) {
       try {
-        await saveExercise(formData, false);
+        // Użyj aktualnego stanu formularza z ref
+        const currentFormData = formDataRef.current;
+        await saveExercise(currentFormData, false);
       } catch (error) {
-        console.error("[WorkoutSessionAssistant.autoPause] Error saving progress:", error);
+        // Jeśli błąd 409 (sesja nie jest in_progress), to jest oczekiwane
+        // gdy trening został zakończony przed unmount - nie logujemy jako błąd
+        if (!(error instanceof Error && error.message.includes("nie jest w statusie 'in_progress'"))) {
+          console.error("[WorkoutSessionAssistant.autoPause] Error saving progress:", error);
+        }
       }
     }
 
@@ -627,11 +700,23 @@ export function WorkoutSessionAssistant({
     } catch (error) {
       console.error("[WorkoutSessionAssistant.autoPause] Error pausing timer:", error);
     }
-  }, [isPaused, formData, saveExercise, sessionId]);
+  }, [isPaused, saveExercise, sessionId, session.status]);
+  
+  // Aktualizuj ref przy każdej zmianie autoPause
+  useEffect(() => {
+    autoPauseRef.current = autoPause;
+  }, [autoPause]);
 
   // Funkcja zatrzymująca timer (używana przy wyjściu i unmount)
   // Używamy ref do przechowywania aktualnych wartości, aby uniknąć zależności od session.last_timer_*
   const stopTimer = useCallback(async () => {
+    // Jeśli sesja nie jest w statusie 'in_progress', nie próbuj zatrzymywać timera
+    // (sesja może być już zakończona, np. po zakończeniu ostatniego ćwiczenia)
+    // Używamy ref, aby mieć aktualny status nawet gdy closure ma stary status
+    if (sessionStatusRef.current !== 'in_progress') {
+      return;
+    }
+    
     // Użyj ref do sprawdzenia aktualnego stanu bez zależności
     const lastTimerStartedAt = timerStateRef.current.lastTimerStartedAt;
     const lastTimerStoppedAt = timerStateRef.current.lastTimerStoppedAt;
@@ -673,9 +758,13 @@ export function WorkoutSessionAssistant({
             last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
           }));
         }
+      } else if (response.status === 409) {
+        // Sesja nie jest już w statusie 'in_progress' (np. została zakończona)
+        // To jest oczekiwane, gdy trening został zakończony przed unmount
+        // Nie logujemy jako błąd, bo to normalna sytuacja
       }
-    } catch (error) {
-      console.error("[WorkoutSessionAssistant.stopTimer] Error:", error);
+    } catch {
+      // Ignoruj błędy - próbujemy zatrzymać timer, ale nie blokujemy unmount
     }
   }, [sessionId]);
 
@@ -687,8 +776,7 @@ export function WorkoutSessionAssistant({
 
       // Przekieruj do strony głównej
       router.push("/");
-    } catch (error) {
-      console.error("[WorkoutSessionAssistant.handleExit] Error:", error);
+    } catch {
       // Nawet jeśli wystąpi błąd, przekieruj użytkownika
       router.push("/");
     }
@@ -714,6 +802,11 @@ export function WorkoutSessionAssistant({
     // Sprawdź, czy jesteśmy na stronie aktywnej sesji
     const activePagePath = `/workout-sessions/${sessionId}/active`;
     const isOnActivePage = pathname === activePagePath;
+    
+    // Sprawdź, czy pathname faktycznie się zmienił (aby uniknąć fałszywych logów)
+    const pathnameChanged = previousPathnameRef.current !== pathname;
+    const previousPathname = previousPathnameRef.current;
+    previousPathnameRef.current = pathname;
 
     // Jeśli nie jesteśmy na stronie aktywnej sesji i sesja nie jest w pauzie, pauzuj
     // Ważne: sprawdzamy czy pathname istnieje i czy nie jesteśmy na właściwej stronie
@@ -725,25 +818,32 @@ export function WorkoutSessionAssistant({
         // Zapisz postępy przed pauzą (gdy użytkownik przechodzi na inną stronę)
         void autoPause(true);
       }
-    } else if (isOnActivePage) {
-      // Resetuj ref, gdy wracamy na stronę aktywnej sesji
+    } else if (isOnActivePage && pathnameChanged && previousPathname !== activePagePath) {
+      // Resetuj ref, gdy faktycznie wracamy na stronę aktywnej sesji (tylko gdy pathname się zmienił z innej strony)
       autoPauseExecutedRef.current = null;
     }
   }, [pathname, sessionId, isPaused, autoPause]);
 
   // Cleanup przy unmount - pauzuj sesję przy wyjściu z asystenta
+  // Używamy pustej tablicy zależności, aby cleanup był wywoływany TYLKO przy faktycznym unmount
+  // autoPause jest przechowywane w ref, aby mieć dostęp do najnowszej wersji funkcji
   useEffect(() => {
     return () => {
       // Pauzuj sesję przy unmount (wyjście z asystenta)
       // Zapisz postępy - dla route change w Next.js jest czas na async zapis
-      void autoPause(true);
+      // Używamy ref, aby uniknąć wywoływania cleanup przy każdej zmianie zależności
+      if (autoPauseRef.current) {
+        void autoPauseRef.current(true);
+      }
     };
-  }, [autoPause]);
+     
+  }, []); // Pusta tablica - cleanup tylko przy unmount
 
   // Funkcja do zapisu postępów przy zamknięciu przeglądarki/karty
   // Używa sendBeacon dla niezawodnego zapisu nawet gdy strona się zamyka
   const saveProgressOnUnload = useCallback(() => {
-    const currentFormData = formData;
+    // Użyj aktualnego stanu formularza z ref
+    const currentFormData = formDataRef.current;
     const currentExerciseOrder = currentExercise.exercise_order;
 
     // Zapisz postępy przez sendBeacon (działa nawet gdy strona się zamyka)
@@ -763,8 +863,8 @@ export function WorkoutSessionAssistant({
       }).catch(() => {
         // Ignoruj błędy - próbujemy zapisać, ale nie blokujemy zamknięcia
       });
-    } catch (error) {
-      console.error("[WorkoutSessionAssistant.saveProgressOnUnload] Error:", error);
+    } catch {
+      // Ignoruj błędy - próbujemy zapisać, ale nie blokujemy zamknięcia
     }
 
     // Pauzuj timer (użyj fetch z keepalive dla niezawodności)
@@ -782,10 +882,10 @@ export function WorkoutSessionAssistant({
       }).catch(() => {
         // Ignoruj błędy - sendBeacon już wysłał dane
       });
-    } catch (error) {
-      console.error("[WorkoutSessionAssistant.saveProgressOnUnload] Error pausing timer:", error);
+    } catch {
+      // Ignoruj błędy - próbujemy zapisać, ale nie blokujemy zamknięcia
     }
-  }, [formData, currentExercise.exercise_order, sessionId]);
+  }, [currentExercise.exercise_order, sessionId]);
 
   // Auto-pauza przy zamknięciu przeglądarki/karty (beforeunload i pagehide)
   useEffect(() => {
@@ -858,6 +958,8 @@ export function WorkoutSessionAssistant({
       setFormData((prev) => {
         const setIndex = prev.sets.findIndex((set) => set.set_number === setNumber);
         
+        let newFormData: ExerciseFormData;
+        
         if (setIndex === -1) {
           // Jeśli seria nie istnieje, dodaj ją
           const newSet: SetLogFormData = {
@@ -870,16 +972,19 @@ export function WorkoutSessionAssistant({
           const newSets = [...prev.sets, newSet].sort(
             (a, b) => a.set_number - b.set_number
           );
-          return { ...prev, sets: newSets };
+          newFormData = { ...prev, sets: newSets };
+        } else {
+          // Aktualizuj istniejącą serię
+          const newSets = [...prev.sets];
+          newSets[setIndex] = { ...newSets[setIndex], ...updates };
+          newFormData = { ...prev, sets: newSets };
         }
-
-        // Aktualizuj istniejącą serię
-        const newSets = [...prev.sets];
-        newSets[setIndex] = { ...newSets[setIndex], ...updates };
-        return { ...prev, sets: newSets };
+        
+        // Ref jest aktualizowany w setFormData, więc nie musimy go tutaj aktualizować
+        return newFormData;
       });
     },
-    [currentExercise.planned_reps, currentExercise.planned_duration_seconds]
+    [currentExercise.planned_reps, currentExercise.planned_duration_seconds, setFormData]
   );
 
   // Callback: zakończenie serii (odliczanie czasu lub powtórzenia)
@@ -895,7 +1000,7 @@ export function WorkoutSessionAssistant({
       });
     }
     // Nie zapisujemy po każdej serii - tylko po zakończeniu wszystkich serii ćwiczenia
-  }, [currentSetNumber, currentExercise.planned_duration_seconds, updateSetInForm]);
+  }, [currentSetNumber, currentExercise.planned_duration_seconds, currentExercise.exercise_order, updateSetInForm]);
 
   // Callback: zakończenie przerwy między seriami
   const handleRestBetweenComplete = useCallback(() => {
@@ -908,7 +1013,7 @@ export function WorkoutSessionAssistant({
       updateSetInForm(nextSetNumber, {});
     }
     // Nie zapisujemy między seriami - tylko po zakończeniu wszystkich serii ćwiczenia
-  }, [currentSetNumber, currentExercise.planned_sets, updateSetInForm]);
+  }, [currentSetNumber, currentExercise.planned_sets, currentExercise.exercise_order, updateSetInForm]);
 
   // Callback: zakończenie przerwy po seriach
   // To jest moment gdy wszystkie serie ćwiczenia są zakończone i przechodzimy do następnego ćwiczenia
@@ -919,6 +1024,7 @@ export function WorkoutSessionAssistant({
     
     // Zapisz ćwiczenie i przejdź do następnego
     // handleNext zapisuje ćwiczenie i przechodzi do następnego ćwiczenia
+    // Ref jest aktualizowany bezpośrednio w updateSetInForm, więc możemy wywołać handleNext natychmiast
     void handleNext();
   }, [handleNext, markAutoTransition]);
 
@@ -931,7 +1037,7 @@ export function WorkoutSessionAssistant({
       });
     }
     // Nie zapisujemy po powtórzeniach - tylko po zakończeniu wszystkich serii ćwiczenia
-  }, [currentSetNumber, currentExercise.planned_reps, updateSetInForm]);
+  }, [currentSetNumber, currentExercise.planned_reps, currentExercise.exercise_order, updateSetInForm]);
 
   // Obliczanie czy można przejść dalej
   const canGoNext = useMemo(() => {

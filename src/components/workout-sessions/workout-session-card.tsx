@@ -3,13 +3,25 @@
 import React, { memo, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Calendar, Play, CheckCircle2, CalendarCheck, Dumbbell, Clock10 } from "lucide-react";
+import { toast } from "sonner";
+import { Calendar, Play, CheckCircle2, CalendarCheck, Dumbbell, Clock10, X } from "lucide-react";
 import type { SessionSummaryDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardActionButtons } from "@/components/ui/card-action-buttons";
 import { DeleteWorkoutSessionDialog } from "@/components/workout-sessions/delete-workout-session-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { formatDateTime } from "@/lib/utils/date-format";
 
 type WorkoutSessionCardProps = {
@@ -19,6 +31,8 @@ type WorkoutSessionCardProps = {
 function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   
   const isInProgress = session.status === "in_progress";
   
@@ -90,6 +104,65 @@ function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
     router.push(`/workout-sessions/${session.id}/active`);
   };
 
+  const handleCancel = async () => {
+    setIsCancelling(true);
+
+    try {
+      const response = await fetch(
+        `/api/workout-sessions/${session.id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: "completed",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        if (response.status === 400) {
+          toast.error(
+            errorData.message || "Nie można anulować ukończonej sesji"
+          );
+        } else if (response.status === 404) {
+          toast.error("Sesja treningowa nie została znaleziona");
+        } else if (response.status === 401 || response.status === 403) {
+          toast.error("Brak autoryzacji. Zaloguj się ponownie.");
+          router.push("/login");
+        } else if (response.status >= 500) {
+          toast.error(
+            errorData.message ||
+              "Wystąpił błąd serwera. Spróbuj ponownie później."
+          );
+        } else {
+          toast.error(
+            errorData.message || "Nie udało się anulować sesji treningowej"
+          );
+        }
+        return;
+      }
+
+      toast.success("Sesja została anulowana");
+      setIsCancelDialogOpen(false);
+      router.refresh();
+    } catch (error) {
+      console.error("Error cancelling session:", error);
+      if (error instanceof TypeError) {
+        toast.error(
+          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."
+        );
+      } else {
+        toast.error("Wystąpił błąd podczas anulowania sesji treningowej");
+      }
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -102,7 +175,7 @@ function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
 
   return (
     <>
-      <Card className="group relative h-full rounded-xl border border-border bg-white transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card">
+      <Card className="group relative h-full rounded-xl border border-border bg-secondary/30 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card">
         <CardActionButtons
           onDelete={handleDeleteClick}
           editAriaLabel={`Edytuj sesję treningową: ${planName}`}
@@ -165,17 +238,52 @@ function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
         </CardContent>
       </Link>
       {isInProgress && (
-        <CardFooter className="pt-0">
+        <CardFooter className="pt-0 flex gap-3">
           <Button
             onClick={handleResume}
             variant="default"
             size="sm"
-            className="w-full"
+            className="flex-1"
             aria-label="Wznów trening"
           >
             <Play className="mr-2 h-4 w-4" />
             Wznów
           </Button>
+          <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                aria-label="Anuluj sesję"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Anuluj sesję
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Anuluj sesję treningową?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Czy na pewno chcesz anulować tę sesję treningową? Postęp
+                  zostanie zapisany, ale sesja zostanie oznaczona jako
+                  ukończona.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isCancelling}>
+                  Anuluj
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancel}
+                  disabled={isCancelling}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isCancelling ? "Anulowanie..." : "Potwierdź"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardFooter>
       )}
       </Card>

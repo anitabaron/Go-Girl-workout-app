@@ -1041,12 +1041,10 @@ export async function autosaveWorkoutSessionExerciseService(
     await callSaveWorkoutSessionExercise(supabase, saveParams);
 
   if (saveError) {
-    console.error("[autosaveWorkoutSessionExerciseService] Save error:", saveError);
     throw mapSaveFunctionError(saveError);
   }
 
   if (!sessionExerciseId) {
-    console.error("[autosaveWorkoutSessionExerciseService] No sessionExerciseId returned");
     throw new ServiceError(
       "INTERNAL",
       "Nie udało się zapisać ćwiczenia w sesji."
@@ -1062,7 +1060,6 @@ export async function autosaveWorkoutSessionExerciseService(
     );
 
     if (updateError) {
-      console.error("[autosaveWorkoutSessionExerciseService] Planned update error:", updateError);
       throw mapDbError(updateError);
     }
   }

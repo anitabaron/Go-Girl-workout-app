@@ -49,7 +49,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     
 
     if (!sessionId) {
-      console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Missing sessionId");
       return NextResponse.json(
         { message: "Brak identyfikatora sesji treningowej w ścieżce." },
         { status: 400 }
@@ -57,7 +56,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     if (!isUuid(sessionId)) {
-      console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Invalid sessionId format:", sessionId);
       return NextResponse.json(
         { message: "Nieprawidłowy format UUID identyfikatora sesji." },
         { status: 400 }
@@ -65,7 +63,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     if (!orderParam) {
-      console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Missing orderParam");
       return NextResponse.json(
         { message: "Brak parametru order w ścieżce." },
         { status: 400 }
@@ -75,7 +72,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const orderNumber = Number.parseInt(orderParam, 10);
 
     if (Number.isNaN(orderNumber) || orderNumber <= 0) {
-      console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Invalid orderNumber:", orderNumber);
       return NextResponse.json(
         { message: "order musi być liczbą całkowitą większą od 0." },
         { status: 400 }
@@ -86,10 +82,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/exercises/[order]] JSON parse error",
-        jsonError
-      );
       return NextResponse.json(
         {
           message: "Nieprawidłowy format JSON w body żądania.",
@@ -108,11 +100,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       body
     );
 
-
     return NextResponse.json({ data: result }, { status: 200 });
   } catch (error) {
-    console.error("[PATCH /api/workout-sessions/[id]/exercises/[order]] Error caught:", error);
-    
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
         { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
@@ -121,28 +110,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
     
     if (error instanceof ServiceError) {
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/exercises/[order]] ServiceError:",
-        {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-        }
-      );
       return respondWithServiceError(error);
     }
 
     if (error instanceof ZodError) {
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/exercises/[order]] ZodError:",
-        {
-          issues: error.issues,
-          formatted: error.issues.map((issue) => ({
-            path: issue.path.join("."),
-            message: issue.message,
-          })),
-        }
-      );
       return NextResponse.json(
         {
           message: "Nieprawidłowe dane wejściowe.",
@@ -153,10 +124,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
-    console.error(
-      "[PATCH /api/workout-sessions/[id]/exercises/[order]] Unexpected error:",
-      error
-    );
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",

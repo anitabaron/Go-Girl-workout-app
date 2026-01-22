@@ -9,7 +9,7 @@ type SkeletonLoaderProps = {
   className?: string;
 };
 
-export function SkeletonLoader({ count = 6, className }: SkeletonLoaderProps) {
+export function SkeletonLoader({ count = 6, className }: Readonly<SkeletonLoaderProps>) {
   if (count === 1) {
     return <Skeleton className={cn("h-4 w-full", className)} />;
   }
