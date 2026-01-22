@@ -63,9 +63,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
  
 
     if (!sessionId) {
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/timer] Missing sessionId"
-      );
       return NextResponse.json(
         { message: "Brak identyfikatora sesji treningowej w ścieżce." },
         { status: 400 }
@@ -73,10 +70,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     if (!isUuid(sessionId)) {
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/timer] Invalid sessionId format:",
-        sessionId
-      );
       return NextResponse.json(
         { message: "Nieprawidłowy format UUID identyfikatora sesji." },
         { status: 400 }
@@ -87,10 +80,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.error(
-        "[PATCH /api/workout-sessions/[id]/timer] JSON parse error:",
-        jsonError
-      );
       return NextResponse.json(
         {
           message: "Nieprawidłowy format JSON w body żądania.",
@@ -108,11 +97,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     return NextResponse.json({ data: updated }, { status: 200 });
   } catch (error) {
-    console.error(
-      "[PATCH /api/workout-sessions/[id]/timer] Error caught:",
-      error
-    );
-
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
         {
@@ -124,22 +108,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     if (error instanceof ServiceError) {
-      console.error("[PATCH /api/workout-sessions/[id]/timer] ServiceError:", {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-      });
       return respondWithServiceError(error);
     }
 
     if (error instanceof ZodError) {
-      console.error("[PATCH /api/workout-sessions/[id]/timer] ZodError:", {
-        issues: error.issues,
-        formatted: error.issues.map((issue) => ({
-          path: issue.path.join("."),
-          message: issue.message,
-        })),
-      });
       return NextResponse.json(
         {
           message: "Nieprawidłowe dane wejściowe.",
@@ -150,10 +122,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
-    console.error(
-      "[PATCH /api/workout-sessions/[id]/timer] Unexpected error:",
-      error
-    );
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",
