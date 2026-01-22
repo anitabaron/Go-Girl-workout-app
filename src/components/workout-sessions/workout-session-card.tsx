@@ -175,7 +175,7 @@ function WorkoutSessionCardComponent({ session }: WorkoutSessionCardProps) {
 
   return (
     <>
-      <Card className="group relative h-full rounded-xl border border-border bg-white transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card">
+      <Card className="group relative h-full rounded-xl border border-border bg-secondary/30 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card">
         <CardActionButtons
           onDelete={handleDeleteClick}
           editAriaLabel={`Edytuj sesję treningową: ${planName}`}
