@@ -1019,6 +1019,29 @@ export async function autosaveWorkoutSessionExerciseService(
       duration_seconds: set.duration_seconds ?? null,
       weight_kg: set.weight_kg ?? null,
     }));
+    
+    // Debug: loguj szczegóły serii przed wysłaniem do DB
+    const setsDetails = setsDataForDb.map((set, idx) => ({
+      index: idx,
+      reps: set.reps,
+      duration_seconds: set.duration_seconds,
+      weight_kg: set.weight_kg,
+      hasAnyValue: set.reps !== null || set.duration_seconds !== null || set.weight_kg !== null,
+    }));
+    const originalSetsDetails = parsed.sets.map((set, idx) => ({
+      index: idx,
+      set_number: set.set_number,
+      reps: set.reps,
+      duration_seconds: set.duration_seconds,
+      weight_kg: set.weight_kg,
+    }));
+    
+    console.log('[autosaveWorkoutSessionExerciseService] Sets data for DB:', JSON.stringify({
+      exerciseOrder: order,
+      setsCount: setsDataForDb.length,
+      setsDetails,
+      originalSetsDetails,
+    }, null, 2));
   } else if (parsed.is_skipped === true) {
     // Pusta tablica = wyczyść wszystkie istniejące serie
     setsDataForDb = [];

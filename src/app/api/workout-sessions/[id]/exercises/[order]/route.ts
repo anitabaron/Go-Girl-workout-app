@@ -85,6 +85,29 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     let body;
     try {
       body = await request.json();
+      
+      // Debug: loguj co jest otrzymywane w API - użyj console.error dla lepszej widoczności
+      type SetData = {
+        set_number?: number;
+        reps?: number | null;
+        duration_seconds?: number | null;
+        weight_kg?: number | null;
+      };
+      const setsInfo = (body.sets as SetData[] | undefined)?.map((set: SetData, idx: number) => ({
+        index: idx,
+        set_number: set.set_number,
+        reps: set.reps,
+        duration_seconds: set.duration_seconds,
+        weight_kg: set.weight_kg,
+      })) || [];
+      
+      console.error('=== [API] PATCH /api/workout-sessions/[id]/exercises/[order] ===');
+      console.error('Exercise Order:', orderNumber);
+      console.error('Sets Count:', body.sets?.length ?? 0);
+      console.error('Sets:', JSON.stringify(setsInfo, null, 2));
+      console.error('Is Skipped:', body.is_skipped);
+      console.error('Advance Cursor:', body.advance_cursor_to_next);
+      console.error('========================================================');
     } catch (jsonError) {
       console.error(
         "[PATCH /api/workout-sessions/[id]/exercises/[order]] JSON parse error",
