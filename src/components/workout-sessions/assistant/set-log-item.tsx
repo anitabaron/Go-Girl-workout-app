@@ -11,6 +11,7 @@ type SetLogItemProps = {
   onRemove: () => void;
   error?: string;
   showDuration?: boolean; // czy pokazać pole czasu trwania
+  showReps?: boolean; // czy pokazać pole powtórzeń
   isSkipped?: boolean; // czy ćwiczenie jest pominięte
 };
 
@@ -19,7 +20,7 @@ type SetLogItemProps = {
  * Zawiera pola: set_number (read-only), reps, duration_seconds, weight_kg.
  * Walidacja: co najmniej jedna metryka (reps/duration/weight) z wartością >= 0.
  */
-export function SetLogItem({ set, onChange, onRemove, error, showDuration = true, isSkipped = false }: SetLogItemProps) {
+export function SetLogItem({ set, onChange, onRemove, error, showDuration, showReps, isSkipped = false }: Readonly<SetLogItemProps>) {
   const handleChange = (field: keyof SetLogFormData, value: string) => {
     const numValue = value === "" ? null : Number.parseFloat(value);
     onChange({
@@ -43,7 +44,8 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration = true
           </div>
 
           {/* Pola metryk */}
-          <div className={`grid grid-cols-2 gap-3 ${showDuration ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+          <div className={`grid grid-cols-2 gap-3 sm:grid-cols-2"}`}>
+          {showReps && (
             <div>
               <label
                 htmlFor={`reps-${set.set_number}`}
@@ -65,8 +67,9 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration = true
                 aria-describedby={error ? `error-${set.set_number}` : undefined}
               />
             </div>
+            )}
 
-            {showDuration && (
+            {showDuration  && (
               <div>
                 <label
                   htmlFor={`duration-${set.set_number}`}

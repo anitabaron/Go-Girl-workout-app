@@ -12,6 +12,7 @@ type SetLogsListProps = {
   onRemove: (index: number) => void;
   errors?: Record<number, string>; // klucz: index serii, wartość: komunikat błędu
   showDuration?: boolean; // czy pokazać pole czasu trwania
+  showReps?: boolean; // czy pokazać pole powtórzeń
   isSkipped?: boolean; // czy ćwiczenie jest pominięte
 };
 
@@ -24,9 +25,10 @@ export function SetLogsList({
   onUpdate,
   onRemove,
   errors,
-  showDuration = true,
+  showDuration,
+  showReps,
   isSkipped = false,
-}: SetLogsListProps) {
+}: Readonly<SetLogsListProps>) {
   return (
     <div className={`space-y-4 ${isSkipped ? "opacity-50 grayscale pointer-events-none" : ""}`}>
       {sets.length === 0 ? (
@@ -45,6 +47,7 @@ export function SetLogsList({
               onRemove={() => onRemove(index)}
               error={errors?.[index]}
               showDuration={showDuration}
+              showReps={showReps}
               isSkipped={isSkipped}
             />
           ))}

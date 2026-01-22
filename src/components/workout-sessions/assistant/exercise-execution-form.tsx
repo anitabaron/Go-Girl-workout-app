@@ -24,7 +24,7 @@ export function ExerciseExecutionForm({
   exercise,
   onChange,
   errors,
-}: ExerciseExecutionFormProps) {
+}: Readonly<ExerciseExecutionFormProps>) {
   // Inicjalizacja formData z danych ćwiczenia
   const initialFormData = useMemo(() => {
     const data = exerciseToFormData(exercise);
@@ -242,7 +242,8 @@ export function ExerciseExecutionForm({
         onUpdate={handleSetUpdate}
         onRemove={handleSetRemove}
         errors={errors?.sets}
-        showDuration={exercise.planned_duration_seconds !== null && exercise.planned_duration_seconds !== undefined}
+        showDuration={exercise.planned_duration_seconds !== null && exercise.planned_duration_seconds > 0}
+        showReps={exercise.planned_reps !== null && exercise.planned_reps > 0}
         isSkipped={formData.is_skipped}
       />
 
