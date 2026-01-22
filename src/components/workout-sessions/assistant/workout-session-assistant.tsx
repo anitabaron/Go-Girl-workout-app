@@ -394,13 +394,6 @@ export function WorkoutSessionAssistant({
       return;
     }
 
-    // WAŻNE: Dodaj małe opóźnienie przed zmianą statusu, aby upewnić się że set logs są zapisane w bazie
-    // To zapobiega race condition gdzie status zmienia się przed zakończeniem transakcji DB
-    if (currentExerciseIndex === session.exercises.length - 1) {
-      // Ostatnie ćwiczenie - poczekaj chwilę przed zakończeniem sesji
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-
     // Przejście do następnego ćwiczenia
     if (currentExerciseIndex < session.exercises.length - 1) {
       setCurrentExerciseIndex(currentExerciseIndex + 1);

@@ -15,7 +15,7 @@ type AutosaveIndicatorProps = {
 export function AutosaveIndicator({
   status,
   errorMessage,
-}: AutosaveIndicatorProps) {
+}: Readonly<AutosaveIndicatorProps>) {
   const getStatusConfig = () => {
     switch (status) {
       case "saving":
@@ -28,7 +28,7 @@ export function AutosaveIndicator({
         return {
           icon: CheckCircle2,
           text: "Zapisano",
-          className: "text-green-600 dark:text-green-400",
+          className: "text-pink-600 dark:text-green-400",
         };
       case "error":
         return {
