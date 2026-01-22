@@ -18,7 +18,7 @@ type PersonalRecordsListProps = {
 export function PersonalRecordsList({
   initialData,
   errorMessage,
-}: PersonalRecordsListProps) {
+}: Readonly<PersonalRecordsListProps>) {
   const searchParams = useSearchParams();
   const [records, setRecords] = useState(initialData.items);
   const [nextCursor, setNextCursor] = useState(initialData.nextCursor);

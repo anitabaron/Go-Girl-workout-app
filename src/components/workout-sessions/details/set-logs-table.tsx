@@ -100,7 +100,7 @@ export function SetLogsTable({
                       isPR ? "font-bold text-destructive" : ""
                     }`}
                   >
-                    {set.reps !== null ? set.reps : "-"}
+                    {set.reps ?? "-"}
                   </td>
                 )}
                 {showDuration && (
@@ -117,7 +117,7 @@ export function SetLogsTable({
                     isPR ? "font-bold text-destructive" : ""
                   }`}
                 >
-                  {set.weight_kg !== null ? `${set.weight_kg} kg` : "-"}
+                  {set.weight_kg === null ? "-" : `${set.weight_kg} kg`}
                 </td>
               </tr>
             );

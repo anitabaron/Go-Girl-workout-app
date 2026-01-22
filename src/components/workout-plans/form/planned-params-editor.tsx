@@ -9,7 +9,7 @@ export function PlannedParamsEditor({
   onChange,
   errors,
   disabled,
-}: PlannedParamsEditorProps) {
+}: Readonly<PlannedParamsEditorProps>) {
   const setsId = useId();
   const repsId = useId();
   const durationId = useId();
