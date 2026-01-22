@@ -677,10 +677,6 @@ export async function findWorkoutSessionExerciseByOrder(
     .eq("exercise_order", order)
     .maybeSingle();
 
-  if (error) {
-    console.error("[findWorkoutSessionExerciseByOrder] Error:", error);
-  }
-
   return { data, error };
 }
 
@@ -821,27 +817,9 @@ export async function callSaveWorkoutSessionExercise(
     p_sets_data: setsDataJson as Json | undefined,
   };
 
-  // Debug: loguj co jest wysyłane do funkcji DB
-  console.error('=== [callSaveWorkoutSessionExercise] Calling DB function ===');
-  console.error('Exercise Order:', params.p_exercise_order);
-  console.error('Sets Data JSON:', JSON.stringify(setsDataJson, null, 2));
-  console.error('Sets Count:', setsDataJson?.length ?? 0);
-  console.error('RPC Params:', JSON.stringify({
-    ...rpcParams,
-    p_sets_data: setsDataJson !== null ? `[${setsDataJson.length} sets - see Sets Data JSON above]` : 'null (not included)',
-  }, null, 2));
-  console.error('===========================================================');
-
   const { data, error } = await client.rpc("save_workout_session_exercise", rpcParams);
-  
-  if (error) {
-    console.error('[callSaveWorkoutSessionExercise] RPC error:', error);
-  } else {
-    console.error('[callSaveWorkoutSessionExercise] RPC success, session_exercise_id:', data);
-  }
 
   if (error) {
-    console.error("[callSaveWorkoutSessionExercise] RPC error:", error);
     return { data: null, error };
   }
 
