@@ -70,6 +70,8 @@ export default async function PersonalRecordsPage({
     personalRecords.nextCursor
   );
 
+  console.log("personal records page", personalRecords.items);
+
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeaderSection>
