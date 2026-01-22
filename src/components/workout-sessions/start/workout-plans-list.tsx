@@ -9,7 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type WorkoutPlansListProps = {
-  initialPlans: Array<Omit<WorkoutPlanDTO, "exercises">>;
+  initialPlans: Array<
+    Omit<WorkoutPlanDTO, "exercises"> & {
+      exercise_count?: number;
+      exercise_names?: string[];
+    }
+  >;
   initialNextCursor?: string | null;
 };
 
@@ -20,7 +25,7 @@ type WorkoutPlansListProps = {
 export function WorkoutPlansList({
   initialPlans,
   initialNextCursor,
-}: WorkoutPlansListProps) {
+}: Readonly<WorkoutPlansListProps>) {
   const searchParams = useSearchParams();
   const [plans, setPlans] = useState(initialPlans);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
@@ -69,7 +74,11 @@ export function WorkoutPlansList({
   return (
     <div className="space-y-4">
       {plans.map((plan) => (
-        <WorkoutPlanStartCard key={plan.id} plan={plan} />
+        <WorkoutPlanStartCard
+          key={plan.id}
+          plan={plan}
+          exerciseCount={plan.exercise_count}
+        />
       ))}
       {isLoadingMore && (
         <div className="space-y-4">

@@ -2,7 +2,12 @@ import type { WorkoutPlanDTO } from "@/types";
 import { WorkoutPlansList } from "./workout-plans-list";
 
 type WorkoutPlanSelectorProps = {
-  plans: Array<Omit<WorkoutPlanDTO, "exercises">>;
+  plans: Array<
+    Omit<WorkoutPlanDTO, "exercises"> & {
+      exercise_count?: number;
+      exercise_names?: string[];
+    }
+  >;
   nextCursor?: string | null;
 };
 
@@ -13,7 +18,7 @@ type WorkoutPlanSelectorProps = {
 export function WorkoutPlanSelector({
   plans,
   nextCursor,
-}: WorkoutPlanSelectorProps) {
+}: Readonly<WorkoutPlanSelectorProps>) {
   return (
     <div>
       <h2 className="mb-4 text-xl font-semibold">Wybierz plan treningowy</h2>
