@@ -106,8 +106,6 @@ This project uses a comprehensive testing strategy:
 - Automatic screenshots and trace viewer for debugging
 - Parallel execution for fast test runs
 
-For detailed testing guidelines, see [`.ai/test-plan.md`](.ai/test-plan.md).
-
 ## License
 
 No license file is currently included in this repository. Until a license is added, **all rights are reserved** by default.
