@@ -40,6 +40,7 @@ export function CancelButton({ hasUnsavedChanges }: CancelButtonProps) {
         variant="outline"
         onClick={handleCancel}
         className="w-full sm:w-auto"
+        data-test-id="exercise-form-cancel-button"
       >
         Anuluj
       </Button>

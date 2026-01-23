@@ -36,7 +36,7 @@ export function ExerciseForm({ initialData, mode }: ExerciseFormProps) {
   useBeforeUnload(hasUnsavedChanges);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-test-id="exercise-form">
       <ExerciseFormFields
         fields={fields}
         errors={errors}

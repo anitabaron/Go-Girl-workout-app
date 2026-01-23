@@ -18,7 +18,7 @@ export function ExercisesList({
   if (exercises.length === 0) {
     if (hasActiveFilters) {
       return (
-        <div className="rounded-lg border border-dashed border-border p-8 text-center">
+        <div className="rounded-lg border border-dashed border-border p-8 text-center" data-test-id="exercises-no-results">
           <p className="text-muted-foreground">
             Brak ćwiczeń spełniających kryteria
           </p>
@@ -31,7 +31,7 @@ export function ExercisesList({
   console.log("exercises", exercises);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-test-id="exercises-list">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {exercises.map((exercise) => (
           <ExerciseCard key={exercise.id} exercise={exercise} />

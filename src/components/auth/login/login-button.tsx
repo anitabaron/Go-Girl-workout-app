@@ -15,6 +15,7 @@ export function LoginButton({ isLoading, disabled }: LoginButtonProps) {
       disabled={isLoading || disabled}
       className="w-full"
       aria-busy={isLoading}
+      data-test-id="login-submit-button"
     >
       {isLoading ? (
         <>

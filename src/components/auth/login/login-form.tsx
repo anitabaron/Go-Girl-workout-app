@@ -18,7 +18,7 @@ export function LoginForm() {
   } = useLoginForm();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-test-id="login-form">
       <LoginFormFields
         fields={fields}
         errors={errors}
