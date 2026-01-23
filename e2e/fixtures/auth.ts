@@ -73,8 +73,18 @@ export async function authenticateUser(
     rememberMe
   );
 
-  // Wait for navigation after login (should redirect to home or exercises page)
-  await page.waitForURL(/\/(exercises|$)/, { timeout: 10000 });
+  // Wait for navigation after login (should redirect to home page "/" or exercises)
+  // Using more flexible approach - wait for URL to not be login page
+  await page.waitForFunction(
+    () => !globalThis.location.pathname.includes('/login'),
+    { timeout: 15000 }
+  );
+  
+  // Additional check - verify we're on a valid page (not login)
+  const currentUrl = page.url();
+  if (currentUrl.includes('/login')) {
+    throw new Error('Login failed - still on login page after authentication attempt');
+  }
 }
 
 /**

@@ -40,5 +40,16 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      // Pass environment variables from .env.test to Next.js dev server
+      // This ensures the app uses E2E Supabase instance instead of localhost
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      // Map NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY to NEXT_PUBLIC_SUPABASE_ANON_KEY
+      // (app uses ANON_KEY, but .env.test might have PUBLISHABLE_DEFAULT_KEY)
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+        '',
+    },
   },
 });
