@@ -35,6 +35,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  globalTeardown: './e2e/global-teardown.ts',
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:3000',

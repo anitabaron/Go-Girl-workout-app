@@ -78,11 +78,68 @@ pnpm test:e2e e2e/example.spec.ts
 - Use the codegen tool for test recording
 - Leverage trace viewer for debugging test failures
 
+### Database Teardown
+
+The E2E test suite includes automatic database teardown that runs after all tests complete. This ensures a clean state for each test run.
+
+**Automatic Teardown:**
+- Runs automatically after all E2E tests complete (via `global-teardown.ts`)
+- Cleans up all test data from the E2E database
+- Can be disabled by setting `E2E_SKIP_TEARDOWN=true` in `.env.test`
+
+**Manual Teardown:**
+
+You can run teardown manually using the CLI script:
+
+```bash
+# Clean up all test data
+pnpm e2e:teardown
+
+# Clean up data for a specific user
+pnpm e2e:teardown --user=USER_ID
+```
+
+You can also use the teardown utilities in your tests:
+
+```typescript
+import { teardownUserData, teardownAllData } from '../fixtures';
+
+// Clean up data for a specific user
+await teardownUserData(userId, true); // verbose = true
+
+// Clean up all test data (use with caution)
+await teardownAllData(true); // verbose = true
+```
+
+**Required Environment Variables in `.env.test`:**
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL (test environment)
+- `SUPABASE_SERVICE_ROLE_KEY` (recommended) - Service role key for teardown (bypasses RLS)
+  - OR `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Anon key (may be blocked by RLS)
+- `E2E_TEST_ENV=true` - Required for remote test databases (not localhost)
+
+**Note:** Service role key is recommended for teardown because it bypasses RLS. Anon key may not work if RLS policies block DELETE operations.
+
+**Setting up teardown for remote E2E database:**
+
+1. Add to `.env.test`:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://your-test-project.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   E2E_TEST_ENV=true
+   ```
+
+2. Run teardown:
+   ```bash
+   pnpm e2e:teardown
+   ```
+
 ## Configuration Files
 
 - `vitest.config.ts` - Vitest configuration
 - `vitest.setup.ts` - Global test setup and mocks
 - `playwright.config.ts` - Playwright configuration (Chromium only)
+- `e2e/global-teardown.ts` - Global teardown for E2E tests (database cleanup)
+- `e2e/fixtures/db-teardown.ts` - Database teardown utilities
 
 ## Example Tests
 

@@ -12,3 +12,10 @@ export {
   setAuthCookies,
   type TestUserCredentials,
 } from './auth';
+
+export {
+  teardownDatabase,
+  teardownUserData,
+  teardownAllData,
+  type TeardownOptions,
+} from './db-teardown';
