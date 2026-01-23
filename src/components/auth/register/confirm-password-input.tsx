@@ -22,6 +22,7 @@ type ConfirmPasswordInputProps = {
  */
 export function ConfirmPasswordInput({
   value,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   password: _password,
   error,
   onChange,

@@ -79,7 +79,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     let body;
     try {
       body = await request.json();
-    } catch (jsonError) {
+    } catch {
       return NextResponse.json(
         {
           message: "Nieprawidłowy format JSON w body żądania.",

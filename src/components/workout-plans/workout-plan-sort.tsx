@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { PlanQueryParams } from "@/types";
-import { workoutPlanSortFields } from "@/lib/validation/workout-plans";
 
 type SortField = NonNullable<PlanQueryParams["sort"]>;
 type SortOrder = NonNullable<PlanQueryParams["order"]>;

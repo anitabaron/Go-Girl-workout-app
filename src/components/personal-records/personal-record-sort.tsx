@@ -9,10 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { PersonalRecordQueryParams } from "@/types";
-import {
-  personalRecordSortFields,
-  personalRecordOrderValues,
-} from "@/lib/validation/personal-records";
 
 type SortField = NonNullable<PersonalRecordQueryParams["sort"]>;
 type SortOrder = NonNullable<PersonalRecordQueryParams["order"]>;
