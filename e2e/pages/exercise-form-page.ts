@@ -73,7 +73,9 @@ export class ExerciseFormPage {
    */
   async selectType(type: string) {
     await this.typeSelect.click();
-    await this.page.locator(`text=${type}`).click();
+    // Wait for dropdown to open and use getByRole for better reliability
+    await this.page.getByRole('option', { name: type, exact: true }).waitFor({ state: 'visible', timeout: 5000 });
+    await this.page.getByRole('option', { name: type, exact: true }).click();
   }
 
   /**
@@ -81,7 +83,9 @@ export class ExerciseFormPage {
    */
   async selectPart(part: string) {
     await this.partSelect.click();
-    await this.page.locator(`text=${part}`).click();
+    // Wait for dropdown to open and use getByRole for better reliability
+    await this.page.getByRole('option', { name: part, exact: true }).waitFor({ state: 'visible', timeout: 5000 });
+    await this.page.getByRole('option', { name: part, exact: true }).click();
   }
 
   /**

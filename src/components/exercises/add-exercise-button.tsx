@@ -11,7 +11,7 @@ type AddExerciseButtonProps = {
 
 export function AddExerciseButton({
   variant = "auto",
-}: AddExerciseButtonProps) {
+}: Readonly<AddExerciseButtonProps>) {
   // Auto variant: FAB na mobile, button na desktop
   if (variant === "auto") {
     return (
@@ -34,7 +34,7 @@ export function AddExerciseButton({
         </Link>
 
         {/* Button - widoczny tylko na desktop */}
-        <div className="hidden md:block">
+        <div >
           <Button asChild className="bg-destructive hover:bg-destructive/90 text-destructive-foreground" data-test-id="add-exercise-button">
             <Link href="/exercises/new">
               <Plus className="mr-2 h-4 w-4" />
