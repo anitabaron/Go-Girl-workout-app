@@ -28,13 +28,14 @@ export function AddExerciseButton({
             "md:hidden" // Ukryj na desktop
           )}
           aria-label="Dodaj nowe ćwiczenie"
+          data-test-id="add-exercise-button"
         >
           <Plus className="h-6 w-6" />
         </Link>
 
         {/* Button - widoczny tylko na desktop */}
         <div className="hidden md:block">
-          <Button asChild className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+          <Button asChild className="bg-destructive hover:bg-destructive/90 text-destructive-foreground" data-test-id="add-exercise-button">
             <Link href="/exercises/new">
               <Plus className="mr-2 h-4 w-4" />
               Dodaj ćwiczenie
@@ -57,6 +58,7 @@ export function AddExerciseButton({
           "focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2"
         )}
         aria-label="Dodaj nowe ćwiczenie"
+        data-test-id="add-exercise-button"
       >
         <Plus className="h-6 w-6" />
       </Link>
@@ -64,7 +66,7 @@ export function AddExerciseButton({
   }
 
   return (
-    <Button asChild className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+    <Button asChild className="bg-destructive hover:bg-destructive/90 text-destructive-foreground" data-test-id="add-exercise-button">
       <Link href="/exercises/new">
         <Plus className="mr-2 h-4 w-4" />
         Dodaj ćwiczenie

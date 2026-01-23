@@ -57,6 +57,7 @@ export function ExerciseFormFields({
           disabled={disabled}
           aria-invalid={errors.title ? "true" : "false"}
           aria-describedby={errors.title ? "title-error" : undefined}
+          data-test-id="exercise-form-title"
         />
         {errors.title && (
           <p id="title-error" className="text-sm text-destructive" role="alert">
@@ -79,6 +80,7 @@ export function ExerciseFormFields({
             id="type"
             aria-invalid={errors.type ? "true" : "false"}
             aria-describedby={errors.type ? "type-error" : undefined}
+            data-test-id="exercise-form-type"
           >
             <SelectValue placeholder="Wybierz typ" />
           </SelectTrigger>
@@ -111,6 +113,7 @@ export function ExerciseFormFields({
             id="part"
             aria-invalid={errors.part ? "true" : "false"}
             aria-describedby={errors.part ? "part-error" : undefined}
+            data-test-id="exercise-form-part"
           >
             <SelectValue placeholder="Wybierz partię" />
           </SelectTrigger>
@@ -143,6 +146,7 @@ export function ExerciseFormFields({
             id="level"
             aria-invalid={errors.level ? "true" : "false"}
             aria-describedby={errors.level ? "level-error" : undefined}
+            data-test-id="exercise-form-level"
           >
             <SelectValue placeholder="Wybierz poziom (opcjonalnie)" />
           </SelectTrigger>
@@ -174,6 +178,7 @@ export function ExerciseFormFields({
           rows={4}
           aria-invalid={errors.details ? "true" : "false"}
           aria-describedby={errors.details ? "details-error" : undefined}
+          data-test-id="exercise-form-details"
         />
         {errors.details && (
           <p
@@ -201,6 +206,7 @@ export function ExerciseFormFields({
           disabled={disabled}
           aria-invalid={errors.reps ? "true" : "false"}
           aria-describedby={errors.reps ? "reps-error" : undefined}
+          data-test-id="exercise-form-reps"
         />
         {errors.reps && (
           <p id="reps-error" className="text-sm text-destructive" role="alert">
@@ -226,6 +232,7 @@ export function ExerciseFormFields({
           aria-describedby={
             errors.duration_seconds ? "duration_seconds-error" : undefined
           }
+          data-test-id="exercise-form-duration"
         />
         {errors.duration_seconds && (
           <p
@@ -253,6 +260,7 @@ export function ExerciseFormFields({
           disabled={disabled}
           aria-invalid={errors.series ? "true" : "false"}
           aria-describedby={errors.series ? "series-error" : undefined}
+          data-test-id="exercise-form-series"
         />
         {errors.series && (
           <p id="series-error" className="text-sm text-destructive" role="alert">
@@ -284,6 +292,7 @@ export function ExerciseFormFields({
               ? "rest_in_between_seconds-error"
               : undefined
           }
+          data-test-id="exercise-form-rest-between"
         />
         {errors.rest_in_between_seconds && (
           <p
@@ -322,6 +331,7 @@ export function ExerciseFormFields({
               ? "rest_after_series_seconds-error"
               : undefined
           }
+          data-test-id="exercise-form-rest-after"
         />
         {errors.rest_after_series_seconds && (
           <p
@@ -360,6 +370,7 @@ export function ExerciseFormFields({
               ? "estimated_set_time_seconds-error"
               : undefined
           }
+          data-test-id="exercise-form-estimated-set-time"
         />
         {errors.estimated_set_time_seconds && (
           <p

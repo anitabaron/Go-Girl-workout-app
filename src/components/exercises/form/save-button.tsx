@@ -10,7 +10,7 @@ type SaveButtonProps = {
 
 export function SaveButton({ isLoading, disabled }: SaveButtonProps) {
   return (
-    <Button type="submit" disabled={disabled || isLoading} className="w-full sm:w-auto">
+    <Button type="submit" disabled={disabled || isLoading} className="w-full sm:w-auto" data-test-id="exercise-form-save-button">
       {isLoading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

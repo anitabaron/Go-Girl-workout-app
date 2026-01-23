@@ -37,6 +37,7 @@ export function EmailInput({
         aria-invalid={error ? "true" : "false"}
         aria-describedby={error ? errorId : undefined}
         className={error ? "border-destructive" : ""}
+        data-test-id="login-email-input"
       />
       {error && (
         <p

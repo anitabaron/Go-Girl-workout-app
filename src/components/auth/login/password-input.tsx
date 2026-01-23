@@ -45,6 +45,7 @@ export function PasswordInput({
           aria-invalid={error ? "true" : "false"}
           aria-describedby={error ? errorId : undefined}
           className={error ? "border-destructive pr-10" : "pr-10"}
+          data-test-id="login-password-input"
         />
         <Button
           id={toggleId}

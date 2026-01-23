@@ -25,6 +25,7 @@ export function RememberMeCheckbox({
         onCheckedChange={(checked) => onChange(checked === true)}
         disabled={disabled}
         aria-label="Zapamiętaj mnie"
+        data-test-id="login-remember-me-checkbox"
       />
       <Label
         htmlFor={id}
