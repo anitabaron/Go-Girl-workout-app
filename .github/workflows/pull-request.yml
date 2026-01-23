@@ -88,6 +88,46 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Validate required secrets
+        run: |
+          echo "Validating required secrets..."
+          missing_secrets=()
+          
+          if [ -z "${{ secrets.E2E_USERNAME }}" ]; then
+            missing_secrets+=("E2E_USERNAME")
+          fi
+          
+          if [ -z "${{ secrets.E2E_PASSWORD }}" ]; then
+            missing_secrets+=("E2E_PASSWORD")
+          fi
+          
+          if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" ]; then
+            missing_secrets+=("NEXT_PUBLIC_SUPABASE_URL")
+          fi
+          
+          if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" ] && [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}" ]; then
+            missing_secrets+=("NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY")
+          fi
+          
+          if [ -z "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
+            echo "⚠️  Warning: SUPABASE_SERVICE_ROLE_KEY is not set. Teardown may not work properly."
+          fi
+          
+          if [ -z "${{ secrets.E2E_TEST_ENV }}" ]; then
+            echo "⚠️  Warning: E2E_TEST_ENV is not set. This is required for remote test databases."
+          fi
+          
+          if [ ${#missing_secrets[@]} -ne 0 ]; then
+            echo "❌ Missing required secrets:"
+            printf '  - %s\n' "${missing_secrets[@]}"
+            echo ""
+            echo "Please add these secrets in GitHub:"
+            echo "Settings → Secrets and variables → Actions → New repository secret"
+            exit 1
+          fi
+          
+          echo "✅ All required secrets are set"
+
       - name: Create .env.test file
         run: |
           cat > .env.test << EOF
