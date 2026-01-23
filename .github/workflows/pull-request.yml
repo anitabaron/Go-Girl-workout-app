@@ -112,6 +112,7 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload Playwright test results
         uses: actions/upload-artifact@v6
@@ -120,6 +121,7 @@ jobs:
           name: playwright-test-results
           path: test-results/
           retention-days: 7
+          if-no-files-found: ignore
 
   status-comment:
     name: Status Comment
