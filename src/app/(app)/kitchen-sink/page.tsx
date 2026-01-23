@@ -400,7 +400,6 @@ export default function KitchenSinkPage() {
                       lastTimerStartedAt={TIMER1_START_TIME}
                       lastTimerStoppedAt={null}
                       isPaused={false}
-                      currentExerciseName="Przysiady"
                       currentSetNumber={2}
                       currentExerciseIndex={1}
                       totalExercises={5}
@@ -465,7 +464,6 @@ export default function KitchenSinkPage() {
                       lastTimerStartedAt={TIMER2_START_TIME}
                       lastTimerStoppedAt={null}
                       isPaused={false}
-                      currentExerciseName="Pompki"
                       currentSetNumber={3}
                       currentExerciseIndex={2}
                       totalExercises={6}

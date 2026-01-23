@@ -8,7 +8,6 @@ type WorkoutTimerProps = {
   lastTimerStartedAt: string | null; // timestamp ostatniego uruchomienia timera
   lastTimerStoppedAt: string | null; // timestamp ostatniego zatrzymania timera
   isPaused: boolean; // czy sesja jest w pauzie
-  currentExerciseName: string; // nazwa bieżącego ćwiczenia
   currentSetNumber: number; // numer bieżącej serii (domyślnie 1)
   currentExerciseIndex: number; // indeks bieżącego ćwiczenia (0-based)
   totalExercises: number; // całkowita liczba ćwiczeń w sesji
@@ -26,7 +25,6 @@ export function WorkoutTimer({
   lastTimerStartedAt,
   lastTimerStoppedAt,
   isPaused,
-  currentExerciseName,
   currentSetNumber,
   currentExerciseIndex,
   totalExercises,

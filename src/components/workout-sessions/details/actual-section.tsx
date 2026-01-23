@@ -58,7 +58,6 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
     planned.duration_seconds,
     params.duration_seconds
   );
-  const restComparison = compareValues(planned.rest_seconds, params.rest_seconds);
 
   const getTextColor = (comparison: "up" | "down" | "match" | "na") => {
     if (comparison === "up" || comparison === "down") {

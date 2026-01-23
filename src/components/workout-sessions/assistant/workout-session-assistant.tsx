@@ -1000,7 +1000,7 @@ export function WorkoutSessionAssistant({
       });
     }
     // Nie zapisujemy po każdej serii - tylko po zakończeniu wszystkich serii ćwiczenia
-  }, [currentSetNumber, currentExercise.planned_duration_seconds, currentExercise.exercise_order, updateSetInForm]);
+  }, [currentSetNumber, currentExercise.planned_duration_seconds, updateSetInForm]);
 
   // Callback: zakończenie przerwy między seriami
   const handleRestBetweenComplete = useCallback(() => {
@@ -1013,7 +1013,7 @@ export function WorkoutSessionAssistant({
       updateSetInForm(nextSetNumber, {});
     }
     // Nie zapisujemy między seriami - tylko po zakończeniu wszystkich serii ćwiczenia
-  }, [currentSetNumber, currentExercise.planned_sets, currentExercise.exercise_order, updateSetInForm]);
+  }, [currentSetNumber, currentExercise.planned_sets, updateSetInForm]);
 
   // Callback: zakończenie przerwy po seriach
   // To jest moment gdy wszystkie serie ćwiczenia są zakończone i przechodzimy do następnego ćwiczenia
@@ -1037,7 +1037,7 @@ export function WorkoutSessionAssistant({
       });
     }
     // Nie zapisujemy po powtórzeniach - tylko po zakończeniu wszystkich serii ćwiczenia
-  }, [currentSetNumber, currentExercise.planned_reps, currentExercise.exercise_order, updateSetInForm]);
+  }, [currentSetNumber, currentExercise.planned_reps, updateSetInForm]);
 
   // Obliczanie czy można przejść dalej
   const canGoNext = useMemo(() => {
@@ -1103,7 +1103,6 @@ export function WorkoutSessionAssistant({
             lastTimerStartedAt={session.last_timer_started_at ?? null}
             lastTimerStoppedAt={session.last_timer_stopped_at ?? null}
             isPaused={isPaused}
-            currentExerciseName={currentExercise.exercise_title_at_time}
             currentSetNumber={currentSetNumber}
             currentExerciseIndex={currentExerciseIndex}
             totalExercises={session.exercises.length}
