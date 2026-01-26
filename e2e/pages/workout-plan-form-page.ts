@@ -235,10 +235,12 @@ export class WorkoutPlanFormPage {
   }
 
   /**
-   * Wait for navigation after save (should redirect to /workout-plans)
+   * Wait for navigation after save (should redirect to /workout-plans or /workout-plans/{id})
+   * After create: redirects to /workout-plans (list)
+   * After edit: redirects to /workout-plans/{id} (details)
    */
   async waitForSaveNavigation() {
-    await this.page.waitForURL('**/workout-plans', { timeout: 15000 });
+    await this.page.waitForURL(/\/workout-plans(\/.*)?$/, { timeout: 15000 });
   }
 
   /**
@@ -272,5 +274,87 @@ export class WorkoutPlanFormPage {
    */
   async submit() {
     await this.clickSave();
+  }
+
+  /**
+   * Check if exercise with given title exists in the plan
+   */
+  async hasExercise(exerciseTitle: string): Promise<boolean> {
+    // Get all exercise items
+    const exerciseItems = this.exercisesList.locator('[data-test-id^="workout-plan-exercise-item-"]');
+    const count = await exerciseItems.count();
+    
+    for (let i = 0; i < count; i++) {
+      const item = exerciseItems.nth(i);
+      const itemText = await item.textContent();
+      if (itemText?.includes(exerciseTitle)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * Get exercise item by title
+   */
+  async getExerciseItemByTitle(exerciseTitle: string): Promise<Locator | null> {
+    const exerciseItems = this.exercisesList.locator('[data-test-id^="workout-plan-exercise-item-"]');
+    const count = await exerciseItems.count();
+    
+    for (let i = 0; i < count; i++) {
+      const item = exerciseItems.nth(i);
+      const itemText = await item.textContent();
+      if (itemText?.includes(exerciseTitle)) {
+        return item;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Update planned sets for an exercise by title
+   */
+  async updateExercisePlannedSets(exerciseTitle: string, sets: number) {
+    const exerciseItem = await this.getExerciseItemByTitle(exerciseTitle);
+    if (!exerciseItem) {
+      throw new Error(`Exercise with title "${exerciseTitle}" not found in plan`);
+    }
+    
+    // Get the test ID of the exercise item
+    const testId = await exerciseItem.getAttribute('data-test-id');
+    if (!testId) {
+      throw new Error(`Exercise item does not have data-test-id attribute`);
+    }
+    
+    // Find the planned sets input within this exercise item
+    const plannedSetsInput = exerciseItem.locator(`[data-test-id="${testId}-planned-sets"]`);
+    await plannedSetsInput.waitFor({ state: 'visible', timeout: 5000 });
+    await plannedSetsInput.fill(sets.toString());
+  }
+
+  /**
+   * Remove exercise from plan by title
+   */
+  async removeExercise(exerciseTitle: string) {
+    const exerciseItem = await this.getExerciseItemByTitle(exerciseTitle);
+    if (!exerciseItem) {
+      throw new Error(`Exercise with title "${exerciseTitle}" not found in plan`);
+    }
+    
+    // Get the test ID of the exercise item
+    const testId = await exerciseItem.getAttribute('data-test-id');
+    if (!testId) {
+      throw new Error(`Exercise item does not have data-test-id attribute`);
+    }
+    
+    // Find and click the remove button
+    const removeButton = exerciseItem.locator(`[data-test-id="${testId}-remove-button"]`);
+    await removeButton.waitFor({ state: 'visible', timeout: 5000 });
+    await removeButton.click();
+    
+    // Wait a bit for the exercise to be removed
+    await this.page.waitForTimeout(300);
   }
 }

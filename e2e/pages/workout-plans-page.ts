@@ -203,4 +203,43 @@ export class WorkoutPlansPage {
     const match = testId.match(/^workout-plan-card-(.+)$/);
     return match ? match[1] : null;
   }
+
+  /**
+   * Click edit button for plan by name
+   * Works both from list page and details page
+   * Finds the plan card by name (on list) or uses the edit button on details page
+   */
+  async clickEditPlanByName(planName: string) {
+    // First check if we're on a details page (URL contains /workout-plans/{id})
+    const currentUrl = this.page.url();
+    const isDetailsPage = /\/workout-plans\/[^/]+$/.test(currentUrl);
+    
+    if (isDetailsPage) {
+      // On details page, use the edit button directly
+      const editButton = this.page.getByRole('button', { name: `Edytuj plan: ${planName}` });
+      await editButton.waitFor({ state: 'visible', timeout: 5000 });
+      await editButton.click();
+    } else {
+      // On list page, find the card and click edit button
+      const card = await this.getPlanCardByName(planName);
+      if (!card) {
+        throw new Error(`Plan with name "${planName}" not found`);
+      }
+      
+      // Hover over the card first to make action buttons visible
+      await card.hover();
+      await this.page.waitForTimeout(300); // Small delay for hover effect
+      
+      // The edit button is inside the card, in the CardActionButtons component
+      // It has an aria-label: "Edytuj plan: {planName}"
+      const editButton = card.getByRole('button', { name: `Edytuj plan: ${planName}` });
+      
+      // Wait for button to be visible and clickable
+      await editButton.waitFor({ state: 'visible', timeout: 5000 });
+      await editButton.click();
+    }
+    
+    // Wait for navigation to edit page
+    await this.page.waitForURL('**/workout-plans/*/edit', { timeout: 10000 });
+  }
 }
