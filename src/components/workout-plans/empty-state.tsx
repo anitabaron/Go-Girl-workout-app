@@ -13,7 +13,7 @@ import {
 
 export function EmptyState() {
   return (
-    <Card className="mx-auto min-w-[320px] max-w-md rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950">
+    <Card className="mx-auto min-w-[320px] max-w-md rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950" data-test-id="workout-plans-empty-state">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
           <Calendar className="h-8 w-8 text-destructive" aria-hidden="true" />

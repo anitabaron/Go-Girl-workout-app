@@ -40,6 +40,16 @@ pnpm test:e2e:codegen
 
 # Run specific test file
 pnpm test:e2e e2e/example.spec.ts
+
+# Run workout plans tests
+pnpm test:e2e e2e/workout-plans/workout-plan.spec.ts
+
+# Run all tests from a directory
+pnpm test:e2e e2e/workout-plans
+pnpm test:e2e e2e/exercises
+
+# Run multiple test files/directories
+pnpm test:e2e e2e/workout-plans e2e/exercises
 ```
 
 ## Test Structure

@@ -9,6 +9,7 @@ export function PlannedParamsEditor({
   onChange,
   errors,
   disabled,
+  "data-test-id-prefix": testIdPrefix,
 }: Readonly<PlannedParamsEditorProps>) {
   const setsId = useId();
   const repsId = useId();
@@ -62,6 +63,7 @@ export function PlannedParamsEditor({
             className="mt-1"
             aria-invalid={errors.planned_sets ? "true" : "false"}
             aria-describedby={errors.planned_sets ? setsErrorId : undefined}
+            data-test-id={testIdPrefix ? `${testIdPrefix}-planned-sets` : undefined}
           />
           {errors.planned_sets && (
             <p

@@ -12,6 +12,7 @@ export function WorkoutPlanExercisesList({
   onMoveExercise,
   errors,
   disabled,
+  ...props
 }: Readonly<WorkoutPlanExercisesListProps>) {
   // Sortuj ćwiczenia według section_type i section_order przed renderowaniem
   const sortedExercises = useMemo(() => {
@@ -39,7 +40,7 @@ export function WorkoutPlanExercisesList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" {...props}>
       {sortedExercises.map(({ exercise, originalIndex }) => {
         // Użyj id jeśli istnieje (tryb edycji), w przeciwnym razie użyj kombinacji exercise_id i originalIndex
         // originalIndex jest stabilny - to pozycja w oryginalnej tablicy, która nie zmienia się podczas przesuwania

@@ -8,7 +8,9 @@ type CreatePlanButtonProps = {
   variant?: "auto" | "fab" | "default";
 };
 
-export function CreatePlanButton({ variant = "default" }: CreatePlanButtonProps) {
+export function CreatePlanButton({
+  variant = "default",
+}: Readonly<CreatePlanButtonProps>) {
   // Auto variant: FAB na mobile, button na desktop
   if (variant === "auto") {
     return (
@@ -19,6 +21,7 @@ export function CreatePlanButton({ variant = "default" }: CreatePlanButtonProps)
           size="icon"
           className="fixed bottom-20 right-6 md:bottom-6 h-14 w-14 rounded-full bg-destructive shadow-lg hover:bg-destructive/90 text-destructive-foreground z-50 md:hidden"
           aria-label="Utwórz nowy plan treningowy"
+          data-test-id="create-workout-plan-button"
         >
           <Link href="/workout-plans/new">
             <Plus className="h-6 w-6" />
@@ -31,6 +34,7 @@ export function CreatePlanButton({ variant = "default" }: CreatePlanButtonProps)
             asChild
             className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             aria-label="Utwórz nowy plan treningowy"
+            data-test-id="create-workout-plan-button"
           >
             <Link href="/workout-plans/new">
               <Plus className="mr-2 h-4 w-4" />
@@ -49,6 +53,7 @@ export function CreatePlanButton({ variant = "default" }: CreatePlanButtonProps)
         size="icon"
         className="fixed bottom-20 right-6 md:bottom-6 h-14 w-14 rounded-full bg-destructive shadow-lg hover:bg-destructive/90 text-destructive-foreground z-50"
         aria-label="Utwórz nowy plan treningowy"
+        data-test-id="create-workout-plan-button"
       >
         <Link href="/workout-plans/new">
           <Plus className="h-6 w-6" />
@@ -62,6 +67,7 @@ export function CreatePlanButton({ variant = "default" }: CreatePlanButtonProps)
       asChild
       className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
       aria-label="Utwórz nowy plan treningowy"
+      data-test-id="create-workout-plan-button"
     >
       <Link href="/workout-plans/new">
         <Plus className="mr-2 h-4 w-4" />
