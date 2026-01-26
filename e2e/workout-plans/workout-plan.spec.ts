@@ -182,14 +182,29 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Step 15: Verify the plan was updated
     await workoutPlansPage.waitForList();
 
-    // Old name should not exist
-    const oldNameExists = await workoutPlansPage.hasPlanWithName(planName);
-    expect(oldNameExists).toBe(false);
+    // Old name should not exist (use polling to handle cache issues)
+    await expect.poll(
+      async () => {
+        return await workoutPlansPage.hasPlanWithName(planName);
+      },
+      {
+        message: `Old plan name "${planName}" should not exist`,
+        timeout: 15000,
+        intervals: [500, 1000, 2000],
+      }
+    ).toBe(false);
 
     // New name should exist
-    const newNameExists =
-      await workoutPlansPage.hasPlanWithName(updatedPlanName);
-    expect(newNameExists).toBe(true);
+    await expect.poll(
+      async () => {
+        return await workoutPlansPage.hasPlanWithName(updatedPlanName);
+      },
+      {
+        message: `New plan name "${updatedPlanName}" should exist`,
+        timeout: 15000,
+        intervals: [500, 1000, 2000],
+      }
+    ).toBe(true);
   });
 
   test("should validate that plan must have at least one exercise (TC-WP-001 edge case)", async ({
@@ -284,10 +299,33 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
 
     await workoutPlanFormPage.submit();
     await workoutPlanFormPage.waitForSaveNavigation();
+    
+    // After edit, we're redirected to details page, not list
+    // Navigate to list page first
+    await workoutPlansPage.goto();
+    await page.waitForLoadState("networkidle");
+    
+    // Reload to ensure we see the latest data from the server
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    
     await workoutPlansPage.waitForList();
 
     // Step 4: Get plan ID and navigate to details
-    const planId = await workoutPlansPage.getPlanIdByName(planName);
+    // Use polling to handle potential timing issues
+    let planId: string | null = null;
+    await expect.poll(
+      async () => {
+        planId = await workoutPlansPage.getPlanIdByName(planName);
+        return planId !== null;
+      },
+      {
+        message: `Plan "${planName}" should appear in the list`,
+        timeout: 20000,
+        intervals: [500, 1000, 2000],
+      }
+    ).toBe(true);
+    
     expect(planId).not.toBeNull();
 
     if (planId) {
@@ -398,8 +436,23 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
 
     // Step 6: Verify plan was created
     await workoutPlansPage.waitForList();
-    const planExists = await workoutPlansPage.hasPlanWithName(planName);
-    expect(planExists).toBe(true);
+    
+    // Reload to ensure we see the latest data
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await workoutPlansPage.waitForList();
+    
+    // Use polling to ensure plan is visible
+    await expect.poll(
+      async () => {
+        return await workoutPlansPage.hasPlanWithName(planName);
+      },
+      {
+        message: `Plan "${planName}" should appear in the list`,
+        timeout: 15000,
+        intervals: [500, 1000, 2000],
+      }
+    ).toBe(true);
 
     // Step 7: Edit the plan and verify all exercises are still there
     await workoutPlansPage.clickEditPlanByName(planName);

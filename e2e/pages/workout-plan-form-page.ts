@@ -104,8 +104,20 @@ export class WorkoutPlanFormPage {
     // Wait for exercise selector to load
     await this.page.waitForLoadState('networkidle');
     
-    // Wait a bit for exercises to render
-    await this.page.waitForTimeout(500);
+    // Wait for loader to disappear (exercises are loading)
+    const loader = this.page.locator('svg[class*="animate-spin"]').first();
+    try {
+      await loader.waitFor({ state: 'hidden', timeout: 5000 });
+    } catch {
+      // Loader might not be visible if exercises loaded quickly
+    }
+    
+    // Wait for at least one exercise card to appear (indicates exercises are loaded)
+    const exerciseCard = this.page.locator('div[class*="grid"] > div[class*="cursor-pointer"]').first();
+    await exerciseCard.waitFor({ state: 'visible', timeout: 10000 });
+    
+    // Additional wait for exercises to fully render
+    await this.page.waitForTimeout(300);
     
     // Find the exercise by title text
     // The exercise selector shows cards with checkboxes - clicking the card toggles selection
