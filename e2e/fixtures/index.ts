@@ -19,3 +19,10 @@ export {
   teardownAllData,
   type TeardownOptions,
 } from './db-teardown';
+
+export {
+  createExercise,
+  createExercises,
+  defaultExerciseData,
+  type ExerciseTestData,
+} from './exercises';

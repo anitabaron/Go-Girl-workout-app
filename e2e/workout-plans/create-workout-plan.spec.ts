@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { authenticateUser } from '../fixtures';
-import { ExercisesPage } from '../pages/exercises-page';
-import { ExerciseFormPage } from '../pages/exercise-form-page';
+import { authenticateUser, createExercises } from '../fixtures';
 import { WorkoutPlansPage } from '../pages/workout-plans-page';
 import { WorkoutPlanFormPage } from '../pages/workout-plan-form-page';
 
@@ -9,7 +7,7 @@ import { WorkoutPlanFormPage } from '../pages/workout-plan-form-page';
  * E2E tests for creating workout plans
  * 
  * Tests verify:
- * - User can add exercises to the library
+ * - User can add exercises to the library (via helper function)
  * - User can navigate to workout plans page
  * - User can open create workout plan form
  * - User can fill workout plan form with metadata
@@ -22,61 +20,27 @@ test.describe('Create Workout Plan E2E', () => {
     // Step 1: Login
     await authenticateUser(page);
     
-    // Step 2: Add first exercise
-    const exercisesPage = new ExercisesPage(page);
-    await exercisesPage.goto();
-    await page.waitForLoadState('networkidle');
+    // Step 2: Create exercises using helper function
+    // This encapsulates the common flow of creating exercises
+    const exerciseTitles = await createExercises(page, [
+      {
+        part: 'Arms',
+        series: 3,
+        reps: 10,
+        restBetween: 60,
+      },
+      {
+        part: 'Legs',
+        series: 4,
+        reps: 12,
+        restBetween: 90,
+      },
+    ]);
     
-    const isListVisible = await exercisesPage.isListVisible();
-    const isEmptyStateVisible = await exercisesPage.isEmptyStateVisible();
-    expect(isListVisible || isEmptyStateVisible).toBe(true);
+    expect(exerciseTitles).toHaveLength(2);
+    const [exercise1Title, exercise2Title] = exerciseTitles;
     
-    await exercisesPage.clickAddExercise();
-    
-    const exerciseFormPage = new ExerciseFormPage(page);
-    await exerciseFormPage.waitForForm();
-    
-    const exercise1Title = `Test Exercise 1 ${Date.now()}`;
-    await exerciseFormPage.fillRequiredFields({
-      title: exercise1Title,
-      type: 'Main Workout',
-      part: 'Arms',
-      series: 3,
-      reps: 10,
-      restBetween: 60,
-    });
-    
-    await exerciseFormPage.submit();
-    await exerciseFormPage.waitForSaveNavigation();
-    await exercisesPage.waitForList();
-    
-    // Verify first exercise was created
-    const exercise1Exists = await exercisesPage.hasExerciseWithTitle(exercise1Title);
-    expect(exercise1Exists).toBe(true);
-    
-    // Step 3: Add second exercise
-    await exercisesPage.clickAddExercise();
-    await exerciseFormPage.waitForForm();
-    
-    const exercise2Title = `Test Exercise 2 ${Date.now()}`;
-    await exerciseFormPage.fillRequiredFields({
-      title: exercise2Title,
-      type: 'Main Workout',
-      part: 'Legs',
-      series: 4,
-      reps: 12,
-      restBetween: 90,
-    });
-    
-    await exerciseFormPage.submit();
-    await exerciseFormPage.waitForSaveNavigation();
-    await exercisesPage.waitForList();
-    
-    // Verify second exercise was created
-    const exercise2Exists = await exercisesPage.hasExerciseWithTitle(exercise2Title);
-    expect(exercise2Exists).toBe(true);
-    
-    // Step 4: Navigate to workout plans page
+    // Step 3: Navigate to workout plans page
     const workoutPlansPage = new WorkoutPlansPage(page);
     await workoutPlansPage.goto();
     await page.waitForLoadState('networkidle');
@@ -88,10 +52,10 @@ test.describe('Create Workout Plan E2E', () => {
     // Verify we're on workout plans page (either list or empty state)
     expect(isPlansListVisible || isPlansEmptyStateVisible).toBe(true);
     
-    // Step 5: Click "Create Plan" button
+    // Step 4: Click "Create Plan" button
     await workoutPlansPage.clickCreatePlan();
     
-    // Step 6: Fill workout plan form
+    // Step 5: Fill workout plan form
     const planFormPage = new WorkoutPlanFormPage(page);
     await planFormPage.waitForForm();
     
@@ -102,21 +66,21 @@ test.describe('Create Workout Plan E2E', () => {
       part: 'Arms',
     });
     
-    // Step 7: Add exercises to the plan
+    // Step 6: Add exercises to the plan
     await planFormPage.addExercises([exercise1Title, exercise2Title]);
     
     // Verify exercises were added to the plan
     const exerciseCount = await planFormPage.getExerciseCount();
     expect(exerciseCount).toBeGreaterThanOrEqual(2);
     
-    // Step 8: Save the plan
+    // Step 7: Save the plan
     await planFormPage.submit();
     
-    // Step 9: Wait for navigation back to workout plans list
+    // Step 8: Wait for navigation back to workout plans list
     await planFormPage.waitForSaveNavigation();
     await workoutPlansPage.waitForList();
     
-    // Step 10: Verify plan appears in the list
+    // Step 9: Verify plan appears in the list
     const planExists = await workoutPlansPage.hasPlanWithName(planName);
     expect(planExists).toBe(true);
   });
