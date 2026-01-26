@@ -29,9 +29,21 @@ export class WorkoutPlansPage {
 
   /**
    * Wait for plans list to be visible
+   * If list is not visible, waits for empty state instead
+   * This handles the case where the page might show empty state initially
    */
-  async waitForList() {
-    await this.plansList.waitFor({ state: 'visible' });
+  async waitForList(timeout: number = 10000) {
+    // Wait for either list or empty state to be visible
+    // Use Promise.race to wait for whichever appears first
+    const listPromise = this.plansList.waitFor({ state: 'visible', timeout }).catch(() => null);
+    const emptyStatePromise = this.emptyState.waitFor({ state: 'visible', timeout }).catch(() => null);
+    
+    const result = await Promise.race([listPromise, emptyStatePromise]);
+    
+    // If neither appeared, throw an error
+    if (result === null) {
+      throw new Error(`Neither plans list nor empty state appeared within ${timeout}ms timeout`);
+    }
   }
 
   /**

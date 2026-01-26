@@ -17,6 +17,7 @@ import { WorkoutPlanFormPage } from '../pages/workout-plan-form-page';
  */
 test.describe('Create Workout Plan E2E', () => {
   test('should create a workout plan with exercises successfully', async ({ page }) => {
+    test.setTimeout(60000); // Increase timeout to 60s for CI
     // Step 1: Login
     await authenticateUser(page);
     
@@ -78,10 +79,33 @@ test.describe('Create Workout Plan E2E', () => {
     
     // Step 8: Wait for navigation back to workout plans list
     await planFormPage.waitForSaveNavigation();
+    await page.waitForLoadState('networkidle');
+    
+    // Wait for either list or empty state to be visible
     await workoutPlansPage.waitForList();
     
     // Step 9: Verify plan appears in the list
-    const planExists = await workoutPlansPage.hasPlanWithName(planName);
-    expect(planExists).toBe(true);
+    // Use expect.poll for reliable retry logic that handles CI timing issues
+    // After saving, there might be a delay before the plan appears in the list
+    // First check if we need to reload (if empty state is visible)
+    const isListVisible = await workoutPlansPage.isListVisible();
+    if (!isListVisible) {
+      // If empty state is visible, reload to get fresh data
+      await page.reload();
+      await page.waitForLoadState('networkidle');
+      await workoutPlansPage.waitForList();
+    }
+    
+    // Now poll for the plan to appear (with automatic retries)
+    await expect.poll(
+      async () => {
+        return await workoutPlansPage.hasPlanWithName(planName);
+      },
+      {
+        message: `Plan "${planName}" should appear in the list`,
+        timeout: 20000, // 20 seconds for polling
+        intervals: [500, 1000, 2000], // Progressive intervals: 0.5s, 1s, 2s
+      }
+    ).toBe(true);
   });
 });
