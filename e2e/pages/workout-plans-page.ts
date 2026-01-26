@@ -29,9 +29,21 @@ export class WorkoutPlansPage {
 
   /**
    * Wait for plans list to be visible
+   * If list is not visible, waits for empty state instead
+   * This handles the case where the page might show empty state initially
    */
-  async waitForList() {
-    await this.plansList.waitFor({ state: 'visible' });
+  async waitForList(timeout: number = 30000) {
+    // Wait for either list or empty state to be visible
+    // Use Promise.race to wait for whichever appears first
+    const listPromise = this.plansList.waitFor({ state: 'visible', timeout }).catch(() => null);
+    const emptyStatePromise = this.emptyState.waitFor({ state: 'visible', timeout }).catch(() => null);
+    
+    const result = await Promise.race([listPromise, emptyStatePromise]);
+    
+    // If neither appeared, throw an error
+    if (result === null) {
+      throw new Error(`Neither plans list nor empty state appeared within ${timeout}ms timeout`);
+    }
   }
 
   /**
@@ -145,7 +157,9 @@ export class WorkoutPlansPage {
     
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
-      const cardText = await card.textContent();
+      // Wait for card to be visible before getting text content
+      await card.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+      const cardText = await card.textContent({ timeout: 10000 });
       if (cardText?.includes(name)) {
         return true;
       }
@@ -163,7 +177,9 @@ export class WorkoutPlansPage {
     
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
-      const cardText = await card.textContent();
+      // Wait for card to be visible before getting text content
+      await card.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+      const cardText = await card.textContent({ timeout: 10000 });
       if (cardText?.includes(name)) {
         return card;
       }
@@ -190,5 +206,44 @@ export class WorkoutPlansPage {
     // Extract ID from "workout-plan-card-{id}"
     const match = testId.match(/^workout-plan-card-(.+)$/);
     return match ? match[1] : null;
+  }
+
+  /**
+   * Click edit button for plan by name
+   * Works both from list page and details page
+   * Finds the plan card by name (on list) or uses the edit button on details page
+   */
+  async clickEditPlanByName(planName: string) {
+    // First check if we're on a details page (URL contains /workout-plans/{id})
+    const currentUrl = this.page.url();
+    const isDetailsPage = /\/workout-plans\/[^/]+$/.test(currentUrl);
+    
+    if (isDetailsPage) {
+      // On details page, use the edit button directly
+      const editButton = this.page.getByRole('button', { name: `Edytuj plan: ${planName}` });
+      await editButton.waitFor({ state: 'visible', timeout: 5000 });
+      await editButton.click();
+    } else {
+      // On list page, find the card and click edit button
+      const card = await this.getPlanCardByName(planName);
+      if (!card) {
+        throw new Error(`Plan with name "${planName}" not found`);
+      }
+      
+      // Hover over the card first to make action buttons visible
+      await card.hover();
+      await this.page.waitForTimeout(300); // Small delay for hover effect
+      
+      // The edit button is inside the card, in the CardActionButtons component
+      // It has an aria-label: "Edytuj plan: {planName}"
+      const editButton = card.getByRole('button', { name: `Edytuj plan: ${planName}` });
+      
+      // Wait for button to be visible and clickable
+      await editButton.waitFor({ state: 'visible', timeout: 5000 });
+      await editButton.click();
+    }
+    
+    // Wait for navigation to edit page
+    await this.page.waitForURL('**/workout-plans/*/edit', { timeout: 10000 });
   }
 }

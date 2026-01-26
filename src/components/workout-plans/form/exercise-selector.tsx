@@ -176,6 +176,7 @@ export function ExerciseSelector({
                     selected ? "ring-2 ring-primary" : ""
                   }`}
                   onClick={() => handleExerciseClick(exercise)}
+                  data-test-id="exercise-selector-card"
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">

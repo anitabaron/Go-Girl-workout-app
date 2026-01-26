@@ -1,8 +1,8 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 /**
  * Page Object Model for Login Page
- * 
+ *
  * Encapsulates login page logic and selectors using data-test-id attributes
  */
 export class LoginPage {
@@ -18,7 +18,9 @@ export class LoginPage {
     this.form = page.locator('[data-test-id="login-form"]');
     this.emailInput = page.locator('[data-test-id="login-email-input"]');
     this.passwordInput = page.locator('[data-test-id="login-password-input"]');
-    this.rememberMeCheckbox = page.locator('[data-test-id="login-remember-me-checkbox"]');
+    this.rememberMeCheckbox = page.locator(
+      '[data-test-id="login-remember-me-checkbox"]',
+    );
     this.submitButton = page.locator('[data-test-id="login-submit-button"]');
   }
 
@@ -26,7 +28,7 @@ export class LoginPage {
    * Navigate to login page
    */
   async goto() {
-    await this.page.goto('/login');
+    await this.page.goto("/login");
   }
 
   /**
@@ -76,7 +78,7 @@ export class LoginPage {
    * Wait for form to be visible
    */
   async waitForForm() {
-    await this.form.waitFor({ state: 'visible' });
+    await this.form.waitFor({ state: "visible" });
   }
 
   /**
@@ -84,6 +86,6 @@ export class LoginPage {
    */
   async isSubmitting(): Promise<boolean> {
     const text = await this.submitButton.textContent();
-    return text?.includes('Logowanie...') ?? false;
+    return text?.includes("Logowanie...") ?? false;
   }
 }

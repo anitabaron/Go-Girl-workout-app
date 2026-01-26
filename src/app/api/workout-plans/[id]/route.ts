@@ -83,7 +83,36 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
-    const body = await request.json();
+    // Check if request has body
+    const contentType = request.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return NextResponse.json(
+        { message: "Content-Type musi być application/json." },
+        { status: 400 }
+      );
+    }
+
+    // Safely parse JSON body
+    let body: unknown;
+    try {
+      const text = await request.text();
+      if (!text || text.trim() === "") {
+        return NextResponse.json(
+          { message: "Body żądania nie może być puste." },
+          { status: 400 }
+        );
+      }
+      body = JSON.parse(text);
+    } catch (parseError) {
+      if (parseError instanceof SyntaxError) {
+        return NextResponse.json(
+          { message: "Nieprawidłowy format JSON w body żądania." },
+          { status: 400 }
+        );
+      }
+      throw parseError;
+    }
+
     const updated = await updateWorkoutPlanService(userId, workoutPlanId, body);
 
     return NextResponse.json(updated, { status: 200 });
