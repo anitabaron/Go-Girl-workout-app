@@ -657,19 +657,20 @@ export function useWorkoutPlanForm({
     }
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
     toast.success(
       mode === "create"
         ? "Plan treningowy został utworzony."
         : "Plan treningowy został zaktualizowany."
     );
 
+    setIsLoading(false);
+
     if (onSuccess) {
       onSuccess();
-    } else if (mode === "edit" && initialData?.id) {
-      router.push(`/workout-plans/${initialData.id}`);
     } else {
-      router.push("/workout-plans");
+      // After both create and edit, redirect to the plans list
+      await (router.push("/workout-plans") as unknown as Promise<void>);
     }
   };
 
@@ -720,7 +721,7 @@ export function useWorkoutPlanForm({
       }
 
       await response.json();
-      handleSuccess();
+      await handleSuccess();
     } catch (error) {
       handleNetworkError(error);
       setIsLoading(false);

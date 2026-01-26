@@ -175,27 +175,9 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Wait for page to fully load after navigation
     await page.waitForLoadState("networkidle", { timeout: 60000 });
     
-    // Step 14: Verify update on details page (we're redirected here after edit)
-    // Check that we're on the details page and new name is visible
+    // Step 14: Verify we're redirected to the plans list page (not details page)
     const currentUrl = page.url();
-    expect(currentUrl).toMatch(/\/workout-plans\/[^/]+$/);
-    
-    // Verify updated name is visible on details page
-    await expect.poll(
-      async () => {
-        const pageContent = await page.textContent("body");
-        return pageContent?.includes(updatedPlanName) ?? false;
-      },
-      {
-        message: `Updated plan name "${updatedPlanName}" should be visible on details page`,
-        timeout: 20000,
-        intervals: [500, 1000, 2000],
-      }
-    ).toBe(true);
-
-    // Step 15: Navigate to list page
-    await workoutPlansPage.goto();
-    await page.waitForLoadState("networkidle", { timeout: 60000 });
+    expect(currentUrl).toMatch(/\/workout-plans\/?$/);
     
     // Hard reload with cache bypass to ensure we see the latest data from the server
     await page.reload({ waitUntil: "networkidle" });
@@ -204,7 +186,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Additional wait to ensure data is fully loaded
     await page.waitForTimeout(1000);
 
-    // Step 16: Verify the plan was updated on list page
+    // Step 15: Verify the plan was updated on list page
     await workoutPlansPage.waitForList();
 
     // First verify new name exists (confirms update worked)
@@ -345,9 +327,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     await workoutPlanFormPage.submit();
     await workoutPlanFormPage.waitForSaveNavigation();
     
-    // After edit, we're redirected to details page, not list
-    // Navigate to list page first
-    await workoutPlansPage.goto();
+    // After save, we're redirected to list page
     await page.waitForLoadState("networkidle", { timeout: 60000 });
     
     // Reload to ensure we see the latest data from the server
@@ -394,10 +374,13 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
       await workoutPlanFormPage.fillDescription("Updated description");
 
       await workoutPlanFormPage.submit();
+      await workoutPlanFormPage.waitForSaveNavigation();
       
-      // After edit, we're redirected to details page, not list
-      // Wait for specific details page URL (not edit page)
-      await page.waitForURL(`/workout-plans/${planId}`, { timeout: 15000 });
+      // After edit, we're redirected to list page
+      await page.waitForLoadState("networkidle", { timeout: 60000 });
+      
+      // Navigate to details page to verify changes
+      await page.goto(`/workout-plans/${planId}`);
       await page.waitForLoadState("networkidle", { timeout: 60000 });
       
       // Refresh the page to ensure we see the latest data from the server
@@ -534,7 +517,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     await workoutPlanFormPage.waitForSaveNavigation();
 
     // Step 10: Verify the plan was updated
-    // After edit, we're redirected to details page, so navigate back to list
+    // After edit, we're redirected to list page
     await page.goto('/workout-plans');
     await page.waitForLoadState('networkidle');
     await workoutPlansPage.waitForList();

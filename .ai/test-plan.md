@@ -206,38 +206,30 @@ const oldNameExists = await workoutPlansPage.hasPlanWithName(oldName); // Teraz 
 
 **Kiedy NIE używać `page.reload()`**:
 - Bezpośrednio po utworzeniu nowego obiektu (dane są świeże)
-- Gdy weryfikujesz dane na stronie szczegółów bezpośrednio po edycji (przekierowanie już pokazuje nowe dane)
 - Gdy test sprawdza tylko UI bez weryfikacji danych z serwera
+- Gdy weryfikujesz dane na stronie formularza przed zapisaniem
 
 **Dodatkowe wskazówki**:
 - Zawsze czekaj na `networkidle` po `reload()`, aby upewnić się, że wszystkie dane zostały załadowane
 - W przypadku testów edycji, rozważ użycie `waitForURL()` z konkretnym URL zamiast ogólnego `waitForSaveNavigation()`, aby upewnić się, że jesteś na właściwej stronie
 
-#### 3.3.2 Problemy z nawigacją po edycji planu
+#### 3.3.2 Nawigacja po zapisaniu planu treningowego
 
-**⚠️ Problem: Wywoływanie `waitForList()` na stronie szczegółów**
+**✅ Zachowanie po zapisaniu (utworzenie i edycja)**
 
-Po edycji planu treningowego, aplikacja przekierowuje użytkownika do strony szczegółów planu (`/workout-plans/{id}`), a nie do listy planów. Jeśli test próbuje wywołać `waitForList()` bezpośrednio po `waitForSaveNavigation()`, test będzie na stronie szczegółów, gdzie nie ma ani listy, ani pustego stanu.
+Po zapisaniu planu treningowego (zarówno po utworzeniu jak i po edycji), aplikacja przekierowuje użytkownika do listy planów (`/workout-plans`), a nie do strony szczegółów planu. To zapewnia spójne zachowanie i pozwala użytkownikowi zobaczyć zaktualizowaną listę planów.
 
-**Objawy problemu**:
-- Błąd: `Neither plans list nor empty state appeared within 10000ms timeout`
-- Test jest na URL `/workout-plans/{id}` zamiast `/workout-plans`
-
-**Rozwiązanie**:
-Zawsze nawiguj do listy planów przed wywołaniem `waitForList()`:
+**Oczekiwane zachowanie w testach**:
+- Po `waitForSaveNavigation()` test powinien być na URL `/workout-plans`
+- Można od razu wywołać `waitForList()` bez dodatkowej nawigacji
+- Zawsze użyj `page.reload()` przed weryfikacją zmian, aby pobrać najnowsze dane z serwera
 
 ```typescript
-// ❌ Błędne - jesteśmy na stronie szczegółów
+// ✅ Poprawne - po zapisaniu jesteśmy na liście planów
 await workoutPlanFormPage.submit();
-await workoutPlanFormPage.waitForSaveNavigation();
-await workoutPlansPage.waitForList(); // Błąd - nie ma listy na stronie szczegółów
-
-// ✅ Poprawne - najpierw nawiguj do listy
-await workoutPlanFormPage.submit();
-await workoutPlanFormPage.waitForSaveNavigation();
-await workoutPlansPage.goto(); // ⚠️ WAŻNE: Nawiguj do listy przed waitForList()
+await workoutPlanFormPage.waitForSaveNavigation(); // Przekierowuje na /workout-plans
 await page.waitForLoadState("networkidle");
-await page.reload(); // Odśwież, aby pobrać najnowsze dane
+await page.reload(); // ⚠️ WAŻNE: Odśwież, aby pobrać najnowsze dane
 await page.waitForLoadState("networkidle");
 await workoutPlansPage.waitForList(); // Teraz jesteśmy na liście
 ```
@@ -624,10 +616,11 @@ await workoutPlansPage.clickEditPlanByName(planName);
 
 **Oczekiwany rezultat**:
 - Plan zostaje zaktualizowany
-- Zmiany są widoczne w szczegółach planu
+- Przekierowanie do listy planów (`/workout-plans`)
+- Zmiany są widoczne na liście planów (po odświeżeniu strony)
 
 **⚠️ Ważna uwaga dla testów E2E**:
-Po edycji planu i nawigacji do listy planów, **zawsze użyj `page.reload()`** przed weryfikacją, że stara nazwa nie istnieje, a nowa istnieje. Next.js może cache'ować dane, co prowadzi do fałszywych negatywów w testach. Zobacz sekcję 3.3.1 dla szczegółów.
+Po zapisaniu edycji planu, aplikacja przekierowuje na listę planów. **Zawsze użyj `page.reload()`** przed weryfikacją, że stara nazwa nie istnieje, a nowa istnieje. Next.js może cache'ować dane, co prowadzi do fałszywych negatywów w testach. Zobacz sekcję 3.3.1 dla szczegółów.
 
 ### 4.4 Sesje treningowe
 
@@ -1525,10 +1518,15 @@ Plan powinien być traktowany jako żywy dokument, który ewoluuje wraz z rozwoj
 
 ---
 
-**Wersja dokumentu**: 1.3  
+**Wersja dokumentu**: 1.4  
 **Data utworzenia**: 2025-01-XX  
 **Ostatnia aktualizacja**: 2025-01-26  
 **Autor**: Zespół Go Girl Workout App
+
+**Zmiany w wersji 1.4**:
+- Zaktualizowano sekcję 3.3.2: Zmieniono opis zachowania po zapisaniu planu - po zapisaniu (utworzenie i edycja) aplikacja przekierowuje na listę planów (`/workout-plans`), a nie na stronę szczegółów
+- Zaktualizowano TC-WP-002: Oczekiwany rezultat po edycji - przekierowanie na listę planów zamiast na szczegóły
+- Zaktualizowano wskazówki dotyczące użycia `page.reload()` - usunięto nieaktualną informację o weryfikacji danych na stronie szczegółów
 
 **Zmiany w wersji 1.3**:
 - Rozszerzono sekcję 3.3.1 o dodatkowe problemy z testami E2E

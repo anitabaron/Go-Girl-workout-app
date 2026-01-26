@@ -113,7 +113,8 @@ export class WorkoutPlanFormPage {
     }
     
     // Wait for at least one exercise card to appear (indicates exercises are loaded)
-    const exerciseCard = this.page.locator('div[class*="grid"] > div[class*="cursor-pointer"]').first();
+    // Cards are rendered as Card components with data-test-id
+    const exerciseCard = this.page.locator('[data-test-id="exercise-selector-card"]').first();
     await exerciseCard.waitFor({ state: 'visible', timeout: 30000 }); // Increased for CI pipeline
     
     // Additional wait for exercises to fully render
@@ -247,12 +248,11 @@ export class WorkoutPlanFormPage {
   }
 
   /**
-   * Wait for navigation after save (should redirect to /workout-plans or /workout-plans/{id})
-   * After create: redirects to /workout-plans (list)
-   * After edit: redirects to /workout-plans/{id} (details)
+   * Wait for navigation after save (redirects to /workout-plans list)
+   * After both create and edit: redirects to /workout-plans (list)
    */
   async waitForSaveNavigation() {
-    await this.page.waitForURL(/\/workout-plans(\/.*)?$/, { timeout: 15000 });
+    await this.page.waitForURL(/\/workout-plans\/?$/, { timeout: 15000 });
   }
 
   /**
