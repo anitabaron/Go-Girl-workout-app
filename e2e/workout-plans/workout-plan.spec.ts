@@ -171,8 +171,29 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Step 13: Save the changes
     await workoutPlanFormPage.submit();
     await workoutPlanFormPage.waitForSaveNavigation();
+    
+    // Wait for page to fully load after navigation
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
+    
+    // Step 14: Verify update on details page (we're redirected here after edit)
+    // Check that we're on the details page and new name is visible
+    const currentUrl = page.url();
+    expect(currentUrl).toMatch(/\/workout-plans\/[^/]+$/);
+    
+    // Verify updated name is visible on details page
+    await expect.poll(
+      async () => {
+        const pageContent = await page.textContent("body");
+        return pageContent?.includes(updatedPlanName) ?? false;
+      },
+      {
+        message: `Updated plan name "${updatedPlanName}" should be visible on details page`,
+        timeout: 20000,
+        intervals: [500, 1000, 2000],
+      }
+    ).toBe(true);
 
-    // Step 14: Navigate to list page (after edit, we're redirected to details page)
+    // Step 15: Navigate to list page
     await workoutPlansPage.goto();
     await page.waitForLoadState("networkidle", { timeout: 60000 });
     
@@ -183,7 +204,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Additional wait to ensure data is fully loaded
     await page.waitForTimeout(1000);
 
-    // Step 15: Verify the plan was updated
+    // Step 16: Verify the plan was updated on list page
     await workoutPlansPage.waitForList();
 
     // First verify new name exists (confirms update worked)
@@ -201,7 +222,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
       },
       {
         message: `New plan name "${updatedPlanName}" should exist`,
-        timeout: 30000, // Increased for CI pipeline
+        timeout: 20000, // Reduced since we already verified on details page
         intervals: [1000, 2000, 3000],
       }
     ).toBe(true);
