@@ -45,7 +45,7 @@ export type ExerciseFormErrors = {
 type UseExerciseFormProps = {
   initialData?: ExerciseDTO;
   mode: "create" | "edit";
-  onSuccess?: () => void;
+  onSuccess?: () => void | Promise<void>;
 };
 
 // Schema dla walidacji pojedynczych pól
@@ -424,7 +424,7 @@ export function useExerciseForm({
       toast.success("Ćwiczenie zostało zapisane.");
       
       // Wywołaj callback sukcesu (który przekieruje do listy)
-      onSuccess?.();
+      await onSuccess?.();
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         // Network error

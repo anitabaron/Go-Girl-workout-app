@@ -14,7 +14,10 @@ type ExerciseFormProps = {
   mode: "create" | "edit";
 };
 
-export function ExerciseForm({ initialData, mode }: ExerciseFormProps) {
+export function ExerciseForm({
+  initialData,
+  mode,
+}: Readonly<ExerciseFormProps>) {
   const router = useRouter();
   const {
     fields,
@@ -27,16 +30,22 @@ export function ExerciseForm({ initialData, mode }: ExerciseFormProps) {
   } = useExerciseForm({
     initialData,
     mode,
-    onSuccess: () => {
+    onSuccess: async () => {
       // Przekierowanie do listy ćwiczeń po udanym zapisie
-      router.push("/exercises");
+      // Next.js router.push returns a Promise in App Router
+      await (router.push("/exercises") as unknown as Promise<void>);
     },
   });
 
   useBeforeUnload(hasUnsavedChanges);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-test-id="exercise-form">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      noValidate
+      data-test-id="exercise-form"
+    >
       <ExerciseFormFields
         fields={fields}
         errors={errors}
