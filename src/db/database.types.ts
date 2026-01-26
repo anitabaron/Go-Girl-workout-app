@@ -248,11 +248,16 @@ export type Database = {
       workout_plan_exercises: {
         Row: {
           created_at: string
-          exercise_id: string
+          estimated_set_time_seconds: number | null
+          exercise_id: string | null
+          exercise_part: Database["public"]["Enums"]["exercise_part"] | null
+          exercise_title: string | null
+          exercise_type: Database["public"]["Enums"]["exercise_type"] | null
           id: string
           plan_id: string
           planned_duration_seconds: number | null
           planned_reps: number | null
+          planned_rest_after_series_seconds: number | null
           planned_rest_seconds: number | null
           planned_sets: number | null
           section_order: number
@@ -260,11 +265,16 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          exercise_id: string
+          estimated_set_time_seconds?: number | null
+          exercise_id?: string | null
+          exercise_part?: Database["public"]["Enums"]["exercise_part"] | null
+          exercise_title?: string | null
+          exercise_type?: Database["public"]["Enums"]["exercise_type"] | null
           id?: string
           plan_id: string
           planned_duration_seconds?: number | null
           planned_reps?: number | null
+          planned_rest_after_series_seconds?: number | null
           planned_rest_seconds?: number | null
           planned_sets?: number | null
           section_order: number
@@ -272,11 +282,16 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          exercise_id?: string
+          estimated_set_time_seconds?: number | null
+          exercise_id?: string | null
+          exercise_part?: Database["public"]["Enums"]["exercise_part"] | null
+          exercise_title?: string | null
+          exercise_type?: Database["public"]["Enums"]["exercise_type"] | null
           id?: string
           plan_id?: string
           planned_duration_seconds?: number | null
           planned_reps?: number | null
+          planned_rest_after_series_seconds?: number | null
           planned_rest_seconds?: number | null
           planned_sets?: number | null
           section_order?: number
@@ -339,7 +354,7 @@ export type Database = {
           actual_rest_seconds: number | null
           actual_sets: number | null
           created_at: string
-          exercise_id: string
+          exercise_id: string | null
           exercise_order: number
           exercise_part_at_time: Database["public"]["Enums"]["exercise_part"]
           exercise_title_at_time: string
@@ -348,6 +363,7 @@ export type Database = {
           is_skipped: boolean
           planned_duration_seconds: number | null
           planned_reps: number | null
+          planned_rest_after_series_seconds: number | null
           planned_rest_seconds: number | null
           planned_sets: number | null
           session_id: string
@@ -359,7 +375,7 @@ export type Database = {
           actual_rest_seconds?: number | null
           actual_sets?: number | null
           created_at?: string
-          exercise_id: string
+          exercise_id?: string | null
           exercise_order: number
           exercise_part_at_time: Database["public"]["Enums"]["exercise_part"]
           exercise_title_at_time: string
@@ -368,6 +384,7 @@ export type Database = {
           is_skipped?: boolean
           planned_duration_seconds?: number | null
           planned_reps?: number | null
+          planned_rest_after_series_seconds?: number | null
           planned_rest_seconds?: number | null
           planned_sets?: number | null
           session_id: string
@@ -379,7 +396,7 @@ export type Database = {
           actual_rest_seconds?: number | null
           actual_sets?: number | null
           created_at?: string
-          exercise_id?: string
+          exercise_id?: string | null
           exercise_order?: number
           exercise_part_at_time?: Database["public"]["Enums"]["exercise_part"]
           exercise_title_at_time?: string
@@ -388,6 +405,7 @@ export type Database = {
           is_skipped?: boolean
           planned_duration_seconds?: number | null
           planned_reps?: number | null
+          planned_rest_after_series_seconds?: number | null
           planned_rest_seconds?: number | null
           planned_sets?: number | null
           session_id?: string

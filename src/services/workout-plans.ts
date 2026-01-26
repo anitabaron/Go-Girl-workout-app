@@ -8,6 +8,7 @@ import {
   validateWorkoutPlanBusinessRules,
   workoutPlanCreateSchema,
   workoutPlanUpdateSchema,
+  workoutPlanImportSchema,
 } from "@/lib/validation/workout-plans";
 import {
   findWorkoutPlanById,
@@ -372,10 +373,13 @@ export async function updateWorkoutPlanService(
       const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] & {
         planned_rest_after_series_seconds?: number | null;
         estimated_set_time_seconds?: number | null;
+        exercise_title?: string | null;
+        exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+        exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
       } = {};
 
       if (exerciseUpdate.exercise_id !== undefined) {
-        updateData.exercise_id = exerciseUpdate.exercise_id;
+        updateData.exercise_id = exerciseUpdate.exercise_id ?? null;
       }
       if (exerciseUpdate.section_type !== undefined) {
         updateData.section_type =
@@ -630,6 +634,164 @@ function mapDbError(error: PostgrestError) {
   }
 
   return new ServiceError("INTERNAL", "Wystąpił błąd serwera.", error.message);
+}
+
+/**
+ * Importuje plan treningowy z JSON.
+ * Obsługuje ćwiczenia istniejące w bazie (przez exercise_id) oraz nowe (przez snapshot).
+ */
+export async function importWorkoutPlanService(
+  userId: string,
+  payload: unknown
+): Promise<WorkoutPlanDTO & { warnings?: { missing_exercises?: string[] } }> {
+  assertUser(userId);
+  const parsed = parseOrThrow(workoutPlanImportSchema, payload);
+
+  // Walidacja domenowa
+  const domainErrors = validateWorkoutPlanBusinessRules(
+    parsed.exercises.map((e) => ({
+      exercise_id: e.exercise_id ?? undefined,
+      section_type: e.section_type,
+      section_order: e.section_order,
+      planned_sets: e.planned_sets,
+      planned_reps: e.planned_reps,
+      planned_duration_seconds: e.planned_duration_seconds,
+      planned_rest_seconds: e.planned_rest_seconds,
+      planned_rest_after_series_seconds: e.planned_rest_after_series_seconds,
+      estimated_set_time_seconds: e.estimated_set_time_seconds,
+    } as WorkoutPlanExerciseInput))
+  );
+
+  if (domainErrors.length) {
+    throw new ServiceError("BAD_REQUEST", domainErrors.join(" "));
+  }
+
+  const supabase = await createClient();
+
+  // Dla ćwiczeń z exercise_id - sprawdź czy istnieją i należą do użytkownika
+  const exerciseIds = parsed.exercises
+    .filter((e) => e.exercise_id)
+    .map((e) => e.exercise_id!);
+  
+  const missingExercises: string[] = [];
+  
+  if (exerciseIds.length > 0) {
+    const { data: ownedExercises, error: exercisesError } =
+      await findExercisesByIds(supabase, userId, exerciseIds);
+
+    if (exercisesError) {
+      throw mapDbError(exercisesError);
+    }
+
+    // Znajdź brakujące ćwiczenia
+    const foundIds = new Set((ownedExercises ?? []).map((e) => e.id));
+    for (const exerciseId of exerciseIds) {
+      if (!foundIds.has(exerciseId)) {
+        missingExercises.push(exerciseId);
+      }
+    }
+
+    // Jeśli wszystkie ćwiczenia z exercise_id są brakujące, użyj snapshot
+    // (to nie powinno się zdarzyć, ale obsługujemy to)
+    for (const exercise of parsed.exercises) {
+      if (exercise.exercise_id && missingExercises.includes(exercise.exercise_id)) {
+        // Zapisz exercise_id przed ustawieniem na null
+        const missingExerciseId = exercise.exercise_id;
+        // Ustaw exercise_id na null i użyj snapshot (jeśli nie został podany, użyj placeholder)
+        exercise.exercise_id = null;
+        if (!exercise.exercise_title) {
+          exercise.exercise_title = `Ćwiczenie (ID: ${missingExerciseId})`;
+          exercise.exercise_type = exercise.section_type; // Fallback
+          exercise.exercise_part = parsed.part ?? "Legs"; // Fallback
+        }
+      }
+    }
+  }
+
+  // Utwórz plan
+  const { data: plan, error: planError } = await insertWorkoutPlan(
+    supabase,
+    userId,
+    {
+      name: parsed.name,
+      description: parsed.description,
+      part: parsed.part,
+    }
+  );
+
+  if (planError) {
+    throw mapDbError(planError);
+  }
+
+  if (!plan) {
+    throw new ServiceError(
+      "INTERNAL",
+      "Nie udało się utworzyć planu treningowego."
+    );
+  }
+
+  // Wstaw ćwiczenia (z exercise_id lub snapshot)
+  const { error: exercisesInsertError } = await insertWorkoutPlanExercises(
+    supabase,
+    plan.id,
+    parsed.exercises.map((e) => ({
+      exercise_id: e.exercise_id ?? null,
+      exercise_title: e.exercise_title ?? null,
+      exercise_type: e.exercise_type ?? null,
+      exercise_part: e.exercise_part ?? null,
+      section_type: e.section_type,
+      section_order: e.section_order,
+      planned_sets: e.planned_sets,
+      planned_reps: e.planned_reps,
+      planned_duration_seconds: e.planned_duration_seconds,
+      planned_rest_seconds: e.planned_rest_seconds,
+      planned_rest_after_series_seconds: e.planned_rest_after_series_seconds,
+      estimated_set_time_seconds: e.estimated_set_time_seconds,
+    }))
+  );
+
+  if (exercisesInsertError) {
+    await supabase.from("workout_plans").delete().eq("id", plan.id);
+    throw mapDbError(exercisesInsertError);
+  }
+
+  // Pobierz utworzony plan z ćwiczeniami
+  const { data: planWithExercises, error: fetchError } =
+    await listWorkoutPlanExercises(supabase, plan.id);
+
+  if (fetchError) {
+    throw mapDbError(fetchError);
+  }
+
+  // Oblicz i zaktualizuj szacunkowy całkowity czas treningu
+  const estimatedTotalTime = calculateEstimatedTotalTime(planWithExercises ?? []);
+  const { error: updateTimeError } = await updateWorkoutPlan(
+    supabase,
+    userId,
+    plan.id,
+    { estimated_total_time_seconds: estimatedTotalTime }
+  );
+
+  if (updateTimeError) {
+    console.error("[importWorkoutPlanService] Failed to update estimated_total_time_seconds:", updateTimeError);
+  }
+
+  // Pobierz zaktualizowany plan
+  const { data: updatedPlan, error: fetchUpdatedError } = await findWorkoutPlanById(
+    supabase,
+    userId,
+    plan.id
+  );
+
+  if (fetchUpdatedError) {
+    throw mapDbError(fetchUpdatedError);
+  }
+
+  return {
+    ...(updatedPlan ?? plan),
+    exercises: planWithExercises ?? [],
+    warnings: missingExercises.length > 0 ? { missing_exercises: missingExercises } : undefined,
+  };
 }
 
 function assertUser(userId: string) {

@@ -12,7 +12,7 @@ import type {
 export type WorkoutPlanExerciseItemState = {
   // Identyfikatory
   id?: string; // ID ćwiczenia w planie (tylko w trybie edycji)
-  exercise_id: string; // ID ćwiczenia z biblioteki
+  exercise_id: string | null; // ID ćwiczenia z biblioteki (może być null dla importowanych planów)
   // Metadane ćwiczenia (tylko do wyświetlenia, nie edytowalne w formularzu)
   exercise_title?: string; // Nazwa ćwiczenia (z ExerciseDTO)
   exercise_type?: ExerciseType; // Type ćwiczenia (z ExerciseDTO)

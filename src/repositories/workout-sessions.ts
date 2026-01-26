@@ -249,7 +249,7 @@ export async function insertWorkoutSessionExercises(
   client: DbClient,
   sessionId: string,
   exercises: Array<{
-    exercise_id: string;
+    exercise_id: string | null; // Może być null dla ćwiczeń z planu bez exercise_id
     exercise_title_at_time: string;
     exercise_type_at_time: Database["public"]["Enums"]["exercise_type"];
     exercise_part_at_time: Database["public"]["Enums"]["exercise_part"];
@@ -263,7 +263,7 @@ export async function insertWorkoutSessionExercises(
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
     session_id: sessionId,
-    exercise_id: exercise.exercise_id,
+    exercise_id: exercise.exercise_id ?? null,
     exercise_title_at_time: exercise.exercise_title_at_time,
     exercise_type_at_time: exercise.exercise_type_at_time,
     exercise_part_at_time: exercise.exercise_part_at_time,
@@ -762,7 +762,7 @@ export async function callSaveWorkoutSessionExercise(
   client: DbClient,
   params: {
     p_session_id: string;
-    p_exercise_id: string;
+    p_exercise_id: string | null; // Może być null dla ćwiczeń z planu bez exercise_id
     p_exercise_order: number;
     p_actual_sets?: number | null;
     p_actual_reps?: number | null;
@@ -805,7 +805,8 @@ export async function callSaveWorkoutSessionExercise(
   // Funkcja DB sprawdza `p_sets_data IS NOT NULL`, więc musimy przekazać null zamiast undefined
   // Jeśli setsDataJson jest null, przekaż undefined (funkcja DB nie zmieni istniejących serii)
   // Jeśli setsDataJson jest tablicą (nawet pustą), przekaż tablicę (funkcja DB zastąpi serie)
-  const rpcParams: Database["public"]["Functions"]["save_workout_session_exercise"]["Args"] = {
+  // Type assertion - p_exercise_id może być null (po migracji), ale typy TypeScript jeszcze nie zostały zaktualizowane
+  const rpcParams = {
     p_session_id: params.p_session_id,
     p_exercise_id: params.p_exercise_id,
     p_exercise_order: params.p_exercise_order,
@@ -815,7 +816,7 @@ export async function callSaveWorkoutSessionExercise(
     p_actual_rest_seconds: params.p_actual_rest_seconds ?? undefined,
     p_is_skipped: params.p_is_skipped ?? false,
     p_sets_data: setsDataJson as Json | undefined,
-  };
+  } as Database["public"]["Functions"]["save_workout_session_exercise"]["Args"];
 
   const { data, error } = await client.rpc("save_workout_session_exercise", rpcParams);
 

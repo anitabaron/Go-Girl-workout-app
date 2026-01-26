@@ -199,21 +199,23 @@ export async function insertWorkoutPlan(
 }
 
 /**
- * Wstawia ćwiczenia do planu treningowego (batch insert).
+ * Wstawia ćwiczenia do planu treningowego (batch insert) - obsługuje snapshot.
  */
 export async function insertWorkoutPlanExercises(
   client: DbClient,
   planId: string,
-  exercises: WorkoutPlanExerciseInput[]
+  exercises: Array<WorkoutPlanExerciseInput & {
+    exercise_title?: string | null;
+    exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+    exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+  }>
 ) {
-  const exercisesToInsert: Array<
-    Database["public"]["Tables"]["workout_plan_exercises"]["Insert"] & {
-      planned_rest_after_series_seconds?: number | null;
-      estimated_set_time_seconds?: number | null;
-    }
-  > = exercises.map((exercise) => ({
+  const exercisesToInsert = exercises.map((exercise) => ({
     plan_id: planId,
-    exercise_id: exercise.exercise_id,
+    exercise_id: exercise.exercise_id ?? null,
+    exercise_title: exercise.exercise_title ?? null,
+    exercise_type: exercise.exercise_type ?? null,
+    exercise_part: exercise.exercise_part ?? null,
     section_type: exercise.section_type,
     section_order: exercise.section_order,
     planned_sets: exercise.planned_sets ?? null,
@@ -228,9 +230,10 @@ export async function insertWorkoutPlanExercises(
     }),
   }));
 
+  // Type assertion - pola snapshot są w bazie, ale jeszcze nie w typach TypeScript
   const { data, error } = await client
     .from("workout_plan_exercises")
-    .insert(exercisesToInsert as Database["public"]["Tables"]["workout_plan_exercises"]["Insert"][])
+    .insert(exercisesToInsert as unknown as Database["public"]["Tables"]["workout_plan_exercises"]["Insert"][])
     .select();
 
   return { data, error };
@@ -295,7 +298,10 @@ export async function updateWorkoutPlanExercise(
   planId: string,
   exerciseId: string,
   input: {
-    exercise_id?: string;
+    exercise_id?: string | null;
+    exercise_title?: string | null;
+    exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+    exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
     section_type?: Database["public"]["Enums"]["exercise_type"];
     section_order?: number;
     planned_sets?: number | null;
@@ -309,10 +315,22 @@ export async function updateWorkoutPlanExercise(
   const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] & {
     planned_rest_after_series_seconds?: number | null;
     estimated_set_time_seconds?: number | null;
+    exercise_title?: string | null;
+    exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+    exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
   } = {};
 
   if (input.exercise_id !== undefined) {
-    updateData.exercise_id = input.exercise_id;
+    updateData.exercise_id = input.exercise_id ?? null;
+  }
+  if (input.exercise_title !== undefined) {
+    updateData.exercise_title = input.exercise_title ?? null;
+  }
+  if (input.exercise_type !== undefined) {
+    updateData.exercise_type = input.exercise_type ?? null;
+  }
+  if (input.exercise_part !== undefined) {
+    updateData.exercise_part = input.exercise_part ?? null;
   }
   if (input.section_type !== undefined) {
     updateData.section_type = input.section_type;
@@ -368,32 +386,96 @@ export async function deleteWorkoutPlanExercises(client: DbClient, planId: strin
 }
 
 /**
- * Pobiera wszystkie ćwiczenia planu treningowego posortowane po section_type i section_order.
+ * Pobiera ćwiczenia planu treningowego z informacją o snapshot.
  */
 export async function listWorkoutPlanExercises(
   client: DbClient,
   planId: string
-) {
+): Promise<{
+  data?: WorkoutPlanExerciseDTO[];
+  error?: PostgrestError | null;
+}> {
   const { data, error } = await client
     .from("workout_plan_exercises")
-    .select("*, exercises(title, type, part, estimated_set_time_seconds, rest_after_series_seconds)")
+    .select(`
+      *,
+      exercises (
+        id,
+        title,
+        type,
+        part,
+        estimated_set_time_seconds,
+        rest_after_series_seconds
+      )
+    `)
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
     .order("section_order", { ascending: true });
-  
-  // Note: estimated_set_time_seconds from workout_plan_exercises will be included
-  // if the column exists in the database. The mapExerciseToDTO function will prioritize
-  // the override value from workout_plan_exercises over the default from exercises.
 
   if (error) {
-    console.error("[listWorkoutPlanExercises] Error:", error);
-    return { data: null, error };
+    return { error };
   }
 
-  return {
-    data: data ? data.map(mapExerciseToDTO) : [],
-    error: null,
-  };
+  const exercises = (data ?? []).map((row) => {
+    const exercise = row.exercises as {
+      id: string;
+      title: string;
+      type: Database["public"]["Enums"]["exercise_type"];
+      part: Database["public"]["Enums"]["exercise_part"];
+      estimated_set_time_seconds: number | null;
+      rest_after_series_seconds: number | null;
+    } | null;
+
+    // Type assertion dla pól snapshot (dodanych w migracji, ale jeszcze nie w typach)
+    const rowWithSnapshot = row as WorkoutPlanExerciseRow & {
+      exercise_title?: string | null;
+      exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+      exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+      estimated_set_time_seconds?: number | null;
+      planned_rest_after_series_seconds?: number | null;
+    };
+
+    // Użyj snapshot jeśli exercise_id jest NULL, w przeciwnym razie użyj danych z exercises
+    const exerciseTitle = row.exercise_id
+      ? (exercise?.title ?? null)
+      : (rowWithSnapshot.exercise_title ?? null);
+    const exerciseType = row.exercise_id
+      ? (exercise?.type ?? null)
+      : (rowWithSnapshot.exercise_type ?? null);
+    const exercisePart = row.exercise_id
+      ? (exercise?.part ?? null)
+      : (rowWithSnapshot.exercise_part ?? null);
+
+    // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
+    const finalEstimatedSetTime = rowWithSnapshot.estimated_set_time_seconds !== undefined 
+      ? rowWithSnapshot.estimated_set_time_seconds 
+      : exercise?.estimated_set_time_seconds ?? null;
+    
+    const finalRestAfterSeries = rowWithSnapshot.planned_rest_after_series_seconds !== undefined
+      ? rowWithSnapshot.planned_rest_after_series_seconds
+      : exercise?.rest_after_series_seconds ?? null;
+
+    return {
+      id: row.id,
+      exercise_id: row.exercise_id,
+      section_type: row.section_type,
+      section_order: row.section_order,
+      planned_sets: row.planned_sets,
+      planned_reps: row.planned_reps,
+      planned_duration_seconds: row.planned_duration_seconds,
+      planned_rest_seconds: row.planned_rest_seconds,
+      estimated_set_time_seconds: finalEstimatedSetTime, // Pole z workout_plan_exercises
+      exercise_title: exerciseTitle,
+      exercise_type: exerciseType,
+      exercise_part: exercisePart,
+      exercise_estimated_set_time_seconds: finalEstimatedSetTime,
+      exercise_rest_after_series_seconds: exercise?.rest_after_series_seconds ?? null,
+      planned_rest_after_series_seconds: finalRestAfterSeries,
+      is_exercise_in_library: row.exercise_id !== null,
+    };
+  });
+
+  return { data: exercises, error: null };
 }
 
 /**
@@ -430,6 +512,7 @@ export function mapToDTO(row: WorkoutPlanRow | WorkoutPlanSelectResult): Omit<Wo
 
 /**
  * Mapuje wiersz z bazy danych na DTO ćwiczenia w planie.
+ * @deprecated Używaj bezpośrednio listWorkoutPlanExercises, która zwraca już poprawnie zmapowane DTO.
  */
 export function mapExerciseToDTO(
   row: WorkoutPlanExerciseRow & {
@@ -441,6 +524,15 @@ export function mapExerciseToDTO(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { plan_id, created_at, exercises, estimated_set_time_seconds, planned_rest_after_series_seconds, ...rest } = row;
   
+  // Type assertion dla pól snapshot (dodanych w migracji, ale jeszcze nie w typach)
+  const rowWithSnapshot = row as WorkoutPlanExerciseRow & {
+    exercise_title?: string | null;
+    exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+    exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+    estimated_set_time_seconds?: number | null;
+    planned_rest_after_series_seconds?: number | null;
+  };
+  
   // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
   const finalEstimatedSetTime = estimated_set_time_seconds !== undefined 
     ? estimated_set_time_seconds 
@@ -450,14 +542,27 @@ export function mapExerciseToDTO(
     ? planned_rest_after_series_seconds
     : exercises?.rest_after_series_seconds ?? null;
   
+  // Użyj snapshot jeśli exercise_id jest NULL, w przeciwnym razie użyj danych z exercises
+  const exerciseTitle = rest.exercise_id
+    ? (exercises?.title ?? null)
+    : (rowWithSnapshot.exercise_title ?? null);
+  const exerciseType = rest.exercise_id
+    ? ((exercises?.type as ExerciseType | undefined) ?? null)
+    : (rowWithSnapshot.exercise_type ?? null);
+  const exercisePart = rest.exercise_id
+    ? ((exercises?.part as ExercisePart | undefined) ?? null)
+    : (rowWithSnapshot.exercise_part ?? null);
+  
   return {
     ...rest,
-    exercise_title: exercises?.title ?? null,
-    exercise_type: (exercises?.type as ExerciseType | undefined) ?? null,
-    exercise_part: (exercises?.part as ExercisePart | undefined) ?? null,
+    estimated_set_time_seconds: finalEstimatedSetTime, // Pole z workout_plan_exercises
+    exercise_title: exerciseTitle,
+    exercise_type: exerciseType,
+    exercise_part: exercisePart,
     exercise_estimated_set_time_seconds: finalEstimatedSetTime,
     exercise_rest_after_series_seconds: exercises?.rest_after_series_seconds ?? null,
     planned_rest_after_series_seconds: finalRestAfterSeries,
+    is_exercise_in_library: rest.exercise_id !== null,
   };
 }
 
