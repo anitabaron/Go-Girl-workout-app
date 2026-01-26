@@ -213,6 +213,174 @@ const oldNameExists = await workoutPlansPage.hasPlanWithName(oldName); // Teraz 
 - Zawsze czekaj na `networkidle` po `reload()`, aby upewnić się, że wszystkie dane zostały załadowane
 - W przypadku testów edycji, rozważ użycie `waitForURL()` z konkretnym URL zamiast ogólnego `waitForSaveNavigation()`, aby upewnić się, że jesteś na właściwej stronie
 
+#### 3.3.2 Problemy z nawigacją po edycji planu
+
+**⚠️ Problem: Wywoływanie `waitForList()` na stronie szczegółów**
+
+Po edycji planu treningowego, aplikacja przekierowuje użytkownika do strony szczegółów planu (`/workout-plans/{id}`), a nie do listy planów. Jeśli test próbuje wywołać `waitForList()` bezpośrednio po `waitForSaveNavigation()`, test będzie na stronie szczegółów, gdzie nie ma ani listy, ani pustego stanu.
+
+**Objawy problemu**:
+- Błąd: `Neither plans list nor empty state appeared within 10000ms timeout`
+- Test jest na URL `/workout-plans/{id}` zamiast `/workout-plans`
+
+**Rozwiązanie**:
+Zawsze nawiguj do listy planów przed wywołaniem `waitForList()`:
+
+```typescript
+// ❌ Błędne - jesteśmy na stronie szczegółów
+await workoutPlanFormPage.submit();
+await workoutPlanFormPage.waitForSaveNavigation();
+await workoutPlansPage.waitForList(); // Błąd - nie ma listy na stronie szczegółów
+
+// ✅ Poprawne - najpierw nawiguj do listy
+await workoutPlanFormPage.submit();
+await workoutPlanFormPage.waitForSaveNavigation();
+await workoutPlansPage.goto(); // ⚠️ WAŻNE: Nawiguj do listy przed waitForList()
+await page.waitForLoadState("networkidle");
+await page.reload(); // Odśwież, aby pobrać najnowsze dane
+await page.waitForLoadState("networkidle");
+await workoutPlansPage.waitForList(); // Teraz jesteśmy na liście
+```
+
+#### 3.3.3 Problemy z weryfikacją zmian po edycji
+
+**⚠️ Problem: Cache'owanie danych powoduje fałszywe negatywy**
+
+Po edycji planu i nawigacji do listy, test może sprawdzać, że stara nazwa nie istnieje, a nowa istnieje. Jednak z powodu cache'owania danych, test może widzieć stare dane nawet po `reload()`.
+
+**Objawy problemu**:
+- Test sprawdza, że stara nazwa nie istnieje: `expect(oldNameExists).toBe(false)` → **FAIL** (stara nazwa nadal widoczna)
+- Test sprawdza, że nowa nazwa istnieje: `expect(newNameExists).toBe(true)` → **FAIL** (nowa nazwa nie widoczna)
+
+**Rozwiązanie**:
+Użyj `expect.poll()` z retry logic zamiast prostego sprawdzenia:
+
+```typescript
+// ❌ Błędne - może pokazywać cache'owane dane
+await page.reload();
+await workoutPlansPage.waitForList();
+const oldNameExists = await workoutPlansPage.hasPlanWithName(oldName);
+expect(oldNameExists).toBe(false); // Może zwrócić true z cache
+
+// ✅ Poprawne - polling z retry logic
+await page.reload();
+await workoutPlansPage.waitForList();
+await expect.poll(
+  async () => {
+    return await workoutPlansPage.hasPlanWithName(oldName);
+  },
+  {
+    message: `Old plan name "${oldName}" should not exist`,
+    timeout: 15000,
+    intervals: [500, 1000, 2000], // Progressive intervals
+  }
+).toBe(false); // Automatyczne retry aż do sukcesu lub timeout
+```
+
+**Kiedy używać `expect.poll()`**:
+- Po edycji planu/ćwiczenia i weryfikacji zmian na liście
+- Gdy sprawdzasz, że stara wartość nie istnieje, a nowa istnieje
+- Gdy test sprawdza dane, które mogą być cache'owane
+
+#### 3.3.4 Problemy z asynchronicznym ładowaniem ćwiczeń w dialogu
+
+**⚠️ Problem: Timeout przy wyszukiwaniu ćwiczeń w dialogu dodawania**
+
+Dialog dodawania ćwiczeń do planu ładuje ćwiczenia asynchronicznie. Test może próbować wyszukać ćwiczenie, zanim ćwiczenia zostaną załadowane i wyrenderowane.
+
+**Objawy problemu**:
+- Błąd: `TimeoutError: locator.waitFor: Timeout 10000ms exceeded`
+- Test czeka na tekst ćwiczenia, ale ćwiczenie nie jest jeszcze widoczne
+- Dialog jest otwarty, ale lista ćwiczeń jest pusta lub pokazuje loader
+
+**Rozwiązanie**:
+Czekaj na rzeczywiste załadowanie ćwiczeń przed wyszukiwaniem:
+
+```typescript
+// ❌ Błędne - ćwiczenia mogą nie być jeszcze załadowane
+await this.page.waitForLoadState('networkidle');
+await this.page.waitForTimeout(500);
+const titleLocator = this.page.getByText(exerciseTitle).first();
+await titleLocator.waitFor({ state: 'visible', timeout: 10000 }); // Timeout!
+
+// ✅ Poprawne - czekaj na zniknięcie loadera i pojawienie się ćwiczeń
+await this.page.waitForLoadState('networkidle');
+
+// Czekaj na zniknięcie loadera
+const loader = this.page.locator('svg[class*="animate-spin"]').first();
+try {
+  await loader.waitFor({ state: 'hidden', timeout: 5000 });
+} catch {
+  // Loader might not be visible if exercises loaded quickly
+}
+
+// Czekaj na pojawienie się pierwszego ćwiczenia (indykator, że lista jest załadowana)
+const exerciseCard = this.page.locator('div[class*="grid"] > div[class*="cursor-pointer"]').first();
+await exerciseCard.waitFor({ state: 'visible', timeout: 10000 });
+
+// Dodatkowe oczekiwanie na pełne renderowanie
+await this.page.waitForTimeout(300);
+
+// Teraz bezpiecznie wyszukuj ćwiczenie
+const titleLocator = this.page.getByText(exerciseTitle).first();
+await titleLocator.waitFor({ state: 'visible', timeout: 10000 });
+```
+
+**Wskazówki**:
+- Zawsze czekaj na zniknięcie loadera przed wyszukiwaniem elementów
+- Czekaj na pojawienie się pierwszego elementu listy jako wskaźnika, że lista jest załadowana
+- Używaj bardziej specyficznych selektorów (np. struktura DOM) zamiast tylko tekstu
+
+#### 3.3.5 Problemy z weryfikacją planu przed edycją
+
+**⚠️ Problem: Timeout przy próbie edycji planu**
+
+Po utworzeniu planu, test może próbować edytować plan, zanim plan pojawi się na liście. Przycisk edycji może nie być dostępny lub plan może nie być jeszcze widoczny.
+
+**Objawy problemu**:
+- Błąd: `page.waitForURL: Test timeout of 30000ms exceeded`
+- Test próbuje kliknąć przycisk edycji, ale plan nie jest jeszcze na liście
+- Nawigacja do strony edycji nie następuje
+
+**Rozwiązanie**:
+Użyj reload i polling przed próbą edycji:
+
+```typescript
+// ❌ Błędne - plan może nie być jeszcze widoczny
+await workoutPlansPage.waitForList();
+const planExists = await workoutPlansPage.hasPlanWithName(planName);
+expect(planExists).toBe(true);
+await workoutPlansPage.clickEditPlanByName(planName); // Timeout!
+
+// ✅ Poprawne - upewnij się, że plan jest widoczny przed edycją
+await workoutPlansPage.waitForList();
+
+// Reload, aby pobrać najnowsze dane
+await page.reload();
+await page.waitForLoadState("networkidle");
+await workoutPlansPage.waitForList();
+
+// Użyj polling, aby upewnić się, że plan jest widoczny
+await expect.poll(
+  async () => {
+    return await workoutPlansPage.hasPlanWithName(planName);
+  },
+  {
+    message: `Plan "${planName}" should appear in the list`,
+    timeout: 15000,
+    intervals: [500, 1000, 2000],
+  }
+).toBe(true);
+
+// Teraz bezpiecznie edytuj plan
+await workoutPlansPage.clickEditPlanByName(planName);
+```
+
+**Wskazówki**:
+- Zawsze reload przed weryfikacją danych po utworzeniu nowego obiektu
+- Używaj polling dla weryfikacji, że obiekt jest widoczny przed interakcją
+- Daj aplikacji czas na pełne załadowanie danych przed próbą edycji
+
 ### 3.4 Testy bezpieczeństwa (Security Tests)
 
 **Cel**: Weryfikacja zabezpieczeń aplikacji i izolacji danych.
@@ -1357,10 +1525,19 @@ Plan powinien być traktowany jako żywy dokument, który ewoluuje wraz z rozwoj
 
 ---
 
-**Wersja dokumentu**: 1.2  
+**Wersja dokumentu**: 1.3  
 **Data utworzenia**: 2025-01-XX  
 **Ostatnia aktualizacja**: 2025-01-26  
 **Autor**: Zespół Go Girl Workout App
+
+**Zmiany w wersji 1.3**:
+- Rozszerzono sekcję 3.3.1 o dodatkowe problemy z testami E2E
+- Dodano sekcję 3.3.2: Problemy z nawigacją po edycji planu (wywoływanie `waitForList()` na stronie szczegółów)
+- Dodano sekcję 3.3.3: Problemy z weryfikacją zmian po edycji (cache'owanie danych powoduje fałszywe negatywy)
+- Dodano sekcję 3.3.4: Problemy z asynchronicznym ładowaniem ćwiczeń w dialogu (timeout przy wyszukiwaniu)
+- Dodano sekcję 3.3.5: Problemy z weryfikacją planu przed edycją (timeout przy próbie edycji)
+- Dodano przykłady kodu dla każdego problemu z rozwiązaniami
+- Dodano wskazówki, kiedy używać `expect.poll()` zamiast prostych asercji
 
 **Zmiany w wersji 1.2**:
 - Dodano sekcję 3.3.1 z ważnymi uwagami dotyczącymi cache'owania danych w testach E2E
