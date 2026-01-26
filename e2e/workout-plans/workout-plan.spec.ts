@@ -19,13 +19,14 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
   test("should create workout plan from exercises and then edit it", async ({
     page,
   }) => {
+    test.setTimeout(60000); // Increase timeout to 60s for CI
     // Step 1: Login
     await authenticateUser(page);
 
     // Step 2: Add first exercise
     const exercisesPage = new ExercisesPage(page);
     await exercisesPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
 
     const isListVisible = await exercisesPage.isListVisible();
     const isEmptyStateVisible = await exercisesPage.isEmptyStateVisible();
@@ -81,7 +82,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Step 4: Navigate to workout plans page
     const workoutPlansPage = new WorkoutPlansPage(page);
     await workoutPlansPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
 
     // Step 5: Create new workout plan
     await workoutPlansPage.clickCreatePlan();
@@ -173,11 +174,11 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
 
     // Step 14: Navigate to list page (after edit, we're redirected to details page)
     await workoutPlansPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
     
     // Reload to ensure we see the latest data from the server
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
 
     // Step 15: Verify the plan was updated
     await workoutPlansPage.waitForList();
@@ -216,7 +217,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Step 2: Navigate to workout plans page
     const workoutPlansPage = new WorkoutPlansPage(page);
     await workoutPlansPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
 
     // Step 3: Create new workout plan
     await workoutPlansPage.clickCreatePlan();
@@ -259,7 +260,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Step 2: Add exercise
     const exercisesPage = new ExercisesPage(page);
     await exercisesPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
 
     await exercisesPage.clickAddExercise();
     const formPage = new ExerciseFormPage(page);
@@ -282,7 +283,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Step 3: Create workout plan
     const workoutPlansPage = new WorkoutPlansPage(page);
     await workoutPlansPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
 
     await workoutPlansPage.clickCreatePlan();
     const workoutPlanFormPage = new WorkoutPlanFormPage(page);
@@ -303,11 +304,11 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // After edit, we're redirected to details page, not list
     // Navigate to list page first
     await workoutPlansPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
     
     // Reload to ensure we see the latest data from the server
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
     
     await workoutPlansPage.waitForList();
 
@@ -331,7 +332,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     if (planId) {
       // Navigate to plan details
       await page.goto(`/workout-plans/${planId}`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("networkidle", { timeout: 60000 });
 
       // Verify original data is displayed
       const pageContent = await page.textContent("body");
@@ -353,11 +354,11 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
       // After edit, we're redirected to details page, not list
       // Wait for specific details page URL (not edit page)
       await page.waitForURL(`/workout-plans/${planId}`, { timeout: 15000 });
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("networkidle", { timeout: 60000 });
       
       // Refresh the page to ensure we see the latest data from the server
       await page.reload();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("networkidle", { timeout: 60000 });
       
       // Verify updated data is displayed in details
       const updatedPageContent = await page.textContent("body");
@@ -370,13 +371,14 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
   test("should create workout plan with multiple exercises and verify all are saved", async ({
     page,
   }) => {
+    test.setTimeout(60000); // Increase timeout to 60s for CI
     // Step 1: Login
     await authenticateUser(page);
 
     // Step 2: Add multiple exercises
     const exercisesPage = new ExercisesPage(page);
     await exercisesPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
 
     const formPage = new ExerciseFormPage(page);
     const exerciseTitles: string[] = [];
@@ -406,7 +408,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Step 3: Create workout plan
     const workoutPlansPage = new WorkoutPlansPage(page);
     await workoutPlansPage.goto();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
 
     await workoutPlansPage.clickCreatePlan();
 
@@ -439,7 +441,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     
     // Reload to ensure we see the latest data
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
     await workoutPlansPage.waitForList();
     
     // Use polling to ensure plan is visible

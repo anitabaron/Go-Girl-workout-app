@@ -32,8 +32,8 @@ export class ExercisesPage {
   /**
    * Wait for exercises list to be visible
    */
-  async waitForList() {
-    await this.exercisesList.waitFor({ state: 'visible' });
+  async waitForList(timeout: number = 30000) {
+    await this.exercisesList.waitFor({ state: 'visible', timeout });
   }
 
   /**

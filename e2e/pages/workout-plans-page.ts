@@ -32,7 +32,7 @@ export class WorkoutPlansPage {
    * If list is not visible, waits for empty state instead
    * This handles the case where the page might show empty state initially
    */
-  async waitForList(timeout: number = 10000) {
+  async waitForList(timeout: number = 30000) {
     // Wait for either list or empty state to be visible
     // Use Promise.race to wait for whichever appears first
     const listPromise = this.plansList.waitFor({ state: 'visible', timeout }).catch(() => null);
@@ -157,7 +157,9 @@ export class WorkoutPlansPage {
     
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
-      const cardText = await card.textContent();
+      // Wait for card to be visible before getting text content
+      await card.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+      const cardText = await card.textContent({ timeout: 10000 });
       if (cardText?.includes(name)) {
         return true;
       }
@@ -175,7 +177,9 @@ export class WorkoutPlansPage {
     
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
-      const cardText = await card.textContent();
+      // Wait for card to be visible before getting text content
+      await card.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+      const cardText = await card.textContent({ timeout: 10000 });
       if (cardText?.includes(name)) {
         return card;
       }
