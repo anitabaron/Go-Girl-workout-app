@@ -31,7 +31,7 @@ export function WorkoutPlanForm({
   });
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" data-test-id="workout-plan-form">
       {/* Błędy walidacji na poziomie formularza */}
       {errors._form && errors._form.length > 0 && (
         <ValidationErrors errors={errors._form} />
@@ -68,7 +68,7 @@ export function WorkoutPlanForm({
           />
         </div>
         {fields.exercises.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-8 text-center">
+          <div className="rounded-lg border border-dashed border-border p-8 text-center" data-test-id="workout-plan-form-exercises-empty">
             <p className="text-muted-foreground">
               Brak ćwiczeń w planie. Dodaj pierwsze ćwiczenie, aby rozpocząć.
             </p>
@@ -81,6 +81,7 @@ export function WorkoutPlanForm({
             onMoveExercise={handleMoveExercise}
             errors={errors.exercises || {}}
             disabled={isLoading}
+            data-test-id="workout-plan-form-exercises-list"
           />
         )}
       </section>

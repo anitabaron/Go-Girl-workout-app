@@ -24,7 +24,7 @@ export function AddExerciseDialog({
   const [open, setOpen] = useState(false);
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [exercisesMap, setExercisesMap] = useState<Map<string, ExerciseDTO>>(
-    new Map()
+    new Map(),
   );
 
   const handleToggleExercise = (exercise: ExerciseDTO) => {
@@ -87,12 +87,16 @@ export function AddExerciseDialog({
           variant="outline"
           disabled={disabled}
           className="gap-2"
+          data-test-id="workout-plan-form-add-exercise-button"
         >
           <Plus className="size-4" />
           Dodaj ćwiczenie
         </Button>
       </DialogTrigger>
-      <DialogContent className=" max-w-[400px] md:max-w-[600px] lg:max-w-[1000px]">
+      <DialogContent
+        className=" max-w-[400px] md:max-w-[600px] lg:max-w-[1000px]"
+        data-test-id="workout-plan-form-add-exercise-dialog"
+      >
         <DialogHeader>
           <DialogTitle>Wybierz ćwiczenia</DialogTitle>
           <DialogDescription>
@@ -110,13 +114,19 @@ export function AddExerciseDialog({
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancel}
+            data-test-id="workout-plan-form-add-exercise-dialog-cancel"
+          >
             Anuluj
           </Button>
           <Button
             type="button"
             onClick={handleAdd}
             disabled={selectedExercises.length === 0}
+            data-test-id="workout-plan-form-add-exercise-dialog-confirm"
           >
             {selectedExercises.length === 0
               ? "Dodaj"

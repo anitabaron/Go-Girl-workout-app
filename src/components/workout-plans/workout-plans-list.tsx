@@ -86,7 +86,7 @@ export function WorkoutPlansList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-test-id="workout-plans-list">
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         {plans.map((plan) => (
           <WorkoutPlanCard

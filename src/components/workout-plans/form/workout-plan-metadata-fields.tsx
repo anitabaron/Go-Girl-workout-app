@@ -47,6 +47,7 @@ export function WorkoutPlanMetadataFields({
           aria-describedby={errors.name ? nameErrorId : undefined}
           placeholder="np. Trening siłowy - górna część ciała"
           className="mt-2"
+          data-test-id="workout-plan-form-name"
         />
         {errors.name && (
           <p
@@ -79,6 +80,7 @@ export function WorkoutPlanMetadataFields({
           aria-describedby={errors.description ? descriptionErrorId : undefined}
           placeholder="Dodatkowe informacje o planie treningowym..."
           className="mt-2 min-h-[100px] resize-y"
+          data-test-id="workout-plan-form-description"
         />
         {errors.description && (
           <p
@@ -106,7 +108,7 @@ export function WorkoutPlanMetadataFields({
           }
           disabled={disabled}
         >
-          <SelectTrigger id={partId} className="mt-2">
+          <SelectTrigger id={partId} className="mt-2" data-test-id="workout-plan-form-part">
             <SelectValue placeholder="Wybierz partię ciała" />
           </SelectTrigger>
           <SelectContent>

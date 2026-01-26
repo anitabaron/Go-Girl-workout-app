@@ -97,8 +97,13 @@ export function WorkoutPlanExerciseItem({
       errors[`${exerciseKey}.estimated_set_time_seconds`];
   }
 
+  // Generate stable test ID based on exercise_id or id
+  const exerciseTestId = exercise.id 
+    ? `workout-plan-exercise-item-${exercise.id}`
+    : `workout-plan-exercise-item-${exercise.exercise_id}-${index}`;
+
   return (
-    <Card>
+    <Card data-test-id={exerciseTestId}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -124,6 +129,7 @@ export function WorkoutPlanExerciseItem({
             disabled={disabled}
             className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
             aria-label="Usuń ćwiczenie z planu"
+            data-test-id={`${exerciseTestId}-remove-button`}
           >
             <Trash2 className="size-4" />
           </Button>
@@ -146,7 +152,7 @@ export function WorkoutPlanExerciseItem({
               }
               disabled={disabled}
             >
-              <SelectTrigger id={sectionTypeId} className="mt-1">
+              <SelectTrigger id={sectionTypeId} className="mt-1" data-test-id={`${exerciseTestId}-section-type`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -217,7 +223,7 @@ export function WorkoutPlanExerciseItem({
           <label className="block text-xs font-medium text-muted-foreground mb-2">
             Parametry planowane (opcjonalne)
           </label>
-          <PlannedParamsEditor
+            <PlannedParamsEditor
             params={{
               planned_sets: exercise.planned_sets,
               planned_reps: exercise.planned_reps,
@@ -229,6 +235,7 @@ export function WorkoutPlanExerciseItem({
             onChange={(field, value) => onChange({ [field]: value })}
             errors={plannedParamsErrors}
             disabled={disabled}
+            data-test-id-prefix={exerciseTestId}
           />
         </div>
       </CardContent>

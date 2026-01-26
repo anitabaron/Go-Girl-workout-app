@@ -46,6 +46,7 @@ export function CancelButton({
         variant="outline"
         onClick={handleCancel}
         disabled={showDialog}
+        data-test-id="workout-plan-form-cancel-button"
       >
         Anuluj
       </Button>

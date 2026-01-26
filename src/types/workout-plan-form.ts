@@ -101,6 +101,7 @@ export type WorkoutPlanExercisesListProps = {
   onMoveExercise: (index: number, direction: "up" | "down") => void;
   errors: Record<string, string>;
   disabled: boolean;
+  "data-test-id"?: string;
 };
 
 /**
@@ -126,6 +127,7 @@ export type PlannedParamsEditorProps = {
   onChange: (field: string, value: number | null) => void;
   errors: Record<string, string>;
   disabled: boolean;
+  "data-test-id-prefix"?: string;
 };
 
 /**
