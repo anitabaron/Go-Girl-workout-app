@@ -165,6 +165,54 @@ Aplikacja wykorzystuje następujące narzędzia testowe:
 
 **Priorytet**: Średni-Wysoki
 
+#### 3.3.1 Ważne uwagi dotyczące testów E2E
+
+**⚠️ Problem z cache'owaniem danych po edycji**
+
+Po edycji planu treningowego (lub innych encji), testy mogą napotkać problem z cache'owaniem danych w przeglądarce. Next.js i przeglądarka mogą cache'ować dane, co prowadzi do sytuacji, gdzie test sprawdza stare dane zamiast zaktualizowanych.
+
+**Objawy problemu**:
+- Test sprawdza, że stara nazwa planu nie istnieje, ale nadal jest widoczna w liście
+- Test sprawdza zaktualizowane dane, ale widzi stare wartości
+- Test przechodzi na głównej gałęzi, ale nie przechodzi na branchu z wprowadzonymi zmianami
+
+**Rozwiązanie**:
+Po edycji i nawigacji do strony listy, **zawsze dodaj `page.reload()`** przed weryfikacją danych:
+
+```typescript
+// ❌ Błędne - może pokazywać cache'owane dane
+await workoutPlanFormPage.submit();
+await workoutPlanFormPage.waitForSaveNavigation();
+await workoutPlansPage.goto();
+await workoutPlansPage.waitForList();
+const oldNameExists = await workoutPlansPage.hasPlanWithName(oldName); // Może zwrócić true z cache
+
+// ✅ Poprawne - odświeża stronę przed weryfikacją
+await workoutPlanFormPage.submit();
+await workoutPlanFormPage.waitForSaveNavigation();
+await workoutPlansPage.goto();
+await page.waitForLoadState("networkidle");
+await page.reload(); // ⚠️ WAŻNE: Odśwież stronę, aby pobrać najnowsze dane z serwera
+await page.waitForLoadState("networkidle");
+await workoutPlansPage.waitForList();
+const oldNameExists = await workoutPlansPage.hasPlanWithName(oldName); // Teraz zwróci poprawną wartość
+```
+
+**Kiedy używać `page.reload()`**:
+- Po edycji planu treningowego i nawigacji do listy
+- Po edycji ćwiczenia i nawigacji do listy
+- Po każdej operacji modyfikującej dane, gdy następnie weryfikujesz zmiany na liście
+- Gdy test sprawdza, że stara wartość nie istnieje, a nowa istnieje
+
+**Kiedy NIE używać `page.reload()`**:
+- Bezpośrednio po utworzeniu nowego obiektu (dane są świeże)
+- Gdy weryfikujesz dane na stronie szczegółów bezpośrednio po edycji (przekierowanie już pokazuje nowe dane)
+- Gdy test sprawdza tylko UI bez weryfikacji danych z serwera
+
+**Dodatkowe wskazówki**:
+- Zawsze czekaj na `networkidle` po `reload()`, aby upewnić się, że wszystkie dane zostały załadowane
+- W przypadku testów edycji, rozważ użycie `waitForURL()` z konkretnym URL zamiast ogólnego `waitForSaveNavigation()`, aby upewnić się, że jesteś na właściwej stronie
+
 ### 3.4 Testy bezpieczeństwa (Security Tests)
 
 **Cel**: Weryfikacja zabezpieczeń aplikacji i izolacji danych.
@@ -409,6 +457,9 @@ Aplikacja wykorzystuje następujące narzędzia testowe:
 **Oczekiwany rezultat**:
 - Plan zostaje zaktualizowany
 - Zmiany są widoczne w szczegółach planu
+
+**⚠️ Ważna uwaga dla testów E2E**:
+Po edycji planu i nawigacji do listy planów, **zawsze użyj `page.reload()`** przed weryfikacją, że stara nazwa nie istnieje, a nowa istnieje. Next.js może cache'ować dane, co prowadzi do fałszywych negatywów w testach. Zobacz sekcję 3.3.1 dla szczegółów.
 
 ### 4.4 Sesje treningowe
 
@@ -1306,10 +1357,15 @@ Plan powinien być traktowany jako żywy dokument, który ewoluuje wraz z rozwoj
 
 ---
 
-**Wersja dokumentu**: 1.1  
+**Wersja dokumentu**: 1.2  
 **Data utworzenia**: 2025-01-XX  
-**Ostatnia aktualizacja**: 2025-01-XX  
+**Ostatnia aktualizacja**: 2025-01-26  
 **Autor**: Zespół Go Girl Workout App
+
+**Zmiany w wersji 1.2**:
+- Dodano sekcję 3.3.1 z ważnymi uwagami dotyczącymi cache'owania danych w testach E2E
+- Dodano adnotację w TC-WP-002 o konieczności użycia `page.reload()` po edycji planu
+- Dokumentacja problemu z cache'owaniem danych i jego rozwiązania dla przyszłych testów
 
 **Zmiany w wersji 1.1**:
 - Zaktualizowano narzędzia testowe: Vitest dla testów jednostkowych zamiast Jest
