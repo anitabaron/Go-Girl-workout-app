@@ -176,36 +176,59 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     await workoutPlansPage.goto();
     await page.waitForLoadState("networkidle", { timeout: 60000 });
     
-    // Reload to ensure we see the latest data from the server
-    await page.reload();
+    // Hard reload with cache bypass to ensure we see the latest data from the server
+    await page.reload({ waitUntil: "networkidle" });
     await page.waitForLoadState("networkidle", { timeout: 60000 });
+    
+    // Additional wait to ensure data is fully loaded
+    await page.waitForTimeout(1000);
 
     // Step 15: Verify the plan was updated
     await workoutPlansPage.waitForList();
 
-    // Old name should not exist (use polling to handle cache issues)
+    // First verify new name exists (confirms update worked)
+    // This is more reliable than checking if old name doesn't exist
+    let reloadCount = 0;
     await expect.poll(
       async () => {
-        return await workoutPlansPage.hasPlanWithName(planName);
-      },
-      {
-        message: `Old plan name "${planName}" should not exist`,
-        timeout: 30000, // Increased for CI pipeline
-        intervals: [500, 1000, 2000],
-      }
-    ).toBe(false);
-
-    // New name should exist
-    await expect.poll(
-      async () => {
+        // Reload page periodically to bypass cache (every 3rd attempt)
+        reloadCount++;
+        if (reloadCount > 1 && reloadCount % 3 === 0) {
+          await page.reload({ waitUntil: "networkidle" });
+          await workoutPlansPage.waitForList();
+        }
         return await workoutPlansPage.hasPlanWithName(updatedPlanName);
       },
       {
         message: `New plan name "${updatedPlanName}" should exist`,
         timeout: 30000, // Increased for CI pipeline
-        intervals: [500, 1000, 2000],
+        intervals: [1000, 2000, 3000],
       }
     ).toBe(true);
+
+    // Reload once more before checking old name to ensure fresh data
+    await page.reload({ waitUntil: "networkidle" });
+    await workoutPlansPage.waitForList();
+    await page.waitForTimeout(500);
+
+    // Then verify old name does not exist (use polling with periodic cache bypass)
+    reloadCount = 0;
+    await expect.poll(
+      async () => {
+        // Reload page periodically to bypass cache (every 3rd attempt)
+        reloadCount++;
+        if (reloadCount > 1 && reloadCount % 3 === 0) {
+          await page.reload({ waitUntil: "networkidle" });
+          await workoutPlansPage.waitForList();
+        }
+        return await workoutPlansPage.hasPlanWithName(planName);
+      },
+      {
+        message: `Old plan name "${planName}" should not exist`,
+        timeout: 30000, // Increased for CI pipeline
+        intervals: [1000, 2000, 3000],
+      }
+    ).toBe(false);
   });
 
   test("should validate that plan must have at least one exercise (TC-WP-001 edge case)", async ({
