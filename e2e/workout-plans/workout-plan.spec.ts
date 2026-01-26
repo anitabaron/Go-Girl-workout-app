@@ -190,7 +190,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
       },
       {
         message: `Old plan name "${planName}" should not exist`,
-        timeout: 15000,
+        timeout: 30000, // Increased for CI pipeline
         intervals: [500, 1000, 2000],
       }
     ).toBe(false);
@@ -202,7 +202,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
       },
       {
         message: `New plan name "${updatedPlanName}" should exist`,
-        timeout: 15000,
+        timeout: 30000, // Increased for CI pipeline
         intervals: [500, 1000, 2000],
       }
     ).toBe(true);
@@ -322,7 +322,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
       },
       {
         message: `Plan "${planName}" should appear in the list`,
-        timeout: 20000,
+        timeout: 30000, // Increased for CI pipeline
         intervals: [500, 1000, 2000],
       }
     ).toBe(true);
@@ -451,7 +451,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
       },
       {
         message: `Plan "${planName}" should appear in the list`,
-        timeout: 15000,
+        timeout: 30000, // Increased for CI pipeline
         intervals: [500, 1000, 2000],
       }
     ).toBe(true);

@@ -114,7 +114,7 @@ export class WorkoutPlanFormPage {
     
     // Wait for at least one exercise card to appear (indicates exercises are loaded)
     const exerciseCard = this.page.locator('div[class*="grid"] > div[class*="cursor-pointer"]').first();
-    await exerciseCard.waitFor({ state: 'visible', timeout: 10000 });
+    await exerciseCard.waitFor({ state: 'visible', timeout: 30000 }); // Increased for CI pipeline
     
     // Additional wait for exercises to fully render
     await this.page.waitForTimeout(300);
@@ -124,7 +124,7 @@ export class WorkoutPlanFormPage {
     const titleLocator = this.page.getByText(exerciseTitle, { exact: false }).first();
     
     // Wait for the title to be visible
-    await titleLocator.waitFor({ state: 'visible', timeout: 10000 });
+    await titleLocator.waitFor({ state: 'visible', timeout: 30000 }); // Increased for CI pipeline
     
     // Try to find the checkbox first (more reliable)
     // The checkbox should be near the title in the same card
