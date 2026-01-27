@@ -128,10 +128,28 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     await workoutPlanFormPage.submit();
     await workoutPlanFormPage.waitForSaveNavigation();
 
+    // Wait for page to fully load after navigation
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
+
     // Step 10: Verify plan was created and appears in the list
+    // Reload to ensure we see the latest data from the server
+    await page.reload();
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
     await workoutPlansPage.waitForList();
-    const planExists = await workoutPlansPage.hasPlanWithName(planName);
-    expect(planExists).toBe(true);
+
+    // Use polling to ensure plan is visible (handles CI timing issues)
+    await expect
+      .poll(
+        async () => {
+          return await workoutPlansPage.hasPlanWithName(planName);
+        },
+        {
+          message: `Plan "${planName}" should appear in the list`,
+          timeout: 30000,
+          intervals: [500, 1000, 2000],
+        },
+      )
+      .toBe(true);
 
     // Verify plan card exists and contains plan name
     const planCard = await workoutPlansPage.getPlanCardByName(planName);
@@ -171,20 +189,17 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // Step 13: Save the changes
     await workoutPlanFormPage.submit();
     await workoutPlanFormPage.waitForSaveNavigation();
-    
+
     // Wait for page to fully load after navigation
     await page.waitForLoadState("networkidle", { timeout: 60000 });
-    
+
     // Step 14: Verify we're redirected to the plans list page (not details page)
     const currentUrl = page.url();
     expect(currentUrl).toMatch(/\/workout-plans\/?$/);
-    
+
     // Hard reload with cache bypass to ensure we see the latest data from the server
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForLoadState("networkidle", { timeout: 60000 });
-    
-    // Additional wait to ensure data is fully loaded
-    await page.waitForTimeout(1000);
 
     // Step 15: Verify the plan was updated on list page
     await workoutPlansPage.waitForList();
@@ -192,22 +207,24 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     // First verify new name exists (confirms update worked)
     // This is more reliable than checking if old name doesn't exist
     let reloadCount = 0;
-    await expect.poll(
-      async () => {
-        // Reload page periodically to bypass cache (every 3rd attempt)
-        reloadCount++;
-        if (reloadCount > 1 && reloadCount % 3 === 0) {
-          await page.reload({ waitUntil: "networkidle" });
-          await workoutPlansPage.waitForList();
-        }
-        return await workoutPlansPage.hasPlanWithName(updatedPlanName);
-      },
-      {
-        message: `New plan name "${updatedPlanName}" should exist`,
-        timeout: 20000, // Reduced since we already verified on details page
-        intervals: [1000, 2000, 3000],
-      }
-    ).toBe(true);
+    await expect
+      .poll(
+        async () => {
+          // Reload page periodically to bypass cache (every 3rd attempt)
+          reloadCount++;
+          if (reloadCount > 1 && reloadCount % 3 === 0) {
+            await page.reload({ waitUntil: "networkidle" });
+            await workoutPlansPage.waitForList();
+          }
+          return await workoutPlansPage.hasPlanWithName(updatedPlanName);
+        },
+        {
+          message: `New plan name "${updatedPlanName}" should exist`,
+          timeout: 20000, // Reduced since we already verified on details page
+          intervals: [1000, 2000, 3000],
+        },
+      )
+      .toBe(true);
 
     // Reload once more before checking old name to ensure fresh data
     await page.reload({ waitUntil: "networkidle" });
@@ -216,22 +233,24 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
 
     // Then verify old name does not exist (use polling with periodic cache bypass)
     reloadCount = 0;
-    await expect.poll(
-      async () => {
-        // Reload page periodically to bypass cache (every 3rd attempt)
-        reloadCount++;
-        if (reloadCount > 1 && reloadCount % 3 === 0) {
-          await page.reload({ waitUntil: "networkidle" });
-          await workoutPlansPage.waitForList();
-        }
-        return await workoutPlansPage.hasPlanWithName(planName);
-      },
-      {
-        message: `Old plan name "${planName}" should not exist`,
-        timeout: 30000, // Increased for CI pipeline
-        intervals: [1000, 2000, 3000],
-      }
-    ).toBe(false);
+    await expect
+      .poll(
+        async () => {
+          // Reload page periodically to bypass cache (every 3rd attempt)
+          reloadCount++;
+          if (reloadCount > 1 && reloadCount % 3 === 0) {
+            await page.reload({ waitUntil: "networkidle" });
+            await workoutPlansPage.waitForList();
+          }
+          return await workoutPlansPage.hasPlanWithName(planName);
+        },
+        {
+          message: `Old plan name "${planName}" should not exist`,
+          timeout: 30000, // Increased for CI pipeline
+          intervals: [1000, 2000, 3000],
+        },
+      )
+      .toBe(false);
   });
 
   test("should validate that plan must have at least one exercise (TC-WP-001 edge case)", async ({
@@ -326,31 +345,33 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
 
     await workoutPlanFormPage.submit();
     await workoutPlanFormPage.waitForSaveNavigation();
-    
+
     // After save, we're redirected to list page
     await page.waitForLoadState("networkidle", { timeout: 60000 });
-    
+
     // Reload to ensure we see the latest data from the server
     await page.reload();
     await page.waitForLoadState("networkidle", { timeout: 60000 });
-    
+
     await workoutPlansPage.waitForList();
 
     // Step 4: Get plan ID and navigate to details
     // Use polling to handle potential timing issues
     let planId: string | null = null;
-    await expect.poll(
-      async () => {
-        planId = await workoutPlansPage.getPlanIdByName(planName);
-        return planId !== null;
-      },
-      {
-        message: `Plan "${planName}" should appear in the list`,
-        timeout: 30000, // Increased for CI pipeline
-        intervals: [500, 1000, 2000],
-      }
-    ).toBe(true);
-    
+    await expect
+      .poll(
+        async () => {
+          planId = await workoutPlansPage.getPlanIdByName(planName);
+          return planId !== null;
+        },
+        {
+          message: `Plan "${planName}" should appear in the list`,
+          timeout: 30000, // Increased for CI pipeline
+          intervals: [500, 1000, 2000],
+        },
+      )
+      .toBe(true);
+
     expect(planId).not.toBeNull();
 
     if (planId) {
@@ -375,23 +396,55 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
 
       await workoutPlanFormPage.submit();
       await workoutPlanFormPage.waitForSaveNavigation();
-      
+
       // After edit, we're redirected to list page
       await page.waitForLoadState("networkidle", { timeout: 60000 });
-      
+
+      // Reload to ensure we see the latest data from the server (per test-plan.md)
+      await page.reload();
+      await page.waitForLoadState("networkidle", { timeout: 60000 });
+      await workoutPlansPage.waitForList();
+
+      // Verify new name exists on list page using polling
+      await expect
+        .poll(
+          async () => {
+            return await workoutPlansPage.hasPlanWithName(updatedPlanName);
+          },
+          {
+            message: `Updated plan name "${updatedPlanName}" should exist`,
+            timeout: 30000,
+            intervals: [500, 1000, 2000],
+          },
+        )
+        .toBe(true);
+
       // Navigate to details page to verify changes
       await page.goto(`/workout-plans/${planId}`);
       await page.waitForLoadState("networkidle", { timeout: 60000 });
-      
+
       // Refresh the page to ensure we see the latest data from the server
       await page.reload();
       await page.waitForLoadState("networkidle", { timeout: 60000 });
-      
-      // Verify updated data is displayed in details
-      const updatedPageContent = await page.textContent("body");
-      expect(updatedPageContent).toContain(updatedPlanName);
-      expect(updatedPageContent).toContain("Updated description");
-      expect(updatedPageContent).not.toContain("Original description");
+
+      // Verify updated data is displayed in details using polling
+      await expect
+        .poll(
+          async () => {
+            const pageContent = await page.textContent("body");
+            return (
+              pageContent?.includes(updatedPlanName) &&
+              pageContent?.includes("Updated description") &&
+              !pageContent?.includes("Original description")
+            );
+          },
+          {
+            message: "Updated plan data should be visible in details",
+            timeout: 30000,
+            intervals: [500, 1000, 2000],
+          },
+        )
+        .toBe(true);
     }
   });
 
@@ -463,27 +516,49 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     await workoutPlanFormPage.submit();
     await workoutPlanFormPage.waitForSaveNavigation();
 
+    // Wait for page to fully load after navigation
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
+
     // Step 6: Verify plan was created
-    await workoutPlansPage.waitForList();
-    
-    // Reload to ensure we see the latest data
+    // Reload to ensure we see the latest data from the server (per test-plan.md)
     await page.reload();
     await page.waitForLoadState("networkidle", { timeout: 60000 });
     await workoutPlansPage.waitForList();
-    
+
     // Use polling to ensure plan is visible
-    await expect.poll(
-      async () => {
-        return await workoutPlansPage.hasPlanWithName(planName);
-      },
-      {
-        message: `Plan "${planName}" should appear in the list`,
-        timeout: 30000, // Increased for CI pipeline
-        intervals: [500, 1000, 2000],
-      }
-    ).toBe(true);
+    await expect
+      .poll(
+        async () => {
+          return await workoutPlansPage.hasPlanWithName(planName);
+        },
+        {
+          message: `Plan "${planName}" should appear in the list`,
+          timeout: 30000, // Increased for CI pipeline
+          intervals: [500, 1000, 2000],
+        },
+      )
+      .toBe(true);
 
     // Step 7: Edit the plan and verify all exercises are still there
+    // Reload before editing to ensure we have the latest data
+    await page.reload();
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
+    await workoutPlansPage.waitForList();
+
+    // Use polling to ensure plan is visible before editing
+    await expect
+      .poll(
+        async () => {
+          return await workoutPlansPage.hasPlanWithName(planName);
+        },
+        {
+          message: `Plan "${planName}" should be visible before editing`,
+          timeout: 15000,
+          intervals: [500, 1000, 2000],
+        },
+      )
+      .toBe(true);
+
     await workoutPlansPage.clickEditPlanByName(planName);
     await workoutPlanFormPage.waitForForm();
 
@@ -516,12 +591,28 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
     await workoutPlanFormPage.submit();
     await workoutPlanFormPage.waitForSaveNavigation();
 
+    // Wait for page to fully load after navigation
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
+
     // Step 10: Verify the plan was updated
     // After edit, we're redirected to list page
-    await page.goto('/workout-plans');
-    await page.waitForLoadState('networkidle');
+    // Reload to ensure we see the latest data from the server (per test-plan.md)
+    await page.reload();
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
     await workoutPlansPage.waitForList();
-    const planStillExists = await workoutPlansPage.hasPlanWithName(planName);
-    expect(planStillExists).toBe(true);
+
+    // Use polling to ensure plan is still visible
+    await expect
+      .poll(
+        async () => {
+          return await workoutPlansPage.hasPlanWithName(planName);
+        },
+        {
+          message: `Plan "${planName}" should still exist after edit`,
+          timeout: 30000,
+          intervals: [500, 1000, 2000],
+        },
+      )
+      .toBe(true);
   });
 });
