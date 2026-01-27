@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -21,6 +21,7 @@ export function AddSnapshotExerciseButton({
   planId,
 }: AddSnapshotExerciseButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [exerciseExists, setExerciseExists] = useState<boolean | null>(null);
   const router = useRouter();
 
   // Konwersja danych snapshot na dane ćwiczenia
@@ -109,6 +110,44 @@ export function AddSnapshotExerciseButton({
     return exerciseData;
   };
 
+  // Sprawdź czy ćwiczenie już istnieje w bazie przed wyświetleniem przycisku
+  useEffect(() => {
+    if (exercise.is_exercise_in_library === false && exercise.exercise_title) {
+      const checkExerciseExists = async () => {
+        try {
+          const title = exercise.exercise_title;
+          if (!title) return;
+          
+          const response = await fetch(
+            `/api/exercises/by-title?title=${encodeURIComponent(title)}`
+          );
+          
+          if (response.ok) {
+            const existingExercise = await response.json();
+            if (existingExercise && existingExercise.id) {
+              setExerciseExists(true);
+            } else {
+              setExerciseExists(false);
+            }
+          } else if (response.status === 404) {
+            setExerciseExists(false);
+          } else {
+            // W przypadku błędu, zakładamy że nie istnieje (przycisk się pokaże)
+            setExerciseExists(false);
+          }
+        } catch (error) {
+          console.error("Error checking if exercise exists:", error);
+          // W przypadku błędu, zakładamy że nie istnieje
+          setExerciseExists(false);
+        }
+      };
+
+      checkExerciseExists();
+    } else {
+      setExerciseExists(false);
+    }
+  }, [exercise.is_exercise_in_library, exercise.exercise_title]);
+
   const handleAddToLibrary = async () => {
     if (isLoading) return;
 
@@ -118,65 +157,77 @@ export function AddSnapshotExerciseButton({
       // Konwertuj snapshot na dane ćwiczenia
       const exerciseData = convertSnapshotToExerciseData();
 
-      // 1. Utwórz ćwiczenie w bazie (walidacja znormalizowanej nazwy nastąpi automatycznie)
-      const createResponse = await fetch("/api/exercises", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(exerciseData),
-      });
+      // 1. Najpierw sprawdź czy ćwiczenie już istnieje
+      const checkResponse = await fetch(
+        `/api/exercises/by-title?title=${encodeURIComponent(exerciseData.title)}`
+      );
 
       let exerciseId: string;
 
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json().catch(() => ({}));
-        
-        if (createResponse.status === 409) {
-          // Ćwiczenie już istnieje - znajdź je w bazie i użyj jego ID
-          // Użyj dokładnego wyszukiwania po znormalizowanej nazwie
-          const searchResponse = await fetch(
-            `/api/exercises/by-title?title=${encodeURIComponent(exerciseData.title)}`
-          );
+      if (checkResponse.ok) {
+        // Ćwiczenie już istnieje
+        const existingExercise = await checkResponse.json();
+        if (existingExercise && existingExercise.id) {
+          exerciseId = existingExercise.id;
+          toast.info("Ćwiczenie już istnieje w bazie. Łączenie z istniejącym ćwiczeniem.");
+        } else {
+          // Nie powinno się zdarzyć, ale obsługujemy
+          throw new Error("Ćwiczenie istnieje, ale nie udało się pobrać jego ID.");
+        }
+      } else if (checkResponse.status === 404) {
+        // Ćwiczenie nie istnieje - utwórz je
+        const createResponse = await fetch("/api/exercises", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(exerciseData),
+        });
 
-          if (!searchResponse.ok) {
-            if (searchResponse.status === 404) {
+        if (!createResponse.ok) {
+          const errorData = await createResponse.json().catch(() => ({}));
+          
+          if (createResponse.status === 409) {
+            // Ćwiczenie zostało utworzone między sprawdzeniem a utworzeniem - znajdź je
+            const searchResponse = await fetch(
+              `/api/exercises/by-title?title=${encodeURIComponent(exerciseData.title)}`
+            );
+
+            if (!searchResponse.ok || searchResponse.status === 404) {
               toast.error(
                 "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć."
               );
-            } else {
-              toast.error(
-                "Wystąpił błąd podczas wyszukiwania ćwiczenia."
-              );
+              return;
             }
-            return;
-          }
 
-          const existingExercise = await searchResponse.json();
+            const foundExercise = await searchResponse.json();
+            if (!foundExercise || !foundExercise.id) {
+              toast.error(
+                "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć."
+              );
+              return;
+            }
 
-          if (!existingExercise || !existingExercise.id) {
+            exerciseId = foundExercise.id;
+            toast.info("Ćwiczenie już istnieje w bazie. Łączenie z istniejącym ćwiczeniem.");
+          } else if (createResponse.status === 400) {
             toast.error(
-              "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć."
+              errorData.message || "Nieprawidłowe dane ćwiczenia."
             );
             return;
+          } else {
+            throw new Error(
+              errorData.message || "Nie udało się dodać ćwiczenia do bazy."
+            );
           }
-
-          exerciseId = existingExercise.id;
-          toast.info("Ćwiczenie już istnieje w bazie. Łączenie z istniejącym ćwiczeniem.");
-        } else if (createResponse.status === 400) {
-          toast.error(
-            errorData.message || "Nieprawidłowe dane ćwiczenia."
-          );
-          return;
         } else {
-          throw new Error(
-            errorData.message || "Nie udało się dodać ćwiczenia do bazy."
-          );
+          const createdExercise = await createResponse.json();
+          exerciseId = createdExercise.id;
         }
       } else {
-        const createdExercise = await createResponse.json();
-        exerciseId = createdExercise.id;
+        throw new Error("Wystąpił błąd podczas sprawdzania czy ćwiczenie istnieje.");
       }
+
 
       // 2. Zaktualizuj wszystkie wystąpienia snapshotu w planie (używając snapshot_id)
       if (!exercise.snapshot_id) {
@@ -249,6 +300,16 @@ export function AddSnapshotExerciseButton({
 
   // Przycisk wyświetla się tylko dla ćwiczeń, które nie są w bibliotece
   if (exercise.is_exercise_in_library !== false) {
+    return null;
+  }
+
+  // Jeśli ćwiczenie już istnieje, nie pokazuj przycisku
+  if (exerciseExists === true) {
+    return null;
+  }
+
+  // Jeśli jeszcze sprawdzamy, nie pokazuj przycisku (lub pokaż z disabled)
+  if (exerciseExists === null) {
     return null;
   }
 

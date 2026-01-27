@@ -744,10 +744,11 @@ export async function importWorkoutPlanService(
         throw mapDbError(findError);
       }
 
-      if (foundExercise) {
+      if (foundExercise && foundExercise.id) {
         // Znaleziono ćwiczenie - użyj exercise_id
         exercise.exercise_id = foundExercise.id;
         exercise.match_by_name = undefined; // Usuń match_by_name, bo już mamy exercise_id
+        console.log(`[importWorkoutPlanService] Znaleziono ćwiczenie: "${exercise.match_by_name}" -> exercise_id: ${foundExercise.id}`);
       } else {
         // Nie znaleziono - użyj match_by_name jako exercise_title (snapshot)
         exercise.exercise_title = exercise.match_by_name;
@@ -760,6 +761,7 @@ export async function importWorkoutPlanService(
         }
         // exercise_details pozostaje bez zmian (jeśli było podane)
         exercise.match_by_name = undefined; // Usuń match_by_name, bo używamy snapshot
+        console.log(`[importWorkoutPlanService] Nie znaleziono ćwiczenia: "${exercise.exercise_title}" (znormalizowane: "${normalizedName}") - używam snapshot`);
       }
     }
   }

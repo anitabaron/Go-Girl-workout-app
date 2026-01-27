@@ -4,6 +4,7 @@ import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
 import { Badge } from "@/components/ui/badge";
 import { WorkoutPlanActions } from "@/components/workout-plans/details/workout-plan-actions";
 import { AddSnapshotExerciseButton } from "@/components/workout-plans/details/add-snapshot-exercise-button";
+import { ExerciseLibraryBadge } from "@/components/workout-plans/details/exercise-library-badge";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 import {
@@ -11,7 +12,6 @@ import {
   EXERCISE_TYPE_LABELS,
 } from "@/lib/constants";
 import { formatDuration, formatTotalDuration } from "@/lib/utils/time-format";
-import { AlertCircle } from "lucide-react";
 
 type WorkoutPlanDetailsPageProps = {
   params: Promise<{
@@ -144,12 +144,7 @@ export default async function WorkoutPlanDetailsPage({
                         <span className="text-sm text-zinc-600 dark:text-zinc-400">
                           Pozycja: {exercise.section_order}
                         </span>
-                        {exercise.is_exercise_in_library === false && (
-                          <Badge variant="outline" className="ml-2 border-amber-500 text-amber-600 dark:border-amber-400 dark:text-amber-400">
-                            <AlertCircle className="mr-1 h-3 w-3" />
-                            Nie w bibliotece
-                          </Badge>
-                        )}
+                        <ExerciseLibraryBadge exercise={exercise} />
                       </div>
                       <h3 className="text-lg font-semibold">
                         {exercise.exercise_title || `Ćwiczenie #${index + 1}`}
