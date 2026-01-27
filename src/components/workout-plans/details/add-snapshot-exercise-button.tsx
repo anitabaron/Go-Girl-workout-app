@@ -57,8 +57,8 @@ export function AddSnapshotExerciseButton({
     };
 
     // Dodaj opis (details) jeśli dostępny
-    if (exercise.exercise_description) {
-      exerciseData.details = exercise.exercise_description;
+    if (exercise.exercise_details) {
+      exerciseData.details = exercise.exercise_details;
     }
 
     // Dodaj reps lub duration_seconds (musi być dokładnie jedno)

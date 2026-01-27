@@ -517,11 +517,10 @@ export async function listWorkoutPlanExercises(
       planned_duration_seconds: row.planned_duration_seconds,
       planned_rest_seconds: row.planned_rest_seconds,
       estimated_set_time_seconds: finalEstimatedSetTime, // Pole z workout_plan_exercises
-      exercise_details: rowWithSnapshot.exercise_details ?? null, // Pole z workout_plan_exercises (wymagane przez DTO)
+      exercise_details: exerciseDetails, // Pole z workout_plan_exercises (z snapshot lub z exercises.details)
       exercise_title: exerciseTitle,
       exercise_type: exerciseType,
       exercise_part: exercisePart,
-      exercise_description: exerciseDetails, // Mapuj exercise_details na exercise_description w DTO
       exercise_estimated_set_time_seconds: finalEstimatedSetTime,
       exercise_rest_after_series_seconds: exercise?.rest_after_series_seconds ?? null,
       planned_rest_after_series_seconds: finalRestAfterSeries,

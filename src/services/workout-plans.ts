@@ -714,7 +714,7 @@ export async function importWorkoutPlanService(
         if (!exercise.exercise_part) {
           exercise.exercise_part = parsed.part ?? undefined;
         }
-        // exercise_description pozostaje bez zmian (jeśli było podane)
+        // exercise_details pozostaje bez zmian (jeśli było podane)
         exercise.match_by_name = undefined; // Usuń match_by_name, bo używamy snapshot
       }
     }
@@ -834,7 +834,7 @@ export async function importWorkoutPlanService(
         exercise_title: e.exercise_title ?? null,
         exercise_type: e.exercise_type ?? null,
         exercise_part: e.exercise_part ?? null,
-        exercise_details: e.exercise_description ?? null, // Mapuj exercise_description z JSON na exercise_details w bazie
+        exercise_details: e.exercise_details ?? null,
         section_type: e.section_type,
         section_order: e.section_order,
         planned_sets: e.planned_sets,
@@ -860,7 +860,7 @@ export async function importWorkoutPlanService(
     throw mapDbError(fetchError);
   }
 
-  // exercise_description jest już w DTO z bazy (mapowane z exercise_details przez repository)
+  // exercise_details jest już w DTO z bazy
   const exercisesWithDescription = planWithExercises ?? [];
 
   // Oblicz i zaktualizuj szacunkowy całkowity czas treningu

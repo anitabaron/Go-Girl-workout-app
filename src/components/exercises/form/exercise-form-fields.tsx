@@ -69,7 +69,7 @@ export function ExerciseFormFields({
       {/* Type */}
       <div className="space-y-2">
         <label htmlFor="type" className="text-sm font-medium">
-          Typ <span className="text-destructive">*</span>
+          Typ
         </label>
         <Select
           value={fields.type}
@@ -102,7 +102,7 @@ export function ExerciseFormFields({
       {/* Part */}
       <div className="space-y-2">
         <label htmlFor="part" className="text-sm font-medium">
-          Partia <span className="text-destructive">*</span>
+          Partia
         </label>
         <Select
           value={fields.part}

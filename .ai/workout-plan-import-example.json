@@ -26,7 +26,7 @@
     {
       "exercise_title": "Deska klasyczna",
       "exercise_part": "Core",
-      "exercise_description": "Deska klasyczna w na prostych ramionach",
+      "exercise_details": "Deska klasyczna w na prostych ramionach",
       "section_type": "Main Workout",
       "section_order": 2,
       "planned_sets": 3,
@@ -38,7 +38,7 @@
     {
       "exercise_title": "Brzuszki",
       "exercise_part": "Core",
-      "exercise_description": "Brzuszki w pozycji leżąc na plecach",
+      "exercise_details": "Brzuszki w pozycji leżąc na plecach",
       "section_type": "Main Workout",
       "section_order": 3,
       "planned_sets": 4,
@@ -50,7 +50,7 @@
     {
       "exercise_title": "Rozciąganie core",
       "exercise_part": "Core",
-      "exercise_description": "Rozciąganie w pozycji leżąc na plecach",
+      "exercise_details": "Rozciąganie w pozycji leżąc na plecach",
       "section_type": "Cool-down",
       "section_order": 1,
       "planned_sets": 2,

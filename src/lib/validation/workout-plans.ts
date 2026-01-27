@@ -385,7 +385,7 @@ export const workoutPlanExerciseImportSchema = z
     exercise_title: z.string().trim().min(1).max(120).optional().nullable(),
     exercise_type: sectionTypeSchema.optional().nullable(),
     exercise_part: z.enum(exercisePartValues).optional().nullable(),
-    exercise_description: z.string().trim().max(1000).optional().nullable(),
+    exercise_details: z.string().trim().max(1000).optional().nullable(),
     // Wspólne pola
     section_type: sectionTypeSchema,
     section_order: sectionOrderSchema,

@@ -230,6 +230,18 @@ export default async function WorkoutPlanDetailsPage({
                     </div>
                   </div>
 
+                  {/* Szczegóły ćwiczenia */}
+                  {exercise.exercise_details && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2">
+                        Szczegóły
+                      </p>
+                      <p className="text-base whitespace-pre-wrap text-zinc-900 dark:text-zinc-50">
+                        {exercise.exercise_details}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Przycisk do dodawania ćwiczenia ze snapshotu do bazy */}
                   <AddSnapshotExerciseButton exercise={exercise} planId={id} />
                 </div>
