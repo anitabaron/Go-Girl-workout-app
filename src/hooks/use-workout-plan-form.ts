@@ -521,6 +521,10 @@ export function useWorkoutPlanForm({
         planned_rest_seconds: exercise.planned_rest_seconds ?? undefined,
         planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? undefined,
         estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? undefined,
+        // Pola snapshot - wymagane dla ćwiczeń ze snapshot (gdy exercise_id jest null)
+        exercise_title: exercise.exercise_title ?? undefined,
+        exercise_type: exercise.exercise_type ?? undefined,
+        exercise_part: exercise.exercise_part ?? undefined,
       })
     );
 
@@ -545,6 +549,10 @@ export function useWorkoutPlanForm({
         planned_rest_seconds: exercise.planned_rest_seconds ?? null,
         planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
         estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+        // Pola snapshot - wymagane dla ćwiczeń ze snapshot (gdy exercise_id jest null)
+        exercise_title: exercise.exercise_title ?? null,
+        exercise_type: exercise.exercise_type ?? null,
+        exercise_part: exercise.exercise_part ?? null,
       };
 
       // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego

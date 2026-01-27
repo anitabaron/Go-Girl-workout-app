@@ -442,10 +442,10 @@ export async function updateWorkoutPlanService(
 
     // Dodaj nowe ćwiczenia
     if (exercisesToCreate.length > 0) {
-      // Zweryfikuj czy wszystkie exercise_id należą do użytkownika
+      // Zweryfikuj czy wszystkie exercise_id należą do użytkownika (tylko dla ćwiczeń z exercise_id)
       const exerciseIdsToVerify = exercisesToCreate
         .map((e) => e.exercise_id)
-        .filter((id): id is string => id !== undefined);
+        .filter((id): id is string => id !== undefined && id !== null);
 
       if (exerciseIdsToVerify.length > 0) {
         const { data: ownedExercises, error: exerciseError } =
@@ -460,8 +460,9 @@ export async function updateWorkoutPlanService(
         );
 
         for (const newExercise of exercisesToCreate) {
+          // Sprawdź tylko ćwiczenia z exercise_id (nie snapshoty)
           if (
-            !newExercise.exercise_id ||
+            newExercise.exercise_id &&
             !ownedExerciseIds.has(newExercise.exercise_id)
           ) {
             throw new ServiceError(
@@ -472,10 +473,52 @@ export async function updateWorkoutPlanService(
         }
       }
 
+      // Generuj snapshot_id dla unikalnych snapshotów (podobnie jak w importWorkoutPlanService)
+      const snapshotIdMap = new Map<string, string>();
+      
+      const getSnapshotId = (
+        title: string | null | undefined,
+        type: string | null | undefined,
+        part: string | null | undefined
+      ): string | null => {
+        if (!title) {
+          return null;
+        }
+        
+        const typePart = type && part ? `|${type}|${part}` : type ? `|${type}|` : part ? `||${part}` : '';
+        const snapshotKey = `${title}${typePart}`;
+        
+        let snapshotId = snapshotIdMap.get(snapshotKey);
+        if (!snapshotId) {
+          snapshotId = randomUUID();
+          snapshotIdMap.set(snapshotKey, snapshotId);
+        }
+        
+        return snapshotId;
+      };
+
       // Przygotuj dane do wstawienia
-      const exercisesToInsert: WorkoutPlanExerciseInput[] =
-        exercisesToCreate.map((exercise) => ({
-          exercise_id: exercise.exercise_id!,
+      const exercisesToInsert: Array<WorkoutPlanExerciseInput & {
+        exercise_title?: string | null;
+        exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+        exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+        exercise_details?: string | null;
+        snapshot_id?: string | null;
+      }> = exercisesToCreate.map((exercise) => {
+        // Jeśli to snapshot (brak exercise_id), generuj/przypisz snapshot_id
+        const snapshotId = !exercise.exercise_id && exercise.exercise_title
+          ? getSnapshotId(exercise.exercise_title, exercise.exercise_type ?? null, exercise.exercise_part ?? null)
+          : null;
+
+        const exerciseDetails = (exercise as WorkoutPlanExerciseInput & { exercise_details?: string | null }).exercise_details;
+
+        return {
+          exercise_id: exercise.exercise_id ?? null,
+          snapshot_id: snapshotId,
+          exercise_title: exercise.exercise_title ?? null,
+          exercise_type: exercise.exercise_type ?? null,
+          exercise_part: exercise.exercise_part ?? null,
+          exercise_details: exerciseDetails ?? null,
           section_type: exercise.section_type!,
           section_order: exercise.section_order!,
           planned_sets: exercise.planned_sets ?? null,
@@ -484,7 +527,8 @@ export async function updateWorkoutPlanService(
           planned_rest_seconds: exercise.planned_rest_seconds ?? null,
           planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
           estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
-        }));
+        };
+      });
 
       // Wstaw nowe ćwiczenia
       const { error: insertError } = await insertWorkoutPlanExercises(

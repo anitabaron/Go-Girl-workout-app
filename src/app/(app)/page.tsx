@@ -33,7 +33,7 @@ export default async function Home({
       // Możemy sprawdzić przez próbę zmiany hasła lub przez sprawdzenie typu sesji
       // Dla uproszczenia, jeśli sesja istnieje i użytkownik nie jest w pełni zalogowany,
       // zakładamy, że to sesja recovery
-      
+
       // Po wymianie kodu na sesję, przekierowujemy do /reset-password/confirm
       // Hook w Client Component zweryfikuje typ sesji (recovery vs normal)
       // i obsłuży odpowiednio (reset hasła vs potwierdzenie emaila)
@@ -55,15 +55,12 @@ export default async function Home({
             width={450}
             height={180}
             priority
-            className="h-auto w-[280px] sm:w-[360px] md:w-[450px]"
+            className="h-auto w-[280px] sm:w-[360px] md:w-[350px]"
           />
           <div className="space-y-3">
-            <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-4xl md:text-5xl">
+            <h1 className="text-3xl font-extrabold tracking-tight text-destructive sm:text-3xl md:text-4xl">
               designed to help you stay on track with your goals
             </h1>
-            <p className="text-xl font-semibold text-destructive sm:text-2xl">
-              stay tuned
-            </p>
           </div>
         </div>
       </header>
@@ -74,7 +71,7 @@ export default async function Home({
       </main>
 
       {/* Footer */}
-      <footer className="bg-primary text-white pb-16">
+      <footer className="bg-primary text-white pb-16 md:pb-0">
         <div className="mx-auto w-full max-w-5xl px-6 py-6 text-center sm:px-10">
           <p className="text-lg font-bold">
             &quot;Strong today, unstoppable tomorrow.&quot;

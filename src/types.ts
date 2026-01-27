@@ -101,6 +101,7 @@ export type WorkoutPlanExerciseInput = Omit<
   exercise_title?: string | null;
   exercise_type?: ExerciseType | null;
   exercise_part?: ExercisePart | null;
+  exercise_details?: string | null; // Opis ćwiczenia (z JSON importu)
 };
 
 export type WorkoutPlanCreateCommand = Pick<
