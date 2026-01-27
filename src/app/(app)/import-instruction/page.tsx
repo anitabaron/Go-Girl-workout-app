@@ -2,7 +2,7 @@ import workoutPlanImportExample from "../../../../.ai/workout-plan-import-exampl
 
 export default function ImportInstructionPage() {
   return (
-    <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
+    <div className="min-h-screen pt-16 bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         <div className="space-y-6">
           {/* Header */}
