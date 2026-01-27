@@ -2,9 +2,10 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Info, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export function ImportPlanButton() {
   const [isImporting, setIsImporting] = useState(false);
@@ -83,15 +84,24 @@ export function ImportPlanButton() {
         disabled={isImporting}
         aria-label="Wybierz plik JSON do importu"
       />
-      <Button
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isImporting}
-        variant="outline"
-        aria-label="Importuj plan treningowy z pliku JSON"
-      >
-        <Upload className="mr-2 h-4 w-4" />
-        {isImporting ? "Importowanie..." : "Importuj plan json"}
-      </Button>
+      <div className="flex flex-col items-center gap-2">
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isImporting}
+          variant="outline"
+          aria-label="Importuj plan treningowy z pliku JSON"
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          {isImporting ? "Importowanie..." : "Importuj plan json"}
+        </Button>
+        <Link
+          href="/import-instruction"
+          className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2"
+        >
+          <Info className=" h-4 w-4" />
+          Instrukcja importu
+        </Link>
+      </div>
     </>
   );
 }

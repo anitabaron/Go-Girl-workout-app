@@ -32,6 +32,21 @@ describe("workoutPlanImportSchema", () => {
     expect(() => workoutPlanImportSchema.parse(valid)).not.toThrow();
   });
 
+  it("powinien zaakceptować plan z snapshot bez exercise_type (opcjonalne)", () => {
+    const valid = {
+      name: "Test Plan",
+      exercises: [
+        {
+          exercise_title: "Przysiady",
+          exercise_part: "Legs",
+          section_type: "Main Workout",
+          section_order: 1,
+        },
+      ],
+    };
+    expect(() => workoutPlanImportSchema.parse(valid)).not.toThrow();
+  });
+
   it("powinien odrzucić plan bez exercise_id i snapshot", () => {
     const invalid = {
       name: "Test Plan",

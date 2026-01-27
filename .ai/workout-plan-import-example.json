@@ -14,7 +14,7 @@
       "estimated_set_time_seconds": 300
     },
     {
-      "exercise_id": "38eb0b3f-2098-4acb-8868-2a8a20369208",
+      "match_by_name": "Deska boczna",
       "section_type": "Main Workout",
       "section_order": 1,
       "planned_sets": 3,
@@ -25,7 +25,6 @@
     },
     {
       "exercise_title": "Deska klasyczna",
-      "exercise_type": "Main Workout",
       "exercise_part": "Core",
       "section_type": "Main Workout",
       "section_order": 2,
@@ -37,7 +36,6 @@
     },
     {
       "exercise_title": "Brzuszki",
-      "exercise_type": "Main Workout",
       "exercise_part": "Core",
       "section_type": "Main Workout",
       "section_order": 3,
@@ -49,7 +47,6 @@
     },
     {
       "exercise_title": "Rozciąganie core",
-      "exercise_type": "Cool-down",
       "exercise_part": "Core",
       "section_type": "Cool-down",
       "section_order": 1,

@@ -20,6 +20,8 @@ import {
   updateWorkoutPlan,
   updateWorkoutPlanExercise,
 } from "@/repositories/workout-plans";
+import { findByNormalizedTitle } from "@/repositories/exercises";
+import { normalizeTitle } from "@/lib/validation/exercises";
 import type { PostgrestError } from "@supabase/supabase-js";
 
 /**
@@ -669,6 +671,34 @@ export async function importWorkoutPlanService(
   }
 
   const supabase = await createClient();
+
+  // Mapowanie match_by_name na exercise_id przez title_normalized
+  for (const exercise of parsed.exercises) {
+    if (exercise.match_by_name && !exercise.exercise_id) {
+      const normalizedName = normalizeTitle(exercise.match_by_name);
+      const { data: foundExercise, error: findError } = await findByNormalizedTitle(
+        supabase,
+        userId,
+        normalizedName
+      );
+
+      if (findError) {
+        throw mapDbError(findError);
+      }
+
+      if (foundExercise) {
+        // Znaleziono ćwiczenie - użyj exercise_id
+        exercise.exercise_id = foundExercise.id;
+        exercise.match_by_name = undefined; // Usuń match_by_name, bo już mamy exercise_id
+      } else {
+        // Nie znaleziono - użyj match_by_name jako exercise_title (snapshot)
+        exercise.exercise_title = exercise.match_by_name;
+        exercise.exercise_type = exercise.exercise_type ?? exercise.section_type;
+        exercise.exercise_part = exercise.exercise_part ?? parsed.part ?? "Legs";
+        exercise.match_by_name = undefined; // Usuń match_by_name, bo używamy snapshot
+      }
+    }
+  }
 
   // Dla ćwiczeń z exercise_id - sprawdź czy istnieją i należą do użytkownika
   const exerciseIds = parsed.exercises

@@ -356,7 +356,12 @@ export function validateWorkoutPlanBusinessRules(
 }
 
 /**
- * Schema dla ćwiczenia w planie przy imporcie (obsługuje exercise_id lub snapshot).
+ * Schema dla ćwiczenia w planie przy imporcie (obsługuje exercise_id, match_by_name lub snapshot).
+ * 
+ * Opcje:
+ * - exercise_id: UUID istniejącego ćwiczenia w bazie
+ * - match_by_name: nazwa ćwiczenia do znalezienia w bazie (znormalizowana, case-insensitive)
+ * - exercise_title + exercise_part (exercise_type opcjonalne): nowe ćwiczenie jako snapshot (nie istnieje w bazie)
  */
 export const workoutPlanExerciseImportSchema = z
   .object({
@@ -369,7 +374,9 @@ export const workoutPlanExerciseImportSchema = z
       )
       .optional()
       .nullable(),
-    // Opcja B: nowe ćwiczenie przez snapshot
+    // Opcja B: istniejące ćwiczenie przez nazwę (znormalizowaną) - system znajdzie exercise_id
+    match_by_name: z.string().trim().min(1).max(120).optional().nullable(),
+    // Opcja C: nowe ćwiczenie przez snapshot (nie istnieje w bazie)
     exercise_title: z.string().trim().min(1).max(120).optional().nullable(),
     exercise_type: sectionTypeSchema.optional().nullable(),
     exercise_part: z.enum(exercisePartValues).optional().nullable(),
@@ -386,16 +393,25 @@ export const workoutPlanExerciseImportSchema = z
   .strict()
   .superRefine((data, ctx) => {
     const hasExerciseId = data.exercise_id !== undefined && data.exercise_id !== null;
+    const hasMatchByName = data.match_by_name !== undefined && data.match_by_name !== null;
     const hasSnapshot = 
       data.exercise_title !== undefined && data.exercise_title !== null &&
-      data.exercise_type !== undefined && data.exercise_type !== null &&
       data.exercise_part !== undefined && data.exercise_part !== null;
 
-    // Musi być albo exercise_id, albo snapshot
-    if (!hasExerciseId && !hasSnapshot) {
+    // Musi być co najmniej jedna opcja: exercise_id, match_by_name, lub snapshot
+    if (!hasExerciseId && !hasMatchByName && !hasSnapshot) {
       ctx.addIssue({
         code: "custom",
-        message: "Musisz podać albo exercise_id, albo exercise_title + exercise_type + exercise_part",
+        message: "Musisz podać albo exercise_id, albo match_by_name, albo exercise_title + exercise_part (exercise_type jest opcjonalne)",
+        path: ["exercise_id"],
+      });
+    }
+
+    // Nie można mieć jednocześnie exercise_id i match_by_name
+    if (hasExerciseId && hasMatchByName) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Nie można podać jednocześnie exercise_id i match_by_name",
         path: ["exercise_id"],
       });
     }
@@ -404,8 +420,17 @@ export const workoutPlanExerciseImportSchema = z
     if (hasExerciseId && hasSnapshot) {
       ctx.addIssue({
         code: "custom",
-        message: "Nie można podać jednocześnie exercise_id i snapshot pól (exercise_title, exercise_type, exercise_part)",
+        message: "Nie można podać jednocześnie exercise_id i snapshot pól (exercise_title, exercise_part, opcjonalnie exercise_type)",
         path: ["exercise_id"],
+      });
+    }
+
+    // Nie można mieć jednocześnie match_by_name i snapshot
+    if (hasMatchByName && hasSnapshot) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Nie można podać jednocześnie match_by_name i snapshot pól (exercise_title, exercise_part, opcjonalnie exercise_type)",
+        path: ["match_by_name"],
       });
     }
   });
