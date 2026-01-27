@@ -10,6 +10,7 @@ import {
   EXERCISE_TYPE_LABELS,
 } from "@/lib/constants";
 import { formatDuration, formatTotalDuration } from "@/lib/utils/time-format";
+import { AlertCircle } from "lucide-react";
 
 type WorkoutPlanDetailsPageProps = {
   params: Promise<{
@@ -142,6 +143,12 @@ export default async function WorkoutPlanDetailsPage({
                         <span className="text-sm text-zinc-600 dark:text-zinc-400">
                           Pozycja: {exercise.section_order}
                         </span>
+                        {exercise.is_exercise_in_library === false && (
+                          <Badge variant="outline" className="ml-2 border-amber-500 text-amber-600 dark:border-amber-400 dark:text-amber-400">
+                            <AlertCircle className="mr-1 h-3 w-3" />
+                            Nie w bibliotece
+                          </Badge>
+                        )}
                       </div>
                       <h3 className="text-lg font-semibold">
                         {exercise.exercise_title || `Ćwiczenie #${index + 1}`}
@@ -203,8 +210,8 @@ export default async function WorkoutPlanDetailsPage({
                         Odpoczynek po seriach
                       </p>
                       <p className="text-lg font-semibold">
-                        {exercise.exercise_rest_after_series_seconds !== null && exercise.exercise_rest_after_series_seconds !== undefined
-                          ? formatDuration(exercise.exercise_rest_after_series_seconds)
+                        {exercise.planned_rest_after_series_seconds !== null && exercise.planned_rest_after_series_seconds !== undefined
+                          ? formatDuration(exercise.planned_rest_after_series_seconds)
                           : "-"}
                       </p>
                     </div>

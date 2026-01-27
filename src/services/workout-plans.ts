@@ -179,7 +179,7 @@ export async function listWorkoutPlansService(
   userId: string,
   query: PlanQueryParams
 ): Promise<{
-  items: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number; exercise_names?: string[] })[];
+  items: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number; exercise_names?: string[]; has_missing_exercises?: boolean })[];
   nextCursor: string | null;
 }> {
   assertUser(userId);
@@ -645,7 +645,9 @@ export async function importWorkoutPlanService(
   payload: unknown
 ): Promise<WorkoutPlanDTO & { warnings?: { missing_exercises?: string[] } }> {
   assertUser(userId);
-  const parsed = parseOrThrow(workoutPlanImportSchema, payload);
+  
+  try {
+    const parsed = parseOrThrow(workoutPlanImportSchema, payload);
 
   // Walidacja domenowa
   const domainErrors = validateWorkoutPlanBusinessRules(
@@ -787,11 +789,15 @@ export async function importWorkoutPlanService(
     throw mapDbError(fetchUpdatedError);
   }
 
-  return {
-    ...(updatedPlan ?? plan),
-    exercises: planWithExercises ?? [],
-    warnings: missingExercises.length > 0 ? { missing_exercises: missingExercises } : undefined,
-  };
+    return {
+      ...(updatedPlan ?? plan),
+      exercises: planWithExercises ?? [],
+      warnings: missingExercises.length > 0 ? { missing_exercises: missingExercises } : undefined,
+    };
+  } catch (error) {
+    console.error("[importWorkoutPlanService] Error:", error);
+    throw error;
+  }
 }
 
 function assertUser(userId: string) {

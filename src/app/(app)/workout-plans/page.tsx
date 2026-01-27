@@ -6,6 +6,7 @@ import { WorkoutPlansList } from "@/components/workout-plans/workout-plans-list"
 import { WorkoutPlanFilters } from "@/components/workout-plans/workout-plan-filters";
 import { WorkoutPlanSort } from "@/components/workout-plans/workout-plan-sort";
 import { CreatePlanButton } from "@/components/workout-plans/create-plan-button";
+import { ImportPlanButton } from "@/components/workout-plans/import-plan-button";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 
@@ -39,7 +40,12 @@ export default async function WorkoutPlansPage({
       <PageHeaderSection
         title="Plany treningowe"
         description="Przeglądaj i zarządzaj swoimi planami treningowymi"
-        actionButton={<CreatePlanButton variant="auto" />}
+        actionButton={
+          <div className="flex gap-2">
+            <ImportPlanButton />
+            <CreatePlanButton variant="auto" />
+          </div>
+        }
       />
       <PageHeader showBack={false} />
 

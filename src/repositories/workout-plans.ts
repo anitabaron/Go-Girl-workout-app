@@ -62,7 +62,7 @@ export async function findWorkoutPlansByUserId(
   params: Required<Pick<PlanQueryParams, "sort" | "order" | "limit">> &
     PlanQueryParams
 ): Promise<{
-  data?: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number; exercise_names?: string[] })[];
+  data?: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number; exercise_names?: string[]; has_missing_exercises?: boolean })[];
   nextCursor?: string | null;
   error?: PostgrestError | null;
 }> {
@@ -134,11 +134,12 @@ export async function findWorkoutPlansByUserId(
   const planIds = items.map((item) => item.id);
   const exerciseCounts: Record<string, number> = {};
   const exercisesByPlanId = new Map<string, string[]>();
+  const hasMissingExercisesByPlanId = new Map<string, boolean>();
   
   if (planIds.length > 0) {
     const { data: exercisesData, error: exercisesError } = await client
       .from("workout_plan_exercises")
-      .select("plan_id, exercises(title)")
+      .select("plan_id, exercise_id, exercise_title, exercises(title)")
       .in("plan_id", planIds)
       .order("section_type", { ascending: true })
       .order("section_order", { ascending: true });
@@ -146,10 +147,16 @@ export async function findWorkoutPlansByUserId(
     if (!exercisesError && exercisesData) {
       for (const row of exercisesData) {
         const planId = row.plan_id;
-        const exerciseTitle = (row.exercises as { title: string } | null)?.title;
+        const exerciseTitle = (row.exercises as { title: string } | null)?.title ?? 
+                               (row as { exercise_title?: string | null }).exercise_title;
         
         // Policz ćwiczenia
         exerciseCounts[planId] = (exerciseCounts[planId] ?? 0) + 1;
+        
+        // Sprawdź czy ćwiczenie ma exercise_id (czy jest w bibliotece)
+        if (row.exercise_id === null) {
+          hasMissingExercisesByPlanId.set(planId, true);
+        }
         
         // Zbierz nazwy ćwiczeń
         if (exerciseTitle) {
@@ -167,6 +174,7 @@ export async function findWorkoutPlansByUserId(
       ...mapToDTO(item),
       exercise_count: exerciseCounts[item.id] ?? 0,
       exercise_names: exercisesByPlanId.get(item.id) ?? [],
+      has_missing_exercises: hasMissingExercisesByPlanId.get(item.id) ?? false,
     })),
     nextCursor,
     error: null,
@@ -222,19 +230,20 @@ export async function insertWorkoutPlanExercises(
     planned_reps: exercise.planned_reps ?? null,
     planned_duration_seconds: exercise.planned_duration_seconds ?? null,
     planned_rest_seconds: exercise.planned_rest_seconds ?? null,
-    ...(exercise.planned_rest_after_series_seconds !== undefined && {
-      planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds,
-    }),
-    ...(exercise.estimated_set_time_seconds !== undefined && {
-      estimated_set_time_seconds: exercise.estimated_set_time_seconds,
-    }),
+    planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
+    estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
   }));
 
-  // Type assertion - pola snapshot są w bazie, ale jeszcze nie w typach TypeScript
-  const { data, error } = await client
+  // Type assertion - pola snapshot są w bazie
+  // Używamy 'as any' aby obejść problemy z cache schematu Supabase PostgREST
+  // Cache może wymagać odświeżenia po migracjach - zrestartuj serwer deweloperski
+   
+  const { data, error } = await (client
     .from("workout_plan_exercises")
-    .insert(exercisesToInsert as unknown as Database["public"]["Tables"]["workout_plan_exercises"]["Insert"][])
-    .select();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .insert(exercisesToInsert as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .select() as unknown as Promise<{ data: any; error: any }>);
 
   return { data, error };
 }
@@ -447,13 +456,17 @@ export async function listWorkoutPlanExercises(
       : (rowWithSnapshot.exercise_part ?? null);
 
     // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
-    const finalEstimatedSetTime = rowWithSnapshot.estimated_set_time_seconds !== undefined 
+    // For estimated_set_time_seconds, prioritize workout_plan_exercises value if it's not null/undefined
+    const finalEstimatedSetTime = rowWithSnapshot.estimated_set_time_seconds !== null && rowWithSnapshot.estimated_set_time_seconds !== undefined
       ? rowWithSnapshot.estimated_set_time_seconds 
       : exercise?.estimated_set_time_seconds ?? null;
     
+    // For planned_rest_after_series_seconds, always use value from workout_plan_exercises if it's defined (even if null)
+    // This ensures that imported plans with explicit null values are preserved
+    // Only fall back to exercise default if the value is truly undefined (not present in DB result)
     const finalRestAfterSeries = rowWithSnapshot.planned_rest_after_series_seconds !== undefined
       ? rowWithSnapshot.planned_rest_after_series_seconds
-      : exercise?.rest_after_series_seconds ?? null;
+      : (exercise?.rest_after_series_seconds ?? null);
 
     return {
       id: row.id,
