@@ -127,6 +127,7 @@ export type WorkoutPlanExerciseDTO = Omit<
   exercise_title?: string | null;  // Z snapshot lub z exercises
   exercise_type?: ExerciseType | null;
   exercise_part?: ExercisePart | null;
+  exercise_description?: string | null;  // Opis ćwiczenia (z JSON importu, przekazywany jako details przy tworzeniu)
   exercise_estimated_set_time_seconds?: number | null;
   exercise_rest_after_series_seconds?: number | null;
   planned_rest_after_series_seconds?: number | null;

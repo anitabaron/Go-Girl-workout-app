@@ -707,6 +707,7 @@ export async function importWorkoutPlanService(
         exercise.exercise_title = exercise.match_by_name;
         exercise.exercise_type = exercise.exercise_type ?? exercise.section_type;
         exercise.exercise_part = exercise.exercise_part ?? parsed.part ?? "Legs";
+        // exercise_description pozostaje bez zmian (jeśli było podane)
         exercise.match_by_name = undefined; // Usuń match_by_name, bo używamy snapshot
       }
     }
@@ -783,6 +784,7 @@ export async function importWorkoutPlanService(
       exercise_title: e.exercise_title ?? null,
       exercise_type: e.exercise_type ?? null,
       exercise_part: e.exercise_part ?? null,
+      exercise_details: e.exercise_description ?? null, // Mapuj exercise_description z JSON na exercise_details w bazie
       section_type: e.section_type,
       section_order: e.section_order,
       planned_sets: e.planned_sets,
@@ -807,8 +809,11 @@ export async function importWorkoutPlanService(
     throw mapDbError(fetchError);
   }
 
+  // exercise_description jest już w DTO z bazy (mapowane z exercise_details przez repository)
+  const exercisesWithDescription = planWithExercises ?? [];
+
   // Oblicz i zaktualizuj szacunkowy całkowity czas treningu
-  const estimatedTotalTime = calculateEstimatedTotalTime(planWithExercises ?? []);
+  const estimatedTotalTime = calculateEstimatedTotalTime(exercisesWithDescription);
   const { error: updateTimeError } = await updateWorkoutPlan(
     supabase,
     userId,
@@ -833,7 +838,7 @@ export async function importWorkoutPlanService(
 
     return {
       ...(updatedPlan ?? plan),
-      exercises: planWithExercises ?? [],
+      exercises: exercisesWithDescription,
       warnings: missingExercises.length > 0 ? { missing_exercises: missingExercises } : undefined,
     };
   } catch (error) {

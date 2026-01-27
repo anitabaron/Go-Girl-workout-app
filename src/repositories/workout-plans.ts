@@ -216,6 +216,7 @@ export async function insertWorkoutPlanExercises(
     exercise_title?: string | null;
     exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
     exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+    exercise_details?: string | null;
   }>
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
@@ -224,6 +225,7 @@ export async function insertWorkoutPlanExercises(
     exercise_title: exercise.exercise_title ?? null,
     exercise_type: exercise.exercise_type ?? null,
     exercise_part: exercise.exercise_part ?? null,
+    exercise_details: exercise.exercise_details ?? null,
     section_type: exercise.section_type,
     section_order: exercise.section_order,
     planned_sets: exercise.planned_sets ?? null,
@@ -413,6 +415,7 @@ export async function listWorkoutPlanExercises(
         title,
         type,
         part,
+        details,
         estimated_set_time_seconds,
         rest_after_series_seconds
       )
@@ -431,6 +434,7 @@ export async function listWorkoutPlanExercises(
       title: string;
       type: Database["public"]["Enums"]["exercise_type"];
       part: Database["public"]["Enums"]["exercise_part"];
+      details: string | null;
       estimated_set_time_seconds: number | null;
       rest_after_series_seconds: number | null;
     } | null;
@@ -440,6 +444,7 @@ export async function listWorkoutPlanExercises(
       exercise_title?: string | null;
       exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
       exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+      exercise_details?: string | null;
       estimated_set_time_seconds?: number | null;
       planned_rest_after_series_seconds?: number | null;
     };
@@ -468,6 +473,11 @@ export async function listWorkoutPlanExercises(
       ? rowWithSnapshot.planned_rest_after_series_seconds
       : (exercise?.rest_after_series_seconds ?? null);
 
+    // Pobierz exercise_details z snapshot (jeśli dostępne) lub z exercises.details
+    const exerciseDetails = row.exercise_id
+      ? (exercise?.details ?? null)
+      : (rowWithSnapshot.exercise_details ?? null);
+
     return {
       id: row.id,
       exercise_id: row.exercise_id,
@@ -478,9 +488,11 @@ export async function listWorkoutPlanExercises(
       planned_duration_seconds: row.planned_duration_seconds,
       planned_rest_seconds: row.planned_rest_seconds,
       estimated_set_time_seconds: finalEstimatedSetTime, // Pole z workout_plan_exercises
+      exercise_details: rowWithSnapshot.exercise_details ?? null, // Pole z workout_plan_exercises (wymagane przez DTO)
       exercise_title: exerciseTitle,
       exercise_type: exerciseType,
       exercise_part: exercisePart,
+      exercise_description: exerciseDetails, // Mapuj exercise_details na exercise_description w DTO
       exercise_estimated_set_time_seconds: finalEstimatedSetTime,
       exercise_rest_after_series_seconds: exercise?.rest_after_series_seconds ?? null,
       planned_rest_after_series_seconds: finalRestAfterSeries,

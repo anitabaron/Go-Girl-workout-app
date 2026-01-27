@@ -249,6 +249,7 @@ export type Database = {
         Row: {
           created_at: string
           estimated_set_time_seconds: number | null
+          exercise_details: string | null
           exercise_id: string | null
           exercise_part: Database["public"]["Enums"]["exercise_part"] | null
           exercise_title: string | null
@@ -266,6 +267,7 @@ export type Database = {
         Insert: {
           created_at?: string
           estimated_set_time_seconds?: number | null
+          exercise_details?: string | null
           exercise_id?: string | null
           exercise_part?: Database["public"]["Enums"]["exercise_part"] | null
           exercise_title?: string | null
@@ -283,6 +285,7 @@ export type Database = {
         Update: {
           created_at?: string
           estimated_set_time_seconds?: number | null
+          exercise_details?: string | null
           exercise_id?: string | null
           exercise_part?: Database["public"]["Enums"]["exercise_part"] | null
           exercise_title?: string | null

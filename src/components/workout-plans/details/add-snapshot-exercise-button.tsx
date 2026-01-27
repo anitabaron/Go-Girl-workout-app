@@ -48,12 +48,18 @@ export function AddSnapshotExerciseButton({
       rest_in_between_seconds?: number | null;
       rest_after_series_seconds?: number | null;
       estimated_set_time_seconds?: number | null;
+      details?: string | null;
     } = {
       title: exercise.exercise_title,
       type: exerciseType,
       part: exercise.exercise_part,
       series: exercise.planned_sets ?? 1,
     };
+
+    // Dodaj opis (details) jeśli dostępny
+    if (exercise.exercise_description) {
+      exerciseData.details = exercise.exercise_description;
+    }
 
     // Dodaj reps lub duration_seconds (musi być dokładnie jedno)
     if (exercise.planned_reps !== null && exercise.planned_reps !== undefined) {
