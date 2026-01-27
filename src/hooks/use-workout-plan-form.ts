@@ -117,7 +117,11 @@ export function useWorkoutPlanForm({
     const exerciseErrors: Record<string, string> = {};
     const exerciseKey = `exercise_${index}`;
 
-    if (!exercise.exercise_id || exercise.exercise_id.trim() === "") {
+    // Ćwiczenie musi mieć exercise_id LUB exercise_title (dla snapshot)
+    const hasExerciseId = exercise.exercise_id && typeof exercise.exercise_id === "string" && exercise.exercise_id.trim() !== "";
+    const hasExerciseTitle = exercise.exercise_title && typeof exercise.exercise_title === "string" && exercise.exercise_title.trim() !== "";
+    
+    if (!hasExerciseId && !hasExerciseTitle) {
       exerciseErrors[`${exerciseKey}.exercise_id`] = "Ćwiczenie jest wymagane";
     }
 

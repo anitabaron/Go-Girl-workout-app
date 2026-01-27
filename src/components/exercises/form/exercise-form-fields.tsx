@@ -14,7 +14,10 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
-import type { ExerciseFormState, ExerciseFormErrors } from "@/hooks/use-exercise-form";
+import type {
+  ExerciseFormState,
+  ExerciseFormErrors,
+} from "@/hooks/use-exercise-form";
 
 type ExerciseFormFieldsProps = {
   fields: ExerciseFormState;
@@ -30,7 +33,7 @@ export function ExerciseFormFields({
   onChange,
   onBlur,
   disabled,
-}: ExerciseFormFieldsProps) {
+}: Readonly<ExerciseFormFieldsProps>) {
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Automatyczne ustawienie focus na pierwsze pole przy załadowaniu
@@ -41,7 +44,7 @@ export function ExerciseFormFields({
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Title */}
       <div className="space-y-2">
         <label htmlFor="title" className="text-sm font-medium">
@@ -65,103 +68,116 @@ export function ExerciseFormFields({
           </p>
         )}
       </div>
-
-      {/* Type */}
-      <div className="space-y-2">
-        <label htmlFor="type" className="text-sm font-medium">
-          Typ
-        </label>
-        <Select
-          value={fields.type}
-          onValueChange={(value) => onChange("type", value)}
-          disabled={disabled}
-        >
-          <SelectTrigger
-            id="type"
-            aria-invalid={errors.type ? "true" : "false"}
-            aria-describedby={errors.type ? "type-error" : undefined}
-            data-test-id="exercise-form-type"
+      <div className="sm:flex gap-2 justify-between items-center">
+        {/* Type */}
+        <div className="space-y-2 w-full">
+          <label htmlFor="type" className="text-sm font-medium">
+            Typ
+          </label>
+          <Select
+            value={fields.type}
+            onValueChange={(value) => onChange("type", value)}
+            disabled={disabled}
           >
-            <SelectValue placeholder="Wybierz typ" />
-          </SelectTrigger>
-          <SelectContent>
-            {exerciseTypeValues.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.type && (
-          <p id="type-error" className="text-sm text-destructive" role="alert">
-            {errors.type}
-          </p>
-        )}
-      </div>
-
-      {/* Part */}
-      <div className="space-y-2">
-        <label htmlFor="part" className="text-sm font-medium">
-          Partia
-        </label>
-        <Select
-          value={fields.part}
-          onValueChange={(value) => onChange("part", value)}
-          disabled={disabled}
-        >
-          <SelectTrigger
-            id="part"
-            aria-invalid={errors.part ? "true" : "false"}
-            aria-describedby={errors.part ? "part-error" : undefined}
-            data-test-id="exercise-form-part"
+            <SelectTrigger
+              id="type"
+              aria-invalid={errors.type ? "true" : "false"}
+              aria-describedby={errors.type ? "type-error" : undefined}
+              data-test-id="exercise-form-type"
+            >
+              <SelectValue placeholder="Wybierz typ" />
+            </SelectTrigger>
+            <SelectContent>
+              {exerciseTypeValues.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.type && (
+            <p
+              id="type-error"
+              className="text-sm text-destructive"
+              role="alert"
+            >
+              {errors.type}
+            </p>
+          )}
+        </div>
+        {/* Part */}
+        <div className="space-y-2 w-full">
+          <label htmlFor="part" className="text-sm font-medium">
+            Partia
+          </label>
+          <Select
+            value={fields.part}
+            onValueChange={(value) => onChange("part", value)}
+            disabled={disabled}
           >
-            <SelectValue placeholder="Wybierz partię" />
-          </SelectTrigger>
-          <SelectContent>
-            {exercisePartValues.map((part) => (
-              <SelectItem key={part} value={part}>
-                {part}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.part && (
-          <p id="part-error" className="text-sm text-destructive" role="alert">
-            {errors.part}
-          </p>
-        )}
-      </div>
-
-      {/* Level */}
-      <div className="space-y-2">
-        <label htmlFor="level" className="text-sm font-medium">
-          Poziom
-        </label>
-        <Select
-          value={fields.level || ""}
-          onValueChange={(value) => onChange("level", value === "none" ? "" : value)}
-          disabled={disabled}
-        >
-          <SelectTrigger
-            id="level"
-            aria-invalid={errors.level ? "true" : "false"}
-            aria-describedby={errors.level ? "level-error" : undefined}
-            data-test-id="exercise-form-level"
+            <SelectTrigger
+              id="part"
+              aria-invalid={errors.part ? "true" : "false"}
+              aria-describedby={errors.part ? "part-error" : undefined}
+              data-test-id="exercise-form-part"
+            >
+              <SelectValue placeholder="Wybierz partię" />
+            </SelectTrigger>
+            <SelectContent>
+              {exercisePartValues.map((part) => (
+                <SelectItem key={part} value={part}>
+                  {part}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.part && (
+            <p
+              id="part-error"
+              className="text-sm text-destructive"
+              role="alert"
+            >
+              {errors.part}
+            </p>
+          )}
+        </div>
+        {/* Level */}
+        <div className="space-y-2 w-full">
+          <label htmlFor="level" className="text-sm font-medium">
+            Poziom
+          </label>
+          <Select
+            value={fields.level || ""}
+            onValueChange={(value) =>
+              onChange("level", value === "none" ? "" : value)
+            }
+            disabled={disabled}
           >
-            <SelectValue placeholder="Wybierz poziom (opcjonalnie)" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Brak</SelectItem>
-            <SelectItem value="Beginner">Beginner</SelectItem>
-            <SelectItem value="Intermediate">Intermediate</SelectItem>
-            <SelectItem value="Advanced">Advanced</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.level && (
-          <p id="level-error" className="text-sm text-destructive" role="alert">
-            {errors.level}
-          </p>
-        )}
+            <SelectTrigger
+              id="level"
+              aria-invalid={errors.level ? "true" : "false"}
+              aria-describedby={errors.level ? "level-error" : undefined}
+              data-test-id="exercise-form-level"
+            >
+              <SelectValue placeholder="Wybierz poziom (opcjonalnie)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Brak</SelectItem>
+              <SelectItem value="Beginner">Beginner</SelectItem>
+              <SelectItem value="Intermediate">Intermediate</SelectItem>
+              <SelectItem value="Advanced">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.level && (
+            <p
+              id="level-error"
+              className="text-sm text-destructive"
+              role="alert"
+            >
+              {errors.level}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Details */}
@@ -190,158 +206,167 @@ export function ExerciseFormFields({
           </p>
         )}
       </div>
+      <div className="flex gap-2 justify-between items-center ">
+        {/* Reps */}
+        <div className="space-y-2 w-full">
+          <label htmlFor="reps" className="text-sm font-medium">
+            Powtórzenia
+          </label>
+          <Input
+            id="reps"
+            type="number"
+            min="1"
+            value={fields.reps}
+            onChange={(e) => onChange("reps", e.target.value)}
+            onBlur={() => onBlur("reps")}
+            disabled={disabled}
+            aria-invalid={errors.reps ? "true" : "false"}
+            aria-describedby={errors.reps ? "reps-error" : undefined}
+            data-test-id="exercise-form-reps"
+          />
+          {errors.reps && (
+            <p
+              id="reps-error"
+              className="text-sm text-destructive"
+              role="alert"
+            >
+              {errors.reps}
+            </p>
+          )}
+        </div>
+        <p className="text-sm font-medium mt-7 ">lub</p>
+        {/* Duration */}
+        <div className="space-y-2 w-full">
+          <label htmlFor="duration_seconds" className="text-sm font-medium">
+            Czas (sek)
+          </label>
+          <Input
+            id="duration_seconds"
+            type="number"
+            min="1"
+            value={fields.duration_seconds}
+            onChange={(e) => onChange("duration_seconds", e.target.value)}
+            onBlur={() => onBlur("duration_seconds")}
+            disabled={disabled}
+            aria-invalid={errors.duration_seconds ? "true" : "false"}
+            aria-describedby={
+              errors.duration_seconds ? "duration_seconds-error" : undefined
+            }
+            data-test-id="exercise-form-duration"
+          />
+          {errors.duration_seconds && (
+            <p
+              id="duration_seconds-error"
+              className="text-sm text-destructive"
+              role="alert"
+            >
+              {errors.duration_seconds}
+            </p>
+          )}
+        </div>
 
-      {/* Reps */}
-      <div className="space-y-2">
-        <label htmlFor="reps" className="text-sm font-medium">
-          Powtórzenia
-        </label>
-        <Input
-          id="reps"
-          type="number"
-          min="1"
-          value={fields.reps}
-          onChange={(e) => onChange("reps", e.target.value)}
-          onBlur={() => onBlur("reps")}
-          disabled={disabled}
-          aria-invalid={errors.reps ? "true" : "false"}
-          aria-describedby={errors.reps ? "reps-error" : undefined}
-          data-test-id="exercise-form-reps"
-        />
-        {errors.reps && (
-          <p id="reps-error" className="text-sm text-destructive" role="alert">
-            {errors.reps}
-          </p>
-        )}
+        {/* Series */}
+        <div className="space-y-2">
+          <label htmlFor="series" className="text-sm font-medium">
+            Serie <span className="text-destructive">*</span>
+          </label>
+          <Input
+            id="series"
+            type="number"
+            min="1"
+            value={fields.series}
+            onChange={(e) => onChange("series", e.target.value)}
+            onBlur={() => onBlur("series")}
+            disabled={disabled}
+            aria-invalid={errors.series ? "true" : "false"}
+            aria-describedby={errors.series ? "series-error" : undefined}
+            data-test-id="exercise-form-series"
+          />
+          {errors.series && (
+            <p
+              id="series-error"
+              className="text-sm text-destructive"
+              role="alert"
+            >
+              {errors.series}
+            </p>
+          )}
+        </div>
       </div>
-
-      {/* Duration */}
-      <div className="space-y-2">
-        <label htmlFor="duration_seconds" className="text-sm font-medium">
-          Czas trwania (sekundy)
-        </label>
-        <Input
-          id="duration_seconds"
-          type="number"
-          min="1"
-          value={fields.duration_seconds}
-          onChange={(e) => onChange("duration_seconds", e.target.value)}
-          onBlur={() => onBlur("duration_seconds")}
-          disabled={disabled}
-          aria-invalid={errors.duration_seconds ? "true" : "false"}
-          aria-describedby={
-            errors.duration_seconds ? "duration_seconds-error" : undefined
-          }
-          data-test-id="exercise-form-duration"
-        />
-        {errors.duration_seconds && (
-          <p
-            id="duration_seconds-error"
-            className="text-sm text-destructive"
-            role="alert"
+      <div className="sm:flex gap-2 justify-between items-center">
+        {/* Rest in between */}
+        <div className="space-y-2 w-full">
+          <label
+            htmlFor="rest_in_between_seconds"
+            className="text-sm font-medium"
           >
-            {errors.duration_seconds}
-          </p>
-        )}
-      </div>
+            Odpoczynek między seriami (sekundy)
+          </label>
+          <Input
+            id="rest_in_between_seconds"
+            type="number"
+            min="0"
+            value={fields.rest_in_between_seconds}
+            onChange={(e) =>
+              onChange("rest_in_between_seconds", e.target.value)
+            }
+            onBlur={() => onBlur("rest_in_between_seconds")}
+            disabled={disabled}
+            aria-invalid={errors.rest_in_between_seconds ? "true" : "false"}
+            aria-describedby={
+              errors.rest_in_between_seconds
+                ? "rest_in_between_seconds-error"
+                : undefined
+            }
+            data-test-id="exercise-form-rest-between"
+          />
+          {errors.rest_in_between_seconds && (
+            <p
+              id="rest_in_between_seconds-error"
+              className="text-sm text-destructive"
+              role="alert"
+            >
+              {errors.rest_in_between_seconds}
+            </p>
+          )}
+        </div>
 
-      {/* Series */}
-      <div className="space-y-2">
-        <label htmlFor="series" className="text-sm font-medium">
-          Serie <span className="text-destructive">*</span>
-        </label>
-        <Input
-          id="series"
-          type="number"
-          min="1"
-          value={fields.series}
-          onChange={(e) => onChange("series", e.target.value)}
-          onBlur={() => onBlur("series")}
-          disabled={disabled}
-          aria-invalid={errors.series ? "true" : "false"}
-          aria-describedby={errors.series ? "series-error" : undefined}
-          data-test-id="exercise-form-series"
-        />
-        {errors.series && (
-          <p id="series-error" className="text-sm text-destructive" role="alert">
-            {errors.series}
-          </p>
-        )}
-      </div>
-
-      {/* Rest in between */}
-      <div className="space-y-2">
-        <label htmlFor="rest_in_between_seconds" className="text-sm font-medium">
-          Odpoczynek między seriami (sekundy)
-        </label>
-        <Input
-          id="rest_in_between_seconds"
-          type="number"
-          min="0"
-          value={fields.rest_in_between_seconds}
-          onChange={(e) =>
-            onChange("rest_in_between_seconds", e.target.value)
-          }
-          onBlur={() => onBlur("rest_in_between_seconds")}
-          disabled={disabled}
-          aria-invalid={
-            errors.rest_in_between_seconds ? "true" : "false"
-          }
-          aria-describedby={
-            errors.rest_in_between_seconds
-              ? "rest_in_between_seconds-error"
-              : undefined
-          }
-          data-test-id="exercise-form-rest-between"
-        />
-        {errors.rest_in_between_seconds && (
-          <p
-            id="rest_in_between_seconds-error"
-            className="text-sm text-destructive"
-            role="alert"
+        {/* Rest after series */}
+        <div className="space-y-2 w-full">
+          <label
+            htmlFor="rest_after_series_seconds"
+            className="text-sm font-medium"
           >
-            {errors.rest_in_between_seconds}
-          </p>
-        )}
-      </div>
-
-      {/* Rest after series */}
-      <div className="space-y-2">
-        <label
-          htmlFor="rest_after_series_seconds"
-          className="text-sm font-medium"
-        >
-          Odpoczynek po serii (sekundy)
-        </label>
-        <Input
-          id="rest_after_series_seconds"
-          type="number"
-          min="0"
-          value={fields.rest_after_series_seconds}
-          onChange={(e) =>
-            onChange("rest_after_series_seconds", e.target.value)
-          }
-          onBlur={() => onBlur("rest_after_series_seconds")}
-          disabled={disabled}
-          aria-invalid={
-            errors.rest_after_series_seconds ? "true" : "false"
-          }
-          aria-describedby={
-            errors.rest_after_series_seconds
-              ? "rest_after_series_seconds-error"
-              : undefined
-          }
-          data-test-id="exercise-form-rest-after"
-        />
-        {errors.rest_after_series_seconds && (
-          <p
-            id="rest_after_series_seconds-error"
-            className="text-sm text-destructive"
-            role="alert"
-          >
-            {errors.rest_after_series_seconds}
-          </p>
-        )}
+            Odpoczynek po seriach (sekundy)
+          </label>
+          <Input
+            id="rest_after_series_seconds"
+            type="number"
+            min="0"
+            value={fields.rest_after_series_seconds}
+            onChange={(e) =>
+              onChange("rest_after_series_seconds", e.target.value)
+            }
+            onBlur={() => onBlur("rest_after_series_seconds")}
+            disabled={disabled}
+            aria-invalid={errors.rest_after_series_seconds ? "true" : "false"}
+            aria-describedby={
+              errors.rest_after_series_seconds
+                ? "rest_after_series_seconds-error"
+                : undefined
+            }
+            data-test-id="exercise-form-rest-after"
+          />
+          {errors.rest_after_series_seconds && (
+            <p
+              id="rest_after_series_seconds-error"
+              className="text-sm text-destructive"
+              role="alert"
+            >
+              {errors.rest_after_series_seconds}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Estimated set time */}
@@ -362,9 +387,7 @@ export function ExerciseFormFields({
           }
           onBlur={() => onBlur("estimated_set_time_seconds")}
           disabled={disabled}
-          aria-invalid={
-            errors.estimated_set_time_seconds ? "true" : "false"
-          }
+          aria-invalid={errors.estimated_set_time_seconds ? "true" : "false"}
           aria-describedby={
             errors.estimated_set_time_seconds
               ? "estimated_set_time_seconds-error"
