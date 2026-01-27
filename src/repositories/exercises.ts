@@ -62,6 +62,22 @@ export async function findByNormalizedTitle(
   return { data, error };
 }
 
+export async function findExerciseByNormalizedTitle(
+  client: DbClient,
+  userId: string,
+  titleNormalized: string
+) {
+  const { data, error } = await client
+    .from("exercises")
+    .select(exerciseSelectColumns)
+    .eq("user_id", userId)
+    .eq("title_normalized", titleNormalized)
+    .limit(1)
+    .maybeSingle();
+
+  return { data: data ? mapToDTO(data) : null, error };
+}
+
 export async function insertExercise(
   client: DbClient,
   userId: string,

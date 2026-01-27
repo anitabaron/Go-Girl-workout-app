@@ -1,3 +1,5 @@
+import workoutPlanImportExample from "../../../../.ai/workout-plan-import-example.json";
+
 export default function ImportInstructionPage() {
   return (
     <div className="min-h-screen bg-secondary p-8 pt-24 dark:bg-black">
@@ -42,72 +44,7 @@ export default function ImportInstructionPage() {
           </div>
           <div>
             <pre className="bg-background p-4 rounded-md text-xs overflow-x-auto">
-              {JSON.stringify(
-                {
-                  name: "Trening Core z rozgrzewką i rozciąganiem",
-                  description:
-                    "Kompleksowy plan treningowy skupiający się na mięśniach core z wykorzystaniem ćwiczeń z biblioteki oraz nowych ćwiczeń",
-                  part: "Core",
-                  exercises: [
-                    {
-                      exercise_id: "357c2535-b5fd-4b2f-a523-4d62ca17dff6",
-                      section_type: "Warm-up",
-                      section_order: 1,
-                      planned_sets: 2,
-                      planned_reps: 10,
-                      planned_rest_seconds: 30,
-                      planned_rest_after_series_seconds: 60,
-                      estimated_set_time_seconds: 300,
-                    },
-                    {
-                      match_by_name: "Deska boczna",
-                      section_type: "Main Workout",
-                      section_order: 1,
-                      planned_sets: 3,
-                      planned_duration_seconds: 45,
-                      planned_rest_seconds: 20,
-                      planned_rest_after_series_seconds: 60,
-                      estimated_set_time_seconds: 300,
-                    },
-                    {
-                      exercise_title: "Deska klasyczna",
-                      exercise_part: "Core",
-                      section_type: "Main Workout",
-                      section_order: 2,
-                      planned_sets: 3,
-                      planned_duration_seconds: 60,
-                      planned_rest_seconds: 30,
-                      planned_rest_after_series_seconds: 60,
-                      estimated_set_time_seconds: 300,
-                    },
-                    {
-                      exercise_title: "Brzuszki",
-                      exercise_part: "Core",
-                      section_type: "Main Workout",
-                      section_order: 3,
-                      planned_sets: 4,
-                      planned_reps: 15,
-                      planned_rest_seconds: 45,
-                      planned_rest_after_series_seconds: 60,
-                      estimated_set_time_seconds: 300,
-                    },
-                    {
-                      exercise_title: "Rozciąganie core",
-                      exercise_type: "Cool-down",
-                      exercise_part: "Core",
-                      section_type: "Cool-down",
-                      section_order: 1,
-                      planned_sets: 2,
-                      planned_duration_seconds: 30,
-                      planned_rest_seconds: 15,
-                      planned_rest_after_series_seconds: 60,
-                      estimated_set_time_seconds: 300,
-                    },
-                  ],
-                },
-                null,
-                2,
-              )}
+              {JSON.stringify(workoutPlanImportExample, null, 2)}
             </pre>
           </div>
         </div>

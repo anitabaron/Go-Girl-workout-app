@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { normalizeTitle } from "@/lib/validation/exercises";
 import type { WorkoutPlanExerciseDTO } from "@/types";
 
 type AddSnapshotExerciseButtonProps = {
@@ -135,29 +134,27 @@ export function AddSnapshotExerciseButton({
         
         if (createResponse.status === 409) {
           // Ćwiczenie już istnieje - znajdź je w bazie i użyj jego ID
-          // Pobierz listę ćwiczeń użytkownika i znajdź po znormalizowanej nazwie
+          // Użyj dokładnego wyszukiwania po znormalizowanej nazwie
           const searchResponse = await fetch(
-            `/api/exercises?search=${encodeURIComponent(exerciseData.title)}&limit=100`
+            `/api/exercises/by-title?title=${encodeURIComponent(exerciseData.title)}`
           );
 
           if (!searchResponse.ok) {
-            toast.error(
-              "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć."
-            );
+            if (searchResponse.status === 404) {
+              toast.error(
+                "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć."
+              );
+            } else {
+              toast.error(
+                "Wystąpił błąd podczas wyszukiwania ćwiczenia."
+              );
+            }
             return;
           }
 
-          const searchResult = await searchResponse.json();
-          const normalizedTitle = normalizeTitle(exerciseData.title);
+          const existingExercise = await searchResponse.json();
 
-          const existingExercise = searchResult.items?.find(
-            (ex: { title: string }) => {
-              const exNormalized = normalizeTitle(ex.title);
-              return exNormalized === normalizedTitle;
-            }
-          );
-
-          if (!existingExercise) {
+          if (!existingExercise || !existingExercise.id) {
             toast.error(
               "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć."
             );
