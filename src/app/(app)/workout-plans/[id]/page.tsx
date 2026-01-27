@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
 import { Badge } from "@/components/ui/badge";
 import { WorkoutPlanActions } from "@/components/workout-plans/details/workout-plan-actions";
+import { AddSnapshotExerciseButton } from "@/components/workout-plans/details/add-snapshot-exercise-button";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 import {
@@ -228,6 +229,9 @@ export default async function WorkoutPlanDetailsPage({
                       </p>
                     </div>
                   </div>
+
+                  {/* Przycisk do dodawania ćwiczenia ze snapshotu do bazy */}
+                  <AddSnapshotExerciseButton exercise={exercise} planId={id} />
                 </div>
               ))}
             </div>

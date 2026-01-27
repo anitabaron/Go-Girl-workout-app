@@ -104,7 +104,12 @@ export const workoutPlanExerciseUpdateOrCreateSchema = z
         (val) => uuidRegex.test(val),
         "exercise_id musi być prawidłowym UUID"
       )
-      .optional(),
+      .optional()
+      .nullable(),
+    // Pola snapshot - można je ustawić na null, aby wyczyścić snapshot
+    exercise_title: z.string().trim().max(120).optional().nullable(),
+    exercise_type: z.enum(exerciseTypeValues).optional().nullable(),
+    exercise_part: z.enum(exercisePartValues).optional().nullable(),
     section_type: sectionTypeSchema.optional(),
     section_order: sectionOrderSchema.optional(),
     planned_sets: plannedSetsSchema,

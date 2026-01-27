@@ -383,6 +383,18 @@ export async function updateWorkoutPlanService(
       if (exerciseUpdate.exercise_id !== undefined) {
         updateData.exercise_id = exerciseUpdate.exercise_id ?? null;
       }
+      // Obsługa czyszczenia pól snapshot
+      if (exerciseUpdate.exercise_title !== undefined) {
+        updateData.exercise_title = exerciseUpdate.exercise_title ?? null;
+      }
+      if (exerciseUpdate.exercise_type !== undefined) {
+        updateData.exercise_type =
+          exerciseUpdate.exercise_type as Database["public"]["Enums"]["exercise_type"] | null;
+      }
+      if (exerciseUpdate.exercise_part !== undefined) {
+        updateData.exercise_part =
+          exerciseUpdate.exercise_part as Database["public"]["Enums"]["exercise_part"] | null;
+      }
       if (exerciseUpdate.section_type !== undefined) {
         updateData.section_type =
           exerciseUpdate.section_type as Database["public"]["Enums"]["exercise_type"];
