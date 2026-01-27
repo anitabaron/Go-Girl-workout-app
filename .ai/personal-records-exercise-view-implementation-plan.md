@@ -37,20 +37,20 @@ ExercisePersonalRecordsPage (Server Component)
 ### ExercisePersonalRecordsPage
 
 - **Opis komponentu**: Główny komponent strony, który pobiera dane ćwiczenia i rekordów z API oraz renderuje strukturę widoku. Obsługuje walidację UUID, przekierowania w przypadku błędów oraz layout strony.
-- **Główne elementy**: 
+- **Główne elementy**:
   - Header z tytułem strony
   - Sekcja z informacjami o ćwiczeniu
   - Sekcja ze szczegółami rekordów
   - Obsługa błędów i przekierowań
-- **Obsługiwane interakcje**: 
+- **Obsługiwane interakcje**:
   - Walidacja parametru `exercise_id` (UUID)
   - Przekierowanie do `/personal-records` w przypadku błędów (404, 401/403)
   - Obsługa pustego stanu (brak rekordów dla ćwiczenia)
-- **Obsługiwana walidacja**: 
+- **Obsługiwana walidacja**:
   - Format UUID ćwiczenia (regex validation)
   - Weryfikacja własności ćwiczenia (przez API)
   - Weryfikacja istnienia ćwiczenia
-- **Typy**: 
+- **Typy**:
   - Wejście: `params: Promise<{ exercise_id: string }>`
   - Używa: `PersonalRecordWithExerciseDTO[]`, `ExerciseDTO`
 - **Propsy**: Brak (komponent główny strony)
@@ -58,15 +58,15 @@ ExercisePersonalRecordsPage (Server Component)
 ### ExerciseInfo
 
 - **Opis komponentu**: Komponent wyświetlający podstawowe informacje o ćwiczeniu: tytuł, typ i partię mięśniową. Informacje są pobierane z metadanych ćwiczenia zawartych w odpowiedzi API (pole `exercise` w `PersonalRecordWithExerciseDTO`).
-- **Główne elementy**: 
+- **Główne elementy**:
   - Nagłówek z tytułem ćwiczenia (`<h1>` lub `<h2>`)
-  - Badge typu ćwiczenia (Rozgrzewka/Główny trening/Schłodzenie)
-  - Badge partii mięśniowej (Nogi/Brzuch/Plecy/Ręce/Klatka)
+  - Badge typu ćwiczenia (Warm-up/Main workout/Cool-down)
+  - Badge partii mięśniowej (Legs/Core/Back/Arms/Chest)
 - **Obsługiwane interakcje**: Brak (komponent tylko do odczytu)
 - **Obsługiwana walidacja**: Brak (dane pochodzą z API)
-- **Typy**: 
+- **Typy**:
   - Wejście: `{ exercise: { id: string; title: string; type: ExerciseType; part: ExercisePart } }`
-- **Propsy**: 
+- **Propsy**:
   ```typescript
   type ExerciseInfoProps = {
     exercise: {
@@ -81,18 +81,18 @@ ExercisePersonalRecordsPage (Server Component)
 ### PersonalRecordDetails
 
 - **Opis komponentu**: Komponent wyświetlający szczegóły wszystkich rekordów dla ćwiczenia. Grupuje rekordy według typu metryki (total_reps, max_duration, max_weight) i wyświetla każdy rekord w osobnej karcie. Jeśli brak rekordów, wyświetla pusty stan.
-- **Główne elementy**: 
+- **Główne elementy**:
   - Kontener z kartami rekordów (`<div>` z `space-y-4`)
   - `PersonalRecordMetricCard[]` - karta dla każdego typu metryki
   - `EmptyRecordsState` - pusty stan (jeśli `records.length === 0`)
-- **Obsługiwane interakcje**: 
+- **Obsługiwane interakcje**:
   - Renderowanie kart rekordów
   - Obsługa pustego stanu
-- **Obsługiwana walidacja**: 
+- **Obsługiwana walidacja**:
   - Sprawdzenie, czy lista rekordów nie jest pusta
-- **Typy**: 
+- **Typy**:
   - Wejście: `{ records: PersonalRecordWithExerciseDTO[] }`
-- **Propsy**: 
+- **Propsy**:
   ```typescript
   type PersonalRecordDetailsProps = {
     records: PersonalRecordWithExerciseDTO[];
@@ -102,21 +102,21 @@ ExercisePersonalRecordsPage (Server Component)
 ### PersonalRecordMetricCard
 
 - **Opis komponentu**: Komponent wyświetlający pojedynczy rekord w formie karty. Wyświetla typ metryki, wartość rekordu (sformatowaną), datę osiągnięcia oraz link do sesji treningowej (jeśli dostępny).
-- **Główne elementy**: 
+- **Główne elementy**:
   - Karta (`Card` z shadcn/ui)
   - Nagłówek karty z etykietą typu metryki (`CardHeader`, `CardTitle`)
   - Zawartość karty (`CardContent`):
     - Wartość rekordu (duży, wyróżniony tekst)
     - Data osiągnięcia (sformatowana w formacie polskim)
     - Link do sesji (jeśli `achieved_in_session_id` jest dostępny)
-- **Obsługiwane interakcje**: 
+- **Obsługiwane interakcje**:
   - Kliknięcie w link do sesji (przekierowanie do `/workout-sessions/[id]`)
   - Toast notification przy kliknięciu w link (opcjonalnie)
-- **Obsługiwana walidacja**: 
+- **Obsługiwana walidacja**:
   - Sprawdzenie, czy `achieved_in_session_id` jest dostępny przed wyświetleniem linku
-- **Typy**: 
+- **Typy**:
   - Wejście: `PersonalRecordWithExerciseDTO`
-- **Propsy**: 
+- **Propsy**:
   ```typescript
   type PersonalRecordMetricCardProps = {
     record: PersonalRecordWithExerciseDTO;
@@ -126,18 +126,18 @@ ExercisePersonalRecordsPage (Server Component)
 ### SessionLink
 
 - **Opis komponentu**: Komponent wyświetlający link do sesji treningowej, w której rekord został osiągnięty. Link prowadzi do widoku szczegółów sesji (`/workout-sessions/[id]`).
-- **Główne elementy**: 
+- **Główne elementy**:
   - Link (`Link` z Next.js)
   - Tekst "Zobacz sesję"
   - Ikona (opcjonalnie, np. `ExternalLink` z lucide-react)
-- **Obsługiwane interakcje**: 
+- **Obsługiwane interakcje**:
   - Kliknięcie w link (przekierowanie do `/workout-sessions/${sessionId}`)
   - Toast notification przy kliknięciu (opcjonalnie)
-- **Obsługiwana walidacja**: 
+- **Obsługiwana walidacja**:
   - Sprawdzenie, czy `sessionId` nie jest `null` przed renderowaniem
-- **Typy**: 
+- **Typy**:
   - Wejście: `{ sessionId: string | null }`
-- **Propsy**: 
+- **Propsy**:
   ```typescript
   type SessionLinkProps = {
     sessionId: string | null;
@@ -147,12 +147,12 @@ ExercisePersonalRecordsPage (Server Component)
 ### EmptyRecordsState
 
 - **Opis komponentu**: Komponent wyświetlający pusty stan, gdy brak rekordów dla ćwiczenia. Zawiera komunikat zachęcający użytkowniczkę do rozpoczęcia treningu.
-- **Główne elementy**: 
+- **Główne elementy**:
   - Kontener z komunikatem (`<div>`)
   - Ikona (opcjonalnie)
   - Tekst komunikatu
   - Przycisk CTA do rozpoczęcia treningu (opcjonalnie)
-- **Obsługiwane interakcje**: 
+- **Obsługiwane interakcje**:
   - Kliknięcie w przycisk CTA (przekierowanie do listy planów treningowych lub sesji)
 - **Obsługiwana walidacja**: Brak
 - **Typy**: Brak (komponent bez propsów)
@@ -161,7 +161,7 @@ ExercisePersonalRecordsPage (Server Component)
 ### PersonalRecordHistory [opcjonalny]
 
 - **Opis komponentu**: Komponent wyświetlający historię rekordów (poprzednie rekordy z datami). Komponent jest opcjonalny, ponieważ endpoint `/api/personal-records/[exercise_id]` zwraca tylko aktualne rekordy (najlepsze wartości). Historia może być zaimplementowana w przyszłości, jeśli endpoint zostanie rozszerzony o możliwość pobierania historii.
-- **Główne elementy**: 
+- **Główne elementy**:
   - Nagłówek sekcji "Historia rekordów"
   - Lista elementów historii (`PersonalRecordHistoryItem[]`)
 - **Obsługiwane interakcje**: Brak (komponent tylko do odczytu)
@@ -187,6 +187,7 @@ type PersonalRecordWithExerciseDTO = PersonalRecordDTO & {
 ```
 
 **Pola:**
+
 - `id: string` - UUID rekordu osobistego
 - `exercise_id: string` - UUID ćwiczenia
 - `metric_type: PRMetricType` - typ metryki (`"total_reps" | "max_duration" | "max_weight"`)
@@ -225,14 +226,15 @@ type ExercisePersonalRecordsViewModel = {
   exercise: {
     id: string;
     title: string;
-    type: string; // Przetłumaczony typ (np. "Rozgrzewka", "Główny trening", "Schłodzenie")
-    part: string; // Przetłumaczona partia (np. "Nogi", "Brzuch", "Plecy", "Ręce", "Klatka")
+    type: string; // Przetłumaczony typ (np. "Warm-up", "Main workout", "Cool-down")
+    part: string; // Przetłumaczona partia (np. "Legs", "Core", "Back", "Arms", "Chest")
   };
   records: PersonalRecordMetricViewModel[];
 };
 ```
 
 **Pola:**
+
 - `exercise: { id: string; title: string; type: string; part: string }` - informacje o ćwiczeniu z przetłumaczonymi etykietami
 - `records: PersonalRecordMetricViewModel[]` - lista rekordów dla ćwiczenia
 
@@ -250,6 +252,7 @@ type PersonalRecordMetricViewModel = {
 ```
 
 **Pola:**
+
 - `metricType: PRMetricType` - typ metryki (bez zmian)
 - `label: string` - przetłumaczona etykieta metryki
 - `valueDisplay: string` - sformatowana wartość do wyświetlenia
@@ -263,13 +266,14 @@ type PersonalRecordMetricViewModel = {
 
 ```typescript
 function mapExercisePersonalRecordsToViewModel(
-  records: PersonalRecordWithExerciseDTO[]
+  records: PersonalRecordWithExerciseDTO[],
 ): ExercisePersonalRecordsViewModel | null;
 ```
 
 **Opis**: Mapuje listę rekordów z API na ViewModel dla widoku. Jeśli lista jest pusta, zwraca `null`. Jeśli lista nie jest pusta, wyodrębnia metadane ćwiczenia z pierwszego rekordu i mapuje wszystkie rekordy do `PersonalRecordMetricViewModel[]`.
 
 **Logika:**
+
 1. Jeśli `records.length === 0`, zwróć `null`
 2. Wyodrębnij metadane ćwiczenia z `records[0].exercise`
 3. Przetłumacz typ i partię ćwiczenia
@@ -291,6 +295,7 @@ Widok nie wymaga zarządzania stanem po stronie klienta, ponieważ:
 4. **Linki są statyczne**: Linki do sesji są renderowane statycznie na podstawie danych z API.
 
 **Opcjonalne użycie stanu:**
+
 - Toast notifications przy kliknięciu w link do sesji (można użyć `sonner` bez zarządzania stanem)
 - Loading state podczas nawigacji (obsługiwane przez Next.js)
 
@@ -303,6 +308,7 @@ Widok nie wymaga zarządzania stanem po stronie klienta, ponieważ:
 ### Typy żądania
 
 **Parametry ścieżki:**
+
 - `exercise_id: string` - UUID ćwiczenia (wymagany)
 
 **Query params:** Brak
@@ -377,26 +383,35 @@ const userId = await getUserId();
 const { exercise_id } = await params;
 
 // Walidacja UUID
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidRegex =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 if (!uuidRegex.test(exercise_id)) {
   redirect("/personal-records");
 }
 
 try {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/personal-records/${exercise_id}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`, // Jeśli wymagane
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL || ""}/api/personal-records/${exercise_id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`, // Jeśli wymagane
+      },
     },
-  });
+  );
 
   if (!response.ok) {
-    if (response.status === 404 || response.status === 401 || response.status === 403) {
+    if (
+      response.status === 404 ||
+      response.status === 401 ||
+      response.status === 403
+    ) {
       redirect("/personal-records");
     }
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const data: { items: PersonalRecordWithExerciseDTO[] } = await response.json();
+  const data: { items: PersonalRecordWithExerciseDTO[] } =
+    await response.json();
   // Mapowanie do ViewModel
   const viewModel = mapExercisePersonalRecordsToViewModel(data.items);
 } catch (error) {
@@ -418,7 +433,11 @@ try {
   const viewModel = mapExercisePersonalRecordsToViewModel(result.items);
 } catch (error) {
   if (error instanceof ServiceError) {
-    if (error.code === "NOT_FOUND" || error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN") {
+    if (
+      error.code === "NOT_FOUND" ||
+      error.code === "UNAUTHORIZED" ||
+      error.code === "FORBIDDEN"
+    ) {
       redirect("/personal-records");
     }
   }
@@ -435,7 +454,8 @@ try {
 
 **Akcja**: Kliknięcie w link do szczegółów ćwiczenia (np. w `PersonalRecordCard`)
 
-**Oczekiwany wynik**: 
+**Oczekiwany wynik**:
+
 - Przekierowanie do `/personal-records/[exercise_id]`
 - Załadowanie danych ćwiczenia i rekordów
 - Wyświetlenie widoku z informacjami o ćwiczeniu i rekordach
@@ -446,7 +466,8 @@ try {
 
 **Akcja**: Kliknięcie w link "Zobacz sesję"
 
-**Oczekiwany wynik**: 
+**Oczekiwany wynik**:
+
 - Przekierowanie do `/workout-sessions/[session_id]`
 - Opcjonalnie: Toast notification "Przechodzisz do sesji treningowej"
 
@@ -456,7 +477,8 @@ try {
 
 **Akcja**: Wyświetlenie komunikatu, gdy brak rekordów
 
-**Oczekiwany wynik**: 
+**Oczekiwany wynik**:
+
 - Wyświetlenie komunikatu "Brak rekordów dla tego ćwiczenia"
 - Opcjonalnie: Przycisk CTA "Rozpocznij trening" (przekierowanie do listy planów)
 
@@ -466,7 +488,8 @@ try {
 
 **Akcja**: Przekierowanie do listy rekordów
 
-**Oczekiwany wynik**: 
+**Oczekiwany wynik**:
+
 - Przekierowanie do `/personal-records`
 - Opcjonalnie: Toast notification z komunikatem błędu
 
@@ -478,9 +501,11 @@ try {
 
 **Warunek**: Parametr `exercise_id` musi być w poprawnym formacie UUID
 
-**Walidacja**: 
+**Walidacja**:
+
 ```typescript
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidRegex =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 if (!uuidRegex.test(exercise_id)) {
   redirect("/personal-records");
 }
@@ -495,6 +520,7 @@ if (!uuidRegex.test(exercise_id)) {
 **Warunek**: Ćwiczenie musi należeć do zalogowanego użytkownika
 
 **Walidacja**: Wykonywana po stronie serwera w `getPersonalRecordsByExerciseService`:
+
 - Sprawdzenie, czy ćwiczenie istnieje
 - Sprawdzenie, czy ćwiczenie należy do użytkownika (przez RLS)
 
@@ -506,7 +532,8 @@ if (!uuidRegex.test(exercise_id)) {
 
 **Warunek**: Sprawdzenie, czy lista rekordów nie jest pusta
 
-**Walidacja**: 
+**Walidacja**:
+
 ```typescript
 if (records.length === 0) {
   return <EmptyRecordsState />;
@@ -521,7 +548,8 @@ if (records.length === 0) {
 
 **Warunek**: Sprawdzenie, czy `achieved_in_session_id` nie jest `null`
 
-**Walidacja**: 
+**Walidacja**:
+
 ```typescript
 if (!sessionId) {
   return null; // Nie renderuj linku
@@ -536,7 +564,8 @@ if (!sessionId) {
 
 **Scenariusz**: Parametr `exercise_id` ma nieprawidłowy format UUID
 
-**Obsługa**: 
+**Obsługa**:
+
 - Walidacja UUID w komponencie strony przed wywołaniem API
 - Przekierowanie do `/personal-records` z komunikatem (opcjonalnie)
 
@@ -546,7 +575,8 @@ if (!sessionId) {
 
 **Scenariusz**: Ćwiczenie nie istnieje lub nie należy do użytkownika
 
-**Obsługa**: 
+**Obsługa**:
+
 - API zwraca `404` w `getPersonalRecordsByExerciseService`
 - Przekierowanie do `/personal-records`
 - Opcjonalnie: Toast notification "Ćwiczenie nie zostało znalezione"
@@ -557,7 +587,8 @@ if (!sessionId) {
 
 **Scenariusz**: Użytkowniczka nie jest zalogowana lub nie ma dostępu do danych
 
-**Obsługa**: 
+**Obsługa**:
+
 - API zwraca `401` lub `403`
 - Przekierowanie do `/personal-records` lub strony logowania
 - Opcjonalnie: Toast notification "Brak dostępu do danych"
@@ -568,7 +599,8 @@ if (!sessionId) {
 
 **Scenariusz**: Błąd po stronie serwera (błąd bazy danych, błąd sieci)
 
-**Obsługa**: 
+**Obsługa**:
+
 - API zwraca `500`
 - Przekierowanie do `/personal-records`
 - Opcjonalnie: Toast notification "Wystąpił błąd serwera. Spróbuj ponownie później."
@@ -579,7 +611,8 @@ if (!sessionId) {
 
 **Scenariusz**: Ćwiczenie istnieje, ale nie ma dla niego żadnych rekordów
 
-**Obsługa**: 
+**Obsługa**:
+
 - API zwraca `200` z pustą listą `items: []`
 - Wyświetlenie komponentu `EmptyRecordsState` z komunikatem
 - Opcjonalnie: Przycisk CTA do rozpoczęcia treningu
@@ -590,7 +623,8 @@ if (!sessionId) {
 
 **Scenariusz**: Brak połączenia z serwerem lub timeout
 
-**Obsługa**: 
+**Obsługa**:
+
 - Obsługa wyjątku `fetch` w `try-catch`
 - Przekierowanie do `/personal-records`
 - Opcjonalnie: Toast notification "Brak połączenia z serwerem"

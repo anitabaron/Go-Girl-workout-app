@@ -72,21 +72,19 @@ export default function ImportInstructionPage() {
               </p>
               <div className="space-y-3">
                 <div className="border-l-4 border-red-500 pl-4 py-2 bg-red-50 dark:bg-red-950/20 rounded-r">
-                  <p className="font-medium">1. Warm-up (Rozgrzewka)</p>
+                  <p className="font-medium">1. Warm-up</p>
                   <p className="text-sm text-muted-foreground">
                     Ćwiczenia rozgrzewkowe na początku treningu
                   </p>
                 </div>
                 <div className="border-l-4 border-pink-500 pl-4 py-2 bg-pink-50 dark:bg-pink-950/20 rounded-r">
-                  <p className="font-medium">
-                    2. Main Workout (Główny trening)
-                  </p>
+                  <p className="font-medium">2. Main Workout</p>
                   <p className="text-sm text-muted-foreground">
                     Główne ćwiczenia treningowe
                   </p>
                 </div>
                 <div className="border-l-4 border-purple-500 pl-4 py-2 bg-purple-50 dark:bg-purple-950/20 rounded-r">
-                  <p className="font-medium">3. Cool-down (Rozciąganie)</p>
+                  <p className="font-medium">3. Cool-down </p>
                   <p className="text-sm text-muted-foreground">
                     Ćwiczenia rozciągające na końcu treningu
                   </p>

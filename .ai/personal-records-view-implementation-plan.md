@@ -301,8 +301,8 @@ type PersonalRecordsPageResponse = {
 type PersonalRecordGroupVM = {
   exerciseId: string; // UUID ćwiczenia
   title: string; // Nazwa ćwiczenia (przetłumaczona)
-  type: string; // Typ ćwiczenia (przetłumaczony: "Rozgrzewka", "Główny trening", "Schłodzenie")
-  part: string; // Partia mięśniowa (przetłumaczona: "Nogi", "Brzuch", "Plecy", "Ręce", "Klatka")
+  type: string; // Typ ćwiczenia (przetłumaczony: "Warm-up", "Main workout", "Cool-down")
+  part: string; // Partia mięśniowa (przetłumaczona: "Legs", "Core", "Back", "Arms", "Chest")
   metrics: PersonalRecordMetricVM[]; // Lista metryk dla ćwiczenia
 };
 ```
@@ -456,15 +456,15 @@ const handleLoadMore = async (cursor: string) => {
   try {
     const params = new URLSearchParams(searchParams.toString());
     params.set("cursor", cursor);
-    
+
     const response = await fetch(`/api/personal-records?${params.toString()}`);
-    
+
     if (!response.ok) {
       throw new Error("Failed to load more records");
     }
 
     const data = await response.json();
-    
+
     // Append nowych rekordów do istniejącej listy
     startTransition(() => {
       setRecords((prev) => [...prev, ...data.items]);

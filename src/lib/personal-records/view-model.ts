@@ -1,11 +1,5 @@
-import type {
-  PersonalRecordWithExerciseDTO,
-  PRMetricType,
-} from "@/types";
-import {
-  EXERCISE_PART_LABELS,
-  EXERCISE_TYPE_LABELS,
-} from "@/lib/constants";
+import type { PersonalRecordWithExerciseDTO, PRMetricType } from "@/types";
+import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 
 /**
  * ViewModel dla pojedynczej metryki rekordu osobistego.
@@ -26,8 +20,8 @@ export type ExercisePersonalRecordsViewModel = {
   exercise: {
     id: string;
     title: string;
-    type: string; // Przetłumaczony typ (np. "Rozgrzewka", "Główny trening", "Schłodzenie")
-    part: string; // Przetłumaczona partia (np. "Nogi", "Brzuch", "Plecy", "Ręce", "Klatka")
+    type: string; // Typ ćwiczenia w języku angielskim (np. "Warm-up", "Main Workout", "Cool-down")
+    part: string; // Partia mięśniowa w języku angielskim (np. "Legs", "Core", "Back", "Arms", "Chest")
   };
   records: PersonalRecordMetricViewModel[];
 };
@@ -50,8 +44,8 @@ export type PersonalRecordMetricViewModel = {
 export type PersonalRecordGroupVM = {
   exerciseId: string; // UUID ćwiczenia
   title: string; // Nazwa ćwiczenia
-  type: string; // Typ ćwiczenia (przetłumaczony: "Rozgrzewka", "Główny trening", "Schłodzenie")
-  part: string; // Partia mięśniowa (przetłumaczona: "Nogi", "Brzuch", "Plecy", "Ręce", "Klatka")
+  type: string; // Typ ćwiczenia w języku angielskim (np. "Warm-up", "Main Workout", "Cool-down")
+  part: string; // Partia mięśniowa w języku angielskim (np. "Legs", "Core", "Back", "Arms", "Chest")
   metrics: PersonalRecordMetricVM[]; // Lista metryk dla ćwiczenia
 };
 
@@ -110,7 +104,7 @@ function formatAchievedDate(isoDate: string): string {
  */
 export function mapPersonalRecordsToViewModel(
   records: PersonalRecordWithExerciseDTO[],
-  nextCursor: string | null
+  nextCursor: string | null,
 ): PersonalRecordsPageResponse {
   // Grupowanie rekordów per ćwiczenie
   const groupedByExercise = new Map<string, PersonalRecordWithExerciseDTO[]>();
@@ -164,7 +158,7 @@ export function mapPersonalRecordsToViewModel(
  * @returns ViewModel z informacjami o ćwiczeniu i rekordach lub null, jeśli brak rekordów
  */
 export function mapExercisePersonalRecordsToViewModel(
-  records: PersonalRecordWithExerciseDTO[]
+  records: PersonalRecordWithExerciseDTO[],
 ): ExercisePersonalRecordsViewModel | null {
   // Jeśli lista jest pusta, zwróć null
   if (records.length === 0) {
@@ -188,7 +182,7 @@ export function mapExercisePersonalRecordsToViewModel(
       achievedAt: formatAchievedDate(record.achieved_at),
       sessionId: record.achieved_in_session_id,
       isNew: false, // TODO: Implementacja logiki wykrywania nowych rekordów (osiągniętych w ostatniej sesji)
-    })
+    }),
   );
 
   return {

@@ -217,20 +217,20 @@ ExerciseDetailsPage (Server Component)
 
   ```typescript
   const partLabels: Record<ExercisePart, string> = {
-    Legs: "Nogi",
-    Core: "Brzuch",
-    Back: "Plecy",
-    Arms: "Ręce",
-    Chest: "Klatka",
+    Legs: "Legs",
+    Core: "Core",
+    Back: "Back",
+    Arms: "Arms",
+    Chest: "Chest",
   };
   ```
 
 - `typeLabels`: Mapowanie `ExerciseType` na etykiety po polsku
   ```typescript
   const typeLabels: Record<ExerciseType, string> = {
-    "Warm-up": "Rozgrzewka",
-    "Main Workout": "Główny trening",
-    "Cool-down": "Schłodzenie",
+    "Warm-up": "Warm-up",
+    "Main Workout": "Main Workout",
+    "Cool-down": "Cool-down",
   };
   ```
 
@@ -239,7 +239,6 @@ ExerciseDetailsPage (Server Component)
 ### Stan lokalny w Client Components
 
 - **ExerciseActions**:
-
   - `isDeleteDialogOpen: boolean` - stan otwarcia dialogu usunięcia
   - Zarządzany przez `useState<boolean>`
 
@@ -250,6 +249,7 @@ ExerciseDetailsPage (Server Component)
 ### Custom hook (opcjonalnie)
 
 - `useDeleteExercise`: Hook do obsługi usuwania ćwiczenia
+
   ```typescript
   function useDeleteExercise() {
     const [isDeleting, setIsDeleting] = useState(false);
@@ -265,7 +265,7 @@ ExerciseDetailsPage (Server Component)
         if (!response.ok) {
           if (response.status === 409) {
             toast.error(
-              "Nie można usunąć ćwiczenia, ponieważ jest używane w historii treningów"
+              "Nie można usunąć ćwiczenia, ponieważ jest używane w historii treningów",
             );
           } else {
             toast.error("Nie udało się usunąć ćwiczenia");
@@ -464,7 +464,7 @@ ExerciseDetailsPage (Server Component)
   ```typescript
   if (response.status === 409) {
     toast.error(
-      "Nie można usunąć ćwiczenia, ponieważ jest używane w historii treningów"
+      "Nie można usunąć ćwiczenia, ponieważ jest używane w historii treningów",
     );
     // Dialog pozostaje otwarty
   }
@@ -514,7 +514,7 @@ ExerciseDetailsPage (Server Component)
 
   toast.success("Ćwiczenie zostało usunięte");
   toast.error(
-    "Nie można usunąć ćwiczenia, ponieważ jest używane w historii treningów"
+    "Nie można usunąć ćwiczenia, ponieważ jest używane w historii treningów",
   );
   ```
 

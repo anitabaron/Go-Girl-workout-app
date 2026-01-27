@@ -402,9 +402,9 @@ type ComparisonResult = {
 
 ```typescript
 const typeLabels: Record<ExerciseType, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
+  "Warm-up": "Warm-up",
+  "Main Workout": "Main Workout",
+  "Cool-down": "Cool-down",
 };
 ```
 
@@ -412,11 +412,11 @@ const typeLabels: Record<ExerciseType, string> = {
 
 ```typescript
 const partLabels: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
+  Legs: "Legs",
+  Core: "Core",
+  Back: "Back",
+  Arms: "Arms",
+  Chest: "Chest",
 };
 ```
 
@@ -470,7 +470,7 @@ SessionDetailDTO;
 ```typescript
 // W WorkoutSessionDetailsPage (Server Component)
 async function fetchSessionDetails(
-  sessionId: string
+  sessionId: string,
 ): Promise<SessionDetailDTO> {
   const response = await fetch(
     `${
@@ -482,7 +482,7 @@ async function fetchSessionDetails(
         "Content-Type": "application/json",
       },
       cache: "no-store", // Zawsze pobierz najnowsze dane
-    }
+    },
   );
 
   if (!response.ok) {
@@ -519,14 +519,12 @@ const session = await getWorkoutSessionService(userId, sessionId);
 ### Interakcje podstawowe
 
 1. **Wejście na widok**:
-
    - Użytkowniczka klika na kartę sesji z listy (`/workout-sessions`)
    - Lub wchodzi bezpośrednio przez URL `/workout-sessions/[id]`
    - Server Component pobiera dane z API
    - Wyświetlenie metadanych, listy ćwiczeń i serii
 
 2. **Przeglądanie ćwiczeń**:
-
    - Użytkowniczka przewija listę ćwiczeń
    - Dla każdego ćwiczenia widzi porównanie planned vs actual
    - Przegląda szczegóły serii w tabeli
@@ -539,7 +537,6 @@ const session = await getWorkoutSessionService(userId, sessionId);
 ### Interakcje responsywne
 
 - **Mobile (< 768px)**:
-
   - Sekcje planned vs actual wyświetlane jedna pod drugą (stacked layout)
   - Tabela serii z przewijaniem poziomym (jeśli potrzeba)
   - Przyciski akcji na pełną szerokość
@@ -552,7 +549,6 @@ const session = await getWorkoutSessionService(userId, sessionId);
 ### Interakcje dostępności
 
 - **Keyboard navigation**:
-
   - `Tab` - przechodzenie między interaktywnymi elementami (przycisk "Wznów trening")
   - `Enter/Space` - aktywacja przycisku
   - `Arrow keys` - przewijanie listy ćwiczeń (opcjonalnie)
@@ -567,7 +563,6 @@ const session = await getWorkoutSessionService(userId, sessionId);
 ### Warunki weryfikowane przez interfejs
 
 1. **Status sesji**:
-
    - **Warunek**: Sprawdzenie wartości `status` (musi być `"in_progress"` lub `"completed"`)
    - **Komponent**: `WorkoutSessionActions`, `ResumeSessionButton`
    - **Wpływ na UI**:
@@ -575,7 +570,6 @@ const session = await getWorkoutSessionService(userId, sessionId);
      - Dla `completed`: brak przycisku (lub komunikat "Sesja zakończona")
 
 2. **Obecność danych ćwiczeń**:
-
    - **Warunek**: Sprawdzenie, czy `exercises.length > 0`
    - **Komponent**: `WorkoutSessionExercisesList`
    - **Wpływ na UI**:
@@ -583,7 +577,6 @@ const session = await getWorkoutSessionService(userId, sessionId);
      - Jeśli niepusta: renderowanie listy ćwiczeń
 
 3. **Obecność serii dla ćwiczenia**:
-
    - **Warunek**: Sprawdzenie, czy `exercise.sets.length > 0`
    - **Komponent**: `SetLogsTable`
    - **Wpływ na UI**:
@@ -591,7 +584,6 @@ const session = await getWorkoutSessionService(userId, sessionId);
      - Jeśli niepusta: renderowanie tabeli serii
 
 4. **Ćwiczenie pominięte**:
-
    - **Warunek**: Sprawdzenie flagi `exercise.is_skipped === true`
    - **Komponent**: `ActualSection`, `WorkoutSessionExerciseItem`
    - **Wpływ na UI**:
@@ -600,7 +592,6 @@ const session = await getWorkoutSessionService(userId, sessionId);
      - Pominięcie porównania parametrów (lub wyświetlenie z wartościami 0)
 
 5. **Wartości null w parametrach**:
-
    - **Warunek**: Sprawdzenie, czy wartość parametru jest `null` lub `undefined`
    - **Komponent**: `PlannedSection`, `ActualSection`
    - **Wpływ na UI**:
@@ -627,7 +618,6 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Scenariusze błędów
 
 1. **Sesja nie znaleziona (404)**:
-
    - **Przyczyna**: Nieprawidłowy UUID lub sesja została usunięta
    - **Obsługa**:
      - Wyświetlenie komunikatu: "Sesja treningowa nie została znaleziona"
@@ -635,14 +625,12 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
      - Komponent: `ErrorBoundary` lub warunkowy render w `WorkoutSessionDetailsPage`
 
 2. **Brak autoryzacji (401/403)**:
-
    - **Przyczyna**: Użytkowniczka nie ma dostępu do sesji (RLS) lub sesja wygasła
    - **Obsługa**:
      - Przekierowanie do `/login` (401) lub wyświetlenie komunikatu "Brak dostępu" (403)
      - Komponent: Middleware Next.js lub warunkowy render
 
 3. **Błąd serwera (500)**:
-
    - **Przyczyna**: Błąd po stronie serwera lub baza danych
    - **Obsługa**:
      - Wyświetlenie komunikatu: "Wystąpił błąd serwera. Spróbuj ponownie później."
@@ -650,14 +638,12 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
      - Komponent: `ErrorBoundary`
 
 4. **Brak danych ćwiczeń**:
-
    - **Przyczyna**: Sesja nie ma przypisanych ćwiczeń (błąd w danych)
    - **Obsługa**:
      - Wyświetlenie komunikatu: "Sesja nie zawiera ćwiczeń"
      - Komponent: Warunkowy render w `WorkoutSessionExercisesList`
 
 5. **Błąd sieci**:
-
    - **Przyczyna**: Brak połączenia z internetem lub timeout
    - **Obsługa**:
      - Wyświetlenie komunikatu: "Brak połączenia z internetem"
@@ -712,14 +698,12 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Krok 3: Implementacja komponentów metadanych
 
 1. Implementacja `WorkoutSessionMetadata`:
-
    - Wyświetlenie daty rozpoczęcia i zakończenia
    - Wyświetlenie nazwy planu (lub "Plan usunięty")
    - Integracja z `SessionStatusBadge`
    - Integracja z `SessionDurationDisplay`
 
 2. Implementacja `SessionStatusBadge`:
-
    - Renderowanie badge'a z odpowiednim kolorem i ikoną
    - Mapowanie statusu na wizualną reprezentację
 
@@ -730,7 +714,6 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Krok 4: Implementacja komponentów akcji
 
 1. Implementacja `WorkoutSessionActions`:
-
    - Warunkowe renderowanie przycisku wznowienia (tylko dla `in_progress`)
    - Integracja z `ResumeSessionButton`
 
@@ -742,13 +725,11 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Krok 5: Implementacja listy ćwiczeń
 
 1. Implementacja `WorkoutSessionExercisesList`:
-
    - Mapowanie tablicy ćwiczeń na komponenty `WorkoutSessionExerciseItem`
    - Sortowanie po `exercise_order`
    - Obsługa pustej listy ćwiczeń
 
 2. Implementacja `WorkoutSessionExerciseItem`:
-
    - Renderowanie karty ćwiczenia
    - Integracja z `ExerciseHeader`
    - Integracja z `PlannedVsActualComparison`
@@ -763,14 +744,12 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Krok 6: Implementacja komponentów porównawczych
 
 1. Implementacja `PlannedVsActualComparison`:
-
    - Layout responsywny (stacked mobile, side-by-side desktop)
    - Integracja z `PlannedSection` i `ActualSection`
    - Logika porównywania wartości
    - Wizualne wyróżnienie różnic (kolory, ikony)
 
 2. Implementacja `PlannedSection`:
-
    - Wyświetlenie parametrów planowanych (sets, reps, duration, rest)
    - Formatowanie wartości
    - Obsługa wartości null
@@ -795,7 +774,6 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Krok 8: Stylowanie i responsywność
 
 1. Stylowanie komponentów:
-
    - Użycie Tailwind CSS zgodnie z design system
    - Kolory dla wyróżnienia różnic (zielony, żółty, pomarańczowy)
    - Responsywne breakpointy (mobile < 768px, desktop ≥ 768px)
@@ -808,13 +786,11 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Krok 9: Dostępność (a11y)
 
 1. Dodanie ARIA labels:
-
    - Dla wszystkich sekcji (`aria-label` lub `aria-labelledby`)
    - Dla tabel (`aria-label` dla tabeli, `aria-describedby` dla opisów)
    - Dla przycisków (opisowe `aria-label`)
 
 2. Semantyczne HTML:
-
    - Użycie `<main>`, `<section>`, `<table>`, `<dl>` zamiast `<div>`
    - Właściwe nagłówki hierarchiczne (`<h1>`, `<h2>`, `<h3>`)
 
@@ -825,7 +801,6 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Krok 10: Testowanie
 
 1. Testy funkcjonalne:
-
    - Pobranie danych sesji `completed` - sprawdzenie wyświetlenia wszystkich sekcji
    - Pobranie danych sesji `in_progress` - sprawdzenie przycisku wznowienia
    - Obsługa błędów (404, 401/403, 500)
@@ -834,13 +809,11 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
    - Obsługa ćwiczeń pominiętych
 
 2. Testy responsywności:
-
    - Sprawdzenie layoutu na mobile (< 768px)
    - Sprawdzenie layoutu na desktop (≥ 768px)
    - Sprawdzenie przewijania tabeli serii na mobile
 
 3. Testy dostępności:
-
    - Test z screen readerem (VoiceOver, NVDA)
    - Test nawigacji klawiaturą
    - Sprawdzenie ARIA labels
@@ -853,13 +826,11 @@ Interfejs nie wykonuje walidacji danych wejściowych (ponieważ nie ma formularz
 ### Krok 11: Optymalizacja i finał
 
 1. Optymalizacja wydajności:
-
    - Memoizacja komponentów (React.memo) dla listy ćwiczeń
    - Lazy loading obrazów (jeśli będą dodane w przyszłości)
    - Optymalizacja renderowania dużych list ćwiczeń
 
 2. Dokumentacja:
-
    - Komentarze w kodzie dla złożonych logik
    - README dla komponentów (opcjonalnie)
 

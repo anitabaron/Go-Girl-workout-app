@@ -1,21 +1,21 @@
 import type { ExercisePart, ExerciseType } from "@/types";
 
 /**
- * Tłumaczenia części ciała (ExercisePart) na język polski.
+ * Etykiety części ciała (ExercisePart) w języku angielskim.
  */
 export const EXERCISE_PART_LABELS: Record<ExercisePart, string> = {
-  Legs: "Nogi",
-  Core: "Brzuch",
-  Back: "Plecy",
-  Arms: "Ręce",
-  Chest: "Klatka",
+  Legs: "Legs",
+  Core: "Core",
+  Back: "Back",
+  Arms: "Arms",
+  Chest: "Chest",
 };
 
 /**
- * Tłumaczenia typów ćwiczeń (ExerciseType) na język polski.
+ * Etykiety typów ćwiczeń (ExerciseType) w języku angielskim.
  */
 export const EXERCISE_TYPE_LABELS: Record<ExerciseType, string> = {
-  "Warm-up": "Rozgrzewka",
-  "Main Workout": "Główny trening",
-  "Cool-down": "Schłodzenie",
+  "Warm-up": "Warm-up",
+  "Main Workout": "Main Workout",
+  "Cool-down": "Cool-down",
 };

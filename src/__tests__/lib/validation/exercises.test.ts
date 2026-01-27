@@ -1,55 +1,55 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   normalizeTitle,
   validateExerciseBusinessRules,
-} from '@/lib/validation/exercises';
+} from "@/lib/validation/exercises";
 
 /**
  * Testy jednostkowe dla funkcji walidacji ćwiczeń
- * 
+ *
  * Priorytet: WYSOKI
  * Funkcje czyste (pure functions) - łatwe do testowania, brak zależności zewnętrznych
  * Kluczowe dla logiki biznesowej i poprawności danych
  */
 
-describe('normalizeTitle', () => {
-  describe('normalizacja diakrytyków', () => {
-    it('should normalize Polish diacritics to ASCII equivalents', () => {
+describe("normalizeTitle", () => {
+  describe("normalizacja diakrytyków", () => {
+    it("should normalize Polish diacritics to ASCII equivalents", () => {
       // Arrange
-      const input = 'Ćwiczenie';
+      const input = "Ćwiczenie";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
-      expect(result).toBe('cwiczenie');
+      expect(result).toBe("cwiczenie");
     });
 
-    it('should normalize multiple diacritics in single string', () => {
+    it("should normalize multiple diacritics in single string", () => {
       // Arrange
-      const input = 'Łąka Ćwiczeń';
+      const input = "Łąka Ćwiczeń";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
       // Note: "Ł" is not a diacritic but a separate letter, so it remains as "ł"
-      expect(result).toBe('łaka cwiczen');
+      expect(result).toBe("łaka cwiczen");
     });
 
-    it('should normalize all common Polish diacritics', () => {
+    it("should normalize all common Polish diacritics", () => {
       // Arrange
       // Note: "Ł" is not a diacritic but a separate letter, so it remains as "ł"
       const testCases = [
-        { input: 'ą', expected: 'a' },
-        { input: 'ć', expected: 'c' },
-        { input: 'ę', expected: 'e' },
-        { input: 'ł', expected: 'ł' }, // Ł is a separate letter, not a diacritic
-        { input: 'ń', expected: 'n' },
-        { input: 'ó', expected: 'o' },
-        { input: 'ś', expected: 's' },
-        { input: 'ź', expected: 'z' },
-        { input: 'ż', expected: 'z' },
+        { input: "ą", expected: "a" },
+        { input: "ć", expected: "c" },
+        { input: "ę", expected: "e" },
+        { input: "ł", expected: "ł" }, // Ł is a separate letter, not a diacritic
+        { input: "ń", expected: "n" },
+        { input: "ó", expected: "o" },
+        { input: "ś", expected: "s" },
+        { input: "ź", expected: "z" },
+        { input: "ż", expected: "z" },
       ];
 
       // Act & Assert
@@ -59,93 +59,93 @@ describe('normalizeTitle', () => {
     });
   });
 
-  describe('obsługa wielokrotnych spacji', () => {
-    it('should replace multiple spaces with single space', () => {
+  describe("obsługa wielokrotnych spacji", () => {
+    it("should replace multiple spaces with single space", () => {
       // Arrange
-      const input = 'Ćwiczenie   na   nogi';
+      const input = "Ćwiczenie   na   nogi";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
-      expect(result).toBe('cwiczenie na nogi');
+      expect(result).toBe("cwiczenie na nogi");
     });
 
-    it('should handle tabs and newlines as spaces', () => {
+    it("should handle tabs and newlines as spaces", () => {
       // Arrange
-      const input = 'Ćwiczenie\t\tna\n\nnogi';
+      const input = "Ćwiczenie\t\tna\n\nnogi";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
-      expect(result).toBe('cwiczenie na nogi');
-    });
-  });
-
-  describe('konwersja na małe litery', () => {
-    it('should convert uppercase to lowercase', () => {
-      // Arrange
-      const input = 'PRZYSIADY';
-
-      // Act
-      const result = normalizeTitle(input);
-
-      // Assert
-      expect(result).toBe('przysiady');
-    });
-
-    it('should handle mixed case', () => {
-      // Arrange
-      const input = 'Przysiady Z Obciążeniem';
-
-      // Act
-      const result = normalizeTitle(input);
-
-      // Assert
-      expect(result).toBe('przysiady z obciazeniem');
+      expect(result).toBe("cwiczenie na nogi");
     });
   });
 
-  describe('trimowanie białych znaków', () => {
-    it('should trim leading and trailing whitespace', () => {
+  describe("konwersja na małe litery", () => {
+    it("should convert uppercase to lowercase", () => {
       // Arrange
-      const input = '  przysiady  ';
+      const input = "PRZYSIADY";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
-      expect(result).toBe('przysiady');
+      expect(result).toBe("przysiady");
     });
 
-    it('should handle string with only whitespace', () => {
+    it("should handle mixed case", () => {
       // Arrange
-      const input = '   \t\n  ';
+      const input = "Przysiady Z Obciążeniem";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
-      expect(result).toBe('');
+      expect(result).toBe("przysiady z obciazeniem");
     });
   });
 
-  describe('warunki brzegowe', () => {
-    it('should handle empty string', () => {
+  describe("trimowanie białych znaków", () => {
+    it("should trim leading and trailing whitespace", () => {
       // Arrange
-      const input = '';
+      const input = "  przysiady  ";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
-      expect(result).toBe('');
+      expect(result).toBe("przysiady");
     });
 
-    it('should handle string with only diacritics', () => {
+    it("should handle string with only whitespace", () => {
       // Arrange
-      const input = 'ĄĆĘŁŃÓŚŹŻ';
+      const input = "   \t\n  ";
+
+      // Act
+      const result = normalizeTitle(input);
+
+      // Assert
+      expect(result).toBe("");
+    });
+  });
+
+  describe("warunki brzegowe", () => {
+    it("should handle empty string", () => {
+      // Arrange
+      const input = "";
+
+      // Act
+      const result = normalizeTitle(input);
+
+      // Assert
+      expect(result).toBe("");
+    });
+
+    it("should handle string with only diacritics", () => {
+      // Arrange
+      const input = "ĄĆĘŁŃÓŚŹŻ";
 
       // Act
       const result = normalizeTitle(input);
@@ -153,36 +153,36 @@ describe('normalizeTitle', () => {
       // Assert
       // Note: "Ł" remains as "ł" because it's not a diacritic (separate letter)
       // Order: A→a, C→c, E→e, Ł→ł, N→n, O→o, S→s, Z→z, Z→z
-      expect(result).toBe('acełnoszz');
+      expect(result).toBe("acełnoszz");
     });
 
-    it('should handle complex real-world example', () => {
+    it("should handle complex real-world example", () => {
       // Arrange
-      const input = '  Przysiady   Z   Obciążeniem  (Ćwiczenie Na Nogi)  ';
+      const input = "  Przysiady   Z   Obciążeniem  (Ćwiczenie Na Nogi)  ";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
-      expect(result).toBe('przysiady z obciazeniem (cwiczenie na nogi)');
+      expect(result).toBe("przysiady z obciazeniem (cwiczenie na nogi)");
     });
 
-    it('should preserve special characters but normalize diacritics', () => {
+    it("should preserve special characters but normalize diacritics", () => {
       // Arrange
-      const input = 'Ćwiczenie #1: Rozgrzewka';
+      const input = "Ćwiczenie #1: Warm-up";
 
       // Act
       const result = normalizeTitle(input);
 
       // Assert
-      expect(result).toBe('cwiczenie #1: rozgrzewka');
+      expect(result).toBe("cwiczenie #1: warm-up");
     });
   });
 });
 
-describe('validateExerciseBusinessRules', () => {
-  describe('reguła: dokładnie jedno z reps lub duration_seconds', () => {
-    it('should return error when both reps and duration_seconds are provided', () => {
+describe("validateExerciseBusinessRules", () => {
+  describe("reguła: dokładnie jedno z reps lub duration_seconds", () => {
+    it("should return error when both reps and duration_seconds are provided", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -195,11 +195,13 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).toContain('Podaj dokładnie jedno z pól: reps lub duration_seconds.');
+      expect(result).toContain(
+        "Podaj dokładnie jedno z pól: reps lub duration_seconds.",
+      );
       expect(result.length).toBeGreaterThan(0);
     });
 
-    it('should return error when neither reps nor duration_seconds is provided', () => {
+    it("should return error when neither reps nor duration_seconds is provided", () => {
       // Arrange
       const input = {
         series: 3,
@@ -210,10 +212,12 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).toContain('Podaj dokładnie jedno z pól: reps lub duration_seconds.');
+      expect(result).toContain(
+        "Podaj dokładnie jedno z pól: reps lub duration_seconds.",
+      );
     });
 
-    it('should return empty array when only reps is provided', () => {
+    it("should return empty array when only reps is provided", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -228,7 +232,7 @@ describe('validateExerciseBusinessRules', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array when only duration_seconds is provided', () => {
+    it("should return empty array when only duration_seconds is provided", () => {
       // Arrange
       const input = {
         duration_seconds: 30,
@@ -243,7 +247,7 @@ describe('validateExerciseBusinessRules', () => {
       expect(result).toEqual([]);
     });
 
-    it('should handle null values correctly', () => {
+    it("should handle null values correctly", () => {
       // Arrange
       const input = {
         reps: null,
@@ -256,12 +260,14 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).toContain('Podaj dokładnie jedno z pól: reps lub duration_seconds.');
+      expect(result).toContain(
+        "Podaj dokładnie jedno z pól: reps lub duration_seconds.",
+      );
     });
   });
 
-  describe('reguła: co najmniej jedno pole odpoczynku', () => {
-    it('should return error when no rest fields are provided', () => {
+  describe("reguła: co najmniej jedno pole odpoczynku", () => {
+    it("should return error when no rest fields are provided", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -273,11 +279,11 @@ describe('validateExerciseBusinessRules', () => {
 
       // Assert
       expect(result).toContain(
-        'Wymagane jest co najmniej jedno pole odpoczynku (rest_in_between_seconds lub rest_after_series_seconds).'
+        "Wymagane jest co najmniej jedno pole odpoczynku (rest_in_between_seconds lub rest_after_series_seconds).",
       );
     });
 
-    it('should return empty array when rest_in_between_seconds is provided', () => {
+    it("should return empty array when rest_in_between_seconds is provided", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -292,7 +298,7 @@ describe('validateExerciseBusinessRules', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array when rest_after_series_seconds is provided', () => {
+    it("should return empty array when rest_after_series_seconds is provided", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -307,7 +313,7 @@ describe('validateExerciseBusinessRules', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array when both rest fields are provided', () => {
+    it("should return empty array when both rest fields are provided", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -323,7 +329,7 @@ describe('validateExerciseBusinessRules', () => {
       expect(result).toEqual([]);
     });
 
-    it('should handle null values in rest fields', () => {
+    it("should handle null values in rest fields", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -337,13 +343,13 @@ describe('validateExerciseBusinessRules', () => {
 
       // Assert
       expect(result).toContain(
-        'Wymagane jest co najmniej jedno pole odpoczynku (rest_in_between_seconds lub rest_after_series_seconds).'
+        "Wymagane jest co najmniej jedno pole odpoczynku (rest_in_between_seconds lub rest_after_series_seconds).",
       );
     });
   });
 
-  describe('reguła: series musi być większe od zera', () => {
-    it('should return error when series is 0', () => {
+  describe("reguła: series musi być większe od zera", () => {
+    it("should return error when series is 0", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -355,10 +361,10 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).toContain('Pole series musi być większe od zera.');
+      expect(result).toContain("Pole series musi być większe od zera.");
     });
 
-    it('should return error when series is negative', () => {
+    it("should return error when series is negative", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -370,10 +376,10 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).toContain('Pole series musi być większe od zera.');
+      expect(result).toContain("Pole series musi być większe od zera.");
     });
 
-    it('should return empty array when series is positive', () => {
+    it("should return empty array when series is positive", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -385,10 +391,10 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).not.toContain('Pole series musi być większe od zera.');
+      expect(result).not.toContain("Pole series musi być większe od zera.");
     });
 
-    it('should not validate series when series is undefined', () => {
+    it("should not validate series when series is undefined", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -400,12 +406,12 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).not.toContain('Pole series musi być większe od zera.');
+      expect(result).not.toContain("Pole series musi być większe od zera.");
     });
   });
 
-  describe('reguła: pola odpoczynku nie mogą być ujemne', () => {
-    it('should return error when rest_in_between_seconds is negative', () => {
+  describe("reguła: pola odpoczynku nie mogą być ujemne", () => {
+    it("should return error when rest_in_between_seconds is negative", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -417,10 +423,12 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).toContain('Pole rest_in_between_seconds nie może być ujemne.');
+      expect(result).toContain(
+        "Pole rest_in_between_seconds nie może być ujemne.",
+      );
     });
 
-    it('should return error when rest_after_series_seconds is negative', () => {
+    it("should return error when rest_after_series_seconds is negative", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -432,10 +440,12 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).toContain('Pole rest_after_series_seconds nie może być ujemne.');
+      expect(result).toContain(
+        "Pole rest_after_series_seconds nie może być ujemne.",
+      );
     });
 
-    it('should allow zero values for rest fields', () => {
+    it("should allow zero values for rest fields", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -447,12 +457,14 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).not.toContain('Pole rest_in_between_seconds nie może być ujemne.');
+      expect(result).not.toContain(
+        "Pole rest_in_between_seconds nie może być ujemne.",
+      );
     });
   });
 
-  describe('kombinacje błędów', () => {
-    it('should return multiple errors when multiple rules are violated', () => {
+  describe("kombinacje błędów", () => {
+    it("should return multiple errors when multiple rules are violated", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -465,15 +477,17 @@ describe('validateExerciseBusinessRules', () => {
       const result = validateExerciseBusinessRules(input);
 
       // Assert
-      expect(result).toContain('Podaj dokładnie jedno z pól: reps lub duration_seconds.');
-      expect(result).toContain('Pole series musi być większe od zera.');
       expect(result).toContain(
-        'Wymagane jest co najmniej jedno pole odpoczynku (rest_in_between_seconds lub rest_after_series_seconds).'
+        "Podaj dokładnie jedno z pól: reps lub duration_seconds.",
+      );
+      expect(result).toContain("Pole series musi być większe od zera.");
+      expect(result).toContain(
+        "Wymagane jest co najmniej jedno pole odpoczynku (rest_in_between_seconds lub rest_after_series_seconds).",
       );
       expect(result.length).toBe(3);
     });
 
-    it('should return all validation errors in correct order', () => {
+    it("should return all validation errors in correct order", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -488,15 +502,19 @@ describe('validateExerciseBusinessRules', () => {
 
       // Assert
       expect(result.length).toBeGreaterThanOrEqual(4);
-      expect(result[0]).toContain('Podaj dokładnie jedno z pól');
-      expect(result).toContain('Pole series musi być większe od zera.');
-      expect(result).toContain('Pole rest_in_between_seconds nie może być ujemne.');
-      expect(result).toContain('Pole rest_after_series_seconds nie może być ujemne.');
+      expect(result[0]).toContain("Podaj dokładnie jedno z pól");
+      expect(result).toContain("Pole series musi być większe od zera.");
+      expect(result).toContain(
+        "Pole rest_in_between_seconds nie może być ujemne.",
+      );
+      expect(result).toContain(
+        "Pole rest_after_series_seconds nie może być ujemne.",
+      );
     });
   });
 
-  describe('poprawne dane wejściowe', () => {
-    it('should return empty array for valid input with reps', () => {
+  describe("poprawne dane wejściowe", () => {
+    it("should return empty array for valid input with reps", () => {
       // Arrange
       const input = {
         reps: 10,
@@ -512,7 +530,7 @@ describe('validateExerciseBusinessRules', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array for valid input with duration_seconds', () => {
+    it("should return empty array for valid input with duration_seconds", () => {
       // Arrange
       const input = {
         duration_seconds: 30,

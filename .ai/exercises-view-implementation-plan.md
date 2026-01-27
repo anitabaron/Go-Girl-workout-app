@@ -240,9 +240,9 @@ type ExerciseCardViewModel = {
   id: string;
   title: string;
   type: ExerciseType;
-  typeLabel: string; // "Rozgrzewka" | "Główny trening" | "Schłodzenie"
+  typeLabel: string; // "Warm-up" | "Main workout" | "Cool-down"
   part: ExercisePart;
-  partLabel: string; // "Nogi" | "Brzuch" | "Plecy" | "Ręce" | "Klatka"
+  partLabel: string; // "Legs" | "Core" | "Back" | "Arms" | "Chest"
   level: string | null;
   href: string; // `/exercises/${id}`
 };

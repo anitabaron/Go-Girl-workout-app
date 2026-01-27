@@ -66,7 +66,10 @@ function processDataGood(data: { title?: string }): void {
 ### ❌ Błędne - nadmierne użycie type assertions
 
 ```typescript
-function getValueFromObjectBad(obj: Record<string, unknown>, key: string): string {
+function getValueFromObjectBad(
+  obj: Record<string, unknown>,
+  key: string,
+): string {
   return obj[key as keyof typeof obj] as string; // Niebezpieczne
 }
 ```
@@ -76,7 +79,7 @@ function getValueFromObjectBad(obj: Record<string, unknown>, key: string): strin
 ```typescript
 function getValueFromObjectGood(
   obj: { name: string; id: number },
-  key: "name" | "id"
+  key: "name" | "id",
 ): string | number {
   return key === "name" ? obj.name : obj.id;
 }
@@ -209,7 +212,10 @@ function getSortValueBad(row: Row, sort: string): string | number {
 ### ✅ Poprawne - explicit type narrowing
 
 ```typescript
-function getSortValueGood(row: Row, sort: "id" | "name" | "created_at"): string | number {
+function getSortValueGood(
+  row: Row,
+  sort: "id" | "name" | "created_at",
+): string | number {
   switch (sort) {
     case "id":
       return row.id;
@@ -246,7 +252,7 @@ function updateEntityGood(data: Partial<{ title: string }>): void {
 type SelectResult<T> = Omit<T, "user_id" | "internal_id">;
 
 function mapToDTO<T extends { user_id: string }>(
-  row: T | SelectResult<T>
+  row: T | SelectResult<T>,
 ): Omit<T, "user_id"> {
   const { user_id, ...rest } = row as T;
   return rest;
@@ -274,10 +280,10 @@ const labelsBad: Record<string, string> = {
 
 ```typescript
 const labelsGood: Record<Part, string> = {
-  Arms: "Ręce",
-  Back: "Plecy",
-  Chest: "Klatka",
-  Core: "Brzuch",
+  Arms: "Arms",
+  Back: "Back",
+  Chest: "Chest",
+  Core: "Core",
 };
 ```
 
@@ -287,13 +293,13 @@ const labelsGood: Record<Part, string> = {
 function getPartLabel(part: Part): string {
   switch (part) {
     case "Arms":
-      return "Ręce";
+      return "Arms";
     case "Back":
-      return "Plecy";
+      return "Back";
     case "Chest":
-      return "Klatka";
+      return "Chest";
     case "Core":
-      return "Brzuch";
+      return "Core";
     // TypeScript sprawdzi, czy wszystkie przypadki są obsłużone
   }
 }
@@ -325,7 +331,11 @@ const schemaGood = z.enum(["value1", "value2"], {
 
 ```typescript
 const exerciseSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(120, "Title too long"),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title is required")
+    .max(120, "Title too long"),
   type: z.enum(["Strength", "Cardio", "Flexibility"], {
     message: "Type is required",
   }),
@@ -473,7 +483,7 @@ const patternGood = "/(.*\\.(?:svg|png)$).*)";
 
 ```typescript
 const complexPattern = new RegExp(
-  `((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)`
+  `((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)`,
 );
 ```
 
