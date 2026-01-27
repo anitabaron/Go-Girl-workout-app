@@ -81,18 +81,27 @@ export type ExerciseDTO = Omit<ExerciseEntity, "user_id" | "title_normalized">;
 /**
  * Workout Plans
  */
-export type WorkoutPlanExerciseInput = Pick<
-  TablesInsert<"workout_plan_exercises">,
-  | "exercise_id"
-  | "section_type"
-  | "section_order"
-  | "planned_sets"
-  | "planned_reps"
-  | "planned_duration_seconds"
-  | "planned_rest_seconds"
+export type WorkoutPlanExerciseInput = Omit<
+  Pick<
+    TablesInsert<"workout_plan_exercises">,
+    | "section_type"
+    | "section_order"
+    | "planned_sets"
+    | "planned_reps"
+    | "planned_duration_seconds"
+    | "planned_rest_seconds"
+  >,
+  "exercise_id"
 > & {
+  // exercise_id jest teraz nullable (po migracji)
+  exercise_id?: string | null;
   planned_rest_after_series_seconds?: number | null;
   estimated_set_time_seconds?: number | null;
+  // Snapshot pól dla importu (wymagane jeśli exercise_id IS NULL)
+  exercise_title?: string | null;
+  exercise_type?: ExerciseType | null;
+  exercise_part?: ExercisePart | null;
+  exercise_details?: string | null; // Opis ćwiczenia (z JSON importu)
 };
 
 export type WorkoutPlanCreateCommand = Pick<
@@ -116,12 +125,16 @@ export type WorkoutPlanExerciseDTO = Omit<
   WorkoutPlanExerciseEntity,
   "plan_id" | "created_at"
 > & {
-  exercise_title?: string | null;
+  snapshot_id?: string | null;  // UUID identyfikujący unikalny snapshot (ten sam snapshot = ten sam UUID)
+  exercise_title?: string | null;  // Z snapshot lub z exercises
   exercise_type?: ExerciseType | null;
   exercise_part?: ExercisePart | null;
+  exercise_details?: string | null;  // Opis ćwiczenia (z JSON importu, przekazywany jako details przy tworzeniu)
   exercise_estimated_set_time_seconds?: number | null;
   exercise_rest_after_series_seconds?: number | null;
   planned_rest_after_series_seconds?: number | null;
+  // Flaga wskazująca czy ćwiczenie istnieje w bazie
+  is_exercise_in_library?: boolean;
 };
 
 export type WorkoutPlanDTO = Omit<WorkoutPlanEntity, "user_id"> & {

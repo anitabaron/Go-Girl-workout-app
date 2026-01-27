@@ -109,31 +109,74 @@ export const workoutPlanEstimatedSetTimeSchema = z
 
 /**
  * Schema dla walidacji exercise_id (UUID)
+ * Może być string (UUID) lub null (dla snapshot)
  */
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const workoutPlanExerciseIdSchema = z
+  .union([
+    z.string().refine(
+      (val) => uuidRegex.test(val),
+      "exercise_id musi być prawidłowym UUID"
+    ),
+    z.null(),
+  ])
+  .optional();
+
+/**
+ * Schema dla walidacji exercise_title (dla snapshot)
+ */
+export const workoutPlanExerciseTitleSchema = z
   .string()
-  .refine(
-    (val) => uuidRegex.test(val),
-    "exercise_id musi być prawidłowym UUID"
-  );
+  .trim()
+  .min(1, "Nazwa ćwiczenia jest wymagana dla snapshot")
+  .optional();
 
 /**
  * Schema dla walidacji pojedynczego ćwiczenia w formularzu
+ * Ćwiczenie musi mieć exercise_id LUB exercise_title (dla snapshot)
  */
 export const workoutPlanExerciseItemFormSchema = z
   .object({
     exercise_id: workoutPlanExerciseIdSchema,
+    exercise_title: workoutPlanExerciseTitleSchema,
+    exercise_type: z.enum(exerciseTypeValues).optional(),
+    exercise_part: z.enum(exercisePartValues).optional(),
     section_type: workoutPlanSectionTypeSchema,
     section_order: workoutPlanSectionOrderSchema,
     planned_sets: workoutPlanPlannedSetsSchema,
     planned_reps: workoutPlanPlannedRepsSchema,
     planned_duration_seconds: workoutPlanPlannedDurationSchema,
     planned_rest_seconds: workoutPlanPlannedRestSchema,
+    planned_rest_after_series_seconds: workoutPlanPlannedRestAfterSeriesSchema,
+    estimated_set_time_seconds: workoutPlanEstimatedSetTimeSchema,
   })
-  .strict();
+  .refine(
+    (data) => {
+      // Musi mieć exercise_id LUB exercise_title
+      const hasExerciseId = data.exercise_id && typeof data.exercise_id === "string" && data.exercise_id.trim() !== "";
+      const hasExerciseTitle = data.exercise_title && typeof data.exercise_title === "string" && data.exercise_title.trim() !== "";
+      return hasExerciseId || hasExerciseTitle;
+    },
+    {
+      message: "Ćwiczenie musi mieć exercise_id lub exercise_title (dla snapshot)",
+      path: ["exercise_id"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Jeśli exercise_id jest podane, musi być prawidłowym UUID
+      if (data.exercise_id && typeof data.exercise_id === "string" && data.exercise_id.trim() !== "") {
+        return uuidRegex.test(data.exercise_id);
+      }
+      return true;
+    },
+    {
+      message: "exercise_id musi być prawidłowym UUID",
+      path: ["exercise_id"],
+    }
+  );
 
 /**
  * Schema dla walidacji całego formularza planu treningowego

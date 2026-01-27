@@ -9,6 +9,8 @@ import type {
   WorkoutPlanUpdateCommand,
   WorkoutPlanExerciseInput,
   ExerciseDTO,
+  ExerciseType,
+  ExercisePart,
 } from "@/types";
 import type {
   WorkoutPlanFormState,
@@ -36,7 +38,7 @@ export function useWorkoutPlanForm({
 }: UseWorkoutPlanFormProps) {
   const router = useRouter();
   const [fields, setFields] = useState<WorkoutPlanFormState>(() =>
-    dtoToFormState(initialData)
+    dtoToFormState(initialData),
   );
   const [errors, setErrors] = useState<WorkoutPlanFormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -77,14 +79,14 @@ export function useWorkoutPlanForm({
   // Walidacja pojedynczego pola
   const validateField = (
     field: keyof WorkoutPlanFormState,
-    value: unknown
+    value: unknown,
   ): string | undefined => {
     return validateWorkoutPlanFormField(field, value);
   };
 
   // Walidacja pól metadanych
   const validateMetadataFields = (
-    newErrors: WorkoutPlanFormErrors
+    newErrors: WorkoutPlanFormErrors,
   ): boolean => {
     let isValid = true;
 
@@ -112,17 +114,28 @@ export function useWorkoutPlanForm({
   // Walidacja pojedynczego ćwiczenia
   const validateExercise = (
     exercise: WorkoutPlanExerciseItemState,
-    index: number
+    index: number,
   ): Record<string, string> => {
     const exerciseErrors: Record<string, string> = {};
     const exerciseKey = `exercise_${index}`;
 
-    if (!exercise.exercise_id || exercise.exercise_id.trim() === "") {
+    // Ćwiczenie musi mieć exercise_id LUB exercise_title (dla snapshot)
+    const hasExerciseId =
+      exercise.exercise_id &&
+      typeof exercise.exercise_id === "string" &&
+      exercise.exercise_id.trim() !== "";
+    const hasExerciseTitle =
+      exercise.exercise_title &&
+      typeof exercise.exercise_title === "string" &&
+      exercise.exercise_title.trim() !== "";
+
+    if (!hasExerciseId && !hasExerciseTitle) {
       exerciseErrors[`${exerciseKey}.exercise_id`] = "Ćwiczenie jest wymagane";
     }
 
     if (!exercise.section_type) {
-      exerciseErrors[`${exerciseKey}.section_type`] = "Typ sekcji jest wymagany";
+      exerciseErrors[`${exerciseKey}.section_type`] =
+        "Typ sekcji jest wymagany";
     }
 
     if (
@@ -134,19 +147,25 @@ export function useWorkoutPlanForm({
         "Kolejność musi być liczbą całkowitą większą od zera";
     }
 
-    const setsError = validatePlannedParam("planned_sets", exercise.planned_sets);
+    const setsError = validatePlannedParam(
+      "planned_sets",
+      exercise.planned_sets,
+    );
     if (setsError) {
       exerciseErrors[`${exerciseKey}.planned_sets`] = setsError;
     }
 
-    const repsError = validatePlannedParam("planned_reps", exercise.planned_reps);
+    const repsError = validatePlannedParam(
+      "planned_reps",
+      exercise.planned_reps,
+    );
     if (repsError) {
       exerciseErrors[`${exerciseKey}.planned_reps`] = repsError;
     }
 
     const durationError = validatePlannedParam(
       "planned_duration_seconds",
-      exercise.planned_duration_seconds
+      exercise.planned_duration_seconds,
     );
     if (durationError) {
       exerciseErrors[`${exerciseKey}.planned_duration_seconds`] = durationError;
@@ -154,7 +173,7 @@ export function useWorkoutPlanForm({
 
     const restError = validatePlannedParam(
       "planned_rest_seconds",
-      exercise.planned_rest_seconds
+      exercise.planned_rest_seconds,
     );
     if (restError) {
       exerciseErrors[`${exerciseKey}.planned_rest_seconds`] = restError;
@@ -162,18 +181,20 @@ export function useWorkoutPlanForm({
 
     const restAfterSeriesError = validatePlannedParam(
       "planned_rest_after_series_seconds",
-      exercise.planned_rest_after_series_seconds
+      exercise.planned_rest_after_series_seconds,
     );
     if (restAfterSeriesError) {
-      exerciseErrors[`${exerciseKey}.planned_rest_after_series_seconds`] = restAfterSeriesError;
+      exerciseErrors[`${exerciseKey}.planned_rest_after_series_seconds`] =
+        restAfterSeriesError;
     }
 
     const estimatedTimeError = validatePlannedParam(
       "estimated_set_time_seconds",
-      exercise.estimated_set_time_seconds
+      exercise.estimated_set_time_seconds,
     );
     if (estimatedTimeError) {
-      exerciseErrors[`${exerciseKey}.estimated_set_time_seconds`] = estimatedTimeError;
+      exerciseErrors[`${exerciseKey}.estimated_set_time_seconds`] =
+        estimatedTimeError;
     }
 
     return exerciseErrors;
@@ -207,7 +228,7 @@ export function useWorkoutPlanForm({
       }
 
       const businessErrors = validateWorkoutPlanFormBusinessRules(
-        fields.exercises
+        fields.exercises,
       );
       if (businessErrors.length > 0) {
         newErrors._form = businessErrors;
@@ -254,10 +275,7 @@ export function useWorkoutPlanForm({
     }
 
     // Grupuj ćwiczenia według typu sekcji
-    const exercisesBySection = new Map<
-      ExerciseDTO["type"],
-      ExerciseDTO[]
-    >();
+    const exercisesBySection = new Map<ExerciseDTO["type"], ExerciseDTO[]>();
     exercisesArray.forEach((exercise) => {
       const sectionType = exercise.type;
       if (!exercisesBySection.has(sectionType)) {
@@ -271,7 +289,7 @@ export function useWorkoutPlanForm({
 
     exercisesBySection.forEach((sectionExercises, sectionType) => {
       const exercisesInSection = fields.exercises.filter(
-        (e) => e.section_type === sectionType
+        (e) => e.section_type === sectionType,
       );
       let nextOrder =
         exercisesInSection.length > 0
@@ -292,8 +310,10 @@ export function useWorkoutPlanForm({
           planned_reps: exercise.reps ?? null,
           planned_duration_seconds: exercise.duration_seconds ?? null,
           planned_rest_seconds: exercise.rest_in_between_seconds ?? null,
-          planned_rest_after_series_seconds: exercise.rest_after_series_seconds ?? null,
-          estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+          planned_rest_after_series_seconds:
+            exercise.rest_after_series_seconds ?? null,
+          estimated_set_time_seconds:
+            exercise.estimated_set_time_seconds ?? null,
         };
 
         newExercises.push(newExercise);
@@ -344,7 +364,7 @@ export function useWorkoutPlanForm({
 
   const handleUpdateExercise = (
     index: number,
-    updates: Partial<WorkoutPlanExerciseItemState>
+    updates: Partial<WorkoutPlanExerciseItemState>,
   ) => {
     setFields((prev) => {
       const currentExercise = prev.exercises[index];
@@ -352,36 +372,41 @@ export function useWorkoutPlanForm({
 
       // Jeśli zmienia się section_type, musimy ustawić section_order na następną dostępną pozycję w nowej sekcji
       const finalUpdates = { ...updates };
-      if (updates.section_type && updates.section_type !== currentExercise.section_type) {
+      if (
+        updates.section_type &&
+        updates.section_type !== currentExercise.section_type
+      ) {
         // Znajdź wszystkie ćwiczenia w nowej sekcji
         const exercisesInNewSection = prev.exercises.filter(
-          (ex, i) => i !== index && ex.section_type === updates.section_type
+          (ex, i) => i !== index && ex.section_type === updates.section_type,
         );
-        
+
         // Oblicz następną dostępną pozycję
         const nextOrder =
           exercisesInNewSection.length > 0
             ? Math.max(...exercisesInNewSection.map((e) => e.section_order)) + 1
             : 1;
-        
+
         finalUpdates.section_order = nextOrder;
       }
 
       // Jeśli zmienia się tylko section_order (bez zmiany section_type), sprawdź czy nie ma duplikatu
       if (
         updates.section_order !== undefined &&
-        (!updates.section_type || updates.section_type === currentExercise.section_type)
+        (!updates.section_type ||
+          updates.section_type === currentExercise.section_type)
       ) {
-        const targetSection = updates.section_type || currentExercise.section_type;
+        const targetSection =
+          updates.section_type || currentExercise.section_type;
         const exercisesInSection = prev.exercises.filter(
-          (ex, i) => i !== index && ex.section_type === targetSection
+          (ex, i) => i !== index && ex.section_type === targetSection,
         );
-        
+
         // Sprawdź czy nowa pozycja już istnieje
         const orderExists = exercisesInSection.some(
-          (ex) => ex.section_order === updates.section_order
+          (ex) => ex.section_order === updates.section_order,
         );
-        
+
         if (orderExists) {
           // Jeśli pozycja już istnieje, znajdź następną dostępną
           const maxOrder =
@@ -395,7 +420,7 @@ export function useWorkoutPlanForm({
       return {
         ...prev,
         exercises: prev.exercises.map((exercise, i) =>
-          i === index ? { ...exercise, ...finalUpdates } : exercise
+          i === index ? { ...exercise, ...finalUpdates } : exercise,
         ),
       };
     });
@@ -415,7 +440,9 @@ export function useWorkoutPlanForm({
       // Wyczyść błędy formularza związane z duplikatami pozycji
       if (newErrors._form) {
         newErrors._form = newErrors._form.filter(
-          (error) => !error.includes("Duplikat kolejności") && !error.includes("Duplikat pozycji")
+          (error) =>
+            !error.includes("Duplikat kolejności") &&
+            !error.includes("Duplikat pozycji"),
         );
         if (newErrors._form.length === 0) {
           delete newErrors._form;
@@ -434,13 +461,14 @@ export function useWorkoutPlanForm({
       const exercisesInSection = prev.exercises
         .map((ex, i) => ({ exercise: ex, originalIndex: i }))
         .filter(
-          ({ exercise }) => exercise.section_type === currentExercise.section_type
+          ({ exercise }) =>
+            exercise.section_type === currentExercise.section_type,
         )
         .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
 
       // Znajdź pozycję bieżącego ćwiczenia w posortowanej liście sekcji
       const currentPosition = exercisesInSection.findIndex(
-        ({ originalIndex }) => originalIndex === index
+        ({ originalIndex }) => originalIndex === index,
       );
 
       if (currentPosition === -1) return prev;
@@ -498,7 +526,9 @@ export function useWorkoutPlanForm({
       // Wyczyść błędy formularza związane z duplikatami pozycji
       if (newErrors._form) {
         newErrors._form = newErrors._form.filter(
-          (error) => !error.includes("Duplikat kolejności") && !error.includes("Duplikat pozycji")
+          (error) =>
+            !error.includes("Duplikat kolejności") &&
+            !error.includes("Duplikat pozycji"),
         );
         if (newErrors._form.length === 0) {
           delete newErrors._form;
@@ -511,17 +541,30 @@ export function useWorkoutPlanForm({
   // Konwersja formState na Command dla API
   const formStateToCreateCommand = (): WorkoutPlanCreateCommand => {
     const exercises: WorkoutPlanExerciseInput[] = fields.exercises.map(
-      (exercise) => ({
-        exercise_id: exercise.exercise_id,
-        section_type: exercise.section_type,
-        section_order: exercise.section_order,
-        planned_sets: exercise.planned_sets ?? undefined,
-        planned_reps: exercise.planned_reps ?? undefined,
-        planned_duration_seconds: exercise.planned_duration_seconds ?? undefined,
-        planned_rest_seconds: exercise.planned_rest_seconds ?? undefined,
-        planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? undefined,
-        estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? undefined,
-      })
+      (exercise) => {
+        // Base exercise object - zawsze wymagane pola
+        const baseExercise = {
+          exercise_id: exercise.exercise_id,
+          section_type: exercise.section_type,
+          section_order: exercise.section_order,
+          planned_sets: exercise.planned_sets ?? undefined,
+          planned_reps: exercise.planned_reps ?? undefined,
+          planned_duration_seconds:
+            exercise.planned_duration_seconds ?? undefined,
+          planned_rest_seconds: exercise.planned_rest_seconds ?? undefined,
+          planned_rest_after_series_seconds:
+            exercise.planned_rest_after_series_seconds ?? undefined,
+          estimated_set_time_seconds:
+            exercise.estimated_set_time_seconds ?? undefined,
+        };
+
+        // Pola snapshot (exercise_title, exercise_type, exercise_part) są używane tylko
+        // w schemacie importu, nie w workoutPlanExerciseInputSchema.
+        // workoutPlanExerciseInputSchema jest strict i nie akceptuje tych pól.
+        // Więc nie dodajemy ich tutaj - jeśli exercise_id jest ustawione, to jest wystarczające.
+
+        return baseExercise;
+      },
     );
 
     return {
@@ -535,7 +578,21 @@ export function useWorkoutPlanForm({
   const formStateToUpdateCommand = (): WorkoutPlanUpdateCommand => {
     // W trybie edycji rozdzielamy ćwiczenia na istniejące (z id) i nowe (bez id)
     const exercises = fields.exercises.map((exercise) => {
-      const baseExercise = {
+      // Base exercise object - zawsze wymagane pola
+      const baseExercise: {
+        exercise_id: string | null;
+        section_type: ExerciseType;
+        section_order: number;
+        planned_sets: number | null;
+        planned_reps: number | null;
+        planned_duration_seconds: number | null;
+        planned_rest_seconds: number | null;
+        planned_rest_after_series_seconds: number | null;
+        estimated_set_time_seconds: number | null;
+        exercise_title?: string | null;
+        exercise_type?: ExerciseType | null;
+        exercise_part?: ExercisePart | null;
+      } = {
         exercise_id: exercise.exercise_id,
         section_type: exercise.section_type,
         section_order: exercise.section_order,
@@ -543,9 +600,20 @@ export function useWorkoutPlanForm({
         planned_reps: exercise.planned_reps ?? null,
         planned_duration_seconds: exercise.planned_duration_seconds ?? null,
         planned_rest_seconds: exercise.planned_rest_seconds ?? null,
-        planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
+        planned_rest_after_series_seconds:
+          exercise.planned_rest_after_series_seconds ?? null,
         estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
       };
+
+      // Pola snapshot (exercise_title, exercise_type, exercise_part) są dodawane tylko
+      // gdy exercise_id jest null (dla snapshot exercises).
+      // Gdy exercise_id jest ustawione, te pola nie są potrzebne i nie powinny być wysyłane.
+      if (!exercise.exercise_id) {
+        // Tylko dla snapshot exercises dodajemy te pola
+        baseExercise.exercise_title = exercise.exercise_title ?? null;
+        baseExercise.exercise_type = exercise.exercise_type ?? null;
+        baseExercise.exercise_part = exercise.exercise_part ?? null;
+      }
 
       // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego
       if (exercise.id) {
@@ -586,7 +654,7 @@ export function useWorkoutPlanForm({
     };
     setErrors(newErrors);
     toast.error(
-      errorData.message || "Duplikat pozycji w sekcji planu treningowego."
+      errorData.message || "Duplikat pozycji w sekcji planu treningowego.",
     );
   };
 
@@ -647,7 +715,7 @@ export function useWorkoutPlanForm({
 
   const scrollToFirstError = () => {
     const firstErrorElement = document.querySelector(
-      '[aria-invalid="true"], [role="alert"]'
+      '[aria-invalid="true"], [role="alert"]',
     );
     if (firstErrorElement) {
       firstErrorElement.scrollIntoView({
@@ -661,7 +729,7 @@ export function useWorkoutPlanForm({
     toast.success(
       mode === "create"
         ? "Plan treningowy został utworzony."
-        : "Plan treningowy został zaktualizowany."
+        : "Plan treningowy został zaktualizowany.",
     );
 
     setIsLoading(false);
@@ -670,14 +738,24 @@ export function useWorkoutPlanForm({
       onSuccess();
     } else {
       // After both create and edit, redirect to the plans list
-      await (router.push("/workout-plans") as unknown as Promise<void>);
+      // Next.js router.push returns void but is actually async, so we cast it
+      // This is the same pattern used in exercise-form.tsx
+      try {
+        await (router.push("/workout-plans") as unknown as Promise<void>);
+      } catch (error) {
+        // Fallback to globalThis.location if router.push fails
+        console.error("Navigation error:", error);
+        if (typeof globalThis !== "undefined" && globalThis.location) {
+          globalThis.location.href = "/workout-plans";
+        }
+      }
     }
   };
 
   const handleNetworkError = (error: unknown) => {
     if (error instanceof TypeError && error.message.includes("fetch")) {
       toast.error(
-        "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."
+        "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
       );
     } else if (error instanceof SyntaxError) {
       toast.error("Nieprawidłowa odpowiedź z serwera. Spróbuj ponownie.");

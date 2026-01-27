@@ -42,7 +42,7 @@ export function WorkoutSessionExercisesList({
             exerciseIndex={index}
             totalExercises={sortedExercises.length}
             sessionId={sessionId}
-            personalRecords={personalRecordsByExercise.get(exercise.exercise_id) ?? []}
+            personalRecords={exercise.exercise_id ? (personalRecordsByExercise.get(exercise.exercise_id) ?? []) : []}
           />
         ))}
       </div>

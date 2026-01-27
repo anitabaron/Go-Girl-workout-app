@@ -64,7 +64,7 @@ export function WorkoutPlanForm({
           <AddExerciseDialog
             onAddExercise={handleAddExercise}
             disabled={isLoading}
-            existingExerciseIds={fields.exercises.map((e) => e.exercise_id)}
+            existingExerciseIds={fields.exercises.map((e) => e.exercise_id).filter((id): id is string => id !== null)}
           />
         </div>
         {fields.exercises.length === 0 ? (

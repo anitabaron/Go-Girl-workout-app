@@ -104,7 +104,12 @@ export const workoutPlanExerciseUpdateOrCreateSchema = z
         (val) => uuidRegex.test(val),
         "exercise_id musi być prawidłowym UUID"
       )
-      .optional(),
+      .optional()
+      .nullable(),
+    // Pola snapshot - można je ustawić na null, aby wyczyścić snapshot
+    exercise_title: z.string().trim().max(120).optional().nullable(),
+    exercise_type: z.enum(exerciseTypeValues).optional().nullable(),
+    exercise_part: z.enum(exercisePartValues).optional().nullable(),
     section_type: sectionTypeSchema.optional(),
     section_order: sectionOrderSchema.optional(),
     planned_sets: plannedSetsSchema,
@@ -354,6 +359,122 @@ export function validateWorkoutPlanBusinessRules(
 
   return errors;
 }
+
+/**
+ * Schema dla ćwiczenia w planie przy imporcie (obsługuje exercise_id, match_by_name lub snapshot).
+ * 
+ * Opcje:
+ * - exercise_id: UUID istniejącego ćwiczenia w bazie
+ * - match_by_name: nazwa ćwiczenia do znalezienia w bazie (znormalizowana, case-insensitive)
+ * - exercise_title (exercise_type i exercise_part opcjonalne): nowe ćwiczenie jako snapshot (nie istnieje w bazie)
+ */
+export const workoutPlanExerciseImportSchema = z
+  .object({
+    // Opcja A: istniejące ćwiczenie przez exercise_id
+    exercise_id: z
+      .string()
+      .refine(
+        (val) => uuidRegex.test(val),
+        "exercise_id musi być prawidłowym UUID"
+      )
+      .optional()
+      .nullable(),
+    // Opcja B: istniejące ćwiczenie przez nazwę (znormalizowaną) - system znajdzie exercise_id
+    match_by_name: z.string().trim().min(1).max(120).optional().nullable(),
+    // Opcja C: nowe ćwiczenie przez snapshot (nie istnieje w bazie)
+    exercise_title: z.string().trim().min(1).max(120).optional().nullable(),
+    exercise_type: sectionTypeSchema.optional().nullable(),
+    exercise_part: z.enum(exercisePartValues).optional().nullable(),
+    exercise_details: z.string().trim().max(1000).optional().nullable(),
+    // Wspólne pola
+    section_type: sectionTypeSchema,
+    section_order: sectionOrderSchema,
+    planned_sets: plannedSetsSchema,
+    planned_reps: plannedRepsSchema,
+    planned_duration_seconds: plannedDurationSchema,
+    planned_rest_seconds: plannedRestSchema,
+    planned_rest_after_series_seconds: plannedRestAfterSeriesSchema,
+    estimated_set_time_seconds: estimatedSetTimeSchema,
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    const hasExerciseId = data.exercise_id !== undefined && data.exercise_id !== null;
+    const hasMatchByName = data.match_by_name !== undefined && data.match_by_name !== null;
+    const hasSnapshot = 
+      data.exercise_title !== undefined && data.exercise_title !== null;
+
+    // Musi być co najmniej jedna opcja: exercise_id, match_by_name, lub snapshot
+    if (!hasExerciseId && !hasMatchByName && !hasSnapshot) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Musisz podać albo exercise_id, albo match_by_name, albo exercise_title (exercise_type i exercise_part są opcjonalne)",
+        path: ["exercise_id"],
+      });
+    }
+
+    // Nie można mieć jednocześnie exercise_id i match_by_name
+    if (hasExerciseId && hasMatchByName) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Nie można podać jednocześnie exercise_id i match_by_name",
+        path: ["exercise_id"],
+      });
+    }
+
+    // Nie można mieć jednocześnie exercise_id i snapshot
+    if (hasExerciseId && hasSnapshot) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Nie można podać jednocześnie exercise_id i snapshot pól (exercise_title, opcjonalnie exercise_type i exercise_part)",
+        path: ["exercise_id"],
+      });
+    }
+
+    // Nie można mieć jednocześnie match_by_name i snapshot
+    if (hasMatchByName && hasSnapshot) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Nie można podać jednocześnie match_by_name i snapshot pól (exercise_title, opcjonalnie exercise_type i exercise_part)",
+        path: ["match_by_name"],
+      });
+    }
+  });
+
+/**
+ * Schema dla importu planu treningowego z JSON.
+ */
+export const workoutPlanImportSchema = z
+  .object({
+    name: nameSchema,
+    description: descriptionSchema,
+    part: partSchema,
+    exercises: z
+      .array(workoutPlanExerciseImportSchema)
+      .min(1, "Plan treningowy musi zawierać co najmniej jedno ćwiczenie"),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    // Walidacja reguł biznesowych (unikalność pozycji, wartości dodatnie)
+    const exercisesForBusinessRules: WorkoutPlanExerciseInput[] = data.exercises.map((e) => ({
+      exercise_id: e.exercise_id ?? undefined,
+      section_type: e.section_type,
+      section_order: e.section_order,
+      planned_sets: e.planned_sets,
+      planned_reps: e.planned_reps,
+      planned_duration_seconds: e.planned_duration_seconds,
+      planned_rest_seconds: e.planned_rest_seconds,
+      planned_rest_after_series_seconds: e.planned_rest_after_series_seconds,
+      estimated_set_time_seconds: e.estimated_set_time_seconds,
+    } as WorkoutPlanExerciseInput));
+
+    const errors = validateWorkoutPlanBusinessRules(exercisesForBusinessRules);
+    errors.forEach((message) =>
+      ctx.addIssue({
+        code: "custom",
+        message,
+      })
+    );
+  });
 
 /**
  * Enkoduje kursor paginacji do base64url string.

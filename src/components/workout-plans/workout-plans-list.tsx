@@ -9,7 +9,7 @@ import { LoadMoreButton } from "./load-more-button";
 import { SkeletonLoader } from "./skeleton-loader";
 
 type WorkoutPlansListProps = {
-  initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number })[];
+  initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number; has_missing_exercises?: boolean })[];
   initialNextCursor?: string | null;
   initialHasMore: boolean;
 };

@@ -1,8 +1,8 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 /**
  * Page Object Model for Workout Plan Form Page (Create/Edit)
- * 
+ *
  * Encapsulates workout plan form page logic and selectors using data-test-id attributes
  */
 export class WorkoutPlanFormPage {
@@ -21,20 +21,32 @@ export class WorkoutPlanFormPage {
     this.page = page;
     this.form = page.locator('[data-test-id="workout-plan-form"]');
     this.nameInput = page.locator('[data-test-id="workout-plan-form-name"]');
-    this.descriptionTextarea = page.locator('[data-test-id="workout-plan-form-description"]');
+    this.descriptionTextarea = page.locator(
+      '[data-test-id="workout-plan-form-description"]',
+    );
     this.partSelect = page.locator('[data-test-id="workout-plan-form-part"]');
-    this.addExerciseButton = page.locator('[data-test-id="workout-plan-form-add-exercise-button"]');
-    this.exercisesList = page.locator('[data-test-id="workout-plan-form-exercises-list"]');
-    this.exercisesEmpty = page.locator('[data-test-id="workout-plan-form-exercises-empty"]');
-    this.saveButton = page.locator('[data-test-id="workout-plan-form-save-button"]');
-    this.cancelButton = page.locator('[data-test-id="workout-plan-form-cancel-button"]');
+    this.addExerciseButton = page.locator(
+      '[data-test-id="workout-plan-form-add-exercise-button"]',
+    );
+    this.exercisesList = page.locator(
+      '[data-test-id="workout-plan-form-exercises-list"]',
+    );
+    this.exercisesEmpty = page.locator(
+      '[data-test-id="workout-plan-form-exercises-empty"]',
+    );
+    this.saveButton = page.locator(
+      '[data-test-id="workout-plan-form-save-button"]',
+    );
+    this.cancelButton = page.locator(
+      '[data-test-id="workout-plan-form-cancel-button"]',
+    );
   }
 
   /**
    * Navigate to create workout plan page
    */
   async gotoCreate() {
-    await this.page.goto('/workout-plans/new');
+    await this.page.goto("/workout-plans/new");
   }
 
   /**
@@ -48,7 +60,7 @@ export class WorkoutPlanFormPage {
    * Wait for form to be visible
    */
   async waitForForm() {
-    await this.form.waitFor({ state: 'visible' });
+    await this.form.waitFor({ state: "visible" });
   }
 
   /**
@@ -71,12 +83,18 @@ export class WorkoutPlanFormPage {
   async selectPart(part: string) {
     await this.partSelect.click();
     // Wait for dropdown to open and use getByRole for better reliability
-    if (part === 'none' || part === '') {
-      await this.page.getByRole('option', { name: 'Brak', exact: true }).waitFor({ state: 'visible', timeout: 5000 });
-      await this.page.getByRole('option', { name: 'Brak', exact: true }).click();
+    if (part === "none" || part === "") {
+      await this.page
+        .getByRole("option", { name: "Brak", exact: true })
+        .waitFor({ state: "visible", timeout: 5000 });
+      await this.page
+        .getByRole("option", { name: "Brak", exact: true })
+        .click();
     } else {
-      await this.page.getByRole('option', { name: part, exact: true }).waitFor({ state: 'visible', timeout: 5000 });
-      await this.page.getByRole('option', { name: part, exact: true }).click();
+      await this.page
+        .getByRole("option", { name: part, exact: true })
+        .waitFor({ state: "visible", timeout: 5000 });
+      await this.page.getByRole("option", { name: part, exact: true }).click();
     }
   }
 
@@ -84,17 +102,21 @@ export class WorkoutPlanFormPage {
    * Click add exercise button
    */
   async clickAddExercise() {
-    await this.addExerciseButton.waitFor({ state: 'visible', timeout: 10000 });
+    await this.addExerciseButton.waitFor({ state: "visible", timeout: 10000 });
     await this.addExerciseButton.click();
     // Wait for dialog to open
-    await this.page.locator('[data-test-id="workout-plan-form-add-exercise-dialog"]').waitFor({ state: 'visible', timeout: 5000 });
+    await this.page
+      .locator('[data-test-id="workout-plan-form-add-exercise-dialog"]')
+      .waitFor({ state: "visible", timeout: 5000 });
   }
 
   /**
    * Wait for add exercise dialog to be visible
    */
   async waitForAddExerciseDialog() {
-    await this.page.locator('[data-test-id="workout-plan-form-add-exercise-dialog"]').waitFor({ state: 'visible' });
+    await this.page
+      .locator('[data-test-id="workout-plan-form-add-exercise-dialog"]')
+      .waitFor({ state: "visible" });
   }
 
   /**
@@ -102,49 +124,53 @@ export class WorkoutPlanFormPage {
    */
   async selectExerciseInDialog(exerciseTitle: string) {
     // Wait for exercise selector to load
-    await this.page.waitForLoadState('networkidle');
-    
+    await this.page.waitForLoadState("networkidle");
+
     // Wait for loader to disappear (exercises are loading)
     const loader = this.page.locator('svg[class*="animate-spin"]').first();
     try {
-      await loader.waitFor({ state: 'hidden', timeout: 5000 });
+      await loader.waitFor({ state: "hidden", timeout: 5000 });
     } catch {
       // Loader might not be visible if exercises loaded quickly
     }
-    
+
     // Wait for at least one exercise card to appear (indicates exercises are loaded)
     // Cards are rendered as Card components with data-test-id
-    const exerciseCard = this.page.locator('[data-test-id="exercise-selector-card"]').first();
-    await exerciseCard.waitFor({ state: 'visible', timeout: 30000 }); // Increased for CI pipeline
-    
+    const exerciseCard = this.page
+      .locator('[data-test-id="exercise-selector-card"]')
+      .first();
+    await exerciseCard.waitFor({ state: "visible", timeout: 30000 }); // Increased for CI pipeline
+
     // Additional wait for exercises to fully render
     await this.page.waitForTimeout(300);
-    
+
     // Find the exercise by title text
     // The exercise selector shows cards with checkboxes - clicking the card toggles selection
-    const titleLocator = this.page.getByText(exerciseTitle, { exact: false }).first();
-    
+    const titleLocator = this.page
+      .getByText(exerciseTitle, { exact: false })
+      .first();
+
     // Wait for the title to be visible
-    await titleLocator.waitFor({ state: 'visible', timeout: 30000 }); // Increased for CI pipeline
-    
+    await titleLocator.waitFor({ state: "visible", timeout: 30000 }); // Increased for CI pipeline
+
     // Try to find the checkbox first (more reliable)
     // The checkbox should be near the title in the same card
     const allCheckboxes = this.page.locator('input[type="checkbox"]');
     const checkboxCount = await allCheckboxes.count();
-    
+
     // Find checkbox that's in the same card as the title
     let selectedCheckbox: Locator | null = null;
     for (let i = 0; i < checkboxCount; i++) {
       const checkbox = allCheckboxes.nth(i);
       // Get the card containing this checkbox
-      const card = checkbox.locator('..').locator('..');
+      const card = checkbox.locator("..").locator("..");
       const cardText = await card.textContent();
       if (cardText?.includes(exerciseTitle)) {
         selectedCheckbox = checkbox;
         break;
       }
     }
-    
+
     if (selectedCheckbox) {
       // Check if already selected
       const isChecked = await selectedCheckbox.isChecked().catch(() => false);
@@ -155,7 +181,7 @@ export class WorkoutPlanFormPage {
       // Fallback: click on the title text - the card has onClick handler
       await titleLocator.click();
     }
-    
+
     // Wait a bit for the selection to register
     await this.page.waitForTimeout(300);
   }
@@ -164,11 +190,15 @@ export class WorkoutPlanFormPage {
    * Confirm adding exercises in the dialog
    */
   async confirmAddExercises() {
-    const confirmButton = this.page.locator('[data-test-id="workout-plan-form-add-exercise-dialog-confirm"]');
-    await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
+    const confirmButton = this.page.locator(
+      '[data-test-id="workout-plan-form-add-exercise-dialog-confirm"]',
+    );
+    await confirmButton.waitFor({ state: "visible", timeout: 5000 });
     await confirmButton.click();
     // Wait for dialog to close
-    await this.page.locator('[data-test-id="workout-plan-form-add-exercise-dialog"]').waitFor({ state: 'hidden', timeout: 5000 });
+    await this.page
+      .locator('[data-test-id="workout-plan-form-add-exercise-dialog"]')
+      .waitFor({ state: "hidden", timeout: 5000 });
   }
 
   /**
@@ -189,11 +219,11 @@ export class WorkoutPlanFormPage {
   async addExercises(exerciseTitles: string[]) {
     await this.clickAddExercise();
     await this.waitForAddExerciseDialog();
-    
+
     for (const title of exerciseTitles) {
       await this.selectExerciseInDialog(title);
     }
-    
+
     await this.confirmAddExercises();
     // Wait for exercises to appear in the list
     await this.page.waitForTimeout(500); // Small delay for state update
@@ -221,7 +251,9 @@ export class WorkoutPlanFormPage {
       return 0;
     }
     // Count exercise items in the list
-    const exerciseItems = this.exercisesList.locator('[data-test-id^="workout-plan-exercise-item-"]');
+    const exerciseItems = this.exercisesList.locator(
+      '[data-test-id^="workout-plan-exercise-item-"]',
+    );
     return await exerciseItems.count();
   }
 
@@ -244,22 +276,43 @@ export class WorkoutPlanFormPage {
    */
   async isSaving(): Promise<boolean> {
     const text = await this.saveButton.textContent();
-    return text?.includes('Zapisywanie...') ?? false;
+    return text?.includes("Zapisywanie...") ?? false;
   }
 
   /**
    * Wait for navigation after save (redirects to /workout-plans list)
    * After both create and edit: redirects to /workout-plans (list)
+   *
+   * Uses increased timeout and waits for networkidle to ensure page is fully loaded
+   * Also checks for error states that might prevent navigation
    */
   async waitForSaveNavigation() {
-    await this.page.waitForURL(/\/workout-plans\/?$/, { timeout: 15000 });
+    // First, wait a bit for the save operation to complete
+    await this.page.waitForTimeout(1000);
+
+    // Check if we're already on the target URL
+    const currentUrl = this.page.url();
+    if (currentUrl.match(/\/workout-plans\/?$/)) {
+      await this.page.waitForLoadState("networkidle", { timeout: 30000 });
+      return;
+    }
+
+    // Wait for URL to change to /workout-plans (with or without trailing slash)
+    // Use waitUntil: 'load' to ensure the page is fully loaded
+    await this.page.waitForURL(/\/workout-plans\/?$/, {
+      timeout: 30000,
+      waitUntil: "load",
+    });
+
+    // Wait for network to be idle to ensure page is fully loaded
+    await this.page.waitForLoadState("networkidle", { timeout: 30000 });
   }
 
   /**
    * Wait for navigation after cancel (should redirect to /workout-plans)
    */
   async waitForCancelNavigation() {
-    await this.page.waitForURL('**/workout-plans', { timeout: 10000 });
+    await this.page.waitForURL("**/workout-plans", { timeout: 10000 });
   }
 
   /**
@@ -271,11 +324,11 @@ export class WorkoutPlanFormPage {
     part?: string;
   }) {
     await this.fillName(data.name);
-    
+
     if (data.description) {
       await this.fillDescription(data.description);
     }
-    
+
     if (data.part) {
       await this.selectPart(data.part);
     }
@@ -293,9 +346,11 @@ export class WorkoutPlanFormPage {
    */
   async hasExercise(exerciseTitle: string): Promise<boolean> {
     // Get all exercise items
-    const exerciseItems = this.exercisesList.locator('[data-test-id^="workout-plan-exercise-item-"]');
+    const exerciseItems = this.exercisesList.locator(
+      '[data-test-id^="workout-plan-exercise-item-"]',
+    );
     const count = await exerciseItems.count();
-    
+
     for (let i = 0; i < count; i++) {
       const item = exerciseItems.nth(i);
       const itemText = await item.textContent();
@@ -303,7 +358,7 @@ export class WorkoutPlanFormPage {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -311,9 +366,11 @@ export class WorkoutPlanFormPage {
    * Get exercise item by title
    */
   async getExerciseItemByTitle(exerciseTitle: string): Promise<Locator | null> {
-    const exerciseItems = this.exercisesList.locator('[data-test-id^="workout-plan-exercise-item-"]');
+    const exerciseItems = this.exercisesList.locator(
+      '[data-test-id^="workout-plan-exercise-item-"]',
+    );
     const count = await exerciseItems.count();
-    
+
     for (let i = 0; i < count; i++) {
       const item = exerciseItems.nth(i);
       const itemText = await item.textContent();
@@ -321,7 +378,7 @@ export class WorkoutPlanFormPage {
         return item;
       }
     }
-    
+
     return null;
   }
 
@@ -331,18 +388,22 @@ export class WorkoutPlanFormPage {
   async updateExercisePlannedSets(exerciseTitle: string, sets: number) {
     const exerciseItem = await this.getExerciseItemByTitle(exerciseTitle);
     if (!exerciseItem) {
-      throw new Error(`Exercise with title "${exerciseTitle}" not found in plan`);
+      throw new Error(
+        `Exercise with title "${exerciseTitle}" not found in plan`,
+      );
     }
-    
+
     // Get the test ID of the exercise item
-    const testId = await exerciseItem.getAttribute('data-test-id');
+    const testId = await exerciseItem.getAttribute("data-test-id");
     if (!testId) {
       throw new Error(`Exercise item does not have data-test-id attribute`);
     }
-    
+
     // Find the planned sets input within this exercise item
-    const plannedSetsInput = exerciseItem.locator(`[data-test-id="${testId}-planned-sets"]`);
-    await plannedSetsInput.waitFor({ state: 'visible', timeout: 5000 });
+    const plannedSetsInput = exerciseItem.locator(
+      `[data-test-id="${testId}-planned-sets"]`,
+    );
+    await plannedSetsInput.waitFor({ state: "visible", timeout: 5000 });
     await plannedSetsInput.fill(sets.toString());
   }
 
@@ -352,20 +413,24 @@ export class WorkoutPlanFormPage {
   async removeExercise(exerciseTitle: string) {
     const exerciseItem = await this.getExerciseItemByTitle(exerciseTitle);
     if (!exerciseItem) {
-      throw new Error(`Exercise with title "${exerciseTitle}" not found in plan`);
+      throw new Error(
+        `Exercise with title "${exerciseTitle}" not found in plan`,
+      );
     }
-    
+
     // Get the test ID of the exercise item
-    const testId = await exerciseItem.getAttribute('data-test-id');
+    const testId = await exerciseItem.getAttribute("data-test-id");
     if (!testId) {
       throw new Error(`Exercise item does not have data-test-id attribute`);
     }
-    
+
     // Find and click the remove button
-    const removeButton = exerciseItem.locator(`[data-test-id="${testId}-remove-button"]`);
-    await removeButton.waitFor({ state: 'visible', timeout: 5000 });
+    const removeButton = exerciseItem.locator(
+      `[data-test-id="${testId}-remove-button"]`,
+    );
+    await removeButton.waitFor({ state: "visible", timeout: 5000 });
     await removeButton.click();
-    
+
     // Wait a bit for the exercise to be removed
     await this.page.waitForTimeout(300);
   }

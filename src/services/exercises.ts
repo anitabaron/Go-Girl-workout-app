@@ -14,6 +14,7 @@ import {
   deleteExercise,
   findById,
   findByNormalizedTitle,
+  findExerciseByNormalizedTitle,
   insertExercise,
   listExercises,
   mapToDTO,
@@ -137,6 +138,26 @@ export async function getExerciseService(
   }
 
   return mapToDTO(data);
+}
+
+export async function getExerciseByTitleService(
+  userId: string,
+  title: string
+): Promise<ExerciseDTO | null> {
+  assertUser(userId);
+  const supabase = await createClient();
+  const titleNormalized = normalizeTitle(title);
+  const { data, error } = await findExerciseByNormalizedTitle(
+    supabase,
+    userId,
+    titleNormalized
+  );
+
+  if (error) {
+    throw mapDbError(error);
+  }
+
+  return data;
 }
 
 export async function updateExerciseService(

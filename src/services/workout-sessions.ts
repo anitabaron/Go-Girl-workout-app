@@ -7,6 +7,7 @@ import type {
   SessionExerciseAutosaveResponse,
   SessionListQueryParams,
   SessionSummaryDTO,
+  WorkoutPlanExerciseDTO,
 } from "@/types";
 import {
   sessionStartSchema,
@@ -120,15 +121,21 @@ export async function startWorkoutSessionService(
   }
 
   // Pobierz szczegóły ćwiczeń (pełne dane dla snapshotów)
-  const exerciseIds = planExercises.map((e) => e.exercise_id);
+  // Filtruj null - tylko ćwiczenia z exercise_id potrzebują pełnych danych
+  const exerciseIds = planExercises
+    .map((e) => e.exercise_id)
+    .filter((id): id is string => id !== null);
   const { data: exercises, error: exercisesError } =
-    await findExercisesByIdsForSnapshots(supabase, userId, exerciseIds);
+    exerciseIds.length > 0
+      ? await findExercisesByIdsForSnapshots(supabase, userId, exerciseIds)
+      : { data: [], error: null };
 
   if (exercisesError) {
     throw mapDbError(exercisesError);
   }
 
-  if (!exercises || exercises.length !== exerciseIds.length) {
+  // Sprawdź tylko jeśli są ćwiczenia z exercise_id
+  if (exerciseIds.length > 0 && (!exercises || exercises.length !== exerciseIds.length)) {
     throw new ServiceError(
       "NOT_FOUND",
       "Niektóre ćwiczenia w planie nie istnieją lub nie należą do użytkownika."
@@ -137,7 +144,7 @@ export async function startWorkoutSessionService(
 
   // Utwórz mapę ćwiczeń dla szybkiego dostępu
   const exercisesMap = new Map(
-    exercises.map((e) => [e.id, e])
+    (exercises ?? []).map((e) => [e.id, e])
   );
 
   // Utwórz sesję
@@ -162,6 +169,7 @@ export async function startWorkoutSessionService(
   }
 
   // Przygotuj snapshoty ćwiczeń
+  // createSessionSnapshots przyjmuje WorkoutPlanExerciseDTO[], które może mieć nullable exercise_id
   const sessionExercises = createSessionSnapshots(
     planExercises,
     exercisesMap
@@ -490,18 +498,10 @@ async function getWorkoutSessionDetail(
 
 /**
  * Tworzy snapshoty ćwiczeń dla sesji na podstawie planu.
+ * Obsługuje ćwiczenia z exercise_id (z biblioteki) oraz bez exercise_id (snapshot z planu).
  */
 function createSessionSnapshots(
-  planExercises: Array<{
-    exercise_id: string;
-    section_type: Database["public"]["Enums"]["exercise_type"];
-    section_order: number;
-    planned_sets: number | null;
-    planned_reps: number | null;
-    planned_duration_seconds: number | null;
-    planned_rest_seconds: number | null;
-    planned_rest_after_series_seconds?: number | null;
-  }>,
+  planExercises: WorkoutPlanExerciseDTO[],
   exercisesMap: Map<
     string,
     {
@@ -517,7 +517,7 @@ function createSessionSnapshots(
     }
   >
 ): Array<{
-  exercise_id: string;
+  exercise_id: string | null;
   exercise_title_at_time: string;
   exercise_type_at_time: Database["public"]["Enums"]["exercise_type"];
   exercise_part_at_time: Database["public"]["Enums"]["exercise_part"];
@@ -549,43 +549,52 @@ function createSessionSnapshots(
 
   // Oblicz flattened order (1, 2, 3, ...)
   const snapshots = sortedExercises.map((planExercise, index) => {
-    const exercise = exercisesMap.get(planExercise.exercise_id);
-
-    if (!exercise) {
-      throw new ServiceError(
-        "INTERNAL",
-        `Ćwiczenie ${planExercise.exercise_id} nie zostało znalezione.`
-      );
+    // Jeśli ćwiczenie ma exercise_id, pobierz dane z mapy
+    // W przeciwnym razie użyj snapshot z planu
+    let exerciseTitle: string;
+    let exerciseType: Database["public"]["Enums"]["exercise_type"];
+    let exercisePart: Database["public"]["Enums"]["exercise_part"];
+    let exerciseId: string | null = planExercise.exercise_id;
+    
+    if (planExercise.exercise_id) {
+      const exercise = exercisesMap.get(planExercise.exercise_id);
+      if (!exercise) {
+        // Fallback do snapshot z planu
+        exerciseTitle = planExercise.exercise_title ?? "Nieznane ćwiczenie";
+        exerciseType = planExercise.exercise_type ?? planExercise.section_type;
+        exercisePart = planExercise.exercise_part ?? "Legs";
+        exerciseId = null;
+      } else {
+        exerciseTitle = exercise.title;
+        exerciseType = exercise.type;
+        exercisePart = exercise.part;
+      }
+    } else {
+      // Użyj snapshot z planu
+      exerciseTitle = planExercise.exercise_title ?? "Nieznane ćwiczenie";
+      exerciseType = planExercise.exercise_type ?? planExercise.section_type;
+      exercisePart = planExercise.exercise_part ?? "Legs";
+      exerciseId = null;
     }
 
-    // Użyj planned_* z planu, jeśli dostępne, w przeciwnym razie użyj wartości z ćwiczenia jako fallback
-    const plannedSets =
-      planExercise.planned_sets ?? exercise.series ?? null;
-    const plannedReps = planExercise.planned_reps ?? exercise.reps ?? null;
-    const plannedDuration =
-      planExercise.planned_duration_seconds ??
-      exercise.duration_seconds ??
-      null;
-    const plannedRest =
-      planExercise.planned_rest_seconds ??
-      exercise.rest_in_between_seconds ??
-      null;
-    const plannedRestAfterSeries =
-      planExercise.planned_rest_after_series_seconds ??
-      exercise.rest_after_series_seconds ??
-      null;
+    // Użyj planned_* z planu, jeśli dostępne
+    const plannedSets = planExercise.planned_sets ?? null;
+    const plannedReps = planExercise.planned_reps ?? null;
+    const plannedDuration = planExercise.planned_duration_seconds ?? null;
+    const plannedRest = planExercise.planned_rest_seconds ?? null;
+    const plannedRestAfterSeries = planExercise.planned_rest_after_series_seconds ?? null;
 
     return {
-      exercise_id: exercise.id,
-      exercise_title_at_time: exercise.title,
-      exercise_type_at_time: exercise.type,
-      exercise_part_at_time: exercise.part,
+      exercise_id: exerciseId,
+      exercise_title_at_time: exerciseTitle,
+      exercise_type_at_time: exerciseType,
+      exercise_part_at_time: exercisePart,
       planned_sets: plannedSets,
       planned_reps: plannedReps,
       planned_duration_seconds: plannedDuration,
       planned_rest_seconds: plannedRest,
       planned_rest_after_series_seconds: plannedRestAfterSeries,
-      exercise_order: index + 1, // Flattened order starting from 1
+      exercise_order: index + 1,
     };
   });
 

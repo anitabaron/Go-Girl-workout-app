@@ -1,4 +1,11 @@
-import { Dumbbell, Calendar, History, Trophy } from "lucide-react";
+import {
+  Dumbbell,
+  Calendar,
+  History,
+  Trophy,
+  ClipboardClock,
+  FileJson,
+} from "lucide-react";
 import { FeatureCard, type Feature } from "./feature-card";
 
 /**
@@ -37,6 +44,22 @@ const features: Feature[] = [
     icon: Trophy,
     href: "/personal-records",
   },
+  {
+    id: "assistant",
+    title: "Asystent treningowy",
+    description:
+      "Asystent treningowy pomaga Ci w organizacji i wykonywaniu treningów. Generuje plany treningowe, dostosowane do Twoich potrzeb i umiejscowienia.",
+    icon: ClipboardClock,
+    href: "/workout-sessions/start",
+  },
+  {
+    id: "import-workout-plan",
+    title: "Import planu treningowego",
+    description:
+      "Importuj plan treningowy z pliku JSON. Aplikacja przeanalizuje plik i wygeneruje plan treningowy dostosowany do Twoich potrzeb.",
+    icon: FileJson,
+    href: "/import-instruction",
+  },
 ];
 
 /**
@@ -46,10 +69,10 @@ const features: Feature[] = [
 export function FeaturesOverview() {
   return (
     <section className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
-      <h2 className="text-xl font-bold tracking-tight">Funkcje aplikacji</h2>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Odkryj wszystkie możliwości aplikacji Go Girl.
-      </p>
+      <h2 className="text-xl font-bold tracking-tight">
+        Odkryj wszystkie możliwości aplikacji{" "}
+      </h2>
+
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         {features.map((feature) => (
           <FeatureCard key={feature.id} feature={feature} />

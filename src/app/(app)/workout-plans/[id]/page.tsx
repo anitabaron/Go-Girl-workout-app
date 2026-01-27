@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
 import { Badge } from "@/components/ui/badge";
 import { WorkoutPlanActions } from "@/components/workout-plans/details/workout-plan-actions";
+import { AddSnapshotExerciseButton } from "@/components/workout-plans/details/add-snapshot-exercise-button";
+import { ExerciseLibraryBadge } from "@/components/workout-plans/details/exercise-library-badge";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 import {
@@ -142,6 +144,7 @@ export default async function WorkoutPlanDetailsPage({
                         <span className="text-sm text-zinc-600 dark:text-zinc-400">
                           Pozycja: {exercise.section_order}
                         </span>
+                        <ExerciseLibraryBadge exercise={exercise} />
                       </div>
                       <h3 className="text-lg font-semibold">
                         {exercise.exercise_title || `Ćwiczenie #${index + 1}`}
@@ -203,8 +206,8 @@ export default async function WorkoutPlanDetailsPage({
                         Odpoczynek po seriach
                       </p>
                       <p className="text-lg font-semibold">
-                        {exercise.exercise_rest_after_series_seconds !== null && exercise.exercise_rest_after_series_seconds !== undefined
-                          ? formatDuration(exercise.exercise_rest_after_series_seconds)
+                        {exercise.planned_rest_after_series_seconds !== null && exercise.planned_rest_after_series_seconds !== undefined
+                          ? formatDuration(exercise.planned_rest_after_series_seconds)
                           : "-"}
                       </p>
                     </div>
@@ -221,6 +224,21 @@ export default async function WorkoutPlanDetailsPage({
                       </p>
                     </div>
                   </div>
+
+                  {/* Szczegóły ćwiczenia */}
+                  {exercise.exercise_details && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2">
+                        Szczegóły
+                      </p>
+                      <p className="text-base whitespace-pre-wrap text-zinc-900 dark:text-zinc-50">
+                        {exercise.exercise_details}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Przycisk do dodawania ćwiczenia ze snapshotu do bazy */}
+                  <AddSnapshotExerciseButton exercise={exercise} planId={id} />
                 </div>
               ))}
             </div>

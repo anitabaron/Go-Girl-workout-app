@@ -3,7 +3,7 @@
 import React, { memo, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Clock10, Dumbbell } from "lucide-react";
+import { Clock10, Dumbbell, AlertCircle } from "lucide-react";
 import type { WorkoutPlanDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ type WorkoutPlanCardProps = {
   readonly plan: Omit<WorkoutPlanDTO, "exercises"> & {
     exercise_count?: number;
     exercise_names?: string[];
+    has_missing_exercises?: boolean;
   };
   readonly exerciseCount?: number;
   readonly onDelete?: (planId: string) => Promise<void>;
@@ -98,6 +99,12 @@ function WorkoutPlanCardComponent({
                     className="border-destructive text-destructive"
                   >
                     {EXERCISE_PART_LABELS[plan.part]}
+                  </Badge>
+                )}
+                {plan.has_missing_exercises && (
+                  <Badge variant="outline" className="border-amber-500 text-amber-600 dark:border-amber-400 dark:text-amber-400">
+                    <AlertCircle className="mr-1 h-3 w-3" />
+                    Zawiera ćwiczenia spoza biblioteki
                   </Badge>
                 )}
               </div>
