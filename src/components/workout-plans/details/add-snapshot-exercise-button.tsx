@@ -181,32 +181,57 @@ export function AddSnapshotExerciseButton({
         exerciseId = createdExercise.id;
       }
 
-      // 2. Zaktualizuj ćwiczenie w planie, aby połączyć je z ćwiczeniem w bazie
-      const updateResponse = await fetch(`/api/workout-plans/${planId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          exercises: [
-            {
-              id: exercise.id,
-              exercise_id: exerciseId,
-              // Usuń pola snapshot (ustaw na null)
-              exercise_title: null,
-              exercise_type: null,
-              exercise_part: null,
-            },
-          ],
-        }),
-      });
+      // 2. Zaktualizuj wszystkie wystąpienia snapshotu w planie (używając snapshot_id)
+      if (!exercise.snapshot_id) {
+        // Fallback: jeśli nie ma snapshot_id, użyj starej metody (aktualizuj tylko jedno ćwiczenie)
+        const updateResponse = await fetch(`/api/workout-plans/${planId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            exercises: [
+              {
+                id: exercise.id,
+                exercise_id: exerciseId,
+                // Usuń pola snapshot (ustaw na null)
+                exercise_title: null,
+                exercise_type: null,
+                exercise_part: null,
+              },
+            ],
+          }),
+        });
 
-      if (!updateResponse.ok) {
-        const errorData = await updateResponse.json().catch(() => ({}));
-        throw new Error(
-          errorData.message ||
-            "Nie udało się zaktualizować planu treningowego."
+        if (!updateResponse.ok) {
+          const errorData = await updateResponse.json().catch(() => ({}));
+          throw new Error(
+            errorData.message ||
+              "Nie udało się zaktualizować planu treningowego."
+          );
+        }
+      } else {
+        // Użyj nowej metody: masowa aktualizacja wszystkich wystąpień snapshotu
+        const linkResponse = await fetch(
+          `/api/workout-plans/snapshots/${exercise.snapshot_id}/link`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              exercise_id: exerciseId,
+            }),
+          }
         );
+
+        if (!linkResponse.ok) {
+          const errorData = await linkResponse.json().catch(() => ({}));
+          throw new Error(
+            errorData.message ||
+              "Nie udało się połączyć snapshotu z ćwiczeniem w bazie."
+          );
+        }
       }
 
       toast.success("Ćwiczenie zostało połączone z bazą ćwiczeń.");

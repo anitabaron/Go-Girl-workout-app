@@ -124,6 +124,7 @@ export type WorkoutPlanExerciseDTO = Omit<
   WorkoutPlanExerciseEntity,
   "plan_id" | "created_at"
 > & {
+  snapshot_id?: string | null;  // UUID identyfikujący unikalny snapshot (ten sam snapshot = ten sam UUID)
   exercise_title?: string | null;  // Z snapshot lub z exercises
   exercise_type?: ExerciseType | null;
   exercise_part?: ExercisePart | null;

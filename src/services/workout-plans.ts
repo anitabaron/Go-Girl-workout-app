@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import { randomUUID } from "crypto";
 
 import { createClient } from "@/db/supabase.server";
 import type { Database } from "@/db/database.types";
@@ -19,6 +20,7 @@ import {
   listWorkoutPlanExercises,
   updateWorkoutPlan,
   updateWorkoutPlanExercise,
+  updateWorkoutPlanExercisesBySnapshotId,
 } from "@/repositories/workout-plans";
 import { findByNormalizedTitle } from "@/repositories/exercises";
 import { normalizeTitle } from "@/lib/validation/exercises";
@@ -705,8 +707,13 @@ export async function importWorkoutPlanService(
       } else {
         // Nie znaleziono - użyj match_by_name jako exercise_title (snapshot)
         exercise.exercise_title = exercise.match_by_name;
-        exercise.exercise_type = exercise.exercise_type ?? exercise.section_type;
-        exercise.exercise_part = exercise.exercise_part ?? parsed.part ?? "Legs";
+        // exercise_type i exercise_part są opcjonalne - ustaw tylko jeśli nie były podane i chcemy fallback
+        if (!exercise.exercise_type) {
+          exercise.exercise_type = exercise.section_type;
+        }
+        if (!exercise.exercise_part) {
+          exercise.exercise_part = parsed.part ?? undefined;
+        }
         // exercise_description pozostaje bez zmian (jeśli było podane)
         exercise.match_by_name = undefined; // Usuń match_by_name, bo używamy snapshot
       }
@@ -746,8 +753,13 @@ export async function importWorkoutPlanService(
         exercise.exercise_id = null;
         if (!exercise.exercise_title) {
           exercise.exercise_title = `Ćwiczenie (ID: ${missingExerciseId})`;
-          exercise.exercise_type = exercise.section_type; // Fallback
-          exercise.exercise_part = parsed.part ?? "Legs"; // Fallback
+          // exercise_type i exercise_part są opcjonalne
+          if (!exercise.exercise_type) {
+            exercise.exercise_type = exercise.section_type;
+          }
+          if (!exercise.exercise_part) {
+            exercise.exercise_part = parsed.part ?? undefined;
+          }
         }
       }
     }
@@ -775,25 +787,64 @@ export async function importWorkoutPlanService(
     );
   }
 
+  // Generuj snapshot_id dla unikalnych snapshotów
+  // Snapshot jest identyfikowany przez exercise_title (wymagane)
+  // exercise_type i exercise_part są opcjonalne i mogą być użyte do lepszego grupowania
+  const snapshotIdMap = new Map<string, string>();
+  
+  const getSnapshotId = (
+    title: string | null | undefined,
+    type: string | null | undefined,
+    part: string | null | undefined
+  ): string | null => {
+    if (!title) {
+      return null;
+    }
+    
+    // Klucz dla mapy: title + type (jeśli dostępne) + part (jeśli dostępne)
+    // Jeśli type lub part są null, nie są uwzględniane w kluczu
+    const typePart = type && part ? `|${type}|${part}` : type ? `|${type}|` : part ? `||${part}` : '';
+    const snapshotKey = `${title}${typePart}`;
+    
+    // Jeśli już mamy UUID dla tego snapshotu, użyj go
+    let snapshotId = snapshotIdMap.get(snapshotKey);
+    if (!snapshotId) {
+      // Pierwsze wystąpienie - generuj nowy UUID
+      snapshotId = randomUUID();
+      snapshotIdMap.set(snapshotKey, snapshotId);
+    }
+    
+    return snapshotId;
+  };
+
   // Wstaw ćwiczenia (z exercise_id lub snapshot)
   const { error: exercisesInsertError } = await insertWorkoutPlanExercises(
     supabase,
     plan.id,
-    parsed.exercises.map((e) => ({
-      exercise_id: e.exercise_id ?? null,
-      exercise_title: e.exercise_title ?? null,
-      exercise_type: e.exercise_type ?? null,
-      exercise_part: e.exercise_part ?? null,
-      exercise_details: e.exercise_description ?? null, // Mapuj exercise_description z JSON na exercise_details w bazie
-      section_type: e.section_type,
-      section_order: e.section_order,
-      planned_sets: e.planned_sets,
-      planned_reps: e.planned_reps,
-      planned_duration_seconds: e.planned_duration_seconds,
-      planned_rest_seconds: e.planned_rest_seconds,
-      planned_rest_after_series_seconds: e.planned_rest_after_series_seconds,
-      estimated_set_time_seconds: e.estimated_set_time_seconds,
-    }))
+    parsed.exercises.map((e) => {
+      // Jeśli to snapshot (brak exercise_id), generuj/przypisz snapshot_id
+      // exercise_type i exercise_part są opcjonalne
+      const snapshotId = !e.exercise_id && e.exercise_title
+        ? getSnapshotId(e.exercise_title, e.exercise_type ?? null, e.exercise_part ?? null)
+        : null;
+
+      return {
+        exercise_id: e.exercise_id ?? null,
+        snapshot_id: snapshotId,
+        exercise_title: e.exercise_title ?? null,
+        exercise_type: e.exercise_type ?? null,
+        exercise_part: e.exercise_part ?? null,
+        exercise_details: e.exercise_description ?? null, // Mapuj exercise_description z JSON na exercise_details w bazie
+        section_type: e.section_type,
+        section_order: e.section_order,
+        planned_sets: e.planned_sets,
+        planned_reps: e.planned_reps,
+        planned_duration_seconds: e.planned_duration_seconds,
+        planned_rest_seconds: e.planned_rest_seconds,
+        planned_rest_after_series_seconds: e.planned_rest_after_series_seconds,
+        estimated_set_time_seconds: e.estimated_set_time_seconds,
+      };
+    })
   );
 
   if (exercisesInsertError) {
@@ -844,6 +895,48 @@ export async function importWorkoutPlanService(
   } catch (error) {
     console.error("[importWorkoutPlanService] Error:", error);
     throw error;
+  }
+}
+
+/**
+ * Łączy wszystkie wystąpienia snapshotu (po snapshot_id) z ćwiczeniem z biblioteki.
+ * Używane gdy użytkownik dodaje snapshot do bazy ćwiczeń.
+ */
+export async function linkSnapshotToExerciseService(
+  userId: string,
+  snapshotId: string,
+  exerciseId: string
+) {
+  assertUser(userId);
+  const supabase = await createClient();
+
+  // Sprawdź czy ćwiczenie należy do użytkownika
+  const { data: ownedExercise, error: exerciseError } = await findExercisesByIds(
+    supabase,
+    userId,
+    [exerciseId]
+  );
+
+  if (exerciseError) {
+    throw mapDbError(exerciseError);
+  }
+
+  if (!ownedExercise || ownedExercise.length === 0) {
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Ćwiczenie nie istnieje lub nie należy do użytkownika."
+    );
+  }
+
+  // Zaktualizuj wszystkie wystąpienia snapshotu
+  const { error } = await updateWorkoutPlanExercisesBySnapshotId(
+    supabase,
+    snapshotId,
+    exerciseId
+  );
+
+  if (error) {
+    throw mapDbError(error);
   }
 }
 

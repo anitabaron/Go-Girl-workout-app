@@ -366,7 +366,7 @@ export function validateWorkoutPlanBusinessRules(
  * Opcje:
  * - exercise_id: UUID istniejącego ćwiczenia w bazie
  * - match_by_name: nazwa ćwiczenia do znalezienia w bazie (znormalizowana, case-insensitive)
- * - exercise_title + exercise_part (exercise_type opcjonalne): nowe ćwiczenie jako snapshot (nie istnieje w bazie)
+ * - exercise_title (exercise_type i exercise_part opcjonalne): nowe ćwiczenie jako snapshot (nie istnieje w bazie)
  */
 export const workoutPlanExerciseImportSchema = z
   .object({
@@ -401,14 +401,13 @@ export const workoutPlanExerciseImportSchema = z
     const hasExerciseId = data.exercise_id !== undefined && data.exercise_id !== null;
     const hasMatchByName = data.match_by_name !== undefined && data.match_by_name !== null;
     const hasSnapshot = 
-      data.exercise_title !== undefined && data.exercise_title !== null &&
-      data.exercise_part !== undefined && data.exercise_part !== null;
+      data.exercise_title !== undefined && data.exercise_title !== null;
 
     // Musi być co najmniej jedna opcja: exercise_id, match_by_name, lub snapshot
     if (!hasExerciseId && !hasMatchByName && !hasSnapshot) {
       ctx.addIssue({
         code: "custom",
-        message: "Musisz podać albo exercise_id, albo match_by_name, albo exercise_title + exercise_part (exercise_type jest opcjonalne)",
+        message: "Musisz podać albo exercise_id, albo match_by_name, albo exercise_title (exercise_type i exercise_part są opcjonalne)",
         path: ["exercise_id"],
       });
     }
@@ -426,7 +425,7 @@ export const workoutPlanExerciseImportSchema = z
     if (hasExerciseId && hasSnapshot) {
       ctx.addIssue({
         code: "custom",
-        message: "Nie można podać jednocześnie exercise_id i snapshot pól (exercise_title, exercise_part, opcjonalnie exercise_type)",
+        message: "Nie można podać jednocześnie exercise_id i snapshot pól (exercise_title, opcjonalnie exercise_type i exercise_part)",
         path: ["exercise_id"],
       });
     }
@@ -435,7 +434,7 @@ export const workoutPlanExerciseImportSchema = z
     if (hasMatchByName && hasSnapshot) {
       ctx.addIssue({
         code: "custom",
-        message: "Nie można podać jednocześnie match_by_name i snapshot pól (exercise_title, exercise_part, opcjonalnie exercise_type)",
+        message: "Nie można podać jednocześnie match_by_name i snapshot pól (exercise_title, opcjonalnie exercise_type i exercise_part)",
         path: ["match_by_name"],
       });
     }

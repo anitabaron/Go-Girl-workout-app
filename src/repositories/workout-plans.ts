@@ -217,11 +217,13 @@ export async function insertWorkoutPlanExercises(
     exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
     exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
     exercise_details?: string | null;
+    snapshot_id?: string | null;
   }>
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
     plan_id: planId,
     exercise_id: exercise.exercise_id ?? null,
+    snapshot_id: exercise.snapshot_id ?? null,
     exercise_title: exercise.exercise_title ?? null,
     exercise_type: exercise.exercise_type ?? null,
     exercise_part: exercise.exercise_part ?? null,
@@ -397,6 +399,31 @@ export async function deleteWorkoutPlanExercises(client: DbClient, planId: strin
 }
 
 /**
+ * Aktualizuje wszystkie wystąpienia snapshotu (po snapshot_id) - łączy je z ćwiczeniem z biblioteki.
+ * Używane gdy użytkownik dodaje snapshot do bazy ćwiczeń.
+ */
+export async function updateWorkoutPlanExercisesBySnapshotId(
+  client: DbClient,
+  snapshotId: string,
+  exerciseId: string
+) {
+  const { data, error } = await client
+    .from("workout_plan_exercises")
+    .update({
+      exercise_id: exerciseId,
+      snapshot_id: null, // Opcjonalnie można zostawić dla historii
+      exercise_title: null,
+      exercise_type: null,
+      exercise_part: null,
+      exercise_details: null,
+    })
+    .eq("snapshot_id", snapshotId)
+    .select();
+
+  return { data, error };
+}
+
+/**
  * Pobiera ćwiczenia planu treningowego z informacją o snapshot.
  */
 export async function listWorkoutPlanExercises(
@@ -441,6 +468,7 @@ export async function listWorkoutPlanExercises(
 
     // Type assertion dla pól snapshot (dodanych w migracji, ale jeszcze nie w typach)
     const rowWithSnapshot = row as WorkoutPlanExerciseRow & {
+      snapshot_id?: string | null;
       exercise_title?: string | null;
       exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
       exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
@@ -481,6 +509,7 @@ export async function listWorkoutPlanExercises(
     return {
       id: row.id,
       exercise_id: row.exercise_id,
+      snapshot_id: rowWithSnapshot.snapshot_id ?? null,
       section_type: row.section_type,
       section_order: row.section_order,
       planned_sets: row.planned_sets,

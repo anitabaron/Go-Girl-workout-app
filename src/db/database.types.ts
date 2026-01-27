@@ -263,6 +263,7 @@ export type Database = {
           planned_sets: number | null
           section_order: number
           section_type: Database["public"]["Enums"]["exercise_type"]
+          snapshot_id: string | null
         }
         Insert: {
           created_at?: string
@@ -281,6 +282,7 @@ export type Database = {
           planned_sets?: number | null
           section_order: number
           section_type: Database["public"]["Enums"]["exercise_type"]
+          snapshot_id?: string | null
         }
         Update: {
           created_at?: string
@@ -299,6 +301,7 @@ export type Database = {
           planned_sets?: number | null
           section_order?: number
           section_type?: Database["public"]["Enums"]["exercise_type"]
+          snapshot_id?: string | null
         }
         Relationships: [
           {
