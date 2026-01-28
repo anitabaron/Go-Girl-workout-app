@@ -23,12 +23,12 @@ export default function ImportInstructionPage() {
                 1
               </div>
               <h2 className="text-xl font-semibold">
-                Informacje o planie treningowym
+                Informacje ogólne o planie treningowym
               </h2>
             </div>
             <div className="ml-11 space-y-3 text-sm">
               <div className="space-y-1">
-                <p className="font-medium">Wymagane pola na poziomie planu:</p>
+                <p className="font-medium">Pola na poziomie planu:</p>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-4">
                   <li>
                     <code className="bg-muted px-1.5 py-0.5 rounded">name</code>{" "}
@@ -163,7 +163,8 @@ export default function ImportInstructionPage() {
 
                   <div>
                     <p className="text-xs font-medium mb-2">
-                      Pola opcjonalne (jeśli nie podane, zostaną pobrane z bazy):
+                      Pola opcjonalne (jeśli nie podane, zostaną pobrane z
+                      bazy):
                     </p>
                     <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground ml-2">
                       <li>
@@ -207,14 +208,15 @@ export default function ImportInstructionPage() {
                           estimated_set_time_seconds
                         </code>{" "}
                         (number &gt; 0 | null) - szacowany czas wykonania serii
-                        w sekundach (domyślnie z bazy: estimated_set_time_seconds)
+                        w sekundach (domyślnie z bazy:
+                        estimated_set_time_seconds)
                       </li>
                     </ul>
                     <p className="text-xs text-muted-foreground italic mt-2">
                       Jeśli nie podasz żadnego z opcjonalnych pól, wszystkie
                       wartości zostaną automatycznie pobrane z bazy danych na
-                      podstawie ćwiczenia zidentyfikowanego przez exercise_id lub
-                      match_by_name.
+                      podstawie ćwiczenia zidentyfikowanego przez exercise_id
+                      lub match_by_name.
                     </p>
                   </div>
                 </div>

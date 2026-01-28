@@ -26,6 +26,7 @@
       "section_type": "Main Workout",
       "section_order": 2,
       "planned_sets": 3,
+      "planned_reps": null,
       "planned_duration_seconds": 60,
       "planned_rest_seconds": 30,
       "planned_rest_after_series_seconds": 60,
@@ -38,6 +39,7 @@
       "section_order": 3,
       "planned_sets": 4,
       "planned_reps": 15,
+      "planned_duration_seconds": null,
       "planned_rest_seconds": 45,
       "planned_rest_after_series_seconds": 60,
       "estimated_set_time_seconds": 300
@@ -49,6 +51,7 @@
       "section_type": "Cool-down",
       "section_order": 1,
       "planned_sets": 2,
+      "planned_reps": null,
       "planned_duration_seconds": 30,
       "planned_rest_seconds": 15,
       "planned_rest_after_series_seconds": 60,
