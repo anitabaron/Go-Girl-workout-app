@@ -26,33 +26,47 @@ export default function ImportInstructionPage() {
                 Informacje ogólne o planie treningowym
               </h2>
             </div>
-            <div className="ml-11 space-y-3 text-sm">
-              <div className="space-y-1">
-                <p className="font-medium">Pola na poziomie planu:</p>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-4">
-                  <li>
-                    <code className="bg-muted px-1.5 py-0.5 rounded">name</code>{" "}
-                    (string, max 120 znaków) - nazwa planu treningowego
-                  </li>
-                  <li>
-                    <code className="bg-muted px-1.5 py-0.5 rounded">
-                      description
-                    </code>{" "}
-                    (string | null, opcjonalne) - opis planu
-                  </li>
-                  <li>
-                    <code className="bg-muted px-1.5 py-0.5 rounded">part</code>{" "}
-                    (enum: &quot;Legs&quot; | &quot;Core&quot; |
-                    &quot;Back&quot; | &quot;Arms&quot; | &quot;Chest&quot; |
-                    null) - partia mięśniowa
-                  </li>
-                  <li>
-                    <code className="bg-muted px-1.5 py-0.5 rounded">
-                      exercises
-                    </code>{" "}
-                    (array, min 1 element) - tablica ćwiczeń
-                  </li>
-                </ul>
+            <div className="ml-11 space-y-6">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Poniżej znajdują się pola wymagane do utworzenia planu
+                  treningowego.
+                </p>
+                <div className="bg-muted p-3 rounded-md space-y-3">
+                  <div>
+                    <p className="text-xs font-medium mb-2">
+                      Pola na poziomie planu:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground ml-2">
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          name
+                        </code>{" "}
+                        (string, max 120 znaków) - nazwa planu treningowego
+                      </li>
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          description
+                        </code>{" "}
+                        (string | null, opcjonalne) - opis planu
+                      </li>
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          part
+                        </code>{" "}
+                        (enum: &quot;Legs&quot; | &quot;Core&quot; |
+                        &quot;Back&quot; | &quot;Arms&quot; | &quot;Chest&quot;
+                        | null, opcjonalne) - partia mięśniowa
+                      </li>
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          exercises
+                        </code>{" "}
+                        (array, min 1 element) - tablica ćwiczeń
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -65,35 +79,35 @@ export default function ImportInstructionPage() {
               </div>
               <h2 className="text-xl font-semibold">Struktura ćwiczeń</h2>
             </div>
-            <div className="ml-11 space-y-4">
+            <div className="ml-11 space-y-2">
               <p className="text-sm text-muted-foreground">
                 Plan treningowy składa się z trzech sekcji, które powinny być
                 ułożone w następującej kolejności:
               </p>
               <div className="space-y-3">
                 <div className="border-l-4 border-red-500 pl-4 py-2 bg-red-50 dark:bg-red-950/20 rounded-r">
-                  <p className="font-medium">1. Warm-up</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs font-medium">1. Warm-up</p>
+                  <p className="text-xs text-muted-foreground">
                     Ćwiczenia rozgrzewkowe na początku treningu
                   </p>
                 </div>
                 <div className="border-l-4 border-pink-500 pl-4 py-2 bg-pink-50 dark:bg-pink-950/20 rounded-r">
-                  <p className="font-medium">2. Main Workout</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs font-medium">2. Main Workout</p>
+                  <p className="text-xs text-muted-foreground">
                     Główne ćwiczenia treningowe
                   </p>
                 </div>
                 <div className="border-l-4 border-purple-500 pl-4 py-2 bg-purple-50 dark:bg-purple-950/20 rounded-r">
-                  <p className="font-medium">3. Cool-down </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs font-medium">3. Cool-down </p>
+                  <p className="text-xs text-muted-foreground">
                     Ćwiczenia rozciągające na końcu treningu
                   </p>
                 </div>
               </div>
-              <div className=" rounded-md">
+              <div className="rounded-md">
                 <p className="text-xs text-muted-foreground">
                   Numeracja{" "}
-                  <code className="bg-white dark:bg-zinc-950 px-1.5 py-0.5 rounded">
+                  <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
                     section_order
                   </code>{" "}
                   jest oddzielna dla każdej sekcji. Każda sekcja zaczyna się od
@@ -233,9 +247,7 @@ export default function ImportInstructionPage() {
                 </p>
                 <div className="bg-muted p-3 rounded-md space-y-3">
                   <div>
-                    <p className="text-xs font-medium mb-2">
-                      Wymagane pola specyficzne dla tej opcji:
-                    </p>
+                    <p className="text-xs font-medium mb-2">Wymagane pola:</p>
                     <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground ml-2">
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
@@ -263,13 +275,6 @@ export default function ImportInstructionPage() {
                         </code>{" "}
                         (number &gt; 0 | null) - liczba serii
                       </li>
-                      <li>
-                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
-                          planned_rest_seconds
-                        </code>{" "}
-                        (number &gt;= 0 | null) - czas odpoczynku między seriami
-                        w sekundach
-                      </li>
                     </ul>
                   </div>
                   <div>
@@ -286,16 +291,35 @@ export default function ImportInstructionPage() {
                         </code>{" "}
                         (number &gt; 0 | null) - czas trwania w sekundach
                       </li>
+                      <p className="text-xs text-muted-foreground italic mt-1">
+                        Musisz podać przynajmniej jedno z powyższych (reps lub
+                        duration).
+                      </p>{" "}
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          planned_rest_seconds
+                        </code>{" "}
+                        (number &gt;= 0 | null) - czas odpoczynku między seriami
+                        w sekundach
+                      </li>
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          planned_rest_after_series_seconds
+                        </code>{" "}
+                        (number &gt;= 0 | null) - czas odpoczynku po zakończeniu
+                        wszystkich serii
+                      </li>
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          estimated_set_time_seconds
+                        </code>{" "}
+                        (number &gt; 0 | null) - szacowany czas wykonania serii
+                        w sekundach
+                      </li>
                     </ul>
-                    <p className="text-xs text-muted-foreground italic mt-1">
-                      Musisz podać przynajmniej jedno z powyższych (reps lub
-                      duration).
-                    </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium mb-2">
-                      Opcjonalne pola specyficzne dla tej opcji:
-                    </p>
+                    <p className="text-xs font-medium mb-2">Opcjonalne pola:</p>
                     <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground ml-2">
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
@@ -317,28 +341,6 @@ export default function ImportInstructionPage() {
                           exercise_details
                         </code>{" "}
                         (string, max 1000 znaków) - dodatkowe szczegóły
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium mb-2">
-                      Dodatkowe pola opcjonalne:
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground ml-2">
-                      <li>
-                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
-                          planned_rest_after_series_seconds
-                        </code>{" "}
-                        (number &gt;= 0 | null) - czas odpoczynku po zakończeniu
-                        wszystkich serii
-                      </li>
-                      <li>
-                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
-                          estimated_set_time_seconds
-                        </code>{" "}
-                        (number &gt; 0 | null) - szacowany czas wykonania serii
-                        w sekundach
                       </li>
                     </ul>
                   </div>
