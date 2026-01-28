@@ -12,7 +12,7 @@ import {
   EXERCISE_MAX_LIMIT,
   exerciseOrderValues,
   exerciseSortFields,
-  normalizeTitle,
+  normalizeTitleForDbLookup,
 } from "@/lib/validation/exercises";
 
 type DbClient = SupabaseClient<Database>;
@@ -160,7 +160,7 @@ export async function listExercises(
   }
 
   if (params.search) {
-    const normalizedSearch = normalizeTitle(params.search);
+    const normalizedSearch = normalizeTitleForDbLookup(params.search);
     query = query.ilike("title_normalized", `%${normalizedSearch}%`);
   }
 

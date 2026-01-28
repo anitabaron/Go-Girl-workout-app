@@ -116,10 +116,27 @@ export const exerciseQuerySchema = z
   })
   .strict();
 
+/**
+ * Normalizacja tytułu z usuwaniem diakrytyków (ą→a, ć→c itd.).
+ * Używana m.in. do wyświetlania, sortowania, porównań poza bazą.
+ */
 export function normalizeTitle(value: string) {
   return value
     .normalize("NFKD")
     .replaceAll(/\p{Diacritic}/gu, "")
+    .trim()
+    .replaceAll(/\s+/g, " ")
+    .toLowerCase();
+}
+
+/**
+ * Normalizacja tytułu w taki sam sposób jak kolumna GENERATED w PostgreSQL:
+ * lower(trim(regexp_replace(title, '\s+', ' ', 'g'))).
+ * Nie usuwa polskich znaków (ą, ć, ę itd.) – musi być zgodna z title_normalized w bazie.
+ * Używaj przy wyszukiwaniu po tytule (by-title, match_by_name, unikalność).
+ */
+export function normalizeTitleForDbLookup(value: string) {
+  return value
     .trim()
     .replaceAll(/\s+/g, " ")
     .toLowerCase();

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   normalizeTitle,
+  normalizeTitleForDbLookup,
   validateExerciseBusinessRules,
 } from "@/lib/validation/exercises";
 
@@ -177,6 +178,22 @@ describe("normalizeTitle", () => {
       // Assert
       expect(result).toBe("cwiczenie #1: warm-up");
     });
+  });
+});
+
+describe("normalizeTitleForDbLookup", () => {
+  it("should match PostgreSQL title_normalized: lower, trim, collapse spaces, keep Polish diacritics", () => {
+    expect(normalizeTitleForDbLookup("Rozciąganie core")).toBe(
+      "rozciąganie core"
+    );
+    expect(normalizeTitleForDbLookup("  Łąka  Ćwiczeń  ")).toBe(
+      "łąka ćwiczeń"
+    );
+  });
+
+  it("should not strip diacritics (unlike normalizeTitle)", () => {
+    expect(normalizeTitleForDbLookup("Ćwiczenie")).toBe("ćwiczenie");
+    expect(normalizeTitleForDbLookup("Przysiady")).toBe("przysiady");
   });
 });
 

@@ -34,8 +34,8 @@ vi.mock('@/lib/validation/exercises', async () => {
   );
   return {
     ...actual,
-    // Use actual normalizeTitle implementation to test real normalization behavior
-    normalizeTitle: vi.fn(actual.normalizeTitle),
+    // Use actual normalizeTitleForDbLookup (matches DB title_normalized: no diacritic stripping)
+    normalizeTitleForDbLookup: vi.fn(actual.normalizeTitleForDbLookup),
     validateExerciseBusinessRules: vi.fn(() => []),
   };
 });
@@ -129,13 +129,12 @@ describe('createExerciseService', () => {
       await createExerciseService(mockUserId, payloadWithDiacritics);
 
       // Assert
-      // Verify that normalizeTitle was called (exact arguments may vary due to schema processing)
-      expect(exercisesValidation.normalizeTitle).toHaveBeenCalled();
-      // Verify that findByNormalizedTitle was called with normalized title (diacritics removed)
+      expect(exercisesValidation.normalizeTitleForDbLookup).toHaveBeenCalled();
+      // Verify that findByNormalizedTitle was called with DB-style normalized title (lower, trim, collapse spaces; diacritics kept)
       expect(exercisesRepo.findByNormalizedTitle).toHaveBeenCalledWith(
         mockSupabase,
         mockUserId,
-        'przysiady z obciazeniem' // normalized: "ą" → "a"
+        'przysiady z obciążeniem' // normalizeTitleForDbLookup: lowercase + trim, ą kept (matches PostgreSQL title_normalized)
       );
     });
   });

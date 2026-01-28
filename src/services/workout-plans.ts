@@ -24,7 +24,7 @@ import {
   updateWorkoutPlanExercisesBySnapshotId,
 } from "@/repositories/workout-plans";
 import { findByNormalizedTitle } from "@/repositories/exercises";
-import { normalizeTitle } from "@/lib/validation/exercises";
+import { normalizeTitleForDbLookup } from "@/lib/validation/exercises";
 import type { PostgrestError } from "@supabase/supabase-js";
 
 /**
@@ -731,10 +731,10 @@ export async function importWorkoutPlanService(
 
   const supabase = await createClient();
 
-  // Mapowanie match_by_name na exercise_id przez title_normalized
+  // Mapowanie match_by_name na exercise_id przez title_normalized (zgodna z DB: bez usuwania diakrytyków)
   for (const exercise of parsed.exercises) {
     if (exercise.match_by_name && !exercise.exercise_id) {
-      const normalizedName = normalizeTitle(exercise.match_by_name);
+      const normalizedName = normalizeTitleForDbLookup(exercise.match_by_name);
       const { data: foundExercise, error: findError } = await findByNormalizedTitle(
         supabase,
         userId,

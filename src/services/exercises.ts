@@ -7,7 +7,7 @@ import {
   exerciseCreateSchema,
   exerciseQuerySchema,
   exerciseUpdateSchema,
-  normalizeTitle,
+  normalizeTitleForDbLookup,
   validateExerciseBusinessRules,
 } from "@/lib/validation/exercises";
 import {
@@ -56,7 +56,7 @@ export async function createExerciseService(
   }
 
   const supabase = await createClient();
-  const titleNormalized = normalizeTitle(parsed.title);
+  const titleNormalized = normalizeTitleForDbLookup(parsed.title);
 
   const { data: existing, error: existingError } = await findByNormalizedTitle(
     supabase,
@@ -146,7 +146,7 @@ export async function getExerciseByTitleService(
 ): Promise<ExerciseDTO | null> {
   assertUser(userId);
   const supabase = await createClient();
-  const titleNormalized = normalizeTitle(title);
+  const titleNormalized = normalizeTitleForDbLookup(title);
   const { data, error } = await findExerciseByNormalizedTitle(
     supabase,
     userId,
@@ -192,7 +192,7 @@ export async function updateExerciseService(
   if (!merged.title) {
     throw new Error("Title is required");
   }
-  const titleNormalized = normalizeTitle(merged.title);
+  const titleNormalized = normalizeTitleForDbLookup(merged.title);
 
   if (titleNormalized !== existing.title_normalized) {
     const { data: duplicate, error: duplicateError } = await findByNormalizedTitle(
