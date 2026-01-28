@@ -47,7 +47,6 @@ export function ResetPasswordFormFields({
         aria-invalid={error ? "true" : "false"}
         aria-describedby={error ? errorId : undefined}
         className={error ? "border-destructive" : ""}
-        data-test-id="reset-password-email-input"
       />
       {error && (
         <p

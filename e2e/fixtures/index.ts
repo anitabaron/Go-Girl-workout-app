@@ -26,5 +26,3 @@ export {
   defaultExerciseData,
   type ExerciseTestData,
 } from './exercises';
-
-export { generatePasswordResetLink } from './reset-password';

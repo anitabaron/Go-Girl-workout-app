@@ -44,9 +44,6 @@ pnpm test:e2e e2e/example.spec.ts
 # Run workout plans tests
 pnpm test:e2e e2e/workout-plans/workout-plan.spec.ts
 
-# Run reset password E2E tests
-pnpm test:e2e e2e/auth/reset-password.spec.ts
-
 # Run all tests from a directory
 pnpm test:e2e e2e/workout-plans
 pnpm test:e2e e2e/exercises
@@ -90,18 +87,6 @@ pnpm test:e2e e2e/workout-plans e2e/exercises
 - Implement visual comparison with `expect(page).toHaveScreenshot()`
 - Use the codegen tool for test recording
 - Leverage trace viewer for debugging test failures
-
-### Reset hasła – flow użytkownika (E2E)
-
-Flow resetu hasła w aplikacji:
-
-1. **Login** – użytkownik jest na `/login`.
-2. **„Nie pamiętasz hasła?”** – klika link → przekierowanie na `/reset-password`.
-3. **Reset hasła** – wpisuje email, klika „Wyślij link resetujący”. Supabase wysyła email z linkiem.
-4. **Link z maila** – użytkownik klika link z Supabase → trafia na `/reset-password/confirm`.
-5. **Potwierdzenie** – ustawia nowe hasło i zapisuje.
-
-Adresy: `/login` → `/reset-password` → (link z maila) → `/reset-password/confirm`.
 
 ### Database Teardown
 

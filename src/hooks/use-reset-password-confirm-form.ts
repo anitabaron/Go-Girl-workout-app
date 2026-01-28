@@ -42,7 +42,7 @@ export type ResetPasswordConfirmFormErrors = {
 
 /**
  * Custom hook zarządzający stanem i logiką formularza potwierdzenia resetu hasła.
- *
+ * 
  * Hook obsługuje:
  * - Walidację pól (minimum 6 znaków, zgodność haseł)
  * - Wywołanie `supabase.auth.updateUser({ password })` do zmiany hasła
@@ -57,110 +57,34 @@ export function useResetPasswordConfirmForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
 
-  const waitForRecoverySession = async (
-    timeoutMs: number,
-    intervalMs: number,
-  ) => {
-    const startedAt = Date.now();
-    // Poll because Supabase may need time to process URL hash into a session.
-    while (Date.now() - startedAt < timeoutMs) {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-
-      if (!error && session) {
-        return session;
-      }
-
-      await new Promise((r) => setTimeout(r, intervalMs));
-    }
-
-    return null;
-  };
-
   /**
    * Sprawdzenie ważności tokenu recovery przy montowaniu komponentu.
-   * - Jeśli w URL jest parametr code=, wymieniamy go na sesję (exchangeCodeForSession).
-   * - Supabase może też przekierować z hash fragment (#access_token=...) – wtedy sesja jest już w cookies.
+   * Supabase automatycznie przetwarza hash fragment (#access_token=...) i ustawia sesję recovery w cookies.
    * Sprawdzamy, czy sesja recovery istnieje.
    */
   useEffect(() => {
     const checkToken = async () => {
       try {
-        if (globalThis.window === undefined) return;
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
-        const params = new URLSearchParams(globalThis.window.location.search);
-        const code = params.get("code");
-
-        if (code) {
-          const {
-            data: { session },
-            error,
-          } = await supabase.auth.exchangeCodeForSession(code);
-
-          if (error || !session) {
-            setIsTokenValid(false);
-            toast.error(
-              "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link.",
-            );
-            setTimeout(() => {
-              router.replace("/reset-password?error=invalid_token");
-            }, 2000);
-            return;
-          }
-          // Usuń code z URL bez pełnego przeładowania
-          globalThis.window.history.replaceState(
-            {},
-            "",
-            globalThis.window.location.pathname +
-              globalThis.window.location.hash,
-          );
-          setIsTokenValid(true);
-          return;
-        }
-
-        // Gdy w URL jest hash (#access_token=...), klient Supabase może potrzebować chwili na jego przetworzenie.
-        // Nie zakładaj stałego sleep — polluj aż sesja się pojawi albo minie timeout.
-        const hasHash =
-          globalThis.window.location.hash?.includes("access_token") ?? false;
-
-        // In some setups (SSR client), the hash is NOT automatically converted into a session.
-        // Make it explicit to avoid flakiness / false "invalid_token".
-        if (hasHash) {
-          try {
-            const getSessionFromUrl = (
-              supabase.auth as unknown as {
-                getSessionFromUrl?: (options?: {
-                  storeSession?: boolean;
-                }) => Promise<unknown>;
-              }
-            ).getSessionFromUrl;
-
-            if (getSessionFromUrl) {
-              await getSessionFromUrl({ storeSession: true });
-            }
-          } catch (e) {
-            // If parsing fails, we'll fall back to polling getSession() below.
-            console.warn("Failed to parse recovery session from URL hash:", e);
-          }
-        }
-
-        const session = hasHash
-          ? await waitForRecoverySession(10_000, 250)
-          : await waitForRecoverySession(2_000, 250);
-
-        if (!session) {
+        if (error || !session) {
           setIsTokenValid(false);
           toast.error(
-            "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link.",
+            "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
           );
+          // Przekierowanie do /reset-password po krótkim opóźnieniu
           setTimeout(() => {
             router.push("/reset-password?error=invalid_token");
           }, 2000);
           return;
         }
 
+        // Sprawdzenie, czy sesja jest sesją recovery (reset hasła)
+        // W Supabase, sesja recovery jest ustawiana automatycznie po kliknięciu linku w emailu
+        // Jeśli sesja istnieje, token jest ważny
         setIsTokenValid(true);
       } catch (error) {
         console.error("Error checking token:", error);
@@ -181,7 +105,7 @@ export function useResetPasswordConfirmForm() {
   const validateField = (
     field: "newPassword" | "confirmPassword",
     value: string,
-    otherValue?: string,
+    otherValue?: string
   ): string | undefined => {
     try {
       if (field === "newPassword") {
@@ -195,11 +119,7 @@ export function useResetPasswordConfirmForm() {
       }
       return undefined;
     } catch (error) {
-      if (
-        error instanceof z.ZodError &&
-        error.issues &&
-        error.issues.length > 0
-      ) {
+      if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
         return error.issues[0]?.message;
       }
       return "Nieprawidłowa wartość";
@@ -297,11 +217,7 @@ export function useResetPasswordConfirmForm() {
    * Handler opuszczenia pola confirmPassword.
    */
   const handleConfirmPasswordBlur = (): void => {
-    const error = validateField(
-      "confirmPassword",
-      confirmPassword,
-      newPassword,
-    );
+    const error = validateField("confirmPassword", confirmPassword, newPassword);
     setErrors((prev) => ({ ...prev, confirmPassword: error }));
   };
 
@@ -309,14 +225,14 @@ export function useResetPasswordConfirmForm() {
    * Handler submit formularza.
    */
   const handleSubmit = async (
-    e: React.FormEvent<HTMLFormElement>,
+    e: React.FormEvent<HTMLFormElement>
   ): Promise<void> => {
     e.preventDefault();
 
     // Sprawdzenie ważności tokenu
     if (isTokenValid === false) {
       toast.error(
-        "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link.",
+        "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
       );
       router.push("/reset-password?error=invalid_token");
       return;
@@ -351,7 +267,7 @@ export function useResetPasswordConfirmForm() {
           error.message.includes("token")
         ) {
           toast.error(
-            "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link.",
+            "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
           );
           router.push("/reset-password?error=invalid_token");
         } else if (error.message.includes("password")) {
@@ -360,7 +276,9 @@ export function useResetPasswordConfirmForm() {
           });
           toast.error("Hasło nie spełnia wymagań. Minimum 6 znaków.");
         } else {
-          toast.error("Nie udało się zmienić hasła. Spróbuj ponownie później.");
+          toast.error(
+            "Nie udało się zmienić hasła. Spróbuj ponownie później."
+          );
         }
         setIsLoading(false);
         return;
@@ -376,10 +294,8 @@ export function useResetPasswordConfirmForm() {
         // Kontynuujemy mimo błędu wylogowania - przekierowanie do /login
       }
 
-      toast.success(
-        "Hasło zostało pomyślnie zmienione. Możesz się teraz zalogować.",
-      );
-
+      toast.success("Hasło zostało pomyślnie zmienione. Możesz się teraz zalogować.");
+      
       // Przekierowanie do /login po krótkim opóźnieniu
       setTimeout(() => {
         router.push("/login");
@@ -389,7 +305,7 @@ export function useResetPasswordConfirmForm() {
       // Obsługa błędów sieciowych
       if (error instanceof TypeError && error.message.includes("fetch")) {
         toast.error(
-          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."
         );
       } else {
         toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");

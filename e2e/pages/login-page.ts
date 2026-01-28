@@ -12,7 +12,6 @@ export class LoginPage {
   readonly passwordInput: Locator;
   readonly rememberMeCheckbox: Locator;
   readonly submitButton: Locator;
-  readonly forgotPasswordLink: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -23,32 +22,13 @@ export class LoginPage {
       '[data-test-id="login-remember-me-checkbox"]',
     );
     this.submitButton = page.locator('[data-test-id="login-submit-button"]');
-    this.forgotPasswordLink = page.locator(
-      '[data-test-id="login-forgot-password-link"]',
-    );
   }
 
   /**
-   * Click "Nie pamiętasz hasła?" link to go to reset password page.
-   * Scrolls into view and uses force to avoid overlay issues; triggers full navigation.
-   */
-  async clickForgotPassword() {
-    await this.forgotPasswordLink.scrollIntoViewIfNeeded();
-    await this.forgotPasswordLink.click({ force: true });
-  }
-
-  /**
-   * Navigate to login page.
-   * Fails fast with a clear error if the server returns 404 (e.g. dev server not running).
+   * Navigate to login page
    */
   async goto() {
-    await this.page.goto("/login", { waitUntil: "domcontentloaded" });
-    const notFound = this.page.getByRole("heading", { name: "404" });
-    if (await notFound.isVisible().catch(() => false)) {
-      throw new Error(
-        "Login page returned 404. Ensure the dev server is running at baseURL (e.g. pnpm dev) and /login route exists.",
-      );
-    }
+    await this.page.goto("/login");
   }
 
   /**
