@@ -21,7 +21,6 @@ export function ResetPasswordConfirmButton({
       disabled={isLoading || disabled}
       className="w-full"
       aria-busy={isLoading}
-      data-test-id="reset-password-confirm-submit-button"
     >
       {isLoading ? (
         <>

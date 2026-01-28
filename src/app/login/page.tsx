@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/db/supabase.server";
 import { LoginForm } from "@/components/auth/login/login-form";
-import { RecoveryHashRedirect } from "@/components/auth/login/recovery-hash-redirect";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/navigation/page-header";
 
@@ -13,15 +12,9 @@ export const metadata: Metadata = {
 
 export default async function LoginPage() {
   const supabase = await createClient();
-  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] =
-    null;
-  try {
-    const result = await supabase.auth.getUser();
-    user = result.data.user;
-  } catch (e) {
-    // Session cookie może być uszkodzony (np. surowy JWT) – traktuj jak brak sesji
-    console.warn("getUser failed on login page, treating as unauthenticated:", e);
-  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Przekierowanie zalogowanych użytkowniczek do strony głównej
   if (user !== null) {
@@ -30,7 +23,6 @@ export default async function LoginPage() {
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <RecoveryHashRedirect />
       <PageHeader showBack={false} />
       <div className="grid min-h-[calc(100vh-4rem)] place-items-center p-4">
         <Card className="w-full max-w-lg min-w-[320px]">

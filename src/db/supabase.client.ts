@@ -2,15 +2,6 @@ import { createBrowserClient } from "@supabase/ssr";
 
 import type { Database } from "./database.types";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  );
-}
-
 /**
  * Klient Supabase dla Client Components w Next.js 16 App Router.
  *
@@ -28,15 +19,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * }
  */
 export const supabase = createBrowserClient<Database>(
-  supabaseUrl,
-  supabaseAnonKey,
-  {
-    auth: {
-      // Important for recovery flow: ensure the client can pick up tokens from URL
-      // (hash fragment / implicit flow) and persist session.
-      detectSessionInUrl: true,
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  },
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
