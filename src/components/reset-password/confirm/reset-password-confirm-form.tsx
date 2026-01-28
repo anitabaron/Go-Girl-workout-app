@@ -40,7 +40,12 @@ export function ResetPasswordConfirmForm() {
   const isFormDisabled = isLoading || isTokenValid === false || isTokenValid === null;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <form
+        onSubmit={handleSubmit}
+        className="space-y-6"
+        noValidate
+        data-test-id="reset-password-confirm-form"
+      >
       <ResetPasswordConfirmInstructions />
 
       {isTokenValid === false && (
