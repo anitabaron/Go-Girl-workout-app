@@ -14,6 +14,7 @@ import {
 import {
   findWorkoutPlanById,
   findExercisesByIds,
+  findExercisesByIdsWithFullData,
   findWorkoutPlansByUserId,
   insertWorkoutPlan,
   insertWorkoutPlanExercises,
@@ -744,7 +745,7 @@ export async function importWorkoutPlanService(
         throw mapDbError(findError);
       }
 
-      if (foundExercise && foundExercise.id) {
+      if (foundExercise?.id) {
         // Znaleziono ćwiczenie - użyj exercise_id
         exercise.exercise_id = foundExercise.id;
         exercise.match_by_name = undefined; // Usuń match_by_name, bo już mamy exercise_id
@@ -767,25 +768,65 @@ export async function importWorkoutPlanService(
   }
 
   // Dla ćwiczeń z exercise_id - sprawdź czy istnieją i należą do użytkownika
+  // oraz pobierz pełne dane do uzupełnienia brakujących pól
   const exerciseIds = parsed.exercises
     .filter((e) => e.exercise_id)
     .map((e) => e.exercise_id!);
   
   const missingExercises: string[] = [];
+  const exercisesDataMap = new Map<string, {
+    series: number;
+    reps: number | null;
+    duration_seconds: number | null;
+    rest_in_between_seconds: number | null;
+    rest_after_series_seconds: number | null;
+    estimated_set_time_seconds: number | null;
+  }>();
   
   if (exerciseIds.length > 0) {
-    const { data: ownedExercises, error: exercisesError } =
-      await findExercisesByIds(supabase, userId, exerciseIds);
+    // Pobierz pełne dane ćwiczeń (dla uzupełnienia brakujących pól)
+    const { data: exercisesWithData, error: exercisesDataError } =
+      await findExercisesByIdsWithFullData(supabase, userId, exerciseIds);
 
-    if (exercisesError) {
-      throw mapDbError(exercisesError);
+    if (exercisesDataError) {
+      throw mapDbError(exercisesDataError);
+    }
+
+    // Utwórz mapę danych ćwiczeń
+    if (exercisesWithData) {
+      for (const exercise of exercisesWithData) {
+        exercisesDataMap.set(exercise.id, {
+          series: exercise.series,
+          reps: exercise.reps,
+          duration_seconds: exercise.duration_seconds,
+          rest_in_between_seconds: exercise.rest_in_between_seconds,
+          rest_after_series_seconds: exercise.rest_after_series_seconds,
+          estimated_set_time_seconds: exercise.estimated_set_time_seconds,
+        });
+      }
     }
 
     // Znajdź brakujące ćwiczenia
-    const foundIds = new Set((ownedExercises ?? []).map((e) => e.id));
+    const foundIds = new Set((exercisesWithData ?? []).map((e) => e.id));
     for (const exerciseId of exerciseIds) {
       if (!foundIds.has(exerciseId)) {
         missingExercises.push(exerciseId);
+      }
+    }
+
+    // Uzupełnij brakujące pola z bazy danych dla istniejących ćwiczeń
+    for (const exercise of parsed.exercises) {
+      if (exercise.exercise_id && !missingExercises.includes(exercise.exercise_id)) {
+        const exerciseData = exercisesDataMap.get(exercise.exercise_id);
+        if (exerciseData) {
+          // Uzupełnij tylko pola, które nie zostały podane w JSON
+          exercise.planned_sets ??= exerciseData.series;
+          exercise.planned_reps ??= exerciseData.reps;
+          exercise.planned_duration_seconds ??= exerciseData.duration_seconds;
+          exercise.planned_rest_seconds ??= exerciseData.rest_in_between_seconds;
+          exercise.planned_rest_after_series_seconds ??= exerciseData.rest_after_series_seconds;
+          exercise.estimated_set_time_seconds ??= exerciseData.estimated_set_time_seconds;
+        }
       }
     }
 

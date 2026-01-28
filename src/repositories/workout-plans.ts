@@ -553,6 +553,27 @@ export async function findExercisesByIds(
 }
 
 /**
+ * Pobiera pełne dane ćwiczeń po ID (dla importu planów - uzupełnianie brakujących pól).
+ */
+export async function findExercisesByIdsWithFullData(
+  client: DbClient,
+  userId: string,
+  exerciseIds: string[]
+) {
+  if (exerciseIds.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const { data, error } = await client
+    .from("exercises")
+    .select("id,series,reps,duration_seconds,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds")
+    .eq("user_id", userId)
+    .in("id", exerciseIds);
+
+  return { data, error };
+}
+
+/**
  * Mapuje wiersz z bazy danych na DTO planu (bez ćwiczeń).
  */
 type WorkoutPlanSelectResult = Omit<WorkoutPlanRow, "user_id">;

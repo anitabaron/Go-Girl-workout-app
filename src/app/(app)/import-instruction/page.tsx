@@ -119,7 +119,9 @@ export default function ImportInstructionPage() {
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Użyj, gdy ćwiczenie już istnieje w bibliotece. Możesz je
-                  zidentyfikować przez ID (UUID) lub nazwę.
+                  zidentyfikować przez ID (UUID) lub nazwę. Jeśli nie podasz
+                  opcjonalnych pól, zostaną one automatycznie pobrane z bazy
+                  danych.
                 </p>
                 <div className="bg-muted p-3 rounded-md space-y-3">
                   <div>
@@ -144,23 +146,6 @@ export default function ImportInstructionPage() {
                       </p>
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
-                          planned_reps
-                        </code>{" "}
-                        (number &gt; 0 | null) - liczba powtórzeń
-                      </li>
-                      <li>
-                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
-                          planned_duration_seconds
-                        </code>{" "}
-                        (number &gt; 0 | null) - czas trwania w sekundach
-                      </li>
-
-                      <p className="text-xs text-muted-foreground italic mt-1">
-                        Musisz podać przynajmniej jedno z powyższych (reps lub
-                        duration).
-                      </p>
-                      <li>
-                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
                           section_type
                         </code>{" "}
                         (enum: &quot;Warm-up&quot; | &quot;Main Workout&quot; |
@@ -173,42 +158,64 @@ export default function ImportInstructionPage() {
                         (number &gt; 0, unikalna w ramach sekcji) - kolejność w
                         sekcji
                       </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium mb-2">
+                      Pola opcjonalne (jeśli nie podane, zostaną pobrane z bazy):
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground ml-2">
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
                           planned_sets
                         </code>{" "}
-                        (number &gt; 0 | null) - liczba serii
+                        (number &gt; 0 | null) - liczba serii (domyślnie z bazy:
+                        series)
+                      </li>
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          planned_reps
+                        </code>{" "}
+                        (number &gt; 0 | null) - liczba powtórzeń (domyślnie z
+                        bazy: reps)
+                      </li>
+                      <li>
+                        <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
+                          planned_duration_seconds
+                        </code>{" "}
+                        (number &gt; 0 | null) - czas trwania w sekundach
+                        (domyślnie z bazy: duration_seconds)
                       </li>
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
                           planned_rest_seconds
                         </code>{" "}
                         (number &gt;= 0 | null) - czas odpoczynku między seriami
-                        w sekundach
+                        w sekundach (domyślnie z bazy: rest_in_between_seconds)
                       </li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium mb-2">
-                      Dodatkowe pola opcjonalne:
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground ml-2">
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
                           planned_rest_after_series_seconds
                         </code>{" "}
                         (number &gt;= 0 | null) - czas odpoczynku po zakończeniu
-                        wszystkich serii
+                        wszystkich serii (domyślnie z bazy:
+                        rest_after_series_seconds)
                       </li>
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
                           estimated_set_time_seconds
                         </code>{" "}
                         (number &gt; 0 | null) - szacowany czas wykonania serii
-                        w sekundach
+                        w sekundach (domyślnie z bazy: estimated_set_time_seconds)
                       </li>
                     </ul>
+                    <p className="text-xs text-muted-foreground italic mt-2">
+                      Jeśli nie podasz żadnego z opcjonalnych pól, wszystkie
+                      wartości zostaną automatycznie pobrane z bazy danych na
+                      podstawie ćwiczenia zidentyfikowanego przez exercise_id lub
+                      match_by_name.
+                    </p>
                   </div>
                 </div>
               </div>

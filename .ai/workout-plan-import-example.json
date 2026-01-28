@@ -9,6 +9,7 @@
       "section_order": 1,
       "planned_sets": 2,
       "planned_reps": 10,
+      "planned_duration_seconds": null,
       "planned_rest_seconds": 30,
       "planned_rest_after_series_seconds": 60,
       "estimated_set_time_seconds": 300
@@ -16,12 +17,7 @@
     {
       "match_by_name": "Deska boczna",
       "section_type": "Main Workout",
-      "section_order": 1,
-      "planned_sets": 3,
-      "planned_duration_seconds": 45,
-      "planned_rest_seconds": 20,
-      "planned_rest_after_series_seconds": 60,
-      "estimated_set_time_seconds": 300
+      "section_order": 1
     },
     {
       "exercise_title": "Deska klasyczna",
