@@ -16,9 +16,15 @@ export default async function AppLayout({
 }>) {
   // Pobranie danych użytkowniczki z Supabase dla nawigacji
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] =
+    null;
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+  } catch (e) {
+    // Session cookie może być uszkodzony (np. surowy JWT) – traktuj jak brak sesji
+    console.warn("getUser failed, treating as unauthenticated:", e);
+  }
 
   return (
     <AuthProvider user={user}>
