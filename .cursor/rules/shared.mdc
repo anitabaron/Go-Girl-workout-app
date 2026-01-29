@@ -26,6 +26,10 @@ When introducing changes to the project, always follow the directory structure b
 - `./src/assets` - internal static assets (e.g., images)
 - `./public` - public assets served directly
 - `./src/db` - Supabase clients and types
+- `./src/lib/api` - API client layer (workout-sessions, exercises, workout-plans)
+- `./src/lib/utils` - Utility functions (e.g. session-format)
+- `./src/stores` - Zustand stores (auth, workout-session)
+- `./src/hooks` - Custom React hooks
 - `./src/types.ts` - Shared types for backend and frontend (Entities, DTOs)
 
 When modifying the directory structure, always update this section.
