@@ -1,39 +1,99 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import type { Resolver } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createWorkoutPlan,
   updateWorkoutPlan,
 } from "@/app/actions/workout-plans";
+import type { ExerciseDTO } from "@/types";
 import type {
-  WorkoutPlanDTO,
-  WorkoutPlanCreateCommand,
-  WorkoutPlanUpdateCommand,
-  WorkoutPlanExerciseInput,
-  ExerciseDTO,
-  ExerciseType,
-  ExercisePart,
-} from "@/types";
-import type {
-  WorkoutPlanFormState,
   WorkoutPlanFormErrors,
   WorkoutPlanExerciseItemState,
 } from "@/types/workout-plan-form";
 import { dtoToFormState } from "@/types/workout-plan-form";
 import {
-  validateWorkoutPlanFormBusinessRules,
-  validateWorkoutPlanFormField,
-  validatePlannedParam,
+  workoutPlanFormSchema,
+  formValuesToCreateCommand,
+  formValuesToUpdateCommand,
+  type WorkoutPlanFormValues,
 } from "@/lib/validation/workout-plan-form";
 import { useBeforeUnload } from "./use-before-unload";
 
 type UseWorkoutPlanFormProps = {
-  initialData?: WorkoutPlanDTO;
+  initialData?: Parameters<typeof dtoToFormState>[0];
   mode: "create" | "edit";
   onSuccess?: () => void;
 };
+
+function formStateToFormValues(
+  state: ReturnType<typeof dtoToFormState>,
+): WorkoutPlanFormValues {
+  return {
+    name: state.name,
+    description: state.description,
+    part: state.part,
+    exercises: state.exercises.map((ex) => ({
+      id: ex.id,
+      exercise_id: ex.exercise_id,
+      exercise_title: ex.exercise_title,
+      exercise_type: ex.exercise_type,
+      exercise_part: ex.exercise_part,
+      section_type: ex.section_type,
+      section_order: ex.section_order,
+      planned_sets: ex.planned_sets,
+      planned_reps: ex.planned_reps,
+      planned_duration_seconds: ex.planned_duration_seconds,
+      planned_rest_seconds: ex.planned_rest_seconds,
+      planned_rest_after_series_seconds: ex.planned_rest_after_series_seconds,
+      estimated_set_time_seconds: ex.estimated_set_time_seconds,
+    })),
+  };
+}
+
+function rhfErrorsToFormErrors(
+  errors: Record<string, unknown>,
+): WorkoutPlanFormErrors {
+  const result: WorkoutPlanFormErrors = {};
+
+  const getMessage = (val: unknown): string | undefined =>
+    val &&
+    typeof val === "object" &&
+    "message" in val &&
+    typeof (val as { message: unknown }).message === "string"
+      ? (val as { message: string }).message
+      : undefined;
+
+  const nameMsg = getMessage(errors.name);
+  if (nameMsg) result.name = nameMsg;
+
+  const descMsg = getMessage(errors.description);
+  if (descMsg) result.description = descMsg;
+
+  const partMsg = getMessage(errors.part);
+  if (partMsg) result.part = partMsg;
+
+  const exerciseErrors = errors.exercises;
+  if (exerciseErrors && Array.isArray(exerciseErrors)) {
+    const mapped: Record<string, string> = {};
+    exerciseErrors.forEach((ex, index) => {
+      if (ex && typeof ex === "object") {
+        const exObj = ex as Record<string, unknown>;
+        for (const [key, val] of Object.entries(exObj)) {
+          const msg = getMessage(val);
+          if (msg) mapped[`exercise_${index}.${key}`] = msg;
+        }
+      }
+    });
+    if (Object.keys(mapped).length > 0) result.exercises = mapped;
+  }
+
+  return result;
+}
 
 export function useWorkoutPlanForm({
   initialData,
@@ -41,258 +101,77 @@ export function useWorkoutPlanForm({
   onSuccess,
 }: UseWorkoutPlanFormProps) {
   const router = useRouter();
-  const [fields, setFields] = useState<WorkoutPlanFormState>(() =>
-    dtoToFormState(initialData),
-  );
-  const [errors, setErrors] = useState<WorkoutPlanFormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const initialDataRef = useRef(initialData);
+  const defaultValues = formStateToFormValues(dtoToFormState(initialData));
 
-  // Aktualizacja initialDataRef gdy się zmienia
+  const form = useForm<WorkoutPlanFormValues>({
+    resolver: zodResolver(
+      workoutPlanFormSchema,
+    ) as unknown as Resolver<WorkoutPlanFormValues>,
+    defaultValues,
+  });
+
+  const { append, remove, update } = useFieldArray({
+    control: form.control,
+    name: "exercises",
+  });
+
+  const {
+    formState,
+    setError,
+    setValue,
+    watch,
+    reset,
+    handleSubmit: rhfHandleSubmit,
+  } = form;
+  const { errors, isSubmitting, isDirty } = formState;
+
   useEffect(() => {
-    initialDataRef.current = initialData;
-  }, [initialData]);
+    reset(formStateToFormValues(dtoToFormState(initialData)));
+  }, [initialData, reset]);
 
-  // Obliczanie czy są niezapisane zmiany
-  const hasUnsavedChanges = useMemo(() => {
-    if (!initialData) {
-      // W trybie tworzenia - sprawdź czy jakiekolwiek pole jest wypełnione
-      return (
-        fields.name.trim() !== "" ||
-        fields.description !== null ||
-        fields.part !== null ||
-        fields.exercises.length > 0
-      );
-    }
+  useBeforeUnload(isDirty);
 
-    // W trybie edycji - porównaj z initialData
-    const current = fields;
-    const initial = dtoToFormState(initialData);
+  const fieldsState = watch();
+  const formErrors: WorkoutPlanFormErrors = rhfErrorsToFormErrors(
+    errors as Record<string, unknown>,
+  );
 
-    return (
-      current.name !== initial.name ||
-      current.description !== initial.description ||
-      current.part !== initial.part ||
-      JSON.stringify(current.exercises) !== JSON.stringify(initial.exercises)
-    );
-  }, [fields, initialData]);
-
-  // Integracja z useBeforeUnload
-  useBeforeUnload(hasUnsavedChanges);
-
-  // Walidacja pojedynczego pola
-  const validateField = (
-    field: keyof WorkoutPlanFormState,
-    value: unknown,
-  ): string | undefined => {
-    return validateWorkoutPlanFormField(field, value);
-  };
-
-  // Walidacja pól metadanych
-  const validateMetadataFields = (
-    newErrors: WorkoutPlanFormErrors,
-  ): boolean => {
-    let isValid = true;
-
-    const nameError = validateField("name", fields.name);
-    if (nameError) {
-      newErrors.name = nameError;
-      isValid = false;
-    }
-
-    const descriptionError = validateField("description", fields.description);
-    if (descriptionError) {
-      newErrors.description = descriptionError;
-      isValid = false;
-    }
-
-    const partError = validateField("part", fields.part);
-    if (partError) {
-      newErrors.part = partError;
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  // Walidacja pojedynczego ćwiczenia
-  const validateExercise = (
-    exercise: WorkoutPlanExerciseItemState,
-    index: number,
-  ): Record<string, string> => {
-    const exerciseErrors: Record<string, string> = {};
-    const exerciseKey = `exercise_${index}`;
-
-    // Ćwiczenie musi mieć exercise_id LUB exercise_title (dla snapshot)
-    const hasExerciseId =
-      exercise.exercise_id &&
-      typeof exercise.exercise_id === "string" &&
-      exercise.exercise_id.trim() !== "";
-    const hasExerciseTitle =
-      exercise.exercise_title &&
-      typeof exercise.exercise_title === "string" &&
-      exercise.exercise_title.trim() !== "";
-
-    if (!hasExerciseId && !hasExerciseTitle) {
-      exerciseErrors[`${exerciseKey}.exercise_id`] = "Ćwiczenie jest wymagane";
-    }
-
-    if (!exercise.section_type) {
-      exerciseErrors[`${exerciseKey}.section_type`] =
-        "Typ sekcji jest wymagany";
-    }
-
-    if (
-      !exercise.section_order ||
-      !Number.isInteger(exercise.section_order) ||
-      exercise.section_order <= 0
-    ) {
-      exerciseErrors[`${exerciseKey}.section_order`] =
-        "Kolejność musi być liczbą całkowitą większą od zera";
-    }
-
-    const setsError = validatePlannedParam(
-      "planned_sets",
-      exercise.planned_sets,
-    );
-    if (setsError) {
-      exerciseErrors[`${exerciseKey}.planned_sets`] = setsError;
-    }
-
-    const repsError = validatePlannedParam(
-      "planned_reps",
-      exercise.planned_reps,
-    );
-    if (repsError) {
-      exerciseErrors[`${exerciseKey}.planned_reps`] = repsError;
-    }
-
-    const durationError = validatePlannedParam(
-      "planned_duration_seconds",
-      exercise.planned_duration_seconds,
-    );
-    if (durationError) {
-      exerciseErrors[`${exerciseKey}.planned_duration_seconds`] = durationError;
-    }
-
-    const restError = validatePlannedParam(
-      "planned_rest_seconds",
-      exercise.planned_rest_seconds,
-    );
-    if (restError) {
-      exerciseErrors[`${exerciseKey}.planned_rest_seconds`] = restError;
-    }
-
-    const restAfterSeriesError = validatePlannedParam(
-      "planned_rest_after_series_seconds",
-      exercise.planned_rest_after_series_seconds,
-    );
-    if (restAfterSeriesError) {
-      exerciseErrors[`${exerciseKey}.planned_rest_after_series_seconds`] =
-        restAfterSeriesError;
-    }
-
-    const estimatedTimeError = validatePlannedParam(
-      "estimated_set_time_seconds",
-      exercise.estimated_set_time_seconds,
-    );
-    if (estimatedTimeError) {
-      exerciseErrors[`${exerciseKey}.estimated_set_time_seconds`] =
-        estimatedTimeError;
-    }
-
-    return exerciseErrors;
-  };
-
-  // Walidacja całego formularza
-  const validateForm = (): boolean => {
-    const newErrors: WorkoutPlanFormErrors = {};
-    let isValid = true;
-
-    // Walidacja pól metadanych
-    const metadataValid = validateMetadataFields(newErrors);
-    isValid = isValid && metadataValid;
-
-    // Walidacja ćwiczeń
-    if (fields.exercises.length === 0) {
-      newErrors._form = [
-        "Plan treningowy musi zawierać co najmniej jedno ćwiczenie.",
-      ];
-      isValid = false;
-    } else {
-      const exerciseErrors: Record<string, string> = {};
-      fields.exercises.forEach((exercise, index) => {
-        const errors = validateExercise(exercise, index);
-        Object.assign(exerciseErrors, errors);
-      });
-
-      if (Object.keys(exerciseErrors).length > 0) {
-        newErrors.exercises = exerciseErrors;
-        isValid = false;
-      }
-
-      const businessErrors = validateWorkoutPlanFormBusinessRules(
-        fields.exercises,
-      );
-      if (businessErrors.length > 0) {
-        newErrors._form = businessErrors;
-        isValid = false;
-      }
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
+  const rootMsg =
+    errors.root && typeof errors.root === "object" && "message" in errors.root
+      ? (errors.root as { message: string }).message
+      : undefined;
+  if (rootMsg) {
+    formErrors._form = [...(formErrors._form ?? []), rootMsg];
+  }
 
   const handleChange = (field: string, value: unknown) => {
-    setFields((prev) => ({ ...prev, [field]: value }));
-    // Wyczyść błąd dla tego pola przy zmianie
-    if (errors[field as keyof WorkoutPlanFormErrors]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field as keyof WorkoutPlanFormErrors];
-        return newErrors;
-      });
+    if (field === "name" || field === "description" || field === "part") {
+      setValue(field, value as never, { shouldDirty: true });
     }
   };
 
   const handleBlur = (field: string) => {
-    const value = fields[field as keyof WorkoutPlanFormState];
-    const error = validateField(field as keyof WorkoutPlanFormState, value);
-    if (error) {
-      setErrors((prev) => ({ ...prev, [field]: error }));
-    } else {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field as keyof WorkoutPlanFormErrors];
-        return newErrors;
-      });
-    }
+    form.trigger(field as keyof WorkoutPlanFormValues);
   };
 
   const handleAddExercise = (exercises: ExerciseDTO | ExerciseDTO[]) => {
-    // Normalizuj do tablicy
     const exercisesArray = Array.isArray(exercises) ? exercises : [exercises];
+    if (exercisesArray.length === 0) return;
 
-    if (exercisesArray.length === 0) {
-      return;
-    }
-
-    // Grupuj ćwiczenia według typu sekcji
     const exercisesBySection = new Map<ExerciseDTO["type"], ExerciseDTO[]>();
-    exercisesArray.forEach((exercise) => {
-      const sectionType = exercise.type;
+    exercisesArray.forEach((ex) => {
+      const sectionType = ex.type;
       if (!exercisesBySection.has(sectionType)) {
         exercisesBySection.set(sectionType, []);
       }
-      exercisesBySection.get(sectionType)!.push(exercise);
+      exercisesBySection.get(sectionType)!.push(ex);
     });
 
-    // Dla każdej sekcji, znajdź następną dostępną pozycję
-    const newExercises: WorkoutPlanExerciseItemState[] = [];
+    const currentExercises = watch("exercises");
+    const toAppend: Parameters<typeof append>[0][] = [];
 
     exercisesBySection.forEach((sectionExercises, sectionType) => {
-      const exercisesInSection = fields.exercises.filter(
+      const exercisesInSection = currentExercises.filter(
         (e) => e.section_type === sectionType,
       );
       let nextOrder =
@@ -300,16 +179,14 @@ export function useWorkoutPlanForm({
           ? Math.max(...exercisesInSection.map((e) => e.section_order)) + 1
           : 1;
 
-      // Dodaj wszystkie ćwiczenia z tej sekcji
       sectionExercises.forEach((exercise) => {
-        const newExercise: WorkoutPlanExerciseItemState = {
+        toAppend.push({
           exercise_id: exercise.id,
           exercise_title: exercise.title,
           exercise_type: exercise.type,
           exercise_part: exercise.part,
           section_type: sectionType,
           section_order: nextOrder,
-          // Mapowanie wartości z ćwiczenia do parametrów planowanych
           planned_sets: exercise.series ?? null,
           planned_reps: exercise.reps ?? null,
           planned_duration_seconds: exercise.duration_seconds ?? null,
@@ -318,345 +195,158 @@ export function useWorkoutPlanForm({
             exercise.rest_after_series_seconds ?? null,
           estimated_set_time_seconds:
             exercise.estimated_set_time_seconds ?? null,
-        };
-
-        newExercises.push(newExercise);
+        });
         nextOrder += 1;
       });
     });
 
-    setFields((prev) => ({
-      ...prev,
-      exercises: [...prev.exercises, ...newExercises],
-    }));
-
-    // Wyczyść błędy ćwiczeń przy dodaniu
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      if (newErrors.exercises) {
-        delete newErrors.exercises;
-      }
-      if (newErrors._form) {
-        delete newErrors._form;
-      }
-      return newErrors;
-    });
+    toAppend.forEach((item) => append(item));
   };
 
   const handleRemoveExercise = (index: number) => {
-    setFields((prev) => ({
-      ...prev,
-      exercises: prev.exercises.filter((_, i) => i !== index),
-    }));
-
-    // Wyczyść błędy dla usuniętego ćwiczenia
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      if (newErrors.exercises) {
-        const exerciseErrors = { ...newErrors.exercises };
-        Object.keys(exerciseErrors).forEach((key) => {
-          if (key.startsWith(`exercise_${index}.`)) {
-            delete exerciseErrors[key];
-          }
-        });
-        newErrors.exercises =
-          Object.keys(exerciseErrors).length > 0 ? exerciseErrors : undefined;
-      }
-      return newErrors;
-    });
+    remove(index);
   };
 
   const handleUpdateExercise = (
     index: number,
     updates: Partial<WorkoutPlanExerciseItemState>,
   ) => {
-    setFields((prev) => {
-      const currentExercise = prev.exercises[index];
-      if (!currentExercise) return prev;
+    const currentExercises = watch("exercises");
+    const currentExercise = currentExercises[index];
+    if (!currentExercise) return;
 
-      // Jeśli zmienia się section_type, musimy ustawić section_order na następną dostępną pozycję w nowej sekcji
-      const finalUpdates = { ...updates };
-      if (
-        updates.section_type &&
-        updates.section_type !== currentExercise.section_type
-      ) {
-        // Znajdź wszystkie ćwiczenia w nowej sekcji
-        const exercisesInNewSection = prev.exercises.filter(
-          (ex, i) => i !== index && ex.section_type === updates.section_type,
-        );
+    const finalUpdates = { ...updates };
+    if (
+      updates.section_type &&
+      updates.section_type !== currentExercise.section_type
+    ) {
+      const exercisesInNewSection = currentExercises.filter(
+        (ex, i) => i !== index && ex.section_type === updates.section_type,
+      );
+      const nextOrder =
+        exercisesInNewSection.length > 0
+          ? Math.max(...exercisesInNewSection.map((e) => e.section_order)) + 1
+          : 1;
+      finalUpdates.section_order = nextOrder;
+    }
 
-        // Oblicz następną dostępną pozycję
-        const nextOrder =
-          exercisesInNewSection.length > 0
-            ? Math.max(...exercisesInNewSection.map((e) => e.section_order)) + 1
-            : 1;
-
-        finalUpdates.section_order = nextOrder;
+    if (
+      updates.section_order !== undefined &&
+      (!updates.section_type ||
+        updates.section_type === currentExercise.section_type)
+    ) {
+      const targetSection =
+        updates.section_type || currentExercise.section_type;
+      const exercisesInSection = currentExercises.filter(
+        (ex, i) => i !== index && ex.section_type === targetSection,
+      );
+      const orderExists = exercisesInSection.some(
+        (ex) => ex.section_order === updates.section_order,
+      );
+      if (orderExists) {
+        const maxOrder =
+          exercisesInSection.length > 0
+            ? Math.max(...exercisesInSection.map((e) => e.section_order))
+            : 0;
+        finalUpdates.section_order = maxOrder + 1;
       }
+    }
 
-      // Jeśli zmienia się tylko section_order (bez zmiany section_type), sprawdź czy nie ma duplikatu
-      if (
-        updates.section_order !== undefined &&
-        (!updates.section_type ||
-          updates.section_type === currentExercise.section_type)
-      ) {
-        const targetSection =
-          updates.section_type || currentExercise.section_type;
-        const exercisesInSection = prev.exercises.filter(
-          (ex, i) => i !== index && ex.section_type === targetSection,
-        );
-
-        // Sprawdź czy nowa pozycja już istnieje
-        const orderExists = exercisesInSection.some(
-          (ex) => ex.section_order === updates.section_order,
-        );
-
-        if (orderExists) {
-          // Jeśli pozycja już istnieje, znajdź następną dostępną
-          const maxOrder =
-            exercisesInSection.length > 0
-              ? Math.max(...exercisesInSection.map((e) => e.section_order))
-              : 0;
-          finalUpdates.section_order = maxOrder + 1;
-        }
-      }
-
-      return {
-        ...prev,
-        exercises: prev.exercises.map((exercise, i) =>
-          i === index ? { ...exercise, ...finalUpdates } : exercise,
-        ),
-      };
-    });
-
-    // Wyczyść błędy dla zaktualizowanego ćwiczenia
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      if (newErrors.exercises) {
-        const exerciseErrors = { ...newErrors.exercises };
-        Object.keys(updates).forEach((field) => {
-          const key = `exercise_${index}.${field}`;
-          delete exerciseErrors[key];
-        });
-        newErrors.exercises =
-          Object.keys(exerciseErrors).length > 0 ? exerciseErrors : undefined;
-      }
-      // Wyczyść błędy formularza związane z duplikatami pozycji
-      if (newErrors._form) {
-        newErrors._form = newErrors._form.filter(
-          (error) =>
-            !error.includes("Duplikat kolejności") &&
-            !error.includes("Duplikat pozycji"),
-        );
-        if (newErrors._form.length === 0) {
-          delete newErrors._form;
-        }
-      }
-      return newErrors;
-    });
+    update(index, { ...currentExercise, ...finalUpdates });
   };
 
   const handleMoveExercise = (index: number, direction: "up" | "down") => {
-    setFields((prev) => {
-      const currentExercise = prev.exercises[index];
-      if (!currentExercise) return prev;
+    const currentExercises = watch("exercises");
+    const currentExercise = currentExercises[index];
+    if (!currentExercise) return;
 
-      // Znajdź wszystkie ćwiczenia w tej samej sekcji i posortuj je według aktualnego section_order
-      const exercisesInSection = prev.exercises
-        .map((ex, i) => ({ exercise: ex, originalIndex: i }))
-        .filter(
-          ({ exercise }) =>
-            exercise.section_type === currentExercise.section_type,
-        )
-        .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
-
-      // Znajdź pozycję bieżącego ćwiczenia w posortowanej liście sekcji
-      const currentPosition = exercisesInSection.findIndex(
-        ({ originalIndex }) => originalIndex === index,
-      );
-
-      if (currentPosition === -1) return prev;
-
-      // Sprawdź czy można przesunąć
-      if (direction === "up" && currentPosition === 0) return prev;
-      if (
-        direction === "down" &&
-        currentPosition === exercisesInSection.length - 1
+    const exercisesInSection = currentExercises
+      .map((ex, i) => ({ exercise: ex, originalIndex: i }))
+      .filter(
+        ({ exercise }) =>
+          exercise.section_type === currentExercise.section_type,
       )
-        return prev;
+      .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
 
-      // Oblicz nową pozycję w posortowanej liście
-      const newPosition =
-        direction === "up" ? currentPosition - 1 : currentPosition + 1;
-
-      // Utwórz nową tablicę ćwiczeń w sekcji z przesuniętym ćwiczeniem
-      const reorderedSection = [...exercisesInSection];
-      const [movedItem] = reorderedSection.splice(currentPosition, 1);
-      reorderedSection.splice(newPosition, 0, movedItem);
-
-      // Utwórz nową tablicę wszystkich ćwiczeń
-      const newExercises = [...prev.exercises];
-
-      // Przepisz section_order dla wszystkich ćwiczeń w sekcji, aby były kolejne (1, 2, 3...)
-      // Używamy nowej kolejności z reorderedSection
-      reorderedSection.forEach(({ originalIndex }, orderIndex) => {
-        newExercises[originalIndex] = {
-          ...newExercises[originalIndex],
-          section_order: orderIndex + 1,
-        };
-      });
-
-      return {
-        ...prev,
-        exercises: newExercises,
-      };
-    });
-
-    // Wyczyść błędy związane z kolejnością i duplikatami pozycji
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      // Wyczyść błędy ćwiczeń związane z section_order
-      if (newErrors.exercises) {
-        const exerciseErrors = { ...newErrors.exercises };
-        // Usuń błędy section_order dla wszystkich ćwiczeń w tej sekcji
-        Object.keys(exerciseErrors).forEach((key) => {
-          if (key.endsWith(".section_order")) {
-            delete exerciseErrors[key];
-          }
-        });
-        newErrors.exercises =
-          Object.keys(exerciseErrors).length > 0 ? exerciseErrors : undefined;
-      }
-      // Wyczyść błędy formularza związane z duplikatami pozycji
-      if (newErrors._form) {
-        newErrors._form = newErrors._form.filter(
-          (error) =>
-            !error.includes("Duplikat kolejności") &&
-            !error.includes("Duplikat pozycji"),
-        );
-        if (newErrors._form.length === 0) {
-          delete newErrors._form;
-        }
-      }
-      return newErrors;
-    });
-  };
-
-  // Konwersja formState na Command dla API
-  const formStateToCreateCommand = (): WorkoutPlanCreateCommand => {
-    const exercises: WorkoutPlanExerciseInput[] = fields.exercises.map(
-      (exercise) => {
-        // Base exercise object - zawsze wymagane pola
-        const baseExercise = {
-          exercise_id: exercise.exercise_id,
-          section_type: exercise.section_type,
-          section_order: exercise.section_order,
-          planned_sets: exercise.planned_sets ?? undefined,
-          planned_reps: exercise.planned_reps ?? undefined,
-          planned_duration_seconds:
-            exercise.planned_duration_seconds ?? undefined,
-          planned_rest_seconds: exercise.planned_rest_seconds ?? undefined,
-          planned_rest_after_series_seconds:
-            exercise.planned_rest_after_series_seconds ?? undefined,
-          estimated_set_time_seconds:
-            exercise.estimated_set_time_seconds ?? undefined,
-        };
-
-        // Pola snapshot (exercise_title, exercise_type, exercise_part) są używane tylko
-        // w schemacie importu, nie w workoutPlanExerciseInputSchema.
-        // workoutPlanExerciseInputSchema jest strict i nie akceptuje tych pól.
-        // Więc nie dodajemy ich tutaj - jeśli exercise_id jest ustawione, to jest wystarczające.
-
-        return baseExercise;
-      },
+    const currentPosition = exercisesInSection.findIndex(
+      ({ originalIndex }) => originalIndex === index,
     );
+    if (currentPosition === -1) return;
+    if (direction === "up" && currentPosition === 0) return;
+    if (
+      direction === "down" &&
+      currentPosition === exercisesInSection.length - 1
+    )
+      return;
 
-    return {
-      name: fields.name.trim(),
-      description: fields.description?.trim() || null,
-      part: fields.part || null,
-      exercises,
-    };
+    const newPosition =
+      direction === "up" ? currentPosition - 1 : currentPosition + 1;
+    const reorderedSection = [...exercisesInSection];
+    const [movedItem] = reorderedSection.splice(currentPosition, 1);
+    reorderedSection.splice(newPosition, 0, movedItem);
+
+    const newExercises = [...currentExercises];
+    reorderedSection.forEach(({ originalIndex }, orderIndex) => {
+      newExercises[originalIndex] = {
+        ...newExercises[originalIndex],
+        section_order: orderIndex + 1,
+      };
+    });
+    setValue("exercises", newExercises, { shouldDirty: true });
   };
 
-  const formStateToUpdateCommand = (): WorkoutPlanUpdateCommand => {
-    // W trybie edycji rozdzielamy ćwiczenia na istniejące (z id) i nowe (bez id)
-    const exercises = fields.exercises.map((exercise) => {
-      // Base exercise object - zawsze wymagane pola
-      const baseExercise: {
-        exercise_id: string | null;
-        section_type: ExerciseType;
-        section_order: number;
-        planned_sets: number | null;
-        planned_reps: number | null;
-        planned_duration_seconds: number | null;
-        planned_rest_seconds: number | null;
-        planned_rest_after_series_seconds: number | null;
-        estimated_set_time_seconds: number | null;
-        exercise_title?: string | null;
-        exercise_type?: ExerciseType | null;
-        exercise_part?: ExercisePart | null;
-      } = {
-        exercise_id: exercise.exercise_id,
-        section_type: exercise.section_type,
-        section_order: exercise.section_order,
-        planned_sets: exercise.planned_sets ?? null,
-        planned_reps: exercise.planned_reps ?? null,
-        planned_duration_seconds: exercise.planned_duration_seconds ?? null,
-        planned_rest_seconds: exercise.planned_rest_seconds ?? null,
-        planned_rest_after_series_seconds:
-          exercise.planned_rest_after_series_seconds ?? null,
-        estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
-      };
-
-      // Pola snapshot (exercise_title, exercise_type, exercise_part) są dodawane tylko
-      // gdy exercise_id jest null (dla snapshot exercises).
-      // Gdy exercise_id jest ustawione, te pola nie są potrzebne i nie powinny być wysyłane.
-      if (!exercise.exercise_id) {
-        // Tylko dla snapshot exercises dodajemy te pola
-        baseExercise.exercise_title = exercise.exercise_title ?? null;
-        baseExercise.exercise_type = exercise.exercise_type ?? null;
-        baseExercise.exercise_part = exercise.exercise_part ?? null;
-      }
-
-      // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego
-      if (exercise.id) {
-        return {
-          ...baseExercise,
-          id: exercise.id,
-        };
-      } else {
-        // Jeśli ćwiczenie nie ma id, to jest nowym ćwiczeniem
-        // id nie jest podane dla nowych ćwiczeń
-        return baseExercise;
-      }
+  const scrollToFirstError = () => {
+    const firstErrorElement = document.querySelector(
+      '[aria-invalid="true"], [role="alert"]',
+    );
+    firstErrorElement?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
     });
-
-    return {
-      name: fields.name.trim(),
-      description: fields.description?.trim() || null,
-      part: fields.part || null,
-      exercises,
-    };
   };
 
   const handleValidationError = (errorData: {
     message?: string;
-    code?: string;
     details?: string;
   }) => {
-    const newErrors: WorkoutPlanFormErrors = parseValidationErrors(errorData);
-    setErrors(newErrors);
+    const message = errorData.message ?? "";
+    const details = errorData.details ?? "";
+    const errorMessages = message.split("; ").filter((m) => m.trim());
+    if (details && !errorMessages.some((m) => details.includes(m))) {
+      errorMessages.push(details);
+    }
+
+    const fieldMapping: Record<string, keyof WorkoutPlanFormValues> = {
+      name: "name",
+      description: "description",
+      part: "part",
+    };
+
+    const formLevelErrors: string[] = [];
+    for (const errorMsg of errorMessages) {
+      let assigned = false;
+      for (const [apiField, formField] of Object.entries(fieldMapping)) {
+        if (errorMsg.toLowerCase().includes(apiField.toLowerCase())) {
+          setError(formField, { message: errorMsg });
+          assigned = true;
+          break;
+        }
+      }
+      if (!assigned) {
+        formLevelErrors.push(errorMsg);
+      }
+    }
+    if (formLevelErrors.length > 0) {
+      setError("root", { message: formLevelErrors.join("; ") });
+    }
     toast.error("Popraw błędy w formularzu.");
   };
 
   const handleConflictError = (errorData: { message?: string }) => {
-    const newErrors: WorkoutPlanFormErrors = {
-      _form: [
+    setError("root", {
+      message:
         errorData.message || "Duplikat pozycji w sekcji planu treningowego.",
-      ],
-    };
-    setErrors(newErrors);
+    });
     toast.error(
       errorData.message || "Duplikat pozycji w sekcji planu treningowego.",
     );
@@ -664,49 +354,56 @@ export function useWorkoutPlanForm({
 
   const handleNotFoundError = () => {
     toast.error("Plan treningowy nie został znaleziony.");
-    setTimeout(() => {
-      router.push("/workout-plans");
-    }, 1500);
+    setTimeout(() => router.push("/workout-plans"), 1500);
   };
 
   const handleAuthError = () => {
     toast.error("Brak autoryzacji. Zaloguj się ponownie.");
-    setTimeout(() => {
-      router.push("/");
-    }, 1500);
+    setTimeout(() => router.push("/"), 1500);
   };
 
-  const scrollToFirstError = () => {
-    const firstErrorElement = document.querySelector(
-      '[aria-invalid="true"], [role="alert"]',
-    );
-    if (firstErrorElement) {
-      firstErrorElement.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+  const onSubmit = async (data: WorkoutPlanFormValues) => {
+    const result =
+      mode === "create"
+        ? await createWorkoutPlan(formValuesToCreateCommand(data))
+        : await updateWorkoutPlan(
+            initialData?.id ?? "",
+            formValuesToUpdateCommand(data),
+          );
+
+    if (!result.success) {
+      if (result.code === "BAD_REQUEST") {
+        handleValidationError({
+          message: result.error,
+          details: result.details,
+        });
+      } else if (result.code === "CONFLICT") {
+        handleConflictError({ message: result.error });
+      } else if (result.error.includes("nie został znaleziony")) {
+        handleNotFoundError();
+      } else if (
+        result.error.includes("autoryzacji") ||
+        result.error.includes("Zaloguj")
+      ) {
+        handleAuthError();
+      } else {
+        toast.error(result.error);
+      }
+      return;
     }
-  };
 
-  const handleSuccess = async () => {
     toast.success(
       mode === "create"
         ? "Plan treningowy został utworzony."
         : "Plan treningowy został zaktualizowany.",
     );
 
-    setIsLoading(false);
-
     if (onSuccess) {
       onSuccess();
     } else {
-      // After both create and edit, redirect to the plans list
-      // Next.js router.push returns void but is actually async, so we cast it
-      // This is the same pattern used in exercise-form.tsx
       try {
         await (router.push("/workout-plans") as unknown as Promise<void>);
       } catch (error) {
-        // Fallback to globalThis.location if router.push fails
         console.error("Navigation error:", error);
         if (typeof globalThis !== "undefined" && globalThis.location) {
           globalThis.location.href = "/workout-plans";
@@ -715,71 +412,20 @@ export function useWorkoutPlanForm({
     }
   };
 
-  const handleNetworkError = (error: unknown) => {
-    if (error instanceof TypeError && error.message.includes("fetch")) {
-      toast.error(
-        "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
-      );
-    } else if (error instanceof SyntaxError) {
-      toast.error("Nieprawidłowa odpowiedź z serwera. Spróbuj ponownie.");
-    } else {
-      toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
-    }
-  };
+  const handleSubmit = rhfHandleSubmit(onSubmit, () => scrollToFirstError());
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      scrollToFirstError();
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const result =
-        mode === "create"
-          ? await createWorkoutPlan(formStateToCreateCommand())
-          : await updateWorkoutPlan(
-              initialData?.id ?? "",
-              formStateToUpdateCommand(),
-            );
-
-      if (!result.success) {
-        if (result.code === "BAD_REQUEST") {
-          handleValidationError({
-            message: result.error,
-            details: result.details,
-          });
-        } else if (result.code === "CONFLICT") {
-          handleConflictError({ message: result.error });
-        } else if (result.error.includes("nie został znaleziony")) {
-          handleNotFoundError();
-        } else if (
-          result.error.includes("autoryzacji") ||
-          result.error.includes("Zaloguj")
-        ) {
-          handleAuthError();
-        } else {
-          toast.error(result.error);
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      await handleSuccess();
-    } catch (error) {
-      handleNetworkError(error);
-      setIsLoading(false);
-    }
+  const fieldsForComponents = {
+    name: fieldsState.name ?? "",
+    description: fieldsState.description ?? null,
+    part: fieldsState.part ?? null,
+    exercises: (fieldsState.exercises ?? []) as WorkoutPlanExerciseItemState[],
   };
 
   return {
-    fields,
-    errors,
-    isLoading,
-    hasUnsavedChanges,
+    fields: fieldsForComponents,
+    errors: formErrors,
+    isLoading: isSubmitting,
+    hasUnsavedChanges: isDirty,
     handleChange,
     handleBlur,
     handleAddExercise,
@@ -788,59 +434,4 @@ export function useWorkoutPlanForm({
     handleMoveExercise,
     handleSubmit,
   };
-}
-
-/**
- * Parsuje błędy walidacji z odpowiedzi API i przypisuje je do odpowiednich pól formularza.
- */
-function parseValidationErrors(errorData: {
-  message?: string;
-  code?: string;
-  details?: string;
-}): WorkoutPlanFormErrors {
-  const errors: WorkoutPlanFormErrors = {};
-
-  if (!errorData.message) {
-    return errors;
-  }
-
-  const message = errorData.message;
-  const details = errorData.details || "";
-
-  // Jeśli message zawiera wiele błędów oddzielonych "; ", rozdziel je
-  const errorMessages = message.split("; ").filter((msg) => msg.trim());
-
-  // Mapowanie nazw pól z API na nazwy pól w formularzu
-  const fieldMapping: Record<string, keyof WorkoutPlanFormState> = {
-    name: "name",
-    description: "description",
-    part: "part",
-  };
-
-  for (const errorMsg of errorMessages) {
-    let assigned = false;
-
-    // Sprawdź czy błąd dotyczy konkretnego pola
-    for (const [apiField, formField] of Object.entries(fieldMapping)) {
-      if (errorMsg.toLowerCase().includes(apiField.toLowerCase())) {
-        (errors as Record<string, string>)[formField] = errorMsg;
-        assigned = true;
-        break;
-      }
-    }
-
-    // Jeśli nie przypisano do pola, dodaj jako błąd formularza
-    if (!assigned) {
-      errors._form ??= [];
-      errors._form.push(errorMsg);
-    }
-  }
-
-  // Jeśli są szczegóły, które nie zostały przypisane, dodaj je jako błędy formularza
-  if (details && !errorMessages.some((msg) => details.includes(msg))) {
-    errors._form ??= [];
-    errors._form.push(details);
-  }
-
-  return errors;
 }

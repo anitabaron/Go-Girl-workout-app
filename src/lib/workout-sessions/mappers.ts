@@ -64,7 +64,6 @@ export function mapToDetailDTO(
   }
 
   const exerciseDTOs: SessionExerciseDTO[] = exercises.map((exercise) => {
-     
     const {
       session_id,
       created_at,
@@ -115,7 +114,6 @@ export function mapExerciseToDTO(
   },
   sets: WorkoutSessionSetRow[],
 ): SessionExerciseDTO {
-   
   const {
     session_id,
     created_at,
