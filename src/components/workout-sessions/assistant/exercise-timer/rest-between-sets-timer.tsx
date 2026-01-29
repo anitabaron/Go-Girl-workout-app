@@ -29,7 +29,7 @@ export function RestBetweenSetsTimer({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-6">
+    <div className="flex flex-col items-center justify-center gap-3">
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={restSeconds}
@@ -54,7 +54,7 @@ export function RestBetweenSetsTimer({
           </div>
         )}
       </CountdownCircleTimer>
-      
+
       <Button
         onClick={handleSkip}
         size="lg"

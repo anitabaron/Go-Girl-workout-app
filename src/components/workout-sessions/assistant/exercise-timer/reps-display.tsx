@@ -32,17 +32,22 @@ export function RepsDisplay({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-6 py-6">
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative flex items-center justify-center">
-          {/* Różowe kółko jako tło */}
-          <div className="absolute w-60 h-60 sm:w-70 sm:h-70 md:w-80 md:h-80 rounded-full bg-[#ffbdc8] opacity-30 pointer-events-none"></div>
-          <div className="relative text-7xl font-bold text-destructive sm:text-8xl md:text-8xl">
+    <div className="flex flex-col items-center justify-center gap-3 pb-10">
+      {/* Różowe kółko z cyfrą i podpisem */}
+      <div className="relative flex h-60 w-60 flex-col items-center justify-center">
+        {/* Kółko jako tło z opacity */}
+        <div
+          className="absolute inset-0 rounded-full bg-[#ffbdc8] opacity-30"
+          aria-hidden
+        />
+        {/* Cyfra i napis nad kółkiem - pełna widoczność */}
+        <div className="relative z-10 flex flex-col items-center gap-1">
+          <span className="text-7xl font-bold text-destructive sm:text-8xl md:text-8xl">
             {reps}
-          </div>
-        </div>
-        <div className="text-lg text-zinc-600 dark:text-zinc-400">
-          powtórzeń
+          </span>
+          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            powtórzeń
+          </span>
         </div>
       </div>
 
@@ -50,7 +55,7 @@ export function RepsDisplay({
         type="button"
         onClick={handleClick}
         size="lg"
-        className="relative z-10 min-w-[120px] text-lg font-semibold"
+        className="min-w-[120px] text-lg"
       >
         OK
       </Button>

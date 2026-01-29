@@ -29,13 +29,7 @@ export function RestAfterSeriesTimer({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 ">
-      <div className="text-center">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Przygotuj się do następnego ćwiczenia
-        </p>
-      </div>
-
+    <div className="flex flex-col items-center justify-center gap-4">
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={restSeconds}
@@ -60,14 +54,18 @@ export function RestAfterSeriesTimer({
           </div>
         )}
       </CountdownCircleTimer>
-
       <Button
         onClick={handleSkip}
         size="lg"
         className="min-w-[120px] text-md font-light "
       >
         Pomiń przerwę
-      </Button>
+      </Button>{" "}
+      <div className="text-center">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Przygotuj się do następnego ćwiczenia
+        </p>
+      </div>
     </div>
   );
 }
