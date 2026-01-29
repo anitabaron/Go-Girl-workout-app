@@ -1,5 +1,3 @@
-import { ZodError } from "zod";
-
 import { createClient } from "@/db/supabase.server";
 import type { Database } from "@/db/database.types";
 import type { ExerciseDTO, ExerciseQueryParams } from "@/types";
@@ -11,6 +9,12 @@ import {
   validateExerciseBusinessRules,
 } from "@/lib/validation/exercises";
 import {
+  assertUser,
+  mapDbError as mapDbErrorBase,
+  parseOrThrow,
+  ServiceError,
+} from "@/lib/service-utils";
+import {
   deleteExercise,
   findById,
   findByNormalizedTitle,
@@ -20,32 +24,29 @@ import {
   mapToDTO,
   updateExercise,
 } from "@/repositories/exercises";
-import type { PostgrestError } from "@supabase/supabase-js";
+
+export { ServiceError } from "@/lib/service-utils";
 
 type ExerciseRow = Database["public"]["Tables"]["exercises"]["Row"];
 
-export type ServiceErrorCode =
-  | "BAD_REQUEST"
-  | "UNAUTHORIZED"
-  | "NOT_FOUND"
-  | "CONFLICT"
-  | "FORBIDDEN"
-  | "INTERNAL";
+const MAP_DB_ERROR_OVERRIDES = {
+  "23505": {
+    code: "CONFLICT" as const,
+    message: "Ćwiczenie o podanym tytule już istnieje.",
+  },
+  "23503": {
+    code: "CONFLICT" as const,
+    message: "Operacja narusza istniejące powiązania.",
+  },
+};
 
-export class ServiceError extends Error {
-  code: ServiceErrorCode;
-  details?: string;
-
-  constructor(code: ServiceErrorCode, message: string, details?: string) {
-    super(message);
-    this.code = code;
-    this.details = details;
-  }
+function mapDbError(error: Parameters<typeof mapDbErrorBase>[0]) {
+  return mapDbErrorBase(error, MAP_DB_ERROR_OVERRIDES);
 }
 
 export async function createExerciseService(
   userId: string,
-  payload: unknown
+  payload: unknown,
 ): Promise<ExerciseDTO> {
   assertUser(userId);
   const parsed = parseOrThrow(exerciseCreateSchema, payload);
@@ -61,7 +62,7 @@ export async function createExerciseService(
   const { data: existing, error: existingError } = await findByNormalizedTitle(
     supabase,
     userId,
-    titleNormalized
+    titleNormalized,
   );
 
   if (existingError) {
@@ -71,7 +72,7 @@ export async function createExerciseService(
   if (existing) {
     throw new ServiceError(
       "CONFLICT",
-      "Ćwiczenie o podanym tytule już istnieje."
+      "Ćwiczenie o podanym tytule już istnieje.",
     );
   }
 
@@ -90,7 +91,7 @@ export async function createExerciseService(
 
 export async function listExercisesService(
   userId: string,
-  query: ExerciseQueryParams
+  query: ExerciseQueryParams,
 ): Promise<{ items: ExerciseDTO[]; nextCursor: string | null }> {
   assertUser(userId);
   const parsed = parseOrThrow(exerciseQuerySchema, query);
@@ -101,7 +102,7 @@ export async function listExercisesService(
     const { data, nextCursor, error } = await listExercises(
       supabase,
       userId,
-      parsed
+      parsed,
     );
 
     if (error) {
@@ -123,7 +124,7 @@ export async function listExercisesService(
 
 export async function getExerciseService(
   userId: string,
-  id: string
+  id: string,
 ): Promise<ExerciseDTO> {
   assertUser(userId);
   const supabase = await createClient();
@@ -142,7 +143,7 @@ export async function getExerciseService(
 
 export async function getExerciseByTitleService(
   userId: string,
-  title: string
+  title: string,
 ): Promise<ExerciseDTO | null> {
   assertUser(userId);
   const supabase = await createClient();
@@ -150,7 +151,7 @@ export async function getExerciseByTitleService(
   const { data, error } = await findExerciseByNormalizedTitle(
     supabase,
     userId,
-    titleNormalized
+    titleNormalized,
   );
 
   if (error) {
@@ -163,7 +164,7 @@ export async function getExerciseByTitleService(
 export async function updateExerciseService(
   userId: string,
   id: string,
-  payload: unknown
+  payload: unknown,
 ): Promise<ExerciseDTO> {
   assertUser(userId);
   const patch = parseOrThrow(exerciseUpdateSchema, payload);
@@ -171,7 +172,7 @@ export async function updateExerciseService(
   const { data: existing, error: fetchError } = await findById(
     supabase,
     userId,
-    id
+    id,
   );
 
   if (fetchError) {
@@ -195,12 +196,8 @@ export async function updateExerciseService(
   const titleNormalized = normalizeTitleForDbLookup(merged.title);
 
   if (titleNormalized !== existing.title_normalized) {
-    const { data: duplicate, error: duplicateError } = await findByNormalizedTitle(
-      supabase,
-      userId,
-      titleNormalized,
-      id
-    );
+    const { data: duplicate, error: duplicateError } =
+      await findByNormalizedTitle(supabase, userId, titleNormalized, id);
 
     if (duplicateError) {
       throw mapDbError(duplicateError);
@@ -209,7 +206,7 @@ export async function updateExerciseService(
     if (duplicate) {
       throw new ServiceError(
         "CONFLICT",
-        "Ćwiczenie o podanym tytule już istnieje."
+        "Ćwiczenie o podanym tytule już istnieje.",
       );
     }
   }
@@ -223,7 +220,7 @@ export async function updateExerciseService(
   if (!data) {
     throw new ServiceError(
       "INTERNAL",
-      "Nie udało się zaktualizować ćwiczenia."
+      "Nie udało się zaktualizować ćwiczenia.",
     );
   }
 
@@ -236,7 +233,7 @@ export async function deleteExerciseService(userId: string, id: string) {
   const { data: existing, error: fetchError } = await findById(
     supabase,
     userId,
-    id
+    id,
   );
 
   if (fetchError) {
@@ -256,7 +253,7 @@ export async function deleteExerciseService(userId: string, id: string) {
 
 function mergeExercise(
   existing: ExerciseRow,
-  patch: ReturnType<typeof exerciseUpdateSchema.parse>
+  patch: ReturnType<typeof exerciseUpdateSchema.parse>,
 ) {
   return {
     title: pickValue(patch, "title", existing.title),
@@ -268,18 +265,18 @@ function mergeExercise(
     duration_seconds: pickValue(
       patch,
       "duration_seconds",
-      existing.duration_seconds
+      existing.duration_seconds,
     ),
     series: pickValue(patch, "series", existing.series),
     rest_in_between_seconds: pickValue(
       patch,
       "rest_in_between_seconds",
-      existing.rest_in_between_seconds
+      existing.rest_in_between_seconds,
     ),
     rest_after_series_seconds: pickValue(
       patch,
       "rest_after_series_seconds",
-      existing.rest_after_series_seconds
+      existing.rest_after_series_seconds,
     ),
   };
 }
@@ -287,7 +284,7 @@ function mergeExercise(
 function pickValue<T extends object, K extends keyof T, V>(
   obj: T,
   key: K,
-  fallback: V
+  fallback: V,
 ): T[K] | V {
   if (!Object.hasOwn(obj, key)) {
     return fallback;
@@ -300,49 +297,4 @@ function pickValue<T extends object, K extends keyof T, V>(
   }
 
   return value;
-}
-
-function parseOrThrow<T>(schema: { parse: (payload: unknown) => T }, payload: unknown): T {
-  try {
-    return schema.parse(payload);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      throw new ServiceError(
-        "BAD_REQUEST",
-        error.issues.map((issue) => issue.message).join("; ")
-      );
-    }
-
-    throw error;
-  }
-}
-
-function mapDbError(error: PostgrestError) {
-  if (error.code === "23505") {
-    return new ServiceError(
-      "CONFLICT",
-      "Ćwiczenie o podanym tytule już istnieje.",
-      error.message
-    );
-  }
-
-  if (error.code === "23503") {
-    return new ServiceError(
-      "CONFLICT",
-      "Operacja narusza istniejące powiązania.",
-      error.message
-    );
-  }
-
-  if (error.code === "BAD_REQUEST") {
-    return new ServiceError("BAD_REQUEST", error.message, error.details ?? "");
-  }
-
-  return new ServiceError("INTERNAL", "Wystąpił błąd serwera.", error.message);
-}
-
-function assertUser(userId: string) {
-  if (!userId) {
-    throw new ServiceError("UNAUTHORIZED", "Brak aktywnej sesji.");
-  }
 }

@@ -3,6 +3,10 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import {
+  createWorkoutPlan,
+  updateWorkoutPlan,
+} from "@/app/actions/workout-plans";
 import type {
   WorkoutPlanDTO,
   WorkoutPlanCreateCommand,
@@ -672,47 +676,6 @@ export function useWorkoutPlanForm({
     }, 1500);
   };
 
-  const handleServerError = (errorData: { message?: string }) => {
-    if (errorData.message) {
-      toast.error(errorData.message);
-    } else {
-      toast.error("Wystąpił błąd serwera. Spróbuj ponownie później.");
-    }
-  };
-
-  const handleApiError = async (response: Response) => {
-    const errorData = await response.json().catch(() => ({
-      message: "Wystąpił błąd",
-      code: "INTERNAL",
-    }));
-
-    if (response.status === 400) {
-      handleValidationError(errorData);
-      return;
-    }
-
-    if (response.status === 409) {
-      handleConflictError(errorData);
-      return;
-    }
-
-    if (response.status === 404) {
-      handleNotFoundError();
-      return;
-    }
-
-    if (response.status === 401 || response.status === 403) {
-      handleAuthError();
-      return;
-    }
-
-    if (response.status >= 500) {
-      handleServerError(errorData);
-    } else {
-      toast.error(errorData.message || "Wystąpił błąd. Spróbuj ponownie.");
-    }
-  };
-
   const scrollToFirstError = () => {
     const firstErrorElement = document.querySelector(
       '[aria-invalid="true"], [role="alert"]',
@@ -775,30 +738,36 @@ export function useWorkoutPlanForm({
     setIsLoading(true);
 
     try {
-      const url =
+      const result =
         mode === "create"
-          ? "/api/workout-plans"
-          : `/api/workout-plans/${initialData?.id}`;
-      const method = mode === "create" ? "POST" : "PATCH";
+          ? await createWorkoutPlan(formStateToCreateCommand())
+          : await updateWorkoutPlan(
+              initialData?.id ?? "",
+              formStateToUpdateCommand(),
+            );
 
-      const command =
-        mode === "create"
-          ? formStateToCreateCommand()
-          : formStateToUpdateCommand();
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(command),
-      });
-
-      if (!response.ok) {
-        await handleApiError(response);
+      if (!result.success) {
+        if (result.code === "BAD_REQUEST") {
+          handleValidationError({
+            message: result.error,
+            details: result.details,
+          });
+        } else if (result.code === "CONFLICT") {
+          handleConflictError({ message: result.error });
+        } else if (result.error.includes("nie został znaleziony")) {
+          handleNotFoundError();
+        } else if (
+          result.error.includes("autoryzacji") ||
+          result.error.includes("Zaloguj")
+        ) {
+          handleAuthError();
+        } else {
+          toast.error(result.error);
+        }
         setIsLoading(false);
         return;
       }
 
-      await response.json();
       await handleSuccess();
     } catch (error) {
       handleNetworkError(error);

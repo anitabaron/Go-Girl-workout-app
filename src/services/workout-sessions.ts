@@ -1,5 +1,3 @@
-import { ZodError } from "zod";
-
 import { createClient } from "@/db/supabase.server";
 import type { Database } from "@/db/database.types";
 import type {
@@ -16,6 +14,13 @@ import {
   sessionExerciseAutosaveSchema,
   sessionTimerUpdateSchema,
 } from "@/lib/validation/workout-sessions";
+import {
+  assertUser,
+  mapDbError,
+  parseOrThrow,
+  ServiceError,
+  validateUuid,
+} from "@/lib/service-utils";
 import {
   findInProgressSession,
   findWorkoutSessionById,
@@ -40,26 +45,12 @@ import {
   findWorkoutPlanById,
   listWorkoutPlanExercises,
 } from "@/repositories/workout-plans";
-import type { PostgrestError } from "@supabase/supabase-js";
+import {
+  calculateAggregatesFromSets,
+  preparePlannedUpdates,
+} from "@/lib/workout-sessions/aggregates";
 
-export type ServiceErrorCode =
-  | "BAD_REQUEST"
-  | "UNAUTHORIZED"
-  | "NOT_FOUND"
-  | "CONFLICT"
-  | "FORBIDDEN"
-  | "INTERNAL";
-
-export class ServiceError extends Error {
-  code: ServiceErrorCode;
-  details?: string;
-
-  constructor(code: ServiceErrorCode, message: string, details?: string) {
-    super(message);
-    this.code = code;
-    this.details = details;
-  }
-}
+export { ServiceError } from "@/lib/service-utils";
 
 /**
  * Rozpoczyna nową sesję treningową lub zwraca istniejącą sesję in_progress.
@@ -353,15 +344,7 @@ export async function updateWorkoutSessionTimerService(
 }> {
   assertUser(userId);
 
-  // Walidacja UUID
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(sessionId)) {
-    throw new ServiceError(
-      "BAD_REQUEST",
-      "Nieprawidłowy format UUID identyfikatora sesji.",
-    );
-  }
+  validateUuid(sessionId, "id sesji");
 
   // Walidacja request body
   const parsed = parseOrThrow(sessionTimerUpdateSchema, payload);
@@ -600,72 +583,11 @@ function createSessionSnapshots(
   return snapshots;
 }
 
-function parseOrThrow<T>(
-  schema: { parse: (payload: unknown) => T },
-  payload: unknown,
-): T {
-  try {
-    return schema.parse(payload);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      throw new ServiceError(
-        "BAD_REQUEST",
-        error.issues.map((issue) => issue.message).join("; "),
-      );
-    }
-
-    throw error;
-  }
-}
-
-function mapDbError(error: PostgrestError) {
-  if (error.code === "23505") {
-    return new ServiceError(
-      "CONFLICT",
-      "Konflikt unikalności (np. próba utworzenia drugiej sesji in_progress).",
-      error.message,
-    );
-  }
-
-  if (error.code === "23503") {
-    return new ServiceError(
-      "NOT_FOUND",
-      "Operacja narusza istniejące powiązania (np. plan nie istnieje).",
-      error.message,
-    );
-  }
-
-  if (error.code === "23502") {
-    return new ServiceError(
-      "BAD_REQUEST",
-      "Brak wymaganych pól.",
-      error.message,
-    );
-  }
-
-  if (error.code === "BAD_REQUEST") {
-    return new ServiceError("BAD_REQUEST", error.message, error.details ?? "");
-  }
-
-  return new ServiceError("INTERNAL", "Wystąpił błąd serwera.", error.message);
-}
-
-function assertUser(userId: string) {
-  if (!userId) {
-    throw new ServiceError("UNAUTHORIZED", "Brak aktywnej sesji.");
-  }
-}
-
 /**
  * Waliduje path parameters dla autosave.
  */
-function validateAutosavePathParams(sessionId: string, order: number) {
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-  if (!uuidRegex.test(sessionId)) {
-    throw new ServiceError("BAD_REQUEST", "id musi być prawidłowym UUID");
-  }
+function validateAutosavePathParams(sessionId: string, order: number): void {
+  validateUuid(sessionId, "id");
 
   if (!Number.isInteger(order) || order <= 0) {
     throw new ServiceError(
@@ -767,52 +689,6 @@ function mapSaveFunctionError(error: {
 }
 
 /**
- * Przygotowuje dane planned_* do aktualizacji.
- */
-function preparePlannedUpdates(parsed: {
-  planned_sets?: number | null;
-  planned_reps?: number | null;
-  planned_duration_seconds?: number | null;
-  planned_rest_seconds?: number | null;
-}): {
-  planned_sets?: number | null;
-  planned_reps?: number | null;
-  planned_duration_seconds?: number | null;
-  planned_rest_seconds?: number | null;
-} | null {
-  if (
-    parsed.planned_sets === undefined &&
-    parsed.planned_reps === undefined &&
-    parsed.planned_duration_seconds === undefined &&
-    parsed.planned_rest_seconds === undefined
-  ) {
-    return null;
-  }
-
-  const updates: {
-    planned_sets?: number | null;
-    planned_reps?: number | null;
-    planned_duration_seconds?: number | null;
-    planned_rest_seconds?: number | null;
-  } = {};
-
-  if (parsed.planned_sets !== undefined) {
-    updates.planned_sets = parsed.planned_sets;
-  }
-  if (parsed.planned_reps !== undefined) {
-    updates.planned_reps = parsed.planned_reps;
-  }
-  if (parsed.planned_duration_seconds !== undefined) {
-    updates.planned_duration_seconds = parsed.planned_duration_seconds;
-  }
-  if (parsed.planned_rest_seconds !== undefined) {
-    updates.planned_rest_seconds = parsed.planned_rest_seconds;
-  }
-
-  return updates;
-}
-
-/**
  * Aktualizuje kursor sesji, jeśli advance_cursor_to_next = true.
  */
 async function updateCursorIfNeeded(
@@ -902,89 +778,6 @@ async function fetchUpdatedExerciseWithCursor(
       current_position: updatedSession.current_position ?? order,
       last_action_at: updatedSession.last_action_at,
     },
-  };
-}
-
-/**
- * Oblicza agregaty z serii, jeśli nie zostały podane ręcznie.
- * Opcja A: Automatyczne obliczanie z fallbackiem na wartości ręczne.
- * Mapuje nazwy API (actual_count_sets, actual_sum_reps) na nazwy bazy danych (actual_sets, actual_reps).
- *
- * Uwaga: Oblicza actual_reps tylko jeśli planned_reps nie jest null (ćwiczenie oparte na powtórzeniach).
- * Oblicza actual_duration_seconds tylko jeśli planned_duration_seconds nie jest null (ćwiczenie oparte na czasie).
- */
-function calculateAggregatesFromSets(
-  parsed: {
-    actual_count_sets?: number | null;
-    actual_sum_reps?: number | null;
-    actual_duration_seconds?: number | null;
-    sets?: Array<{
-      reps?: number | null;
-      duration_seconds?: number | null;
-      weight_kg?: number | null;
-    }> | null;
-  },
-  plannedReps?: number | null,
-  plannedDurationSeconds?: number | null,
-): {
-  actual_sets: number | null; // Dla bazy danych
-  actual_reps: number | null; // Dla bazy danych
-  actual_duration_seconds: number | null;
-} {
-  // actual_count_sets (API) → actual_sets (DB): jeśli nie podano, oblicz z sets.length
-  let actualSets: number | null = null;
-  if (parsed.actual_count_sets !== undefined) {
-    actualSets = parsed.actual_count_sets;
-  } else if (parsed.sets && parsed.sets.length > 0) {
-    actualSets = parsed.sets.length;
-  }
-
-  // actual_sum_reps (API) → actual_reps (DB): oblicz tylko jeśli ćwiczenie ma planowane powtórzenia
-  // Jeśli planned_reps jest null, to ćwiczenie jest oparte na czasie, więc nie obliczamy sumy powtórzeń
-  let actualReps: number | null = null;
-  if (parsed.actual_sum_reps !== undefined) {
-    actualReps = parsed.actual_sum_reps;
-  } else if (
-    parsed.sets &&
-    parsed.sets.length > 0 &&
-    plannedReps !== null &&
-    plannedReps !== undefined
-  ) {
-    // Oblicz sumę tylko jeśli ćwiczenie ma planowane powtórzenia
-    const repsWithValues = parsed.sets
-      .map((set) => set.reps)
-      .filter((r): r is number => r !== null && r !== undefined);
-
-    if (repsWithValues.length > 0) {
-      const sum = repsWithValues.reduce((acc, reps) => acc + reps, 0);
-      actualReps = sum > 0 ? sum : null;
-    }
-  }
-
-  // actual_duration_seconds: oblicz tylko jeśli ćwiczenie ma planowany czas
-  // Jeśli planned_duration_seconds jest null, to ćwiczenie jest oparte na powtórzeniach, więc nie obliczamy czasu
-  let actualDurationSeconds: number | null = null;
-  if (parsed.actual_duration_seconds !== undefined) {
-    actualDurationSeconds = parsed.actual_duration_seconds;
-  } else if (
-    parsed.sets &&
-    parsed.sets.length > 0 &&
-    plannedDurationSeconds !== null &&
-    plannedDurationSeconds !== undefined
-  ) {
-    // Oblicz maksymalny czas tylko jeśli ćwiczenie ma planowany czas
-    const durations = parsed.sets
-      .map((set) => set.duration_seconds)
-      .filter((d): d is number => d !== null && d !== undefined);
-    if (durations.length > 0) {
-      actualDurationSeconds = Math.max(...durations);
-    }
-  }
-
-  return {
-    actual_sets: actualSets, // Mapowanie na nazwę bazy danych
-    actual_reps: actualReps, // Mapowanie na nazwę bazy danych
-    actual_duration_seconds: actualDurationSeconds,
   };
 }
 

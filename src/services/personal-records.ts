@@ -1,12 +1,16 @@
-import { ZodError } from "zod";
-
 import { createClient } from "@/db/supabase.server";
-import type { PostgrestError } from "@supabase/supabase-js";
 import type {
   PersonalRecordQueryParams,
   PersonalRecordWithExerciseDTO,
 } from "@/types";
 import { personalRecordQuerySchema } from "@/lib/validation/personal-records";
+import {
+  assertUser,
+  mapDbError as mapDbErrorBase,
+  parseOrThrow,
+  ServiceError,
+  validateUuid,
+} from "@/lib/service-utils";
 import { findById } from "@/repositories/exercises";
 import {
   deletePersonalRecordsByExercise,
@@ -14,23 +18,21 @@ import {
   listPersonalRecordsByExercise,
 } from "@/repositories/personal-records";
 
-export type ServiceErrorCode =
-  | "BAD_REQUEST"
-  | "UNAUTHORIZED"
-  | "NOT_FOUND"
-  | "CONFLICT"
-  | "FORBIDDEN"
-  | "INTERNAL";
+export { ServiceError } from "@/lib/service-utils";
 
-export class ServiceError extends Error {
-  code: ServiceErrorCode;
-  details?: string;
+const MAP_DB_ERROR_OVERRIDES = {
+  "23505": {
+    code: "CONFLICT" as const,
+    message: "Operacja narusza istniejące powiązania.",
+  },
+  "23503": {
+    code: "CONFLICT" as const,
+    message: "Operacja narusza istniejące powiązania.",
+  },
+};
 
-  constructor(code: ServiceErrorCode, message: string, details?: string) {
-    super(message);
-    this.code = code;
-    this.details = details;
-  }
+function mapDbError(error: Parameters<typeof mapDbErrorBase>[0]) {
+  return mapDbErrorBase(error, MAP_DB_ERROR_OVERRIDES);
 }
 
 /**
@@ -38,7 +40,7 @@ export class ServiceError extends Error {
  */
 export async function listPersonalRecordsService(
   userId: string,
-  query: PersonalRecordQueryParams
+  query: PersonalRecordQueryParams,
 ): Promise<{
   items: PersonalRecordWithExerciseDTO[];
   nextCursor: string | null;
@@ -52,7 +54,7 @@ export async function listPersonalRecordsService(
     const { data, nextCursor, error } = await listPersonalRecords(
       supabase,
       userId,
-      parsed
+      parsed,
     );
 
     if (error) {
@@ -78,29 +80,18 @@ export async function listPersonalRecordsService(
  */
 export async function getPersonalRecordsByExerciseService(
   userId: string,
-  exerciseId: string
+  exerciseId: string,
 ): Promise<{
   items: PersonalRecordWithExerciseDTO[];
 }> {
   assertUser(userId);
-
-  // Walidacja UUID
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(exerciseId)) {
-    throw new ServiceError(
-      "BAD_REQUEST",
-      "Nieprawidłowy format UUID ćwiczenia."
-    );
-  }
+  validateUuid(exerciseId, "id ćwiczenia");
 
   const supabase = await createClient();
-
-  // Weryfikacja własności ćwiczenia
   const { data: exercise, error: exerciseError } = await findById(
     supabase,
     userId,
-    exerciseId
+    exerciseId,
   );
 
   if (exerciseError) {
@@ -115,7 +106,7 @@ export async function getPersonalRecordsByExerciseService(
   const { data, error } = await listPersonalRecordsByExercise(
     supabase,
     userId,
-    exerciseId
+    exerciseId,
   );
 
   if (error) {
@@ -133,27 +124,16 @@ export async function getPersonalRecordsByExerciseService(
  */
 export async function deletePersonalRecordsByExerciseService(
   userId: string,
-  exerciseId: string
+  exerciseId: string,
 ): Promise<void> {
   assertUser(userId);
-
-  // Walidacja UUID
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(exerciseId)) {
-    throw new ServiceError(
-      "BAD_REQUEST",
-      "Nieprawidłowy format UUID ćwiczenia."
-    );
-  }
+  validateUuid(exerciseId, "id ćwiczenia");
 
   const supabase = await createClient();
-
-  // Weryfikacja własności ćwiczenia
   const { data: exercise, error: exerciseError } = await findById(
     supabase,
     userId,
-    exerciseId
+    exerciseId,
   );
 
   if (exerciseError) {
@@ -168,62 +148,10 @@ export async function deletePersonalRecordsByExerciseService(
   const { error } = await deletePersonalRecordsByExercise(
     supabase,
     userId,
-    exerciseId
+    exerciseId,
   );
 
   if (error) {
     throw mapDbError(error);
-  }
-}
-
-function parseOrThrow<T>(
-  schema: { parse: (payload: unknown) => T },
-  payload: unknown
-): T {
-  try {
-    return schema.parse(payload);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      throw new ServiceError(
-        "BAD_REQUEST",
-        error.issues.map((issue) => issue.message).join("; ")
-      );
-    }
-
-    throw error;
-  }
-}
-
-function mapDbError(error: PostgrestError) {
-  if (error.code === "23505") {
-    return new ServiceError(
-      "CONFLICT",
-      "Operacja narusza istniejące powiązania.",
-      error.message
-    );
-  }
-
-  if (error.code === "23503") {
-    return new ServiceError(
-      "CONFLICT",
-      "Operacja narusza istniejące powiązania.",
-      error.message
-    );
-  }
-
-  if (error.code === "BAD_REQUEST") {
-    return new ServiceError("BAD_REQUEST", error.message, error.details ?? "");
-  }
-
-  if (error.code === "PGRST116") {
-    return new ServiceError("NOT_FOUND", "Zasób nie został znaleziony.");
-  }
-
-  return new ServiceError("INTERNAL", "Wystąpił błąd serwera.", error.message);
-}
-
-function assertUser(userId: string) {
-  if (!userId) {
-    throw new ServiceError("UNAUTHORIZED", "Brak aktywnej sesji.");
   }
 }
