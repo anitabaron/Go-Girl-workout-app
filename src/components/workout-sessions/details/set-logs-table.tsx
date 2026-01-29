@@ -1,7 +1,4 @@
-import type {
-  SessionExerciseSetDTO,
-  PersonalRecordWithExerciseDTO,
-} from "@/types";
+import type { SessionExerciseSetDTO } from "@/types";
 import { formatDuration } from "@/lib/utils/time-format";
 
 type SetLogsTableProps = {
@@ -9,17 +6,13 @@ type SetLogsTableProps = {
   readonly isSkipped?: boolean;
   readonly plannedReps?: number | null;
   readonly plannedDurationSeconds?: number | null;
-  readonly sessionId?: string;
-  readonly personalRecords?: PersonalRecordWithExerciseDTO[];
 };
 
-export function SetLogsTable({ 
-  sets, 
+export function SetLogsTable({
+  sets,
   isSkipped = false,
   plannedReps,
   plannedDurationSeconds,
-  sessionId,
-  personalRecords = [],
 }: SetLogsTableProps) {
   if (isSkipped) {
     return null;
@@ -37,19 +30,32 @@ export function SetLogsTable({
   const sortedSets = [...sets].sort((a, b) => a.set_number - b.set_number);
 
   const showReps = plannedReps !== null && plannedReps !== undefined;
-  const showDuration = plannedDurationSeconds !== null && plannedDurationSeconds !== undefined;
+  const showDuration =
+    plannedDurationSeconds !== null && plannedDurationSeconds !== undefined;
 
-  // Sprawdź czy seria to rekord osobisty
-  const isPersonalRecord = (setNumber: number): boolean => {
-    if (!sessionId || personalRecords.length === 0) {
-      return false;
-    }
-    return personalRecords.some(
-      (pr) =>
-        pr.achieved_in_session_id === sessionId &&
-        pr.achieved_in_set_number === setNumber
-    );
-  };
+  // Najwyższe wartości w serii (do wyróżnienia – analogicznie do personal-record-metric-item)
+  const maxReps =
+    showReps && sortedSets.length > 0
+      ? Math.max(...sortedSets.map((s) => s.reps ?? 0))
+      : 0;
+  const maxDuration =
+    showDuration && sortedSets.length > 0
+      ? Math.max(...sortedSets.map((s) => s.duration_seconds ?? 0))
+      : 0;
+  const maxWeight =
+    sortedSets.length > 0
+      ? Math.max(...sortedSets.map((s) => s.weight_kg ?? 0))
+      : 0;
+
+  const isBestReps = (reps: number | null) =>
+    showReps && reps !== null && reps > 0 && reps === maxReps;
+  const isBestDuration = (duration: number | null) =>
+    showDuration &&
+    duration !== null &&
+    duration > 0 &&
+    duration === maxDuration;
+  const isBestWeight = (weight: number | null) =>
+    weight !== null && weight > 0 && weight === maxWeight;
 
   return (
     <div className="overflow-x-auto">
@@ -79,25 +85,24 @@ export function SetLogsTable({
         </thead>
         <tbody>
           {sortedSets.map((set) => {
-            const isPR = isPersonalRecord(set.set_number);
+            const bestReps = isBestReps(set.reps);
+            const bestDuration = isBestDuration(set.duration_seconds);
+            const bestWeight = isBestWeight(set.weight_kg);
+            const hasHighlight = bestReps || bestDuration || bestWeight;
+            const rowHighlightClass = hasHighlight ? "bg-destructive/10" : "";
+            const cellHighlightClass = "font-bold text-destructive";
             return (
               <tr
                 key={set.set_number}
-                className={`border-b border-border last:border-b-0 ${
-                  isPR ? "bg-destructive/10" : ""
-                }`}
+                className={`border-b border-border last:border-b-0 ${rowHighlightClass}`}
               >
-                <td
-                  className={`px-4 py-1 text-center text-sm ${
-                    isPR ? "font-bold text-destructive" : ""
-                  }`}
-                >
+                <td className="px-4 py-1 text-center text-sm">
                   {set.set_number}
                 </td>
                 {showReps && (
                   <td
                     className={`px-4 text-center text-sm ${
-                      isPR ? "font-bold text-destructive" : ""
+                      bestReps ? cellHighlightClass : ""
                     }`}
                   >
                     {set.reps ?? "-"}
@@ -106,7 +111,7 @@ export function SetLogsTable({
                 {showDuration && (
                   <td
                     className={`px-4 text-center text-sm ${
-                      isPR ? "font-bold text-destructive" : ""
+                      bestDuration ? cellHighlightClass : ""
                     }`}
                   >
                     {formatDuration(set.duration_seconds)}
@@ -114,7 +119,7 @@ export function SetLogsTable({
                 )}
                 <td
                   className={`px-4 text-center text-sm ${
-                    isPR ? "font-bold text-destructive" : ""
+                    bestWeight ? cellHighlightClass : ""
                   }`}
                 >
                   {set.weight_kg === null ? "-" : `${set.weight_kg} kg`}

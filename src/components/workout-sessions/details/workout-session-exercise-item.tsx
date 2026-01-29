@@ -1,7 +1,4 @@
-import type {
-  SessionExerciseDTO,
-  PersonalRecordWithExerciseDTO,
-} from "@/types";
+import type { SessionExerciseDTO } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ExerciseHeader } from "./exercise-header";
 import { PlannedVsActualComparison } from "./planned-vs-actual-comparison";
@@ -12,7 +9,6 @@ type WorkoutSessionExerciseItemProps = {
   readonly exerciseIndex: number;
   readonly totalExercises: number;
   readonly sessionId: string;
-  readonly personalRecords?: PersonalRecordWithExerciseDTO[];
 };
 
 export function WorkoutSessionExerciseItem({
@@ -20,7 +16,6 @@ export function WorkoutSessionExerciseItem({
   exerciseIndex,
   totalExercises,
   sessionId,
-  personalRecords = [],
 }: WorkoutSessionExerciseItemProps) {
   return (
     <Card className="rounded-lg border border-border bg-white dark:border-border dark:bg-zinc-950">
@@ -48,13 +43,11 @@ export function WorkoutSessionExerciseItem({
               is_skipped: exercise.is_skipped,
             }}
           />
-          <SetLogsTable 
-            sets={exercise.sets} 
+          <SetLogsTable
+            sets={exercise.sets}
             isSkipped={exercise.is_skipped}
             plannedReps={exercise.planned_reps}
             plannedDurationSeconds={exercise.planned_duration_seconds}
-            sessionId={sessionId}
-            personalRecords={personalRecords}
           />
         </div>
       </CardContent>
