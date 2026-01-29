@@ -27,7 +27,7 @@ async function getUserIdFromSession(): Promise<string> {
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    value
+    value,
   );
 }
 
@@ -39,33 +39,31 @@ type RouteContext = {
 };
 
 export async function PATCH(request: Request, { params }: RouteContext) {
-  
   try {
     const userId = await getUserIdFromSession();
 
     const { id, order } = await params;
     const sessionId = id ?? new URL(request.url).searchParams.get("id");
     const orderParam = order ?? new URL(request.url).searchParams.get("order");
-    
 
     if (!sessionId) {
       return NextResponse.json(
         { message: "Brak identyfikatora sesji treningowej w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!isUuid(sessionId)) {
       return NextResponse.json(
         { message: "Nieprawidłowy format UUID identyfikatora sesji." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!orderParam) {
       return NextResponse.json(
         { message: "Brak parametru order w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -74,7 +72,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     if (Number.isNaN(orderNumber) || orderNumber <= 0) {
       return NextResponse.json(
         { message: "order musi być liczbą całkowitą większą od 0." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -87,29 +85,36 @@ export async function PATCH(request: Request, { params }: RouteContext) {
           message: "Nieprawidłowy format JSON w body żądania.",
           code: "BAD_REQUEST",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
-
-
 
     const result = await autosaveWorkoutSessionExerciseService(
       userId,
       sessionId,
       orderNumber,
-      body
+      body,
     );
 
     return NextResponse.json({ data: result }, { status: 200 });
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
-    
+
     if (error instanceof ServiceError) {
+      console.error(
+        "[PATCH exercises] ServiceError:",
+        error.code,
+        error.message,
+        error.details,
+      );
       return respondWithServiceError(error);
     }
 
@@ -120,7 +125,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
           code: "BAD_REQUEST",
           details: error.issues.map((issue) => issue.message).join("; "),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -129,7 +134,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         message: "Wystąpił błąd serwera.",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
