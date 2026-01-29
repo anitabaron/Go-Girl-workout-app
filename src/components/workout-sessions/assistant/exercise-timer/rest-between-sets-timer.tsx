@@ -29,7 +29,7 @@ export function RestBetweenSetsTimer({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-3">
+    <div className="flex flex-col items-center justify-center gap-3 pb-10">
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={restSeconds}

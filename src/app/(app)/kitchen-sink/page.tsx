@@ -158,7 +158,9 @@ export default function KitchenSinkPage() {
           <Card>
             <CardHeader>
               <CardTitle>Variants</CardTitle>
-              <CardDescription>Wszystkie dostępne warianty odznak</CardDescription>
+              <CardDescription>
+                Wszystkie dostępne warianty odznak
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-3">
               <Badge variant="default">Default</Badge>
@@ -226,11 +228,13 @@ export default function KitchenSinkPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Card with Action</CardTitle>
-                <CardDescription>
-                  Karta z akcją w nagłówku
-                </CardDescription>
+                <CardDescription>Karta z akcją w nagłówku</CardDescription>
                 <CardAction>
-                  <Button variant="ghost" size="icon-sm" aria-label="More options">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="More options"
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
@@ -273,9 +277,7 @@ export default function KitchenSinkPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Card with Footer Border</CardTitle>
-                <CardDescription>
-                  Karta z obramowaniem w stopce
-                </CardDescription>
+                <CardDescription>Karta z obramowaniem w stopce</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
@@ -298,17 +300,22 @@ export default function KitchenSinkPage() {
           <Card>
             <CardHeader>
               <CardTitle>Basic Select</CardTitle>
-              <CardDescription>
-                Podstawowy komponent wyboru
-              </CardDescription>
+              <CardDescription>Podstawowy komponent wyboru</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label id="select-basic-label" htmlFor="select-basic" className="text-sm font-medium">
+                <label
+                  id="select-basic-label"
+                  htmlFor="select-basic"
+                  className="text-sm font-medium"
+                >
                   Wybierz opcję
                 </label>
                 <Select defaultValue="option1">
-                  <SelectTrigger id="select-basic" aria-labelledby="select-basic-label">
+                  <SelectTrigger
+                    id="select-basic"
+                    aria-labelledby="select-basic-label"
+                  >
                     <SelectValue placeholder="Wybierz..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -320,11 +327,18 @@ export default function KitchenSinkPage() {
               </div>
 
               <div className="space-y-2">
-                <label id="select-groups-label" htmlFor="select-groups" className="text-sm font-medium">
+                <label
+                  id="select-groups-label"
+                  htmlFor="select-groups"
+                  className="text-sm font-medium"
+                >
                   Select z grupami
                 </label>
                 <Select defaultValue="apple">
-                  <SelectTrigger id="select-groups" aria-labelledby="select-groups-label">
+                  <SelectTrigger
+                    id="select-groups"
+                    aria-labelledby="select-groups-label"
+                  >
                     <SelectValue placeholder="Wybierz owoc..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -346,11 +360,19 @@ export default function KitchenSinkPage() {
               </div>
 
               <div className="space-y-2">
-                <label id="select-small-label" htmlFor="select-small" className="text-sm font-medium">
+                <label
+                  id="select-small-label"
+                  htmlFor="select-small"
+                  className="text-sm font-medium"
+                >
                   Small Size
                 </label>
                 <Select defaultValue="small1">
-                  <SelectTrigger id="select-small" size="sm" aria-labelledby="select-small-label">
+                  <SelectTrigger
+                    id="select-small"
+                    size="sm"
+                    aria-labelledby="select-small-label"
+                  >
                     <SelectValue placeholder="Wybierz..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -362,11 +384,18 @@ export default function KitchenSinkPage() {
               </div>
 
               <div className="space-y-2">
-                <label id="select-disabled-label" htmlFor="select-disabled" className="text-sm font-medium">
+                <label
+                  id="select-disabled-label"
+                  htmlFor="select-disabled"
+                  className="text-sm font-medium"
+                >
                   Disabled
                 </label>
                 <Select disabled defaultValue="disabled1">
-                  <SelectTrigger id="select-disabled" aria-labelledby="select-disabled-label">
+                  <SelectTrigger
+                    id="select-disabled"
+                    aria-labelledby="select-disabled-label"
+                  >
                     <SelectValue placeholder="Wybierz..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -393,7 +422,9 @@ export default function KitchenSinkPage() {
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {/* WorkoutTimer - główny timer sesji */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-center">Workout Timer</h3>
+                  <h3 className="text-lg font-semibold text-center">
+                    Workout Timer
+                  </h3>
                   <div className="border rounded-lg p-4 bg-card">
                     <WorkoutTimer
                       activeDurationSeconds={930}
@@ -407,45 +438,27 @@ export default function KitchenSinkPage() {
                   </div>
                 </div>
 
-                {/* SetCountdownTimer - odliczanie czasu serii */}
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-center">Set Countdown Timer</h3>
-                  <div className="border rounded-lg p-4 bg-card">
-                    <SetCountdownTimer
-                      durationSeconds={30}
-                      isPaused={false}
-                      onComplete={() => console.log("Set complete")}
-                    />
-                  </div>
-                </div>
-
-                {/* RestBetweenSetsTimer - przerwa między seriami */}
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-center">Rest Between Sets</h3>
-                  <div className="border rounded-lg p-4 bg-card">
-                    <RestBetweenSetsTimer
-                      restSeconds={60}
-                      isPaused={false}
-                      onComplete={() => console.log("Rest complete")}
-                    />
-                  </div>
-                </div>
-
                 {/* RestAfterSeriesTimer - przerwa po seriach */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-center">Rest After Series</h3>
+                  <h3 className="text-lg font-semibold text-center">
+                    Rest After Series
+                  </h3>
                   <div className="border rounded-lg p-4 bg-card">
                     <RestAfterSeriesTimer
                       restSeconds={90}
                       isPaused={false}
-                      onComplete={() => console.log("Rest after series complete")}
+                      onComplete={() =>
+                        console.log("Rest after series complete")
+                      }
                     />
                   </div>
                 </div>
 
                 {/* RepsDisplay - wyświetlacz powtórzeń */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-center">Reps Display</h3>
+                  <h3 className="text-lg font-semibold text-center">
+                    Reps Display
+                  </h3>
                   <div className="border rounded-lg p-4 bg-card">
                     <RepsDisplay
                       reps={12}
@@ -455,9 +468,39 @@ export default function KitchenSinkPage() {
                   </div>
                 </div>
 
+                {/* RestBetweenSetsTimer - przerwa między seriami */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-center">
+                    Rest Between Sets
+                  </h3>
+                  <div className="border rounded-lg p-4 bg-card">
+                    <RestBetweenSetsTimer
+                      restSeconds={60}
+                      isPaused={false}
+                      onComplete={() => console.log("Rest complete")}
+                    />
+                  </div>
+                </div>
+
+                {/* SetCountdownTimer - odliczanie czasu serii */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-center">
+                    Set Countdown Timer
+                  </h3>
+                  <div className="border rounded-lg p-4 bg-card">
+                    <SetCountdownTimer
+                      durationSeconds={30}
+                      isPaused={false}
+                      onComplete={() => console.log("Set complete")}
+                    />
+                  </div>
+                </div>
+
                 {/* WorkoutTimer z przerwą (restSeconds) */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-center">Workout Timer (Rest Mode)</h3>
+                  <h3 className="text-lg font-semibold text-center">
+                    Workout Timer (Rest Mode)
+                  </h3>
                   <div className="border rounded-lg p-4 bg-card">
                     <WorkoutTimer
                       activeDurationSeconds={450}
@@ -537,11 +580,19 @@ export default function KitchenSinkPage() {
               </div>
 
               <div className="space-y-2">
-                <label id="select-combined-label" htmlFor="select-combined" className="text-sm font-medium">
+                <label
+                  id="select-combined-label"
+                  htmlFor="select-combined"
+                  className="text-sm font-medium"
+                >
                   Wybierz opcję
                 </label>
                 <Select defaultValue="value1">
-                  <SelectTrigger id="select-combined" className="w-full" aria-labelledby="select-combined-label">
+                  <SelectTrigger
+                    id="select-combined"
+                    className="w-full"
+                    aria-labelledby="select-combined-label"
+                  >
                     <SelectValue placeholder="Wybierz..." />
                   </SelectTrigger>
                   <SelectContent>

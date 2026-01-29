@@ -108,7 +108,7 @@ export function WorkoutTimer({
   // Jeśli jest odliczanie przerwy, użyj CountdownCircleTimer
   if (restSeconds !== undefined && restSeconds > 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 pb-6">
+      <div className="flex flex-col items-center justify-center gap-3">
         <CountdownCircleTimer
           isPlaying={!isPaused}
           duration={restSeconds}
@@ -148,7 +148,7 @@ export function WorkoutTimer({
 
   // Timer globalny sesji
   return (
-    <div className="flex flex-col items-center justify-center gap-4 pt-6">
+    <div className="flex flex-col items-center justify-center gap-4 ">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
           Seria {currentSetNumber}
