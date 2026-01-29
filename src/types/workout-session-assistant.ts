@@ -124,22 +124,44 @@ export type RestAfterSeriesTimerProps = {
 
 /**
  * Konwertuje SessionExerciseDTO do ExerciseFormData.
+ * Gdy exercise.sets jest puste, ale są dane planowane (planned_sets > 0),
+ * tworzy wstępne serie z planowanych wartości - pozwala to na aktywny przycisk
+ * Next od początku treningu (zatwierdzenie treningu zgodnego z planem).
  */
 export function exerciseToFormData(
-  exercise: SessionExerciseDTO
+  exercise: SessionExerciseDTO,
 ): ExerciseFormData {
+  let sets: SetLogFormData[];
+
+  if (exercise.sets && exercise.sets.length > 0) {
+    sets = exercise.sets.map((set) => ({
+      set_number: set.set_number,
+      reps: set.reps,
+      duration_seconds: set.duration_seconds,
+      weight_kg: set.weight_kg,
+    }));
+  } else if (exercise.planned_sets != null && exercise.planned_sets > 0) {
+    // Na początku treningu - serie z planowanych wartości
+    sets = [];
+    for (let i = 1; i <= exercise.planned_sets; i++) {
+      sets.push({
+        set_number: i,
+        reps: exercise.planned_reps ?? null,
+        duration_seconds: exercise.planned_duration_seconds ?? null,
+        weight_kg: null,
+      });
+    }
+  } else {
+    sets = [];
+  }
+
   return {
     actual_count_sets: exercise.actual_count_sets,
     actual_sum_reps: exercise.actual_sum_reps,
     actual_duration_seconds: exercise.actual_duration_seconds,
     actual_rest_seconds: exercise.actual_rest_seconds,
-    sets: exercise.sets.map((set) => ({
-      set_number: set.set_number,
-      reps: set.reps,
-      duration_seconds: set.duration_seconds,
-      weight_kg: set.weight_kg,
-    })),
-    is_skipped: exercise.is_skipped,
+    sets,
+    is_skipped: exercise.is_skipped ?? false,
   };
 }
 
@@ -149,7 +171,7 @@ export function exerciseToFormData(
  */
 export function formDataToAutosaveCommand(
   formData: ExerciseFormData,
-  advanceCursor?: boolean
+  advanceCursor?: boolean,
 ): {
   actual_count_sets?: number | null;
   actual_sum_reps?: number | null;

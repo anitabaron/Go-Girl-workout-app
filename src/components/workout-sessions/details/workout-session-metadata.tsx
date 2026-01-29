@@ -8,8 +8,6 @@ type WorkoutSessionMetadataProps = {
   readonly session: SessionSummaryDTO;
 };
 
-
-
 export function WorkoutSessionMetadata({
   session,
 }: WorkoutSessionMetadataProps) {
@@ -24,10 +22,15 @@ export function WorkoutSessionMetadata({
   const planName = session.plan_name_at_time || "Plan usunięty";
 
   return (
-    <Card className="rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950">
+    <Card
+      className="rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-950"
+      data-test-id="workout-session-details-metadata"
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-semibold">Informacje o sesji</CardTitle>
+          <CardTitle className="text-xl font-semibold">
+            Informacje o sesji
+          </CardTitle>
           <SessionStatusBadge status={session.status} />
         </div>
       </CardHeader>
@@ -37,7 +40,12 @@ export function WorkoutSessionMetadata({
             <p className="text-sm font-medium text-zinc-400 dark:text-zinc-400">
               Plan treningowy
             </p>
-            <p className="mt-1 text-md font-semibold">{planName}</p>
+            <p
+              className="mt-1 text-md font-semibold"
+              data-test-id="workout-session-details-plan-name"
+            >
+              {planName}
+            </p>
           </div>
 
           <div>
@@ -52,7 +60,9 @@ export function WorkoutSessionMetadata({
               <p className="text-sm font-medium text-zinc-400 dark:text-zinc-400">
                 Data zakończenia
               </p>
-              <p className="mt-1 text-md font-semibold">{formattedCompletedAt}</p>
+              <p className="mt-1 text-md font-semibold">
+                {formattedCompletedAt}
+              </p>
             </div>
           )}
 

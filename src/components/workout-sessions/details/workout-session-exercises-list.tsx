@@ -1,14 +1,22 @@
-import type { SessionExerciseDTO } from "@/types";
+import type {
+  SessionExerciseDTO,
+  PersonalRecordWithExerciseDTO,
+} from "@/types";
 import { WorkoutSessionExerciseItem } from "./workout-session-exercise-item";
 
 type WorkoutSessionExercisesListProps = {
   readonly exercises: SessionExerciseDTO[];
   readonly sessionId: string;
+  readonly personalRecordsByExercise?: Map<
+    string,
+    PersonalRecordWithExerciseDTO[]
+  >;
 };
 
 export function WorkoutSessionExercisesList({
   exercises,
   sessionId,
+  personalRecordsByExercise = new Map(),
 }: WorkoutSessionExercisesListProps) {
   if (exercises.length === 0) {
     return (
@@ -24,7 +32,7 @@ export function WorkoutSessionExercisesList({
   );
 
   return (
-    <div>
+    <div data-test-id="workout-session-details-exercises-list">
       <h2 className="mb-6 text-2xl font-semibold">Ćwiczenia w sesji</h2>
       <div className="space-y-6">
         {sortedExercises.map((exercise, index) => (
@@ -34,6 +42,11 @@ export function WorkoutSessionExercisesList({
             exerciseIndex={index}
             totalExercises={sortedExercises.length}
             sessionId={sessionId}
+            personalRecords={
+              exercise.exercise_id
+                ? (personalRecordsByExercise.get(exercise.exercise_id) ?? [])
+                : []
+            }
           />
         ))}
       </div>

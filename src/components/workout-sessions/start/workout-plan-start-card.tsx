@@ -82,15 +82,15 @@ export function WorkoutPlanStartCard({
         if (response.status === 400) {
           toast.error(
             errorData.message ||
-              "Nieprawidłowe dane wejściowe. Sprawdź wybór planu."
+              "Nieprawidłowe dane wejściowe. Sprawdź wybór planu.",
           );
         } else if (response.status === 404) {
           toast.error(
-            "Plan treningowy nie został znaleziony lub nie należy do Ciebie."
+            "Plan treningowy nie został znaleziony lub nie należy do Ciebie.",
           );
         } else if (response.status === 409) {
           toast.error(
-            "Masz już aktywną sesję treningową. Wznów istniejącą sesję."
+            "Masz już aktywną sesję treningową. Wznów istniejącą sesję.",
           );
           // Odśwież stronę, aby wyświetlić kartę wznowienia
           router.refresh();
@@ -100,11 +100,11 @@ export function WorkoutPlanStartCard({
         } else if (response.status >= 500) {
           toast.error(
             errorData.message ||
-              "Wystąpił błąd serwera. Spróbuj ponownie później."
+              "Wystąpił błąd serwera. Spróbuj ponownie później.",
           );
         } else {
           toast.error(
-            errorData.message || "Nie udało się rozpocząć sesji treningowej"
+            errorData.message || "Nie udało się rozpocząć sesji treningowej",
           );
         }
         return;
@@ -124,7 +124,7 @@ export function WorkoutPlanStartCard({
       console.error("Error starting workout session:", error);
       if (error instanceof TypeError) {
         toast.error(
-          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."
+          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
         );
       } else {
         toast.error("Wystąpił błąd podczas rozpoczynania sesji treningowej");
@@ -135,7 +135,10 @@ export function WorkoutPlanStartCard({
   };
 
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card
+      className="transition-shadow hover:shadow-md"
+      data-test-id={`workout-plan-start-card-${plan.id}`}
+    >
       <CardHeader>
         <CardTitle>{plan.name}</CardTitle>
         {plan.description && (
@@ -158,7 +161,10 @@ export function WorkoutPlanStartCard({
           {plan.estimated_total_time_seconds && (
             <div className="flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-zinc-50">
               <Clock10 className="h-4 w-4" />
-              <span>Czas trwania: {formatTotalDuration(plan.estimated_total_time_seconds)}</span>
+              <span>
+                Czas trwania:{" "}
+                {formatTotalDuration(plan.estimated_total_time_seconds)}
+              </span>
             </div>
           )}
           {finalExerciseCount > 0 && (
@@ -186,6 +192,7 @@ export function WorkoutPlanStartCard({
           size="lg"
           className="w-full"
           aria-label={`Rozpocznij trening z planem ${plan.name}`}
+          data-test-id={`start-plan-button-${plan.id}`}
         >
           {isStarting ? (
             "Rozpoczynanie..."
