@@ -19,7 +19,6 @@ export function WorkoutPlanSelector({
   plans,
   nextCursor,
 }: Readonly<WorkoutPlanSelectorProps>) {
-
   console.log("plans", plans);
   return (
     <div>

@@ -16,8 +16,7 @@ export function SessionStatusBadge({ status }: SessionStatusBadgeProps) {
         className="bg-destructive text-destructive-foreground"
         aria-label="Sesja w trakcie"
       >
-        <Play className="mr-1 h-3 w-3" />
-        W trakcie
+        <Play className="mr-1 h-3 w-3" />W trakcie
       </Badge>
     );
   }
@@ -28,6 +27,7 @@ export function SessionStatusBadge({ status }: SessionStatusBadgeProps) {
         variant="secondary"
         className="bg-secondary text-secondary-foreground"
         aria-label="Sesja zakończona"
+        data-test-id="workout-session-status-completed"
       >
         <CheckCircle2 className="mr-1 h-3 w-3" />
         Zakończona

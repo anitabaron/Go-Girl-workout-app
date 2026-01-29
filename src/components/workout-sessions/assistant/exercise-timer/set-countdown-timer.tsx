@@ -2,6 +2,7 @@
 
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { SetCountdownTimerProps } from "@/types/workout-session-assistant";
+import { Button } from "@/components/ui/button";
 
 /**
  * Komponent wyświetlający odliczanie czasu dla pojedynczej serii ćwiczenia.
@@ -18,8 +19,17 @@ export function SetCountdownTimer({
     return null;
   }
 
+  // Walidacja: onComplete musi być funkcją
+  if (typeof onComplete !== "function") {
+    return null;
+  }
+
+  const handleComplete = () => {
+    onComplete();
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center gap-4 pb-23">
+    <div className="flex flex-col items-center justify-center gap-4 pb-9">
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={durationSeconds}
@@ -44,6 +54,14 @@ export function SetCountdownTimer({
           </div>
         )}
       </CountdownCircleTimer>
+      <Button
+        onClick={handleComplete}
+        size="lg"
+        className="min-w-[120px] text-md font-light"
+        data-test-id="timer-ok-button"
+      >
+        OK
+      </Button>
     </div>
   );
 }

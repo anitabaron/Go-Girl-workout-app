@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Pause, Play, SkipForward } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play, RedoDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type NavigationButtonsProps = {
@@ -31,18 +31,21 @@ export function NavigationButtons({
   isLoading = false,
 }: NavigationButtonsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div
+      className="grid grid-cols-[1fr_1fr_0.5fr_1fr] gap-2 sm:gap-3 sm:grid-cols-[1fr_1fr_0.5fr_1fr]"
+      data-test-id="workout-assistant-navigation"
+    >
       <Button
         type="button"
         variant="outline"
         size="lg"
         onClick={onPrevious}
         disabled={!canGoPrevious || isLoading}
-        className="h-16 text-base font-semibold"
+        className="h-12 sm:h-16 text-base font-semibold px-2 sm:px-4"
         aria-label="Poprzednie ćwiczenie"
       >
-        <ChevronLeft className="mr-2 size-5" />
-        Poprzednie
+        <ChevronLeft className="size-5 sm:mr-2 shrink-0" />
+        <span className="hidden sm:inline">Poprzednie</span>
       </Button>
 
       <Button
@@ -51,33 +54,34 @@ export function NavigationButtons({
         size="lg"
         onClick={isPaused ? onResume : onPause}
         disabled={isLoading}
-        className="h-16 text-base font-semibold"
+        className="h-12 sm:h-16 text-base font-semibold px-2 sm:px-4"
         aria-label={isPaused ? "Wznów sesję" : "Pauzuj sesję"}
       >
         {isPaused ? (
           <>
-            <Play className="mr-2 size-5" />
-            Wznów
+            <Play className="size-5 sm:mr-2 shrink-0" />
+            <span className="hidden sm:inline">Wznów</span>
           </>
         ) : (
           <>
-            <Pause className="mr-2 size-5" />
-            Pauza
+            <Pause className="size-5 sm:mr-2 shrink-0" />
+            <span className="hidden sm:inline">Pauza</span>
           </>
         )}
       </Button>
 
       <Button
         type="button"
-        variant="outline"
+        variant="secondary"
         size="lg"
         onClick={onSkip}
         disabled={isLoading}
-        className="h-16 text-base font-semibold"
+        className="h-12 sm:h-16 text-base font-semibold px-2 sm:px-4"
         aria-label="Pomiń ćwiczenie"
+        data-test-id="workout-assistant-skip-button"
       >
-        <SkipForward className="mr-2 size-5" />
-        Pomiń
+        <RedoDot className="size-5 sm:mr-2 shrink-0" />
+        <span className="hidden sm:inline">Pomiń</span>
       </Button>
 
       <Button
@@ -86,11 +90,12 @@ export function NavigationButtons({
         size="lg"
         onClick={onNext}
         disabled={!canGoNext || isLoading}
-        className="h-16 bg-destructive text-destructive-foreground hover:bg-destructive/90 text-base font-semibold"
+        className="h-12 sm:h-16 bg-destructive text-destructive-foreground hover:bg-destructive/90 text-base font-semibold px-2 sm:px-4"
         aria-label="Następne ćwiczenie"
+        data-test-id="workout-assistant-next-button"
       >
-        Następne
-        <ChevronRight className="ml-2 size-5" />
+        <span className="hidden sm:inline">Następne</span>
+        <ChevronRight className="size-5 sm:ml-2 shrink-0" />
       </Button>
     </div>
   );

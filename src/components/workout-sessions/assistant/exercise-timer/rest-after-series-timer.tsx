@@ -58,6 +58,7 @@ export function RestAfterSeriesTimer({
         onClick={handleSkip}
         size="lg"
         className="min-w-[120px] text-md font-light "
+        data-test-id="timer-skip-break-button"
       >
         Pomiń przerwę
       </Button>{" "}

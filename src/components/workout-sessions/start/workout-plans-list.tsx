@@ -61,7 +61,7 @@ export function WorkoutPlansList({
       console.error("Error loading more plans:", error);
       if (error instanceof TypeError) {
         toast.error(
-          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."
+          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
         );
       } else {
         toast.error("Nie udało się załadować kolejnych planów treningowych");
@@ -72,7 +72,7 @@ export function WorkoutPlansList({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-test-id="workout-session-start-plans-list">
       {plans.map((plan) => (
         <WorkoutPlanStartCard
           key={plan.id}

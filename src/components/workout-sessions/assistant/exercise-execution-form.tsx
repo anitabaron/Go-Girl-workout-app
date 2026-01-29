@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, startTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  startTransition,
+} from "react";
 import { SetLogsList } from "./set-logs-list";
 import type { SessionExerciseDTO } from "@/types";
 import type {
@@ -25,71 +32,64 @@ export function ExerciseExecutionForm({
   onChange,
   errors,
 }: Readonly<ExerciseExecutionFormProps>) {
-  // Inicjalizacja formData z danych ćwiczenia
-  const initialFormData = useMemo(() => {
-    const data = exerciseToFormData(exercise);
-    
-    // Jeśli nie ma serii, ale są dane planowane, utwórz wstępne serie z planu
-    if (data.sets.length === 0 && exercise.planned_sets && exercise.planned_sets > 0) {
-      const initialSets: SetLogFormData[] = [];
-      for (let i = 1; i <= exercise.planned_sets; i++) {
-        initialSets.push({
-          set_number: i,
-          reps: exercise.planned_reps ?? null,
-          duration_seconds: exercise.planned_duration_seconds ?? null,
-          weight_kg: null, // Waga nie jest planowana, więc pozostaje null
-        });
-      }
-      data.sets = initialSets;
-    }
-    
-    return data;
-  }, [exercise]);
-
-  const [formData, setFormData] = useState<ExerciseFormData>(
-    initialFormData
+  // Inicjalizacja formData z danych ćwiczenia (exerciseToFormData tworzy serie z planu gdy brak)
+  const initialFormData = useMemo(
+    () => exerciseToFormData(exercise),
+    [exercise],
   );
+
+  const [formData, setFormData] = useState<ExerciseFormData>(initialFormData);
 
   // Ref do śledzenia poprzedniego ćwiczenia, aby uniknąć niepotrzebnych aktualizacji
   const prevExerciseIdRef = useRef<string | number | undefined>(exercise.id);
 
   // Obliczanie actual_* z set logs (jeśli nie są ręcznie edytowane)
-  const calculateActuals = useCallback((sets: SetLogFormData[]) => {
-    const actualCountSets = sets.length;
-    
-    // Oblicz sumę powtórzeń tylko jeśli ćwiczenie ma planowane powtórzenia
-    // Jeśli planned_reps jest null, to ćwiczenie jest oparte na czasie, więc nie obliczamy sumy powtórzeń
-    let actualSumReps: number | null = null;
-    if (exercise.planned_reps !== null && exercise.planned_reps !== undefined) {
-      const sum = sets.reduce(
-        (sum, set) => sum + (set.reps ?? 0),
-        0
-      );
-      actualSumReps = sum > 0 ? sum : null;
-    }
-    
-    // Oblicz maksymalny czas tylko jeśli ćwiczenie ma planowany czas
-    // Jeśli planned_duration_seconds jest null, to ćwiczenie jest oparte na powtórzeniach, więc nie obliczamy czasu
-    let actualDurationSeconds: number | null = null;
-    if (exercise.planned_duration_seconds !== null && exercise.planned_duration_seconds !== undefined) {
-      const durations = sets
-        .map((set) => set.duration_seconds)
-        .filter((d): d is number => d !== null && d !== undefined);
-      if (durations.length > 0) {
-        actualDurationSeconds = Math.max(...durations);
-      }
-    }
-    
-    // actual_rest_seconds - można użyć planned_rest_seconds lub najdłuższej przerwy z serii
-    const actualRestSeconds = exercise.planned_rest_seconds ?? null;
+  const calculateActuals = useCallback(
+    (sets: SetLogFormData[]) => {
+      const actualCountSets = sets.length;
 
-    return {
-      actual_count_sets: actualCountSets > 0 ? actualCountSets : null,
-      actual_sum_reps: actualSumReps,
-      actual_duration_seconds: actualDurationSeconds,
-      actual_rest_seconds: actualRestSeconds,
-    };
-  }, [exercise.planned_reps, exercise.planned_duration_seconds, exercise.planned_rest_seconds]);
+      // Oblicz sumę powtórzeń tylko jeśli ćwiczenie ma planowane powtórzenia
+      // Jeśli planned_reps jest null, to ćwiczenie jest oparte na czasie, więc nie obliczamy sumy powtórzeń
+      let actualSumReps: number | null = null;
+      if (
+        exercise.planned_reps !== null &&
+        exercise.planned_reps !== undefined
+      ) {
+        const sum = sets.reduce((sum, set) => sum + (set.reps ?? 0), 0);
+        actualSumReps = sum > 0 ? sum : null;
+      }
+
+      // Oblicz maksymalny czas tylko jeśli ćwiczenie ma planowany czas
+      // Jeśli planned_duration_seconds jest null, to ćwiczenie jest oparte na powtórzeniach, więc nie obliczamy czasu
+      let actualDurationSeconds: number | null = null;
+      if (
+        exercise.planned_duration_seconds !== null &&
+        exercise.planned_duration_seconds !== undefined
+      ) {
+        const durations = sets
+          .map((set) => set.duration_seconds)
+          .filter((d): d is number => d !== null && d !== undefined);
+        if (durations.length > 0) {
+          actualDurationSeconds = Math.max(...durations);
+        }
+      }
+
+      // actual_rest_seconds - można użyć planned_rest_seconds lub najdłuższej przerwy z serii
+      const actualRestSeconds = exercise.planned_rest_seconds ?? null;
+
+      return {
+        actual_count_sets: actualCountSets > 0 ? actualCountSets : null,
+        actual_sum_reps: actualSumReps,
+        actual_duration_seconds: actualDurationSeconds,
+        actual_rest_seconds: actualRestSeconds,
+      };
+    },
+    [
+      exercise.planned_reps,
+      exercise.planned_duration_seconds,
+      exercise.planned_rest_seconds,
+    ],
+  );
 
   // Aktualizuj formData gdy zmienia się ćwiczenie
   useEffect(() => {
@@ -97,57 +97,36 @@ export function ExerciseExecutionForm({
     if (prevExerciseIdRef.current === exercise.id) {
       return;
     }
-    
+
     prevExerciseIdRef.current = exercise.id;
-    
+
     // Użyj startTransition, aby opóźnić aktualizację stanu i uniknąć synchronicznego setState w efekcie
     startTransition(() => {
       const newData = exerciseToFormData(exercise);
-      
-      // Jeśli nie ma serii, ale są dane planowane, utwórz wstępne serie z planu
-      if (newData.sets.length === 0 && exercise.planned_sets && exercise.planned_sets > 0) {
-        const initialSets: SetLogFormData[] = [];
-        for (let i = 1; i <= exercise.planned_sets; i++) {
-          initialSets.push({
-            set_number: i,
-            reps: exercise.planned_reps ?? null,
-            duration_seconds: exercise.planned_duration_seconds ?? null,
-            weight_kg: null,
-          });
-        }
-        newData.sets = initialSets;
-        
-        // Przelicz actual_* dla nowych serii
-        const calculated = calculateActuals(initialSets);
-        newData.actual_count_sets = calculated.actual_count_sets;
-        newData.actual_sum_reps = calculated.actual_sum_reps;
-        newData.actual_duration_seconds = calculated.actual_duration_seconds;
-        newData.actual_rest_seconds = calculated.actual_rest_seconds;
-      }
-      
       setFormData(newData);
       onChange(newData);
     });
-  }, [exercise, calculateActuals, onChange]);
+  }, [exercise, onChange]);
 
   // Aktualizacja formData i wywołanie onChange
   const updateFormData = useCallback(
     (updates: Partial<ExerciseFormData>) => {
       const newFormData = { ...formData, ...updates };
-      
+
       // Jeśli zaktualizowano sets, przelicz actual_*
       if (updates.sets !== undefined) {
         const calculated = calculateActuals(updates.sets);
         newFormData.actual_count_sets = calculated.actual_count_sets;
         newFormData.actual_sum_reps = calculated.actual_sum_reps;
-        newFormData.actual_duration_seconds = calculated.actual_duration_seconds;
+        newFormData.actual_duration_seconds =
+          calculated.actual_duration_seconds;
         newFormData.actual_rest_seconds = calculated.actual_rest_seconds;
       }
 
       setFormData(newFormData);
       onChange(newFormData);
     },
-    [formData, onChange, calculateActuals]
+    [formData, onChange, calculateActuals],
   );
 
   // Obliczanie wartości podsumowania z serii (tylko do wyświetlenia)
@@ -155,21 +134,21 @@ export function ExerciseExecutionForm({
     // Jeśli ćwiczenie jest pominięte, zwróć '-' dla wszystkich wartości
     if (formData.is_skipped) {
       return {
-        count_sets: '-',
-        sum_reps: '-',
-        duration_seconds: '-',
-        rest_seconds: '-',
+        count_sets: "-",
+        sum_reps: "-",
+        duration_seconds: "-",
+        rest_seconds: "-",
       };
     }
 
     const countSets = formData.sets.length;
     const sumReps = formData.sets.reduce(
       (sum, set) => sum + (set.reps ?? 0),
-      0
+      0,
     );
     const maxDuration = formData.sets.reduce(
       (max, set) => Math.max(max, set.duration_seconds ?? 0),
-      0
+      0,
     );
     const restSeconds = exercise.planned_rest_seconds ?? null;
 
@@ -207,7 +186,7 @@ export function ExerciseExecutionForm({
       newSets[index] = set;
       updateFormData({ sets: newSets });
     },
-    [formData.sets, updateFormData]
+    [formData.sets, updateFormData],
   );
 
   // Obsługa usunięcia serii
@@ -216,7 +195,7 @@ export function ExerciseExecutionForm({
       const newSets = formData.sets.filter((_, i) => i !== index);
       updateFormData({ sets: newSets });
     },
-    [formData.sets, updateFormData]
+    [formData.sets, updateFormData],
   );
 
   // Obsługa przełączenia checkboxa skip
@@ -224,7 +203,7 @@ export function ExerciseExecutionForm({
     (checked: boolean) => {
       updateFormData({ is_skipped: checked });
     },
-    [updateFormData]
+    [updateFormData],
   );
 
   return (
@@ -233,8 +212,6 @@ export function ExerciseExecutionForm({
         Wykonanie ćwiczenia
       </h3>
 
-      
-
       {/* Lista serii */}
       <SetLogsList
         sets={formData.sets}
@@ -242,14 +219,16 @@ export function ExerciseExecutionForm({
         onUpdate={handleSetUpdate}
         onRemove={handleSetRemove}
         errors={errors?.sets}
-        showDuration={exercise.planned_duration_seconds !== null && exercise.planned_duration_seconds > 0}
+        showDuration={
+          exercise.planned_duration_seconds !== null &&
+          exercise.planned_duration_seconds > 0
+        }
         showReps={exercise.planned_reps !== null && exercise.planned_reps > 0}
         isSkipped={formData.is_skipped}
       />
 
-     
-{/* Podsumowanie - wartości obliczane z serii (tylko do wyświetlenia) */}
-<div className="grid grid-cols-2 gap-4 md:grid-cols-2">
+      {/* Podsumowanie - wartości obliczane z serii (tylko do wyświetlenia) */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
         <div>
           <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Liczba serii
@@ -281,8 +260,8 @@ export function ExerciseExecutionForm({
             </div>
           )}
       </div>
- {/* Checkbox "Pomiń ćwiczenie" */}
- <div className="flex items-center gap-2">
+      {/* Checkbox "Pomiń ćwiczenie" */}
+      <div className="flex items-center gap-2">
         <input
           id="is_skipped"
           type="checkbox"
@@ -301,7 +280,9 @@ export function ExerciseExecutionForm({
       {/* Błędy globalne formularza */}
       {errors?._form && errors._form.length > 0 && (
         <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
-          <p className="text-sm font-medium text-destructive">Błędy formularza:</p>
+          <p className="text-sm font-medium text-destructive">
+            Błędy formularza:
+          </p>
           <ul className="mt-1 list-disc list-inside text-sm text-destructive">
             {errors._form.map((error, index) => (
               <li key={index}>{error}</li>

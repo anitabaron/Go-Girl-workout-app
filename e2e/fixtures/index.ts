@@ -1,6 +1,6 @@
 /**
  * Fixtures exports
- * 
+ *
  * Centralized export point for all test fixtures
  */
 export {
@@ -11,18 +11,23 @@ export {
   getAuthCookies,
   setAuthCookies,
   type TestUserCredentials,
-} from './auth';
+} from "./auth";
 
 export {
   teardownDatabase,
   teardownUserData,
   teardownAllData,
   type TeardownOptions,
-} from './db-teardown';
+} from "./db-teardown";
+
+export {
+  createWorkoutPlan,
+  type CreateWorkoutPlanOptions,
+} from "./workout-plans";
 
 export {
   createExercise,
   createExercises,
   defaultExerciseData,
   type ExerciseTestData,
-} from './exercises';
+} from "./exercises";
