@@ -58,6 +58,7 @@ export function SetCountdownTimer({
         onClick={handleComplete}
         size="lg"
         className="min-w-[120px] text-md font-light"
+        data-test-id="timer-ok-button"
       >
         OK
       </Button>

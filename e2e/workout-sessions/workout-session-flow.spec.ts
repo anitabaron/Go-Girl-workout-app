@@ -103,4 +103,57 @@ test.describe("Workout Session Flow E2E", () => {
     expect(await detailsPage.hasCompletedStatus()).toBe(true);
     expect(await detailsPage.getPlanName()).toContain(planName);
   });
+
+  test("should complete workout flow using timer buttons (OK, Pomiń przerwę)", async ({
+    page,
+  }) => {
+    test.setTimeout(90000);
+
+    await authenticateUser(page);
+
+    const { planName } = await createWorkoutPlan(page, {
+      planName: `Timer Buttons Plan ${Date.now()}`,
+      exercises: [
+        { part: "Arms", series: 2, reps: 1, restBetween: 30 },
+        { part: "Legs", series: 1, reps: 1 },
+      ],
+    });
+
+    const startPage = new WorkoutSessionStartPage(page);
+    await startPage.goto();
+    await page.waitForLoadState("networkidle", { timeout: 60000 });
+    await startPage.cancelActiveSessionIfPresent();
+    await startPage.waitForPlansList();
+    await startPage.clickStartPlan(planName);
+
+    await page.waitForURL(/\/workout-sessions\/[^/]+\/active/, {
+      timeout: 15000,
+    });
+
+    const assistantPage = new WorkoutSessionAssistantPage(page);
+    await assistantPage.waitForAssistant();
+
+    // Exercise 1: 2 series, reps 1, restBetween 30
+    // Set 1: RepsDisplay OK → RestBetweenSetsTimer Pomiń przerwę → Set 2: RepsDisplay OK
+    await assistantPage.clickTimerOk();
+    await page.waitForTimeout(500);
+    await assistantPage.clickTimerSkipBreak();
+    await page.waitForTimeout(500);
+    await assistantPage.clickTimerOk();
+    await page.waitForTimeout(500);
+
+    // Exercise 2: 1 series, reps 1 - just OK
+    await assistantPage.clickTimerOk();
+    await page.waitForTimeout(500);
+
+    // Finish session
+    await assistantPage.clickNext();
+
+    await page.waitForURL(/\/workout-sessions\/[^/]+$/, { timeout: 15000 });
+
+    const detailsPage = new WorkoutSessionDetailsPage(page);
+    await detailsPage.waitForDetails();
+    expect(await detailsPage.hasCompletedStatus()).toBe(true);
+    expect(await detailsPage.getPlanName()).toContain(planName);
+  });
 });

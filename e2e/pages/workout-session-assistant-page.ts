@@ -10,6 +10,8 @@ export class WorkoutSessionAssistantPage {
   readonly navigation: Locator;
   readonly nextButton: Locator;
   readonly skipButton: Locator;
+  readonly timerOkButton: Locator;
+  readonly timerSkipBreakButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -21,6 +23,10 @@ export class WorkoutSessionAssistantPage {
     );
     this.skipButton = page.locator(
       '[data-test-id="workout-assistant-skip-button"]',
+    );
+    this.timerOkButton = page.locator('[data-test-id="timer-ok-button"]');
+    this.timerSkipBreakButton = page.locator(
+      '[data-test-id="timer-skip-break-button"]',
     );
   }
 
@@ -36,5 +42,20 @@ export class WorkoutSessionAssistantPage {
   async clickSkip() {
     await this.skipButton.waitFor({ state: "visible", timeout: 10000 });
     await this.skipButton.click();
+  }
+
+  /** Click OK button on timer (RepsDisplay or SetCountdownTimer) */
+  async clickTimerOk() {
+    await this.timerOkButton.waitFor({ state: "visible", timeout: 10000 });
+    await this.timerOkButton.click();
+  }
+
+  /** Click Pomiń przerwę button on rest timer */
+  async clickTimerSkipBreak() {
+    await this.timerSkipBreakButton.waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
+    await this.timerSkipBreakButton.click();
   }
 }

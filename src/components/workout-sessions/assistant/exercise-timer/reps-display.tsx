@@ -56,6 +56,7 @@ export function RepsDisplay({
         onClick={handleClick}
         size="lg"
         className="min-w-[120px] text-lg"
+        data-test-id="timer-ok-button"
       >
         OK
       </Button>
