@@ -24,7 +24,7 @@ type ActualSectionProps = {
 
 function compareValues(
   planned: number | null,
-  actual: number | null
+  actual: number | null,
 ): "up" | "down" | "match" | "na" {
   if (planned === null || actual === null) {
     return "na";
@@ -40,7 +40,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
     return (
       <div className="rounded-lg border border-border bg-muted/50 p-4 opacity-60">
         <div className="mb-4 flex items-center justify-between">
-          <h4 className="text-lg font-semibold">Wykonanie</h4>
+          <h4 className="text-lg font-semibold">Wykonane</h4>
           <Badge variant="secondary" className="bg-zinc-500 hidden sm:block">
             Pominięte
           </Badge>
@@ -53,10 +53,18 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
   }
 
   const setsComparison = compareValues(planned.sets, params.count_sets);
-  const repsComparison = compareValues(planned.reps !== null && planned.reps !== undefined && planned.sets !== null && planned.sets !== undefined ? planned.reps * planned.sets : null, params.sum_reps);
+  const repsComparison = compareValues(
+    planned.reps !== null &&
+      planned.reps !== undefined &&
+      planned.sets !== null &&
+      planned.sets !== undefined
+      ? planned.reps * planned.sets
+      : null,
+    params.sum_reps,
+  );
   const durationComparison = compareValues(
     planned.duration_seconds,
-    params.duration_seconds
+    params.duration_seconds,
   );
 
   const getTextColor = (comparison: "up" | "down" | "match" | "na") => {
@@ -78,7 +86,7 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
 
   return (
     <div className="rounded-lg border border-border bg-secondary/50 p-4">
-      <h4 className="mb-4 text-lg font-semibold">Wykonanie</h4>
+      <h4 className="mb-4 text-lg font-semibold">Wykonane</h4>
       <dl className="space-y-3">
         <div>
           <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
@@ -106,19 +114,20 @@ export function ActualSection({ params, planned }: ActualSectionProps) {
           </div>
         )}
         {/* Pokaż czas trwania tylko jeśli ćwiczenie ma planowany czas */}
-        {planned.duration_seconds !== null && planned.duration_seconds !== undefined && (
-          <div>
-            <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Czas trwania
-            </dt>
-            <dd
-              className={`mt-1 rounded text-lg font-semibold ${getTextColor(durationComparison)}`}
-            >
-              {formatDuration(params.duration_seconds)}
-              {getArrowIcon(durationComparison)}
-            </dd>
-          </div>
-        )}
+        {planned.duration_seconds !== null &&
+          planned.duration_seconds !== undefined && (
+            <div>
+              <dt className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                Czas trwania
+              </dt>
+              <dd
+                className={`mt-1 rounded text-lg font-semibold ${getTextColor(durationComparison)}`}
+              >
+                {formatDuration(params.duration_seconds)}
+                {getArrowIcon(durationComparison)}
+              </dd>
+            </div>
+          )}
       </dl>
     </div>
   );

@@ -4,7 +4,6 @@ import {
   getWorkoutSessionService,
   ServiceError,
 } from "@/services/workout-sessions";
-import { getPersonalRecordsByExerciseService } from "@/services/personal-records";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 import {
@@ -12,7 +11,6 @@ import {
   WorkoutSessionActions,
   WorkoutSessionExercisesList,
 } from "@/components/workout-sessions/details";
-import type { PersonalRecordWithExerciseDTO } from "@/types";
 
 type WorkoutSessionDetailsPageProps = {
   params: Promise<{
@@ -33,7 +31,7 @@ export default async function WorkoutSessionDetailsPage({
   }
 
   const userId = await requireAuth();
-  
+
   let session;
   try {
     session = await getWorkoutSessionService(userId, id);
@@ -54,42 +52,6 @@ export default async function WorkoutSessionDetailsPage({
 
   const planName = session.plan_name_at_time || "Plan usunięty";
 
-  // Pobierz rekordy osobiste dla wszystkich ćwiczeń w sesji
-  const personalRecordsByExercise = new Map<
-    string,
-    PersonalRecordWithExerciseDTO[]
-  >();
-  
-  // Pobierz unikalne exercise_id z sesji
-  const uniqueExerciseIds = [
-    ...new Set(session.exercises.map((e) => e.exercise_id).filter(Boolean)),
-  ] as string[];
-
-  // Pobierz rekordy dla każdego ćwiczenia
-  for (const exerciseId of uniqueExerciseIds) {
-    try {
-      const { items } = await getPersonalRecordsByExerciseService(
-        userId,
-        exerciseId
-      );
-      // Filtruj tylko rekordy z tej sesji
-      const recordsForThisSession = items.filter(
-        (pr) => pr.achieved_in_session_id === session.id
-      );
-      if (recordsForThisSession.length > 0) {
-        personalRecordsByExercise.set(exerciseId, recordsForThisSession);
-      }
-    } catch (error) {
-      // Ignoruj błędy - jeśli ćwiczenie nie istnieje lub nie ma rekordów, po prostu pomiń
-      console.error(
-        `Failed to fetch personal records for exercise ${exerciseId}:`,
-        error
-      );
-    }
-  }
-
-  console.log("session", session);
-
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
       <PageHeaderSection
@@ -100,18 +62,12 @@ export default async function WorkoutSessionDetailsPage({
 
       <main className="mx-auto w-full max-w-5xl px-6 pb-10 pt-0 md:pt-10 sm:px-10">
         {/* Metadane sesji */}
-        <section
-          className="mb-6"
-          aria-label="Metadane sesji treningowej"
-        >
+        <section className="mb-6" aria-label="Metadane sesji treningowej">
           <WorkoutSessionMetadata session={session} />
         </section>
 
         {/* Akcje sesji */}
-        <section
-          className="mb-6"
-          aria-label="Akcje sesji treningowej"
-        >
+        <section className="mb-6" aria-label="Akcje sesji treningowej">
           <WorkoutSessionActions
             sessionId={session.id}
             status={session.status}
@@ -126,7 +82,6 @@ export default async function WorkoutSessionDetailsPage({
           <WorkoutSessionExercisesList
             exercises={session.exercises}
             sessionId={session.id}
-            personalRecordsByExercise={personalRecordsByExercise}
           />
         </section>
       </main>

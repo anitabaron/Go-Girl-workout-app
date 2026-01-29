@@ -46,71 +46,83 @@ export function WorkoutSessionAssistant({
       return position > 0
         ? Math.min(position - 1, session.exercises.length - 1)
         : 0;
-    }
+    },
   );
   const [isPaused, setIsPaused] = useState(false);
-  const initialFormDataValue = useMemo(() => 
-    exerciseToFormData(
-      session.exercises[currentExerciseIndex] || session.exercises[0]
-    ),
-    [session.exercises, currentExerciseIndex]
+  const initialFormDataValue = useMemo(
+    () =>
+      exerciseToFormData(
+        session.exercises[currentExerciseIndex] || session.exercises[0],
+      ),
+    [session.exercises, currentExerciseIndex],
   );
-  
-  const [formData, setFormDataState] = useState<ExerciseFormData>(initialFormDataValue);
-  
+
+  const [formData, setFormDataState] =
+    useState<ExerciseFormData>(initialFormDataValue);
+
   // Ref do przechowywania aktualnego stanu formularza (używane w handleNext, aby uniknąć problemów z closure)
   const formDataRef = useRef<ExerciseFormData>(initialFormDataValue);
-  
+
   // Wrapper dla setFormData, który aktualizuje również ref
-  const setFormData = useCallback((updater: ExerciseFormData | ((prev: ExerciseFormData) => ExerciseFormData)) => {
-    setFormDataState((prev) => {
-      const newFormData = typeof updater === 'function' ? updater(prev) : updater;
-      formDataRef.current = newFormData; // Aktualizuj ref
-      return newFormData;
-    });
-  }, []);
+  const setFormData = useCallback(
+    (
+      updater:
+        | ExerciseFormData
+        | ((prev: ExerciseFormData) => ExerciseFormData),
+    ) => {
+      setFormDataState((prev) => {
+        const newFormData =
+          typeof updater === "function" ? updater(prev) : updater;
+        formDataRef.current = newFormData; // Aktualizuj ref
+        return newFormData;
+      });
+    },
+    [],
+  );
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
   const [autosaveError, setAutosaveError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [currentSetNumber, setCurrentSetNumber] = useState<number>(1);
-  
+
   // Ref do śledzenia, czy timer został już uruchomiony (zapobiega pętli)
   const timerInitializedRef = useRef(false);
-  
+
   // Ref do przechowywania aktualnych wartości timera (używane w stopTimer, aby uniknąć zależności)
   const timerStateRef = useRef({
     lastTimerStartedAt: initialSession.last_timer_started_at,
     lastTimerStoppedAt: initialSession.last_timer_stopped_at,
   });
-  
+
   // Ref do przechowywania aktualnego statusu sesji (używane w stopTimer, aby uniknąć zależności od closure)
   const sessionStatusRef = useRef(initialSession.status);
-  
+
   // Ref do śledzenia poprzedniego sessionId (do resetowania przy zmianie sesji)
   const previousSessionIdRef = useRef<string>(sessionId);
-  
+
   // Ref do śledzenia, czy auto-pauza została już wykonana dla bieżącej ścieżki
   const autoPauseExecutedRef = useRef<string | null>(null);
-  
+
   // Ref do śledzenia poprzedniego pathname (używane do wykrywania faktycznej zmiany route)
   const previousPathnameRef = useRef<string | null>(null);
-  
+
   // Ref do śledzenia, czy komponent został już zamontowany (zapobiega auto-pauzie przy pierwszym renderze)
   const isMountedRef = useRef(false);
-  
+
   // Ref do śledzenia, czy to pierwszy render (zapobiega auto-pauzie przy inicjalizacji)
   const isFirstRenderRef = useRef(true);
-  
+
   // Ref do śledzenia ostatniego czasu gdy strona była widoczna (zapobiega fałszywym alarmom visibilitychange)
   const lastVisibleTimeRef = useRef<number>(Date.now());
-  
+
   // Ref do śledzenia, czy jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia
   // (zapobiega pauzowaniu podczas auto-transitions między ćwiczeniami)
   const isAutoTransitioningRef = useRef<boolean>(false);
-  
+
   // Ref do przechowywania aktualnej funkcji autoPause (używane w cleanup, aby uniknąć zależności)
-  const autoPauseRef = useRef<((saveProgress?: boolean) => Promise<void>) | null>(null);
-  
+  const autoPauseRef = useRef<
+    ((saveProgress?: boolean) => Promise<void>) | null
+  >(null);
+
   // Resetuj refy i aktualizuj stan przy zmianie sessionId (nowa sesja)
   useEffect(() => {
     // Jeśli sessionId się zmienił, resetuj wszystko dla nowej sesji
@@ -119,10 +131,10 @@ export function WorkoutSessionAssistant({
       timerInitializedRef.current = false; // Resetuj flagę inicjalizacji
       isMountedRef.current = false; // Resetuj flagę zamontowania dla nowej sesji
       isFirstRenderRef.current = true; // Resetuj flagę pierwszego renderu dla nowej sesji
-      
+
       // Zaktualizuj stan sesji na podstawie nowego initialSession
       setSession(initialSession);
-      
+
       // Zaktualizuj refy timera i statusu sesji
       timerStateRef.current = {
         lastTimerStartedAt: initialSession.last_timer_started_at,
@@ -131,7 +143,7 @@ export function WorkoutSessionAssistant({
       sessionStatusRef.current = initialSession.status;
     }
   }, [sessionId, initialSession]);
-  
+
   // Aktualizuj ref przy zmianie stanu sesji (dla bieżącej sesji)
   useEffect(() => {
     timerStateRef.current = {
@@ -139,12 +151,16 @@ export function WorkoutSessionAssistant({
       lastTimerStoppedAt: session.last_timer_stopped_at,
     };
     sessionStatusRef.current = session.status;
-  }, [session.last_timer_started_at, session.last_timer_stopped_at, session.status]);
+  }, [
+    session.last_timer_started_at,
+    session.last_timer_stopped_at,
+    session.status,
+  ]);
 
   // Bieżące ćwiczenie
   const currentExercise = useMemo(
     () => session.exercises[currentExerciseIndex],
-    [session.exercises, currentExerciseIndex]
+    [session.exercises, currentExerciseIndex],
   );
 
   // Walidacja formularza
@@ -219,11 +235,16 @@ export function WorkoutSessionAssistant({
     const timerStopped = timerStateRef.current.lastTimerStoppedAt !== null;
     const lastTimerStartedAt = timerStateRef.current.lastTimerStartedAt;
     const lastTimerStoppedAt = timerStateRef.current.lastTimerStoppedAt;
-    
+
     // Jeśli timer nie jest uruchomiony, uruchom go
     // Jeśli timer został zatrzymany po ostatnim starcie, uruchom go ponownie
     let shouldStart = !timerStarted;
-    if (timerStarted && timerStopped && lastTimerStartedAt && lastTimerStoppedAt) {
+    if (
+      timerStarted &&
+      timerStopped &&
+      lastTimerStartedAt &&
+      lastTimerStoppedAt
+    ) {
       const startedTime = new Date(lastTimerStartedAt).getTime();
       const stoppedTime = new Date(lastTimerStoppedAt).getTime();
       // Jeśli ostatnie zatrzymanie jest nowsze niż ostatni start, timer został zatrzymany i można go wznowić
@@ -231,10 +252,10 @@ export function WorkoutSessionAssistant({
         shouldStart = true;
       }
     }
-    
+
     if (shouldStart) {
       timerInitializedRef.current = true; // Oznacz jako zainicjalizowany przed wywołaniem API
-      
+
       const now = new Date().toISOString();
       fetch(`/api/workout-sessions/${sessionId}/timer`, {
         method: "PATCH",
@@ -256,9 +277,14 @@ export function WorkoutSessionAssistant({
           if (result.data) {
             setSession((prev) => ({
               ...prev,
-              active_duration_seconds: result.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
-              last_timer_started_at: result.data.last_timer_started_at ?? prev.last_timer_started_at,
-              last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+              active_duration_seconds:
+                result.data.active_duration_seconds ??
+                prev.active_duration_seconds ??
+                0,
+              last_timer_started_at:
+                result.data.last_timer_started_at ?? prev.last_timer_started_at,
+              last_timer_stopped_at:
+                result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
             }));
           }
           // Oznacz komponent jako zamontowany dopiero po pomyślnym uruchomieniu timera
@@ -290,7 +316,6 @@ export function WorkoutSessionAssistant({
     }
   }, [autosaveStatus]);
 
-
   // Aktualizacja formData przy zmianie ćwiczenia
   useEffect(() => {
     if (currentExercise) {
@@ -310,14 +335,14 @@ export function WorkoutSessionAssistant({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentExercise]); // setFormData jest stabilne (useCallback), nie potrzebuje być w zależnościach
-  
+
   // Ref jest aktualizowany w setFormData i updateSetInForm, więc nie potrzebujemy osobnego useEffect
 
   // Zapisywanie stanu ćwiczenia przez API
   const saveExercise = useCallback(
     async (
       data: ExerciseFormData,
-      advanceCursor: boolean
+      advanceCursor: boolean,
     ): Promise<boolean> => {
       setAutosaveStatus("saving");
       setAutosaveError(undefined);
@@ -336,7 +361,8 @@ export function WorkoutSessionAssistant({
         });
 
         if (!response.ok) {
-          let errorData: { message?: string; details?: string; code?: string } = {};
+          let errorData: { message?: string; details?: string; code?: string } =
+            {};
           try {
             const text = await response.text();
             if (text) {
@@ -345,7 +371,12 @@ export function WorkoutSessionAssistant({
           } catch {
             // Jeśli nie można sparsować JSON, użyj pustego obiektu
           }
-          throw new Error(errorData.message || `Błąd zapisu ćwiczenia (${response.status})`);
+          const msg =
+            errorData.message || `Błąd zapisu ćwiczenia (${response.status})`;
+          const fullMsg = errorData.details
+            ? `${msg} ${errorData.details}`
+            : msg;
+          throw new Error(fullMsg);
         }
 
         const result = await response.json();
@@ -355,7 +386,9 @@ export function WorkoutSessionAssistant({
         setSession((prev) => ({
           ...prev,
           exercises: prev.exercises.map((ex) =>
-            ex.exercise_order === currentExercise.exercise_order ? updatedExercise : ex
+            ex.exercise_order === currentExercise.exercise_order
+              ? updatedExercise
+              : ex,
           ),
           current_position:
             result.data.cursor?.current_position ?? prev.current_position,
@@ -372,14 +405,14 @@ export function WorkoutSessionAssistant({
         return false;
       }
     },
-    [sessionId, currentExercise.exercise_order]
+    [sessionId, currentExercise.exercise_order],
   );
 
   // Obsługa nawigacji next
   const handleNext = useCallback(async () => {
     // Użyj aktualnego stanu formularza z ref (aby uniknąć problemów z closure)
     const currentFormData = formDataRef.current;
-    
+
     // Walidacja przed zapisem
     const errors = validateForm(currentFormData);
     if (Object.keys(errors).length > 0 && !currentFormData.is_skipped) {
@@ -408,7 +441,7 @@ export function WorkoutSessionAssistant({
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ status: "completed" }),
-          }
+          },
         );
 
         if (response.ok) {
@@ -466,7 +499,7 @@ export function WorkoutSessionAssistant({
           body: JSON.stringify({
             last_timer_stopped_at: now,
           }),
-        }
+        },
       );
 
       if (timerResponse.ok) {
@@ -475,9 +508,16 @@ export function WorkoutSessionAssistant({
         if (timerResult.data) {
           setSession((prev) => ({
             ...prev,
-            active_duration_seconds: timerResult.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
-            last_timer_started_at: timerResult.data.last_timer_started_at ?? prev.last_timer_started_at,
-            last_timer_stopped_at: timerResult.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+            active_duration_seconds:
+              timerResult.data.active_duration_seconds ??
+              prev.active_duration_seconds ??
+              0,
+            last_timer_started_at:
+              timerResult.data.last_timer_started_at ??
+              prev.last_timer_started_at,
+            last_timer_stopped_at:
+              timerResult.data.last_timer_stopped_at ??
+              prev.last_timer_stopped_at,
           }));
         }
         setIsPaused(true);
@@ -504,7 +544,7 @@ export function WorkoutSessionAssistant({
           body: JSON.stringify({
             last_timer_started_at: now,
           }),
-        }
+        },
       );
 
       if (timerResponse.ok) {
@@ -513,9 +553,16 @@ export function WorkoutSessionAssistant({
         if (timerResult.data) {
           setSession((prev) => ({
             ...prev,
-            active_duration_seconds: timerResult.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
-            last_timer_started_at: timerResult.data.last_timer_started_at ?? prev.last_timer_started_at,
-            last_timer_stopped_at: timerResult.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+            active_duration_seconds:
+              timerResult.data.active_duration_seconds ??
+              prev.active_duration_seconds ??
+              0,
+            last_timer_started_at:
+              timerResult.data.last_timer_started_at ??
+              prev.last_timer_started_at,
+            last_timer_stopped_at:
+              timerResult.data.last_timer_stopped_at ??
+              prev.last_timer_stopped_at,
           }));
         }
         setIsPaused(false);
@@ -558,7 +605,7 @@ export function WorkoutSessionAssistant({
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ status: "completed" }),
-          }
+          },
         );
 
         if (response.ok) {
@@ -593,7 +640,7 @@ export function WorkoutSessionAssistant({
   const markAutoTransition = useCallback(() => {
     // Oznacz, że jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia
     isAutoTransitioningRef.current = true;
-    
+
     // Resetuj flagę po opóźnieniu (daje czas na zakończenie eventów visibilitychange)
     // Używamy 2 sekund aby pokryć cały okres przejścia między ćwiczeniami
     setTimeout(() => {
@@ -603,40 +650,66 @@ export function WorkoutSessionAssistant({
 
   // Funkcja auto-pauzy (używana przy opuszczeniu strony/route change)
   // Pauzuje zarówno globalny timer jak i timer ćwiczenia
-  const autoPause = useCallback(async (saveProgress = false) => {
-    // Jeśli to pierwszy render, nie wykonuj auto-pauzy
-    if (isFirstRenderRef.current) {
-      return;
-    }
-    
-    // Jeśli komponent nie został jeszcze zamontowany, nie wykonuj auto-pauzy
-    // (zapobiega auto-pauzie przy pierwszym renderze)
-    if (!isMountedRef.current) {
-      return;
-    }
-    
-    // Jeśli sesja nie jest w statusie 'in_progress', nie wykonuj auto-pauzy
-    // (sesja może być już zakończona, np. po zakończeniu ostatniego ćwiczenia)
-    if (session.status !== 'in_progress') {
-      return;
-    }
-    
-    // Jeśli już jest w pauzie, nie rób nic
-    if (isPaused) {
-      return;
-    }
-    
-    // Jeśli timer nie został jeszcze zainicjalizowany, nie wykonuj auto-pauzy
-    // (zapobiega auto-pauzie przed uruchomieniem timera)
-    if (!timerInitializedRef.current) {
-      return;
-    }
+  const autoPause = useCallback(
+    async (saveProgress = false) => {
+      // Jeśli to pierwszy render, nie wykonuj auto-pauzy
+      if (isFirstRenderRef.current) {
+        return;
+      }
 
-    // Jeśli jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia,
-    // nie pauzuj (tylko zapisz jeśli trzeba)
-    // To zapobiega pauzowaniu podczas automatycznych przejść między ćwiczeniami
-    if (isAutoTransitioningRef.current) {
-      if (saveProgress && session.status === 'in_progress') {
+      // Jeśli komponent nie został jeszcze zamontowany, nie wykonuj auto-pauzy
+      // (zapobiega auto-pauzie przy pierwszym renderze)
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      // Jeśli sesja nie jest w statusie 'in_progress', nie wykonuj auto-pauzy
+      // (sesja może być już zakończona, np. po zakończeniu ostatniego ćwiczenia)
+      if (session.status !== "in_progress") {
+        return;
+      }
+
+      // Jeśli już jest w pauzie, nie rób nic
+      if (isPaused) {
+        return;
+      }
+
+      // Jeśli timer nie został jeszcze zainicjalizowany, nie wykonuj auto-pauzy
+      // (zapobiega auto-pauzie przed uruchomieniem timera)
+      if (!timerInitializedRef.current) {
+        return;
+      }
+
+      // Jeśli jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia,
+      // nie pauzuj (tylko zapisz jeśli trzeba)
+      // To zapobiega pauzowaniu podczas automatycznych przejść między ćwiczeniami
+      if (isAutoTransitioningRef.current) {
+        if (saveProgress && session.status === "in_progress") {
+          try {
+            // Użyj aktualnego stanu formularza z ref
+            const currentFormData = formDataRef.current;
+            await saveExercise(currentFormData, false);
+          } catch (error) {
+            // Jeśli błąd 409 (sesja nie jest in_progress), to jest oczekiwane
+            // gdy trening został zakończony przed unmount - nie logujemy jako błąd
+            if (
+              !(
+                error instanceof Error &&
+                error.message.includes("nie jest w statusie 'in_progress'")
+              )
+            ) {
+              console.error(
+                "[WorkoutSessionAssistant.autoPause] Error saving progress during auto-transition:",
+                error,
+              );
+            }
+          }
+        }
+        return; // Nie pauzuj podczas automatycznych przejść między ćwiczeniami
+      }
+
+      // Opcjonalnie zapisz postępy
+      if (saveProgress) {
         try {
           // Użyj aktualnego stanu formularza z ref
           const currentFormData = formDataRef.current;
@@ -644,64 +717,67 @@ export function WorkoutSessionAssistant({
         } catch (error) {
           // Jeśli błąd 409 (sesja nie jest in_progress), to jest oczekiwane
           // gdy trening został zakończony przed unmount - nie logujemy jako błąd
-          if (!(error instanceof Error && error.message.includes("nie jest w statusie 'in_progress'"))) {
-            console.error("[WorkoutSessionAssistant.autoPause] Error saving progress during auto-transition:", error);
+          if (
+            !(
+              error instanceof Error &&
+              error.message.includes("nie jest w statusie 'in_progress'")
+            )
+          ) {
+            console.error(
+              "[WorkoutSessionAssistant.autoPause] Error saving progress:",
+              error,
+            );
           }
         }
       }
-      return; // Nie pauzuj podczas automatycznych przejść między ćwiczeniami
-    }
 
-    // Opcjonalnie zapisz postępy
-    if (saveProgress) {
+      // Zatrzymaj globalny timer przez API
+      const now = new Date().toISOString();
       try {
-        // Użyj aktualnego stanu formularza z ref
-        const currentFormData = formDataRef.current;
-        await saveExercise(currentFormData, false);
-      } catch (error) {
-        // Jeśli błąd 409 (sesja nie jest in_progress), to jest oczekiwane
-        // gdy trening został zakończony przed unmount - nie logujemy jako błąd
-        if (!(error instanceof Error && error.message.includes("nie jest w statusie 'in_progress'"))) {
-          console.error("[WorkoutSessionAssistant.autoPause] Error saving progress:", error);
-        }
-      }
-    }
-
-    // Zatrzymaj globalny timer przez API
-    const now = new Date().toISOString();
-    try {
-      const timerResponse = await fetch(
-        `/api/workout-sessions/${sessionId}/timer`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
+        const timerResponse = await fetch(
+          `/api/workout-sessions/${sessionId}/timer`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              last_timer_stopped_at: now,
+            }),
           },
-          body: JSON.stringify({
-            last_timer_stopped_at: now,
-          }),
-        }
-      );
+        );
 
-      if (timerResponse.ok) {
-        const timerResult = await timerResponse.json();
-        // Aktualizuj stan sesji z odpowiedzi API
-        if (timerResult.data) {
-          setSession((prev) => ({
-            ...prev,
-            active_duration_seconds: timerResult.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
-            last_timer_started_at: timerResult.data.last_timer_started_at ?? prev.last_timer_started_at,
-            last_timer_stopped_at: timerResult.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
-          }));
+        if (timerResponse.ok) {
+          const timerResult = await timerResponse.json();
+          // Aktualizuj stan sesji z odpowiedzi API
+          if (timerResult.data) {
+            setSession((prev) => ({
+              ...prev,
+              active_duration_seconds:
+                timerResult.data.active_duration_seconds ??
+                prev.active_duration_seconds ??
+                0,
+              last_timer_started_at:
+                timerResult.data.last_timer_started_at ??
+                prev.last_timer_started_at,
+              last_timer_stopped_at:
+                timerResult.data.last_timer_stopped_at ??
+                prev.last_timer_stopped_at,
+            }));
+          }
+          // Pauzuj timer ćwiczenia (ustaw isPaused na true)
+          setIsPaused(true);
         }
-        // Pauzuj timer ćwiczenia (ustaw isPaused na true)
-        setIsPaused(true);
+      } catch (error) {
+        console.error(
+          "[WorkoutSessionAssistant.autoPause] Error pausing timer:",
+          error,
+        );
       }
-    } catch (error) {
-      console.error("[WorkoutSessionAssistant.autoPause] Error pausing timer:", error);
-    }
-  }, [isPaused, saveExercise, sessionId, session.status]);
-  
+    },
+    [isPaused, saveExercise, sessionId, session.status],
+  );
+
   // Aktualizuj ref przy każdej zmianie autoPause
   useEffect(() => {
     autoPauseRef.current = autoPause;
@@ -713,28 +789,31 @@ export function WorkoutSessionAssistant({
     // Jeśli sesja nie jest w statusie 'in_progress', nie próbuj zatrzymywać timera
     // (sesja może być już zakończona, np. po zakończeniu ostatniego ćwiczenia)
     // Używamy ref, aby mieć aktualny status nawet gdy closure ma stary status
-    if (sessionStatusRef.current !== 'in_progress') {
+    if (sessionStatusRef.current !== "in_progress") {
       return;
     }
-    
+
     // Użyj ref do sprawdzenia aktualnego stanu bez zależności
     const lastTimerStartedAt = timerStateRef.current.lastTimerStartedAt;
     const lastTimerStoppedAt = timerStateRef.current.lastTimerStoppedAt;
-    
+
     // Zapisujemy czas jeśli timer był uruchomiony (lastTimerStartedAt istnieje)
     // i jeśli timer nie został jeszcze zatrzymany LUB został ponownie uruchomiony po ostatnim zatrzymaniu
     if (!lastTimerStartedAt) {
       return;
     }
-    
+
     // Sprawdź czy timer został już zatrzymany i czy został ponownie uruchomiony
-    const isTimerActive = !lastTimerStoppedAt || 
-      (lastTimerStoppedAt && new Date(lastTimerStartedAt).getTime() > new Date(lastTimerStoppedAt).getTime());
-    
+    const isTimerActive =
+      !lastTimerStoppedAt ||
+      (lastTimerStoppedAt &&
+        new Date(lastTimerStartedAt).getTime() >
+          new Date(lastTimerStoppedAt).getTime());
+
     if (!isTimerActive) {
       return;
     }
-    
+
     const now = new Date().toISOString();
     try {
       const response = await fetch(`/api/workout-sessions/${sessionId}/timer`, {
@@ -753,9 +832,14 @@ export function WorkoutSessionAssistant({
         if (result.data) {
           setSession((prev) => ({
             ...prev,
-            active_duration_seconds: result.data.active_duration_seconds ?? prev.active_duration_seconds ?? 0,
-            last_timer_started_at: result.data.last_timer_started_at ?? prev.last_timer_started_at,
-            last_timer_stopped_at: result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
+            active_duration_seconds:
+              result.data.active_duration_seconds ??
+              prev.active_duration_seconds ??
+              0,
+            last_timer_started_at:
+              result.data.last_timer_started_at ?? prev.last_timer_started_at,
+            last_timer_stopped_at:
+              result.data.last_timer_stopped_at ?? prev.last_timer_stopped_at,
           }));
         }
       } else if (response.status === 409) {
@@ -788,21 +872,21 @@ export function WorkoutSessionAssistant({
     if (!isMountedRef.current) {
       return;
     }
-    
+
     // Jeśli timer nie został jeszcze zainicjalizowany, nie wykonuj auto-pauzy
     if (!timerInitializedRef.current) {
       return;
     }
-    
+
     // Jeśli to pierwszy render, nie wykonuj auto-pauzy
     if (isFirstRenderRef.current) {
       return;
     }
-    
+
     // Sprawdź, czy jesteśmy na stronie aktywnej sesji
     const activePagePath = `/workout-sessions/${sessionId}/active`;
     const isOnActivePage = pathname === activePagePath;
-    
+
     // Sprawdź, czy pathname faktycznie się zmienił (aby uniknąć fałszywych logów)
     const pathnameChanged = previousPathnameRef.current !== pathname;
     const previousPathname = previousPathnameRef.current;
@@ -811,14 +895,24 @@ export function WorkoutSessionAssistant({
     // Jeśli nie jesteśmy na stronie aktywnej sesji i sesja nie jest w pauzie, pauzuj
     // Ważne: sprawdzamy czy pathname istnieje i czy nie jesteśmy na właściwej stronie
     // Dodatkowo sprawdzamy czy pathname faktycznie się zmienił (nie jest pusty lub undefined)
-    if (!isOnActivePage && !isPaused && pathname && pathname !== activePagePath && pathname.trim() !== "") {
+    if (
+      !isOnActivePage &&
+      !isPaused &&
+      pathname &&
+      pathname !== activePagePath &&
+      pathname.trim() !== ""
+    ) {
       // Sprawdź, czy auto-pauza nie została już wykonana dla tej ścieżki
       if (autoPauseExecutedRef.current !== pathname) {
         autoPauseExecutedRef.current = pathname;
         // Zapisz postępy przed pauzą (gdy użytkownik przechodzi na inną stronę)
         void autoPause(true);
       }
-    } else if (isOnActivePage && pathnameChanged && previousPathname !== activePagePath) {
+    } else if (
+      isOnActivePage &&
+      pathnameChanged &&
+      previousPathname !== activePagePath
+    ) {
       // Resetuj ref, gdy faktycznie wracamy na stronę aktywnej sesji (tylko gdy pathname się zmienił z innej strony)
       autoPauseExecutedRef.current = null;
     }
@@ -836,7 +930,6 @@ export function WorkoutSessionAssistant({
         void autoPauseRef.current(true);
       }
     };
-     
   }, []); // Pusta tablica - cleanup tylko przy unmount
 
   // Funkcja do zapisu postępów przy zamknięciu przeglądarki/karty
@@ -851,7 +944,7 @@ export function WorkoutSessionAssistant({
     try {
       const command = formDataToAutosaveCommand(currentFormData, false);
       const url = `/api/workout-sessions/${sessionId}/exercises/${currentExerciseOrder}`;
-      
+
       // Używamy fetch z keepalive zamiast sendBeacon, bo endpoint używa PATCH
       fetch(url, {
         method: "PATCH",
@@ -911,25 +1004,25 @@ export function WorkoutSessionAssistant({
       if (!isMountedRef.current) {
         return;
       }
-      
+
       // Aktualizuj czas ostatniej widoczności
       if (document.visibilityState === "visible") {
         lastVisibleTimeRef.current = Date.now();
         return;
       }
-      
+
       // Gdy strona staje się niewidoczna (wygaszenie ekranu, przełączenie aplikacji, itp.)
       if (document.visibilityState === "hidden" && !isPaused) {
         // Sprawdź, czy strona była widoczna przez co najmniej 1 sekundę przed ukryciem
         // To zapobiega fałszywym alarmom podczas interakcji użytkownika (np. kliknięcie OK)
         const timeSinceLastVisible = Date.now() - lastVisibleTimeRef.current;
         const MIN_VISIBLE_TIME = 1000; // 1 sekunda
-        
+
         if (timeSinceLastVisible < MIN_VISIBLE_TIME) {
           // Zbyt szybka zmiana - prawdopodobnie fałszywy alarm, ignoruj
           return;
         }
-        
+
         // Zapisz postępy i pauzuj sesję
         // Dla visibilitychange używamy normalnego async zapisu (jest czas)
         void autoPause(true);
@@ -938,7 +1031,7 @@ export function WorkoutSessionAssistant({
 
     // visibilitychange - działa na mobile gdy ekran się wygasi lub przełączenie aplikacji
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    
+
     // Inicjalizuj czas ostatniej widoczności
     if (document.visibilityState === "visible") {
       lastVisibleTimeRef.current = Date.now();
@@ -956,10 +1049,12 @@ export function WorkoutSessionAssistant({
   const updateSetInForm = useCallback(
     (setNumber: number, updates: Partial<SetLogFormData>) => {
       setFormData((prev) => {
-        const setIndex = prev.sets.findIndex((set) => set.set_number === setNumber);
-        
+        const setIndex = prev.sets.findIndex(
+          (set) => set.set_number === setNumber,
+        );
+
         let newFormData: ExerciseFormData;
-        
+
         if (setIndex === -1) {
           // Jeśli seria nie istnieje, dodaj ją
           const newSet: SetLogFormData = {
@@ -970,7 +1065,7 @@ export function WorkoutSessionAssistant({
             ...updates,
           };
           const newSets = [...prev.sets, newSet].sort(
-            (a, b) => a.set_number - b.set_number
+            (a, b) => a.set_number - b.set_number,
           );
           newFormData = { ...prev, sets: newSets };
         } else {
@@ -979,12 +1074,16 @@ export function WorkoutSessionAssistant({
           newSets[setIndex] = { ...newSets[setIndex], ...updates };
           newFormData = { ...prev, sets: newSets };
         }
-        
+
         // Ref jest aktualizowany w setFormData, więc nie musimy go tutaj aktualizować
         return newFormData;
       });
     },
-    [currentExercise.planned_reps, currentExercise.planned_duration_seconds, setFormData]
+    [
+      currentExercise.planned_reps,
+      currentExercise.planned_duration_seconds,
+      setFormData,
+    ],
   );
 
   // Callback: zakończenie serii (odliczanie czasu lub powtórzenia)
@@ -1000,7 +1099,11 @@ export function WorkoutSessionAssistant({
       });
     }
     // Nie zapisujemy po każdej serii - tylko po zakończeniu wszystkich serii ćwiczenia
-  }, [currentSetNumber, currentExercise.planned_duration_seconds, updateSetInForm]);
+  }, [
+    currentSetNumber,
+    currentExercise.planned_duration_seconds,
+    updateSetInForm,
+  ]);
 
   // Callback: zakończenie przerwy między seriami
   const handleRestBetweenComplete = useCallback(() => {
@@ -1021,7 +1124,7 @@ export function WorkoutSessionAssistant({
     // Oznacz, że jesteśmy w trakcie automatycznego przejścia do następnego ćwiczenia
     // To zapobiega pauzowaniu przez visibilitychange podczas przejścia
     markAutoTransition();
-    
+
     // Zapisz ćwiczenie i przejdź do następnego
     // handleNext zapisuje ćwiczenie i przechodzi do następnego ćwiczenia
     // Ref jest aktualizowany bezpośrednio w updateSetInForm, więc możemy wywołać handleNext natychmiast
@@ -1075,7 +1178,7 @@ export function WorkoutSessionAssistant({
       handleRestBetweenComplete,
       handleRestAfterSeriesComplete,
       handleRepsComplete,
-    ]
+    ],
   );
 
   if (!currentExercise) {

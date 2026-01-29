@@ -8,7 +8,7 @@ import type {
 } from "@/types";
 
 export const EXERCISE_MAX_LIMIT = 50;
-export const EXERCISE_DEFAULT_LIMIT = 20;
+export const EXERCISE_DEFAULT_LIMIT = 50;
 
 export const exercisePartValues = [
   "Legs",
@@ -40,7 +40,12 @@ const repsSchema = z.number().int().positive().nullable().optional();
 const durationSchema = z.number().int().positive().nullable().optional();
 const restSchema = z.number().int().nonnegative().nullable().optional();
 const seriesSchema = z.number().int().positive();
-const estimatedSetTimeSchema = z.number().int().positive().nullable().optional();
+const estimatedSetTimeSchema = z
+  .number()
+  .int()
+  .positive()
+  .nullable()
+  .optional();
 
 const METRIC_ERROR = "Podaj dokładnie jedno z pól: reps lub duration_seconds.";
 const REST_ERROR =
@@ -70,9 +75,9 @@ export const exerciseCreateSchema = exerciseBaseSchema.superRefine(
       ctx.addIssue({
         code: "custom",
         message,
-      })
+      }),
     );
-  }
+  },
 );
 
 export const exerciseUpdateSchema = exerciseBaseSchema
@@ -136,10 +141,7 @@ export function normalizeTitle(value: string) {
  * Używaj przy wyszukiwaniu po tytule (by-title, match_by_name, unikalność).
  */
 export function normalizeTitleForDbLookup(value: string) {
-  return value
-    .trim()
-    .replaceAll(/\s+/g, " ")
-    .toLowerCase();
+  return value.trim().replaceAll(/\s+/g, " ").toLowerCase();
 }
 
 export function validateExerciseBusinessRules(
@@ -152,7 +154,7 @@ export function validateExerciseBusinessRules(
       | "rest_after_series_seconds"
       | "series"
     >
-  >
+  >,
 ) {
   return collectBusinessRuleErrors(input);
 }
@@ -167,7 +169,7 @@ function collectBusinessRuleErrors(
       | "rest_after_series_seconds"
       | "series"
     >
-  >
+  >,
 ) {
   const errors: string[] = [];
   const hasReps = input.reps !== undefined && input.reps !== null;
@@ -214,7 +216,7 @@ function collectBusinessRuleErrors(
 
 function hasOwnValue<T extends object, K extends keyof T>(
   obj: T,
-  key: K
+  key: K,
 ): obj is T & Required<Pick<T, K>> {
   return Object.hasOwn(obj, key);
 }

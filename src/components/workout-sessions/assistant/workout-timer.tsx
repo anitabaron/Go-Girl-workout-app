@@ -33,13 +33,19 @@ export function WorkoutTimer({
   onTimerStop,
 }: Readonly<WorkoutTimerProps>) {
   // Oblicz bazowy czas (skumulowany czas aktywności z bazy)
-  const baseSeconds = useMemo(() => activeDurationSeconds || 0, [activeDurationSeconds]);
+  const baseSeconds = useMemo(
+    () => activeDurationSeconds || 0,
+    [activeDurationSeconds],
+  );
 
   // Sprawdź, czy timer jest zatrzymany
   const isTimerStopped = useMemo(() => {
-    return lastTimerStoppedAt !== null && 
-      (lastTimerStartedAt === null || 
-       new Date(lastTimerStoppedAt).getTime() > new Date(lastTimerStartedAt).getTime());
+    return (
+      lastTimerStoppedAt !== null &&
+      (lastTimerStartedAt === null ||
+        new Date(lastTimerStoppedAt).getTime() >
+          new Date(lastTimerStartedAt).getTime())
+    );
   }, [lastTimerStoppedAt, lastTimerStartedAt]);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(baseSeconds);
@@ -102,13 +108,7 @@ export function WorkoutTimer({
   // Jeśli jest odliczanie przerwy, użyj CountdownCircleTimer
   if (restSeconds !== undefined && restSeconds > 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-6">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
-          Seria {currentSetNumber}
-          </h3>
-        </div>
-
+      <div className="flex flex-col items-center justify-center gap-4 pb-6">
         <CountdownCircleTimer
           isPlaying={!isPaused}
           duration={restSeconds}
@@ -129,7 +129,11 @@ export function WorkoutTimer({
             </div>
           )}
         </CountdownCircleTimer>
-
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
+            Seria {currentSetNumber}
+          </h3>
+        </div>
         <div className="text-center">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Status: {isPaused ? "Pauza" : "W trakcie"}
@@ -147,7 +151,7 @@ export function WorkoutTimer({
     <div className="flex flex-col items-center justify-center gap-4 pt-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">
-        Seria {currentSetNumber}
+          Seria {currentSetNumber}
         </h3>
       </div>
 
@@ -160,19 +164,18 @@ export function WorkoutTimer({
         }`}
       >
         <div className="text-sm text-zinc-600 dark:text-zinc-400">
-      Łączny czas treningu
-    </div>
+          Łączny czas treningu
+        </div>
         <div className="text-xl font-semibold text-zinc-700 dark:text-zinc-300">
           {formatTime(elapsedSeconds)}
         </div>
-        
-      <div className="text-center">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
-        </p>
-      </div>
-      </div>
 
+        <div className="text-center">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
