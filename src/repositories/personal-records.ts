@@ -44,7 +44,7 @@ export async function listPersonalRecords(
   params: Required<
     Pick<PersonalRecordQueryParams, "sort" | "order" | "limit">
   > &
-    PersonalRecordQueryParams
+    PersonalRecordQueryParams,
 ): Promise<{
   data?: PersonalRecordWithExerciseDTO[];
   nextCursor?: string | null;
@@ -52,7 +52,7 @@ export async function listPersonalRecords(
 }> {
   const limit = Math.min(
     params.limit ?? PERSONAL_RECORD_DEFAULT_LIMIT,
-    PERSONAL_RECORD_MAX_LIMIT
+    PERSONAL_RECORD_MAX_LIMIT,
   );
   const sort = params.sort ?? "achieved_at";
   const order = params.order ?? "desc";
@@ -65,6 +65,7 @@ export async function listPersonalRecords(
       exercise_id,
       metric_type,
       value,
+      series_values,
       achieved_at,
       achieved_in_session_id,
       achieved_in_set_number,
@@ -76,7 +77,7 @@ export async function listPersonalRecords(
         type,
         part
       )
-    `
+    `,
     )
     .eq("user_id", userId);
 
@@ -143,7 +144,7 @@ export async function listPersonalRecords(
 export async function listPersonalRecordsByExercise(
   client: DbClient,
   userId: string,
-  exerciseId: string
+  exerciseId: string,
 ): Promise<{
   data?: PersonalRecordWithExerciseDTO[];
   error?: PostgrestError | null;
@@ -156,6 +157,7 @@ export async function listPersonalRecordsByExercise(
       exercise_id,
       metric_type,
       value,
+      series_values,
       achieved_at,
       achieved_in_session_id,
       achieved_in_set_number,
@@ -167,7 +169,7 @@ export async function listPersonalRecordsByExercise(
         type,
         part
       )
-    `
+    `,
     )
     .eq("user_id", userId)
     .eq("exercise_id", exerciseId)
@@ -191,7 +193,7 @@ export async function listPersonalRecordsByExercise(
 export async function deletePersonalRecordsByExercise(
   client: DbClient,
   userId: string,
-  exerciseId: string
+  exerciseId: string,
 ): Promise<{
   error?: PostgrestError | null;
 }> {
@@ -208,7 +210,7 @@ export async function deletePersonalRecordsByExercise(
  * Mapuje wiersz z bazy danych (z JOIN do exercises) na PersonalRecordWithExerciseDTO.
  */
 export function mapToDTO(
-  row: PersonalRecordWithExerciseRow
+  row: PersonalRecordWithExerciseRow,
 ): PersonalRecordWithExerciseDTO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user_id, exercises, ...rest } = row;
@@ -232,13 +234,13 @@ function applyCursorFilter(
   query: any,
   sort: SortField,
   order: SortOrder,
-  cursor: CursorPayload
+  cursor: CursorPayload,
 ) {
   const direction = order === "asc" ? "gt" : "lt";
   const encodedValue = encodeURIComponent(String(cursor.value));
   const encodedId = encodeURIComponent(cursor.id);
 
   return query.or(
-    `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`
+    `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`,
   );
 }

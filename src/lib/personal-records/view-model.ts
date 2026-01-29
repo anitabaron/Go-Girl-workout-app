@@ -2,12 +2,18 @@ import type { PersonalRecordWithExerciseDTO, PRMetricType } from "@/types";
 import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 
 /**
+ * Wartości per seria w formacie { S1: 10, S2: 10, S3: 10 }
+ */
+export type SeriesValues = Record<string, number>;
+
+/**
  * ViewModel dla pojedynczej metryki rekordu osobistego.
  */
 export type PersonalRecordMetricVM = {
   metricType: PRMetricType;
   label: string; // Etykieta metryki (przetłumaczona: "Maks. powtórzenia", "Maks. czas", "Maks. ciężar")
   valueDisplay: string; // Wartość sformatowana do wyświetlenia (np. "15", "02:30", "50 kg")
+  seriesValues: SeriesValues | null; // Wartości per seria (S1, S2, S3...) lub null
   achievedAt: string; // Data osiągnięcia (sformatowana w formacie polskim)
   sessionId: string | null; // UUID sesji lub null
   isNew: boolean; // Czy rekord jest nowy (osiągnięty w ostatniej sesji)
@@ -33,6 +39,7 @@ export type PersonalRecordMetricViewModel = {
   metricType: PRMetricType;
   label: string; // Etykieta metryki (przetłumaczona: "Maks. powtórzenia", "Maks. czas", "Maks. ciężar")
   valueDisplay: string; // Wartość sformatowana do wyświetlenia (np. "15", "02:30", "50 kg")
+  seriesValues: SeriesValues | null; // Wartości per seria (S1, S2, S3...) lub null
   achievedAt: string; // Data osiągnięcia (sformatowana w formacie polskim)
   sessionId: string | null; // UUID sesji lub null
   isNew: boolean; // Czy rekord jest nowy (osiągnięty w ostatniej sesji) - opcjonalnie
@@ -128,6 +135,7 @@ export function mapPersonalRecordsToViewModel(
       metricType: record.metric_type,
       label: metricTypeLabels[record.metric_type],
       valueDisplay: formatMetricValue(record.metric_type, record.value),
+      seriesValues: record.series_values ?? null,
       achievedAt: formatAchievedDate(record.achieved_at),
       sessionId: record.achieved_in_session_id,
       isNew: false, // TODO: Implementacja logiki wykrywania nowych rekordów (osiągniętych w ostatniej sesji)
@@ -179,6 +187,7 @@ export function mapExercisePersonalRecordsToViewModel(
       metricType: record.metric_type,
       label: metricTypeLabels[record.metric_type],
       valueDisplay: formatMetricValue(record.metric_type, record.value),
+      seriesValues: record.series_values ?? null,
       achievedAt: formatAchievedDate(record.achieved_at),
       sessionId: record.achieved_in_session_id,
       isNew: false, // TODO: Implementacja logiki wykrywania nowych rekordów (osiągniętych w ostatniej sesji)
