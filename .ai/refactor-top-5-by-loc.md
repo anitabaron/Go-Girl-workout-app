@@ -126,15 +126,15 @@
 
 ## Podsumowanie priorytetów
 
-| Priorytet | Działanie                                                    | Pliki                                 | Efekt                     |
-| --------- | ------------------------------------------------------------ | ------------------------------------- | ------------------------- |
-| 1         | Wydzielenie `lib/cursor-utils.ts`                            | workout-sessions, workout-plans repos | DRY, ~30 LOC mniej        |
-| 2         | Wydzielenie `applyExerciseUpdates` + `mapExerciseUpdateToDb` | workout-plans service                 | SRP, testowalność         |
-| 3         | Wydzielenie `createSessionSnapshots` do lib                  | workout-sessions service              | Pure function, testy      |
-| 4         | Wydzielenie `prepareExercisesForInsert` (DRY create/import)  | workout-plans service                 | DRY                       |
-| 5         | Wydzielenie `mapPlanExerciseRowToDTO`                        | workout-plans repository              | SRP, testowalność         |
-| 6         | Server Actions dla planów                                    | use-workout-plan-form, app/actions    | Spójność z tech stackiem  |
-| 7         | `data-test-id` kebab-case                                    | Nowe/refaktoryzowane komponenty       | Zgodność E2E (Playwright) |
+| Priorytet | Działanie                                                    | Pliki                                 | Efekt                     | Status |
+| --------- | ------------------------------------------------------------ | ------------------------------------- | ------------------------- | ------ |
+| 1         | Wydzielenie `lib/cursor-utils.ts`                            | workout-sessions, workout-plans repos | DRY, ~30 LOC mniej        | ✅     |
+| 2         | Wydzielenie `applyExerciseUpdates` + `mapExerciseUpdateToDb` | workout-plans service                 | SRP, testowalność         | ✅     |
+| 3         | Wydzielenie `createSessionSnapshots` do lib                  | workout-sessions service              | Pure function, testy      |        |
+| 4         | Wydzielenie `prepareExercisesForInsert` (DRY create/import)  | workout-plans service                 | DRY                       |        |
+| 5         | Wydzielenie `mapPlanExerciseRowToDTO`                        | workout-plans repository              | SRP, testowalność         |        |
+| 6         | Server Actions dla planów                                    | use-workout-plan-form, app/actions    | Spójność z tech stackiem  |        |
+| 7         | `data-test-id` kebab-case                                    | Nowe/refaktoryzowane komponenty       | Zgodność E2E (Playwright) |        |
 
 ---
 

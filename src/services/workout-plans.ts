@@ -5,6 +5,7 @@ import type {
   WorkoutPlanDTO,
   WorkoutPlanExerciseInput,
   WorkoutPlanExerciseDTO,
+  WorkoutPlanExerciseUpdateOrCreate,
 } from "@/types";
 import {
   workoutPlanQuerySchema,
@@ -33,6 +34,7 @@ import {
 } from "@/repositories/workout-plans";
 import { findByNormalizedTitle } from "@/repositories/exercises";
 import { normalizeTitleForDbLookup } from "@/lib/validation/exercises";
+import { mapExerciseUpdateToDb } from "@/lib/workout-plans/map-exercise-update-to-db";
 import { createSnapshotIdFactory } from "@/lib/workout-plan-snapshot-id";
 
 export { ServiceError } from "@/lib/service-utils";
@@ -68,6 +70,195 @@ function calculateEstimatedTotalTime(
   }, 0);
 
   return total > 0 ? total : null;
+}
+
+/**
+ * Wykonuje aktualizacje ćwiczeń planu: temp order, update istniejących, insert nowych.
+ * Wydzielone dla SRP – updateWorkoutPlanService deleguje logikę ćwiczeń tutaj.
+ */
+async function applyExerciseUpdates(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  planId: string,
+  exercises: WorkoutPlanExerciseUpdateOrCreate[],
+  userId: string,
+): Promise<void> {
+  const { data: existingExercises, error: fetchExercisesError } =
+    await listWorkoutPlanExercises(supabase, planId);
+
+  if (fetchExercisesError) {
+    throw mapDbError(fetchExercisesError);
+  }
+
+  const existingExerciseIds = new Set(
+    (existingExercises ?? []).map((e) => e.id),
+  );
+
+  const exercisesToUpdate = exercises.filter((e) => e.id !== undefined);
+  const exercisesToCreate = exercises.filter((e) => e.id === undefined);
+
+  const hasSectionOrderChanges = exercisesToUpdate.some(
+    (e) => e.section_order !== undefined && e.id !== undefined,
+  );
+
+  if (hasSectionOrderChanges) {
+    const exercisesToTempUpdate: Array<{ id: string }> = [];
+
+    for (const exerciseUpdate of exercisesToUpdate) {
+      if (exerciseUpdate.section_order !== undefined && exerciseUpdate.id) {
+        exercisesToTempUpdate.push({ id: exerciseUpdate.id });
+      }
+    }
+
+    let tempOrder = 100000;
+    for (const update of exercisesToTempUpdate) {
+      const { error: tempUpdateError } = await updateWorkoutPlanExercise(
+        supabase,
+        planId,
+        update.id,
+        { section_order: tempOrder },
+      );
+
+      if (tempUpdateError) {
+        throw mapDbError(tempUpdateError);
+      }
+
+      tempOrder += 1;
+    }
+  }
+
+  for (const exerciseUpdate of exercisesToUpdate) {
+    if (!exerciseUpdate.id) {
+      continue;
+    }
+
+    if (!existingExerciseIds.has(exerciseUpdate.id)) {
+      throw new ServiceError(
+        "NOT_FOUND",
+        `Ćwiczenie o id ${exerciseUpdate.id} nie istnieje w tym planie treningowym.`,
+      );
+    }
+
+    if (exerciseUpdate.exercise_id) {
+      const { data: ownedExercise, error: exerciseError } =
+        await findExercisesByIds(supabase, userId, [
+          exerciseUpdate.exercise_id,
+        ]);
+
+      if (exerciseError) {
+        throw mapDbError(exerciseError);
+      }
+
+      if (!ownedExercise || ownedExercise.length === 0) {
+        throw new ServiceError(
+          "NOT_FOUND",
+          `Ćwiczenie o exercise_id ${exerciseUpdate.exercise_id} nie istnieje lub nie należy do użytkownika.`,
+        );
+      }
+    }
+
+    const updateData = mapExerciseUpdateToDb(
+      exerciseUpdate as WorkoutPlanExerciseUpdateOrCreate & { id: string },
+    );
+
+    if (Object.keys(updateData).length === 0) {
+      continue;
+    }
+
+    const { error: updateError } = await updateWorkoutPlanExercise(
+      supabase,
+      planId,
+      exerciseUpdate.id,
+      updateData,
+    );
+
+    if (updateError) {
+      throw mapDbError(updateError);
+    }
+  }
+
+  if (exercisesToCreate.length > 0) {
+    const exerciseIdsToVerify = exercisesToCreate
+      .map((e) => e.exercise_id)
+      .filter((id): id is string => id !== undefined && id !== null);
+
+    if (exerciseIdsToVerify.length > 0) {
+      const { data: ownedExercises, error: exerciseError } =
+        await findExercisesByIds(supabase, userId, exerciseIdsToVerify);
+
+      if (exerciseError) {
+        throw mapDbError(exerciseError);
+      }
+
+      const ownedExerciseIds = new Set((ownedExercises ?? []).map((e) => e.id));
+
+      for (const newExercise of exercisesToCreate) {
+        if (
+          newExercise.exercise_id &&
+          !ownedExerciseIds.has(newExercise.exercise_id)
+        ) {
+          throw new ServiceError(
+            "NOT_FOUND",
+            `Ćwiczenie o exercise_id ${newExercise.exercise_id} nie istnieje lub nie należy do użytkownika.`,
+          );
+        }
+      }
+    }
+
+    const getSnapshotId = createSnapshotIdFactory();
+
+    const exercisesToInsert: Array<
+      WorkoutPlanExerciseInput & {
+        exercise_title?: string | null;
+        exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+        exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+        exercise_details?: string | null;
+        snapshot_id?: string | null;
+      }
+    > = exercisesToCreate.map((exercise) => {
+      const snapshotId =
+        !exercise.exercise_id && exercise.exercise_title
+          ? getSnapshotId(
+              exercise.exercise_title,
+              exercise.exercise_type ?? null,
+              exercise.exercise_part ?? null,
+            )
+          : null;
+
+      const exerciseDetails = (
+        exercise as WorkoutPlanExerciseInput & {
+          exercise_details?: string | null;
+        }
+      ).exercise_details;
+
+      return {
+        exercise_id: exercise.exercise_id ?? null,
+        snapshot_id: snapshotId,
+        exercise_title: exercise.exercise_title ?? null,
+        exercise_type: exercise.exercise_type ?? null,
+        exercise_part: exercise.exercise_part ?? null,
+        exercise_details: exerciseDetails ?? null,
+        section_type: exercise.section_type!,
+        section_order: exercise.section_order!,
+        planned_sets: exercise.planned_sets ?? null,
+        planned_reps: exercise.planned_reps ?? null,
+        planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+        planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+        planned_rest_after_series_seconds:
+          exercise.planned_rest_after_series_seconds ?? null,
+        estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+      };
+    });
+
+    const { error: insertError } = await insertWorkoutPlanExercises(
+      supabase,
+      planId,
+      exercisesToInsert,
+    );
+
+    if (insertError) {
+      throw mapDbError(insertError);
+    }
+  }
 }
 
 /**
@@ -298,255 +489,13 @@ export async function updateWorkoutPlanService(
     );
   }
 
-  // Jeśli exercises podane, wykonaj częściowe aktualizacje ćwiczeń lub dodaj nowe
   if (patch.exercises !== undefined && patch.exercises.length > 0) {
-    // Pobierz istniejące ćwiczenia planu, aby zweryfikować czy id są poprawne
-    const { data: existingExercises, error: fetchExercisesError } =
-      await listWorkoutPlanExercises(supabase, id);
-
-    if (fetchExercisesError) {
-      throw mapDbError(fetchExercisesError);
-    }
-
-    const existingExerciseIds = new Set(
-      (existingExercises ?? []).map((e) => e.id),
+    await applyExerciseUpdates(
+      supabase,
+      id,
+      patch.exercises as WorkoutPlanExerciseUpdateOrCreate[],
+      userId,
     );
-
-    // Rozdziel ćwiczenia na istniejące (z id) i nowe (bez id)
-    const exercisesToUpdate = patch.exercises.filter((e) => e.id !== undefined);
-    const exercisesToCreate = patch.exercises.filter((e) => e.id === undefined);
-
-    // Sprawdź czy jakiekolwiek ćwiczenie do aktualizacji ma zmienione section_order
-    const hasSectionOrderChanges = exercisesToUpdate.some(
-      (e) => e.section_order !== undefined && e.id !== undefined,
-    );
-
-    // Jeśli są zmiany w section_order, najpierw ustaw wszystkie na wartości tymczasowe
-    // aby uniknąć duplikatów podczas aktualizacji
-    if (hasSectionOrderChanges) {
-      // Zbierz wszystkie ćwiczenia, które mają zmienione section_order
-      // i ustaw je na wartości tymczasowe (bardzo duże, aby nie kolidowały z prawidłowymi)
-      const exercisesToTempUpdate: Array<{ id: string }> = [];
-
-      for (const exerciseUpdate of exercisesToUpdate) {
-        if (exerciseUpdate.section_order !== undefined && exerciseUpdate.id) {
-          exercisesToTempUpdate.push({ id: exerciseUpdate.id });
-        }
-      }
-
-      // Ustaw wartości tymczasowe (bardzo duże, aby nie kolidowały z prawidłowymi wartościami)
-      // Używamy 100000 jako bazy, aby być pewnym, że nie koliduje z żadną możliwą pozycją
-      let tempOrder = 100000;
-      for (const update of exercisesToTempUpdate) {
-        const { error: tempUpdateError } = await updateWorkoutPlanExercise(
-          supabase,
-          id,
-          update.id,
-          { section_order: tempOrder },
-        );
-
-        if (tempUpdateError) {
-          throw mapDbError(tempUpdateError);
-        }
-
-        tempOrder += 1;
-      }
-    }
-
-    // Aktualizuj istniejące ćwiczenia
-    for (const exerciseUpdate of exercisesToUpdate) {
-      if (!exerciseUpdate.id) {
-        continue; // To nie powinno się zdarzyć, ale dla bezpieczeństwa
-      }
-
-      // Sprawdź czy ćwiczenie istnieje w planie
-      if (!existingExerciseIds.has(exerciseUpdate.id)) {
-        throw new ServiceError(
-          "NOT_FOUND",
-          `Ćwiczenie o id ${exerciseUpdate.id} nie istnieje w tym planie treningowym.`,
-        );
-      }
-
-      // Jeśli exercise_id jest podane, zweryfikuj czy należy do użytkownika
-      if (exerciseUpdate.exercise_id) {
-        const { data: ownedExercise, error: exerciseError } =
-          await findExercisesByIds(supabase, userId, [
-            exerciseUpdate.exercise_id,
-          ]);
-
-        if (exerciseError) {
-          throw mapDbError(exerciseError);
-        }
-
-        if (!ownedExercise || ownedExercise.length === 0) {
-          throw new ServiceError(
-            "NOT_FOUND",
-            `Ćwiczenie o exercise_id ${exerciseUpdate.exercise_id} nie istnieje lub nie należy do użytkownika.`,
-          );
-        }
-      }
-
-      // Przygotuj dane do aktualizacji (tylko podane pola)
-      const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] & {
-        planned_rest_after_series_seconds?: number | null;
-        estimated_set_time_seconds?: number | null;
-        exercise_title?: string | null;
-        exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
-        exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
-      } = {};
-
-      if (exerciseUpdate.exercise_id !== undefined) {
-        updateData.exercise_id = exerciseUpdate.exercise_id ?? null;
-      }
-      // Obsługa czyszczenia pól snapshot
-      if (exerciseUpdate.exercise_title !== undefined) {
-        updateData.exercise_title = exerciseUpdate.exercise_title ?? null;
-      }
-      if (exerciseUpdate.exercise_type !== undefined) {
-        updateData.exercise_type = exerciseUpdate.exercise_type as
-          | Database["public"]["Enums"]["exercise_type"]
-          | null;
-      }
-      if (exerciseUpdate.exercise_part !== undefined) {
-        updateData.exercise_part = exerciseUpdate.exercise_part as
-          | Database["public"]["Enums"]["exercise_part"]
-          | null;
-      }
-      if (exerciseUpdate.section_type !== undefined) {
-        updateData.section_type =
-          exerciseUpdate.section_type as Database["public"]["Enums"]["exercise_type"];
-      }
-      if (exerciseUpdate.section_order !== undefined) {
-        updateData.section_order = exerciseUpdate.section_order;
-      }
-      if (exerciseUpdate.planned_sets !== undefined) {
-        updateData.planned_sets = exerciseUpdate.planned_sets ?? null;
-      }
-      if (exerciseUpdate.planned_reps !== undefined) {
-        updateData.planned_reps = exerciseUpdate.planned_reps ?? null;
-      }
-      if (exerciseUpdate.planned_duration_seconds !== undefined) {
-        updateData.planned_duration_seconds =
-          exerciseUpdate.planned_duration_seconds ?? null;
-      }
-      if (exerciseUpdate.planned_rest_seconds !== undefined) {
-        updateData.planned_rest_seconds =
-          exerciseUpdate.planned_rest_seconds ?? null;
-      }
-      if (exerciseUpdate.planned_rest_after_series_seconds !== undefined) {
-        updateData.planned_rest_after_series_seconds =
-          exerciseUpdate.planned_rest_after_series_seconds ?? null;
-      }
-      if (exerciseUpdate.estimated_set_time_seconds !== undefined) {
-        updateData.estimated_set_time_seconds =
-          exerciseUpdate.estimated_set_time_seconds ?? null;
-      }
-
-      // Aktualizuj ćwiczenie
-      const { error: updateError } = await updateWorkoutPlanExercise(
-        supabase,
-        id,
-        exerciseUpdate.id,
-        updateData,
-      );
-
-      if (updateError) {
-        throw mapDbError(updateError);
-      }
-    }
-
-    // Dodaj nowe ćwiczenia
-    if (exercisesToCreate.length > 0) {
-      // Zweryfikuj czy wszystkie exercise_id należą do użytkownika (tylko dla ćwiczeń z exercise_id)
-      const exerciseIdsToVerify = exercisesToCreate
-        .map((e) => e.exercise_id)
-        .filter((id): id is string => id !== undefined && id !== null);
-
-      if (exerciseIdsToVerify.length > 0) {
-        const { data: ownedExercises, error: exerciseError } =
-          await findExercisesByIds(supabase, userId, exerciseIdsToVerify);
-
-        if (exerciseError) {
-          throw mapDbError(exerciseError);
-        }
-
-        const ownedExerciseIds = new Set(
-          (ownedExercises ?? []).map((e) => e.id),
-        );
-
-        for (const newExercise of exercisesToCreate) {
-          // Sprawdź tylko ćwiczenia z exercise_id (nie snapshoty)
-          if (
-            newExercise.exercise_id &&
-            !ownedExerciseIds.has(newExercise.exercise_id)
-          ) {
-            throw new ServiceError(
-              "NOT_FOUND",
-              `Ćwiczenie o exercise_id ${newExercise.exercise_id} nie istnieje lub nie należy do użytkownika.`,
-            );
-          }
-        }
-      }
-
-      const getSnapshotId = createSnapshotIdFactory();
-
-      // Przygotuj dane do wstawienia
-      const exercisesToInsert: Array<
-        WorkoutPlanExerciseInput & {
-          exercise_title?: string | null;
-          exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
-          exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
-          exercise_details?: string | null;
-          snapshot_id?: string | null;
-        }
-      > = exercisesToCreate.map((exercise) => {
-        // Jeśli to snapshot (brak exercise_id), generuj/przypisz snapshot_id
-        const snapshotId =
-          !exercise.exercise_id && exercise.exercise_title
-            ? getSnapshotId(
-                exercise.exercise_title,
-                exercise.exercise_type ?? null,
-                exercise.exercise_part ?? null,
-              )
-            : null;
-
-        const exerciseDetails = (
-          exercise as WorkoutPlanExerciseInput & {
-            exercise_details?: string | null;
-          }
-        ).exercise_details;
-
-        return {
-          exercise_id: exercise.exercise_id ?? null,
-          snapshot_id: snapshotId,
-          exercise_title: exercise.exercise_title ?? null,
-          exercise_type: exercise.exercise_type ?? null,
-          exercise_part: exercise.exercise_part ?? null,
-          exercise_details: exerciseDetails ?? null,
-          section_type: exercise.section_type!,
-          section_order: exercise.section_order!,
-          planned_sets: exercise.planned_sets ?? null,
-          planned_reps: exercise.planned_reps ?? null,
-          planned_duration_seconds: exercise.planned_duration_seconds ?? null,
-          planned_rest_seconds: exercise.planned_rest_seconds ?? null,
-          planned_rest_after_series_seconds:
-            exercise.planned_rest_after_series_seconds ?? null,
-          estimated_set_time_seconds:
-            exercise.estimated_set_time_seconds ?? null,
-        };
-      });
-
-      // Wstaw nowe ćwiczenia
-      const { error: insertError } = await insertWorkoutPlanExercises(
-        supabase,
-        id,
-        exercisesToInsert,
-      );
-
-      if (insertError) {
-        throw mapDbError(insertError);
-      }
-    }
   }
 
   // Aktualizuj metadane planu (jeśli podane)

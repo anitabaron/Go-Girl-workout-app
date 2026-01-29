@@ -3,6 +3,7 @@ import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/db/database.types";
 import type { SessionListQueryParams, SessionSummaryDTO } from "@/types";
 import { mapToSummaryDTO } from "@/lib/workout-sessions/mappers";
+import { applyCursorFilter } from "@/lib/cursor-utils";
 import {
   SESSION_DEFAULT_LIMIT,
   SESSION_MAX_LIMIT,
@@ -25,13 +26,6 @@ type SortOrder = (typeof sessionOrderValues)[number];
 
 const sessionSelectColumns =
   "id,workout_plan_id,status,plan_name_at_time,started_at,completed_at,current_position,user_id,last_action_at,active_duration_seconds,last_timer_started_at,last_timer_stopped_at";
-
-type CursorPayload = {
-  sort: SortField;
-  order: SortOrder;
-  value: string | number;
-  id: string;
-};
 
 /**
  * Znajduje sesję treningową ze statusem 'in_progress' dla użytkownika.
@@ -511,25 +505,6 @@ export {
   mapToDetailDTO,
   mapToSummaryDTO,
 } from "@/lib/workout-sessions/mappers";
-
-/**
- * Zastosowuje filtr kursora do zapytania.
- */
-function applyCursorFilter(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  query: any,
-  sort: SortField,
-  order: SortOrder,
-  cursor: CursorPayload,
-) {
-  const direction = order === "asc" ? "gt" : "lt";
-  const encodedValue = encodeURIComponent(String(cursor.value));
-  const encodedId = encodeURIComponent(cursor.id);
-
-  return query.or(
-    `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`,
-  );
-}
 
 /**
  * Znajduje ćwiczenie sesji treningowej po session_id i order.
