@@ -147,26 +147,18 @@ export function useAutoPause(
       ];
 
     if (currentFormData && currentExercise) {
-      try {
-        const command = formDataToAutosaveCommand(currentFormData, false);
-        patchWorkoutSessionExerciseKeepalive(
-          sessionId,
-          currentExercise.exercise_order,
-          command,
-        ).catch(() => {});
-      } catch {
-        // Ignoruj błędy
-      }
+      const command = formDataToAutosaveCommand(currentFormData, false);
+      patchWorkoutSessionExerciseKeepalive(
+        sessionId,
+        currentExercise.exercise_order,
+        command,
+      ).catch(() => {});
     }
 
     const now = new Date().toISOString();
-    try {
-      patchWorkoutSessionTimerKeepalive(sessionId, {
-        last_timer_stopped_at: now,
-      }).catch(() => {});
-    } catch {
-      // Ignoruj błędy
-    }
+    patchWorkoutSessionTimerKeepalive(sessionId, {
+      last_timer_stopped_at: now,
+    }).catch(() => {});
   }, [sessionId, session?.exercises, formDataRef]);
 
   useEffect(() => {

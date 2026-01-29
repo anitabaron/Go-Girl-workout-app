@@ -24,7 +24,7 @@ export function FormField({
   children,
   "data-test-id": dataTestId,
   className,
-}: FormFieldProps) {
+}: Readonly<FormFieldProps>) {
   const errorId = error ? `${htmlFor}-error` : undefined;
 
   return (

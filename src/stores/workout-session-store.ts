@@ -47,12 +47,14 @@ export const useWorkoutSessionStore = create<WorkoutSessionStore>((set) => ({
 
   setSession: (session) =>
     set((state) => {
-      const newSession =
-        typeof session === "function" && state.session
-          ? session(state.session)
-          : typeof session === "function"
-            ? state.session
-            : session;
+      let newSession: SessionDetailDTO | null;
+      if (typeof session === "function" && state.session) {
+        newSession = session(state.session);
+      } else if (typeof session === "function") {
+        newSession = state.session;
+      } else {
+        newSession = session;
+      }
       return { session: newSession };
     }),
 

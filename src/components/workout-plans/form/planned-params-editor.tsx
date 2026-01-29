@@ -63,7 +63,7 @@ export function PlannedParamsEditor({
     const value = params[config.key];
     const error = errors[config.key];
     // Use kebab-case for data-test-id (matches E2E expectations: planned-sets, planned-reps, etc.)
-    const keyKebab = config.key.replace(/_/g, "-");
+    const keyKebab = config.key.replaceAll("_", "-");
     const dataTestId = testIdPrefix ? `${testIdPrefix}-${keyKebab}` : undefined;
 
     return (

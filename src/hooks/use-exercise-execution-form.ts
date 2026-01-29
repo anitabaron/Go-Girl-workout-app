@@ -131,9 +131,9 @@ export function useExerciseExecutionForm(
     const restSeconds = exercise.planned_rest_seconds ?? null;
 
     return {
-      count_sets: countSets > 0 ? countSets : 0,
-      sum_reps: sumReps > 0 ? sumReps : 0,
-      duration_seconds: maxDuration > 0 ? maxDuration : 0,
+      count_sets: Math.max(0, countSets),
+      sum_reps: Math.max(0, sumReps),
+      duration_seconds: Math.max(0, maxDuration),
       rest_seconds: restSeconds,
     };
   }, [formData.sets, formData.is_skipped, exercise.planned_rest_seconds]);

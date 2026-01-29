@@ -9,7 +9,89 @@ import {
   linkSnapshotToExercise,
 } from "@/lib/api/workout-plans";
 import { convertSnapshotToExercise } from "@/lib/exercises/snapshot-to-exercise";
-import type { WorkoutPlanExerciseDTO } from "@/types";
+import type { WorkoutPlanExerciseDTO, ExerciseCreateCommand } from "@/types";
+
+const ALREADY_EXISTS_MSG =
+  "Ćwiczenie już istnieje w bazie. Łączenie z istniejącym ćwiczeniem.";
+const NOT_FOUND_MSG =
+  "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć.";
+const INVALID_DATA_MSG = "Nieprawidłowe dane ćwiczenia.";
+
+async function getOrCreateExerciseId(
+  exerciseData: ExerciseCreateCommand,
+): Promise<string> {
+  const existing = await getExerciseByTitle(exerciseData.title);
+  if (existing?.id) {
+    toast.info(ALREADY_EXISTS_MSG);
+    return existing.id;
+  }
+
+  try {
+    const created = await createExercise(exerciseData);
+    return created.id;
+  } catch (createError) {
+    const errMsg = createError instanceof Error ? createError.message : "";
+    return handleCreateConflict(exerciseData.title, errMsg, createError);
+  }
+}
+
+function handleCreateConflict(
+  title: string,
+  errMsg: string,
+  createError: unknown,
+): Promise<string> {
+  const isConflict =
+    errMsg.includes("już istnieje") ||
+    errMsg.includes("CONFLICT") ||
+    errMsg.includes("409");
+  if (isConflict) {
+    return resolveExistingByTitle(title);
+  }
+
+  const isBadRequest =
+    errMsg.includes("Nieprawidłowe") || errMsg.includes("400");
+  if (isBadRequest) {
+    throw new Error(errMsg || INVALID_DATA_MSG);
+  }
+
+  throw createError;
+}
+
+async function resolveExistingByTitle(title: string): Promise<string> {
+  const found = await getExerciseByTitle(title);
+  if (found?.id) {
+    toast.info(ALREADY_EXISTS_MSG);
+    return found.id;
+  }
+  throw new Error(NOT_FOUND_MSG);
+}
+
+function buildExercisePatchPayload(
+  exercise: WorkoutPlanExerciseDTO,
+  exerciseId: string,
+) {
+  return {
+    id: exercise.id,
+    exercise_id: exerciseId,
+    exercise_title: null,
+    exercise_type: null,
+    exercise_part: null,
+    section_type: exercise.section_type,
+    section_order: exercise.section_order,
+    planned_sets: exercise.planned_sets ?? 1,
+    planned_reps: exercise.planned_reps ?? null,
+    planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+    planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+    planned_rest_after_series_seconds:
+      exercise.planned_rest_after_series_seconds ??
+      exercise.exercise_rest_after_series_seconds ??
+      null,
+    estimated_set_time_seconds:
+      exercise.estimated_set_time_seconds ??
+      exercise.exercise_estimated_set_time_seconds ??
+      null,
+  };
+}
 
 export function useAddSnapshotToLibrary(
   exercise: WorkoutPlanExerciseDTO,
@@ -24,80 +106,14 @@ export function useAddSnapshotToLibrary(
     setIsLoading(true);
     try {
       const exerciseData = convertSnapshotToExercise(exercise);
+      const exerciseId = await getOrCreateExerciseId(exerciseData);
 
-      let exerciseId: string;
-
-      const existing = await getExerciseByTitle(exerciseData.title);
-      if (existing?.id) {
-        exerciseId = existing.id;
-        toast.info(
-          "Ćwiczenie już istnieje w bazie. Łączenie z istniejącym ćwiczeniem.",
-        );
-      } else {
-        try {
-          const created = await createExercise(exerciseData);
-          exerciseId = created.id;
-        } catch (createError) {
-          const errMsg =
-            createError instanceof Error ? createError.message : "";
-          if (
-            errMsg.includes("już istnieje") ||
-            errMsg.includes("CONFLICT") ||
-            errMsg.includes("409")
-          ) {
-            const found = await getExerciseByTitle(exerciseData.title);
-            if (found?.id) {
-              exerciseId = found.id;
-              toast.info(
-                "Ćwiczenie już istnieje w bazie. Łączenie z istniejącym ćwiczeniem.",
-              );
-            } else {
-              toast.error(
-                "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć.",
-              );
-              return;
-            }
-          } else if (
-            errMsg.includes("Nieprawidłowe") ||
-            errMsg.includes("400")
-          ) {
-            toast.error(errMsg || "Nieprawidłowe dane ćwiczenia.");
-            return;
-          } else {
-            throw createError;
-          }
-        }
-      }
-
-      if (!exercise.snapshot_id) {
-        await patchWorkoutPlan(planId, {
-          exercises: [
-            {
-              id: exercise.id,
-              exercise_id: exerciseId,
-              exercise_title: null,
-              exercise_type: null,
-              exercise_part: null,
-              section_type: exercise.section_type,
-              section_order: exercise.section_order,
-              planned_sets: exercise.planned_sets ?? 1,
-              planned_reps: exercise.planned_reps ?? null,
-              planned_duration_seconds:
-                exercise.planned_duration_seconds ?? null,
-              planned_rest_seconds: exercise.planned_rest_seconds ?? null,
-              planned_rest_after_series_seconds:
-                exercise.planned_rest_after_series_seconds ??
-                exercise.exercise_rest_after_series_seconds ??
-                null,
-              estimated_set_time_seconds:
-                exercise.estimated_set_time_seconds ??
-                exercise.exercise_estimated_set_time_seconds ??
-                null,
-            },
-          ],
-        });
-      } else {
+      if (exercise.snapshot_id) {
         await linkSnapshotToExercise(exercise.snapshot_id, exerciseId);
+      } else {
+        await patchWorkoutPlan(planId, {
+          exercises: [buildExercisePatchPayload(exercise, exerciseId)],
+        });
       }
 
       toast.success("Ćwiczenie zostało połączone z bazą ćwiczeń.");

@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 
 /**
  * Tworzy fabrykę funkcji getSnapshotId dla unikalnych snapshotów planu treningowego.
@@ -17,14 +17,16 @@ export function createSnapshotIdFactory(): (
       return null;
     }
 
-    const typePart =
-      type && part
-        ? `|${type}|${part}`
-        : type
-          ? `|${type}|`
-          : part
-            ? `||${part}`
-            : "";
+    let typePart: string;
+    if (type && part) {
+      typePart = `|${type}|${part}`;
+    } else if (type) {
+      typePart = `|${type}|`;
+    } else if (part) {
+      typePart = `||${part}`;
+    } else {
+      typePart = "";
+    }
     const snapshotKey = `${title}${typePart}`;
 
     let snapshotId = snapshotIdMap.get(snapshotKey);

@@ -39,7 +39,7 @@ const requiredPositiveIntString = z.string().transform((val) => {
         code: "custom",
         message: "Serie są wymagane",
         path: [],
-      } as z.ZodIssue,
+      } as z.core.$ZodIssue,
     ]);
   }
   const num = Number(val);
@@ -49,7 +49,7 @@ const requiredPositiveIntString = z.string().transform((val) => {
         code: "custom",
         message: "Serie muszą być liczbą całkowitą większą od zera",
         path: [],
-      } as z.ZodIssue,
+      } as z.core.$ZodIssue,
     ]);
   }
   return num;
@@ -67,7 +67,7 @@ const levelStringSchema = z
         code: "custom",
         message: "Wybierz poprawny poziom",
         path: [],
-      } as z.ZodIssue,
+      } as z.core.$ZodIssue,
     ]);
   })
   .nullable()
@@ -113,7 +113,7 @@ export const exerciseFormSchema = z
               code: "custom",
               message: "Odpoczynek między seriami nie może być ujemny",
               path: [],
-            } as z.ZodIssue,
+            } as z.core.$ZodIssue,
           ]);
         }
         return num;
@@ -131,7 +131,7 @@ export const exerciseFormSchema = z
               code: "custom",
               message: "Odpoczynek po serii nie może być ujemny",
               path: [],
-            } as z.ZodIssue,
+            } as z.core.$ZodIssue,
           ]);
         }
         return num;
@@ -150,7 +150,7 @@ export const exerciseFormSchema = z
               message:
                 "Szacunkowy czas zestawu musi być liczbą całkowitą większą od zera",
               path: [],
-            } as z.ZodIssue,
+            } as z.core.$ZodIssue,
           ]);
         }
         return num;

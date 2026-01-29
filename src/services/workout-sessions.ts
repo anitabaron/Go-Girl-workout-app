@@ -539,16 +539,16 @@ function createSessionSnapshots(
 
     if (planExercise.exercise_id) {
       const exercise = exercisesMap.get(planExercise.exercise_id);
-      if (!exercise) {
+      if (exercise) {
+        exerciseTitle = exercise.title;
+        exerciseType = exercise.type;
+        exercisePart = exercise.part;
+      } else {
         // Fallback do snapshot z planu
         exerciseTitle = planExercise.exercise_title ?? "Nieznane ćwiczenie";
         exerciseType = planExercise.exercise_type ?? planExercise.section_type;
         exercisePart = planExercise.exercise_part ?? "Legs";
         exerciseId = null;
-      } else {
-        exerciseTitle = exercise.title;
-        exerciseType = exercise.type;
-        exercisePart = exercise.part;
       }
     } else {
       // Użyj snapshot z planu

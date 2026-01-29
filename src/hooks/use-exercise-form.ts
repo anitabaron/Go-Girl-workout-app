@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { ExerciseDTO, ExerciseCreateCommand } from "@/types";
+import type { ExerciseDTO } from "@/types";
 import {
   exerciseFormSchema,
   formValuesToCommand,
