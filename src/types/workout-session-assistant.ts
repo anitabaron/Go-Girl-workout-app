@@ -155,10 +155,30 @@ export function exerciseToFormData(
     sets = [];
   }
 
+  // Gdy mamy serie z planu, oblicz actual_* jeśli brak (spójność z PlannedVsActualComparison)
+  let actual_count_sets = exercise.actual_count_sets;
+  let actual_sum_reps = exercise.actual_sum_reps;
+  let actual_duration_seconds = exercise.actual_duration_seconds;
+
+  if (sets.length > 0 && actual_count_sets == null) {
+    actual_count_sets = sets.length;
+  }
+  if (sets.length > 0 && actual_sum_reps == null) {
+    const sum = sets.reduce((acc, s) => acc + (s.reps ?? 0), 0);
+    actual_sum_reps = sum > 0 ? sum : null;
+  }
+  if (sets.length > 0 && actual_duration_seconds == null) {
+    const durations = sets
+      .map((s) => s.duration_seconds)
+      .filter((d): d is number => d != null);
+    actual_duration_seconds =
+      durations.length > 0 ? Math.max(...durations) : null;
+  }
+
   return {
-    actual_count_sets: exercise.actual_count_sets,
-    actual_sum_reps: exercise.actual_sum_reps,
-    actual_duration_seconds: exercise.actual_duration_seconds,
+    actual_count_sets,
+    actual_sum_reps,
+    actual_duration_seconds,
     actual_rest_seconds: exercise.actual_rest_seconds,
     sets,
     is_skipped: exercise.is_skipped ?? false,
@@ -168,6 +188,9 @@ export function exerciseToFormData(
 /**
  * Konwertuje ExerciseFormData do SessionExerciseAutosaveCommand.
  * Uwaga: actual_rest_seconds nie jest obsługiwane przez API (nie jest potrzebne).
+ *
+ * Gdy actual_count_sets/actual_sum_reps/actual_duration_seconds są null, ale mamy serie,
+ * oblicza agregaty z serii - zapewnia zapis do DB i wyświetlanie w PlannedVsActualComparison.
  */
 export function formDataToAutosaveCommand(
   formData: ExerciseFormData,
@@ -180,6 +203,26 @@ export function formDataToAutosaveCommand(
   sets?: SessionExerciseSetCommand[];
   advance_cursor_to_next?: boolean;
 } {
+  let actual_count_sets = formData.actual_count_sets;
+  let actual_sum_reps = formData.actual_sum_reps;
+  let actual_duration_seconds = formData.actual_duration_seconds;
+
+  // Oblicz agregaty z serii gdy są null (np. przy zatwierdzeniu planowanych wartości przez Next)
+  if (formData.sets.length > 0) {
+    actual_count_sets ??= formData.sets.length;
+    if (actual_sum_reps == null) {
+      const sum = formData.sets.reduce((acc, set) => acc + (set.reps ?? 0), 0);
+      actual_sum_reps = sum > 0 ? sum : null;
+    }
+    if (actual_duration_seconds == null) {
+      const durations = formData.sets
+        .map((s) => s.duration_seconds)
+        .filter((d): d is number => d != null);
+      actual_duration_seconds =
+        durations.length > 0 ? Math.max(...durations) : null;
+    }
+  }
+
   const command: {
     actual_count_sets?: number | null;
     actual_sum_reps?: number | null;
@@ -188,10 +231,9 @@ export function formDataToAutosaveCommand(
     sets?: SessionExerciseSetCommand[];
     advance_cursor_to_next?: boolean;
   } = {
-    actual_count_sets: formData.actual_count_sets,
-    actual_sum_reps: formData.actual_sum_reps,
-    actual_duration_seconds: formData.actual_duration_seconds,
-    // actual_rest_seconds nie jest obsługiwane przez API
+    actual_count_sets,
+    actual_sum_reps,
+    actual_duration_seconds,
     is_skipped: formData.is_skipped,
     advance_cursor_to_next: advanceCursor,
   };
