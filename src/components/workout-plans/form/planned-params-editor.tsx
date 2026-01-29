@@ -1,8 +1,49 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { useId } from "react";
-import type { PlannedParamsEditorProps } from "@/types/workout-plan-form";
+import { PlannedParamField } from "./planned-param-field";
+import type {
+  PlannedParamsEditorProps,
+  PlannedParamsState,
+} from "@/types/workout-plan-form";
+
+type FieldConfig = {
+  key: keyof PlannedParamsState;
+  label: string;
+  min: number;
+  conditional?: (params: PlannedParamsState) => boolean;
+};
+
+const PLANNED_PARAMS_CONFIG: FieldConfig[] = [
+  { key: "planned_sets", label: "Serie", min: 1 },
+  {
+    key: "planned_reps",
+    label: "Powtórzenia",
+    min: 1,
+    conditional: (p) => p.planned_reps != null && p.planned_reps > 0,
+  },
+  {
+    key: "planned_duration_seconds",
+    label: "Czas (s)",
+    min: 1,
+    conditional: (p) =>
+      p.planned_duration_seconds != null && p.planned_duration_seconds > 0,
+  },
+  {
+    key: "planned_rest_seconds",
+    label: "Odpoczynek między seriami (s)",
+    min: 0,
+  },
+  {
+    key: "planned_rest_after_series_seconds",
+    label: "Odpoczynek po seriach (s)",
+    min: 0,
+  },
+  {
+    key: "estimated_set_time_seconds",
+    label: "Szacunkowy czas zestawu (s)",
+    min: 1,
+  },
+];
 
 export function PlannedParamsEditor({
   params,
@@ -11,250 +52,42 @@ export function PlannedParamsEditor({
   disabled,
   "data-test-id-prefix": testIdPrefix,
 }: Readonly<PlannedParamsEditorProps>) {
-  const setsId = useId();
-  const repsId = useId();
-  const durationId = useId();
-  const restId = useId();
-  const setsErrorId = useId();
-  const repsErrorId = useId();
-  const durationErrorId = useId();
-  const restErrorId = useId();
+  const firstRowFields = PLANNED_PARAMS_CONFIG.slice(0, 4);
+  const secondRowFields = PLANNED_PARAMS_CONFIG.slice(4);
 
-  const handleNumberChange = (
-    field: string,
-    value: string
-  ) => {
-    if (value === "" || value.trim() === "") {
-      onChange(field, null);
-      return;
+  const renderField = (config: FieldConfig) => {
+    if (config.conditional && !config.conditional(params)) {
+      return null;
     }
 
-    const num = Number(value);
-    if (!Number.isNaN(num)) {
-      onChange(field, num);
-    }
+    const value = params[config.key];
+    const error = errors[config.key];
+    // Use kebab-case for data-test-id (matches E2E expectations: planned-sets, planned-reps, etc.)
+    const keyKebab = config.key.replace(/_/g, "-");
+    const dataTestId = testIdPrefix ? `${testIdPrefix}-${keyKebab}` : undefined;
+
+    return (
+      <PlannedParamField
+        key={config.key}
+        id={config.key}
+        label={config.label}
+        value={value}
+        onChange={(v) => onChange(config.key, v)}
+        error={error}
+        disabled={disabled}
+        min={config.min}
+        data-test-id={dataTestId}
+      />
+    );
   };
-
-  const estimatedTimeId = useId();
-  const estimatedTimeErrorId = useId();
-  const restAfterSeriesId = useId();
-  const restAfterSeriesErrorId = useId();
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {/* Planned Sets */}
-        <div>
-          <label
-            htmlFor={setsId}
-            className="block text-xs font-medium text-muted-foreground"
-          >
-            Serie
-          </label>
-          <Input
-            id={setsId}
-            type="number"
-            min="1"
-            step="1"
-            value={params.planned_sets ?? ""}
-            onChange={(e) => handleNumberChange("planned_sets", e.target.value)}
-            disabled={disabled}
-            placeholder="—"
-            className="mt-1"
-            aria-invalid={errors.planned_sets ? "true" : "false"}
-            aria-describedby={errors.planned_sets ? setsErrorId : undefined}
-            data-test-id={testIdPrefix ? `${testIdPrefix}-planned-sets` : undefined}
-          />
-          {errors.planned_sets && (
-            <p
-              id={setsErrorId}
-              className="mt-1 text-xs text-destructive"
-              role="alert"
-            >
-              {errors.planned_sets}
-            </p>
-          )}
-        </div>
-
-        {/* Planned Reps */}
-        {params.planned_reps && (
-        <div>
-          <label
-            htmlFor={repsId}
-            className="block text-xs font-medium text-muted-foreground"
-          >
-            Powtórzenia
-          </label>
-          <Input
-            id={repsId}
-            type="number"
-            min="1"
-            step="1"
-            value={params.planned_reps ?? ""}
-            onChange={(e) => handleNumberChange("planned_reps", e.target.value)}
-            disabled={disabled}
-            placeholder="—"
-            className="mt-1"
-            aria-invalid={errors.planned_reps ? "true" : "false"}
-            aria-describedby={errors.planned_reps ? repsErrorId : undefined}
-          />
-          {errors.planned_reps && (
-            <p
-              id={repsErrorId}
-              className="mt-1 text-xs text-destructive"
-              role="alert"
-            >
-              {errors.planned_reps}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Planned Duration */}
-        {params.planned_duration_seconds && (
-        <div>
-          <label
-            htmlFor={durationId}
-            className="block text-xs font-medium text-muted-foreground"
-          >
-            Czas (s)
-          </label>
-          <Input
-            id={durationId}
-            type="number"
-            min="1"
-            step="1"
-            value={params.planned_duration_seconds ?? ""}
-            onChange={(e) =>
-              handleNumberChange("planned_duration_seconds", e.target.value)
-            }
-            disabled={disabled}
-            placeholder="—"
-            className="mt-1"
-            aria-invalid={errors.planned_duration_seconds ? "true" : "false"}
-            aria-describedby={
-              errors.planned_duration_seconds ? durationErrorId : undefined
-            }
-          />
-          {errors.planned_duration_seconds && (
-            <p
-              id={durationErrorId}
-              className="mt-1 text-xs text-destructive"
-              role="alert"
-            >
-              {errors.planned_duration_seconds}
-            </p>
-          )}
-        </div>
-        )}
-
-        {/* Planned Rest Between Sets */}
-        <div>
-          <label
-            htmlFor={restId}
-            className="block text-xs font-medium text-muted-foreground"
-          >
-            Odpoczynek między seriami (s)
-          </label>
-          <Input
-            id={restId}
-            type="number"
-            min="0"
-            step="1"
-            value={params.planned_rest_seconds ?? ""}
-            onChange={(e) =>
-              handleNumberChange("planned_rest_seconds", e.target.value)
-            }
-            disabled={disabled}
-            placeholder="—"
-            className="mt-1"
-            aria-invalid={errors.planned_rest_seconds ? "true" : "false"}
-            aria-describedby={errors.planned_rest_seconds ? restId : undefined}
-          />
-          {errors.planned_rest_seconds && (
-            <p
-              id={restErrorId}
-              className="mt-1 text-xs text-destructive"
-              role="alert"
-            >
-              {errors.planned_rest_seconds}
-            </p>
-          )}
-        </div>
+        {firstRowFields.map(renderField)}
       </div>
-
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
-        {/* Planned Rest After Series */}
-        <div>
-          <label
-            htmlFor={restAfterSeriesId}
-            className="block text-xs font-medium text-muted-foreground"
-          >
-            Odpoczynek po seriach (s)
-          </label>
-          <Input
-            id={restAfterSeriesId}
-            type="number"
-            min="0"
-            step="1"
-            value={params.planned_rest_after_series_seconds ?? ""}
-            onChange={(e) =>
-              handleNumberChange("planned_rest_after_series_seconds", e.target.value)
-            }
-            disabled={disabled}
-            placeholder="—"
-            className="mt-1"
-            aria-invalid={errors.planned_rest_after_series_seconds ? "true" : "false"}
-            aria-describedby={
-              errors.planned_rest_after_series_seconds ? restAfterSeriesErrorId : undefined
-            }
-          />
-          {errors.planned_rest_after_series_seconds && (
-            <p
-              id={restAfterSeriesErrorId}
-              className="mt-1 text-xs text-destructive"
-              role="alert"
-            >
-              {errors.planned_rest_after_series_seconds}
-            </p>
-          )}
-        </div>
-
-        {/* Estimated Set Time */}
-        <div>
-          <label
-            htmlFor={estimatedTimeId}
-            className="block text-xs font-medium text-muted-foreground"
-          >
-            Szacunkowy czas zestawu (s)
-          </label>
-          <Input
-            id={estimatedTimeId}
-            type="number"
-            min="1"
-            step="1"
-            value={params.estimated_set_time_seconds ?? ""}
-            onChange={(e) =>
-              handleNumberChange("estimated_set_time_seconds", e.target.value)
-            }
-            disabled={disabled}
-            placeholder="—"
-            className="mt-1"
-            aria-invalid={errors.estimated_set_time_seconds ? "true" : "false"}
-            aria-describedby={
-              errors.estimated_set_time_seconds ? estimatedTimeErrorId : undefined
-            }
-          />
-          {errors.estimated_set_time_seconds && (
-            <p
-              id={estimatedTimeErrorId}
-              className="mt-1 text-xs text-destructive"
-              role="alert"
-            >
-              {errors.estimated_set_time_seconds}
-            </p>
-          )}
-        </div>
+        {secondRowFields.map(renderField)}
       </div>
     </div>
   );

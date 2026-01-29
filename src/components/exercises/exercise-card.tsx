@@ -7,10 +7,8 @@ import type { ExerciseDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CardActionButtons } from "@/components/ui/card-action-buttons";
-import {
-  EXERCISE_PART_LABELS,
-  EXERCISE_TYPE_LABELS,
-} from "@/lib/constants";
+import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import { DeleteExerciseDialog } from "@/components/exercises/details/delete-exercise-dialog";
 
 type ExerciseCardProps = {
@@ -35,7 +33,10 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
 
   return (
     <>
-      <Card className="group relative h-full rounded-xl border border-border bg-secondary/30 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card gap-3" data-test-id={`exercise-card-${exercise.id}`}>
+      <Card
+        className="group relative h-full rounded-xl border border-border bg-secondary/30 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-destructive focus-within:ring-offset-2 dark:border-border dark:bg-card gap-3"
+        data-test-id={`exercise-card-${exercise.id}`}
+      >
         <CardActionButtons
           onEdit={handleEdit}
           onDelete={handleDeleteClick}
@@ -57,12 +58,7 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
           <CardContent>
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant="secondary"
-                  className="bg-secondary text-destructive hover:bg-primary"
-                >
-                  {EXERCISE_TYPE_LABELS[exercise.type]}
-                </Badge>
+                <ExerciseTypeBadge type={exercise.type} />
                 <Badge
                   variant="outline"
                   className="border-destructive text-destructive"
@@ -84,7 +80,9 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
                   <span className="ml-4">Powtórzenia: {exercise.reps}</span>
                 )}
                 {exercise.duration_seconds && (
-                  <span className="ml-4">Czas: {exercise.duration_seconds} sekund</span>
+                  <span className="ml-4">
+                    Czas: {exercise.duration_seconds} sekund
+                  </span>
                 )}
               </div>
               {exercise.details && (

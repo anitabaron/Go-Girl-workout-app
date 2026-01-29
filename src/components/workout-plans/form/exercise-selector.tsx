@@ -19,10 +19,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  EXERCISE_PART_LABELS,
-  EXERCISE_TYPE_LABELS,
-} from "@/lib/constants";
+import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
+import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 
 export function ExerciseSelector({
   selectedExerciseIds,
@@ -61,12 +59,14 @@ export function ExerciseSelector({
 
       const data = await response.json();
       const filteredExercises = data.items.filter(
-        (exercise: ExerciseDTO) => !excludedExerciseIds.includes(exercise.id)
+        (exercise: ExerciseDTO) => !excludedExerciseIds.includes(exercise.id),
       );
       setExercises(filteredExercises);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Wystąpił błąd podczas pobierania ćwiczeń"
+        err instanceof Error
+          ? err.message
+          : "Wystąpił błąd podczas pobierania ćwiczeń",
       );
     } finally {
       setIsLoading(false);
@@ -165,53 +165,54 @@ export function ExerciseSelector({
         }
 
         return (
-        <div className="max-h-[400px] overflow-y-auto">
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            {exercises.map((exercise) => {
-              const selected = isSelected(exercise.id);
-              return (
-                <Card
-                  key={exercise.id}
-                  className={`cursor-pointer transition-all hover:shadow-md ${
-                    selected ? "ring-2 ring-primary" : ""
-                  }`}
-                  onClick={() => handleExerciseClick(exercise)}
-                  data-test-id="exercise-selector-card"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="line-clamp-2 flex-1 text-base">
-                        {exercise.title}
-                      </CardTitle>
-                      <Checkbox
-                        checked={selected}
-                        onCheckedChange={() => handleExerciseClick(exercise)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-0.5 shrink-0"
-                        aria-label={`Wybierz ${exercise.title}`}
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {EXERCISE_TYPE_LABELS[exercise.type]}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {EXERCISE_PART_LABELS[exercise.part]}
-                      </Badge>
-                      {exercise.level && (
+          <div className="max-h-[400px] overflow-y-auto">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+              {exercises.map((exercise) => {
+                const selected = isSelected(exercise.id);
+                return (
+                  <Card
+                    key={exercise.id}
+                    className={`cursor-pointer transition-all hover:shadow-md ${
+                      selected ? "ring-2 ring-primary" : ""
+                    }`}
+                    onClick={() => handleExerciseClick(exercise)}
+                    data-test-id="exercise-selector-card"
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="line-clamp-2 flex-1 text-base">
+                          {exercise.title}
+                        </CardTitle>
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() => handleExerciseClick(exercise)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-0.5 shrink-0"
+                          aria-label={`Wybierz ${exercise.title}`}
+                        />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        <ExerciseTypeBadge
+                          type={exercise.type}
+                          className="text-xs"
+                        />
                         <Badge variant="outline" className="text-xs">
-                          {exercise.level}
+                          {EXERCISE_PART_LABELS[exercise.part]}
                         </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                        {exercise.level && (
+                          <Badge variant="outline" className="text-xs">
+                            {exercise.level}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
-        </div>
         );
       })()}
     </div>

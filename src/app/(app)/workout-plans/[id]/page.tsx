@@ -7,10 +7,8 @@ import { AddSnapshotExerciseButton } from "@/components/workout-plans/details/ad
 import { ExerciseLibraryBadge } from "@/components/workout-plans/details/exercise-library-badge";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
-import {
-  EXERCISE_PART_LABELS,
-  EXERCISE_TYPE_LABELS,
-} from "@/lib/constants";
+import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
+import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 import { formatDuration, formatTotalDuration } from "@/lib/utils/time-format";
 
 type WorkoutPlanDetailsPageProps = {
@@ -18,8 +16,6 @@ type WorkoutPlanDetailsPageProps = {
     id: string;
   }>;
 };
-
-
 
 export default async function WorkoutPlanDetailsPage({
   params,
@@ -61,8 +57,7 @@ export default async function WorkoutPlanDetailsPage({
       "Cool-down": 3,
     };
     const typeDiff =
-      (typeOrder[a.section_type] || 999) -
-      (typeOrder[b.section_type] || 999);
+      (typeOrder[a.section_type] || 999) - (typeOrder[b.section_type] || 999);
     if (typeDiff !== 0) return typeDiff;
 
     // Następnie sortuj według section_order
@@ -99,7 +94,8 @@ export default async function WorkoutPlanDetailsPage({
               </Badge>
               {estimatedTotalTime > 0 && (
                 <Badge variant="secondary">
-                  Szacunkowy czas treningu: {formatTotalDuration(estimatedTotalTime)}
+                  Szacunkowy czas treningu:{" "}
+                  {formatTotalDuration(estimatedTotalTime)}
                 </Badge>
               )}
             </div>
@@ -137,10 +133,7 @@ export default async function WorkoutPlanDetailsPage({
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex-1">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="outline">
-                          {EXERCISE_TYPE_LABELS[exercise.section_type] ||
-                            exercise.section_type}
-                        </Badge>
+                        <ExerciseTypeBadge type={exercise.section_type} />
                         <span className="text-sm text-zinc-600 dark:text-zinc-400">
                           Pozycja: {exercise.section_order}
                         </span>
@@ -206,8 +199,11 @@ export default async function WorkoutPlanDetailsPage({
                         Odpoczynek po seriach
                       </p>
                       <p className="text-lg font-semibold">
-                        {exercise.planned_rest_after_series_seconds !== null && exercise.planned_rest_after_series_seconds !== undefined
-                          ? formatDuration(exercise.planned_rest_after_series_seconds)
+                        {exercise.planned_rest_after_series_seconds !== null &&
+                        exercise.planned_rest_after_series_seconds !== undefined
+                          ? formatDuration(
+                              exercise.planned_rest_after_series_seconds,
+                            )
                           : "-"}
                       </p>
                     </div>
@@ -217,9 +213,13 @@ export default async function WorkoutPlanDetailsPage({
                         Szacunkowy czas zestawu
                       </p>
                       <p className="text-lg font-semibold">
-                        {exercise.exercise_estimated_set_time_seconds !== null &&
-                        exercise.exercise_estimated_set_time_seconds !== undefined
-                          ? formatDuration(exercise.exercise_estimated_set_time_seconds)
+                        {exercise.exercise_estimated_set_time_seconds !==
+                          null &&
+                        exercise.exercise_estimated_set_time_seconds !==
+                          undefined
+                          ? formatDuration(
+                              exercise.exercise_estimated_set_time_seconds,
+                            )
                           : "-"}
                       </p>
                     </div>

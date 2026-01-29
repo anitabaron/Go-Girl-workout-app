@@ -1,9 +1,7 @@
 import type { SessionExerciseDTO } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import {
-  EXERCISE_PART_LABELS,
-  EXERCISE_TYPE_LABELS,
-} from "@/lib/constants";
+import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
 
 type ExerciseHeaderProps = {
   readonly exercise: SessionExerciseDTO;
@@ -23,16 +21,18 @@ export function ExerciseHeader({
   return (
     <div>
       <div className="mb-3 flex items-start justify-between">
-        <h3 className="text-lg font-semibold">{exercise.exercise_title_at_time}</h3>
+        <h3 className="text-lg font-semibold">
+          {exercise.exercise_title_at_time}
+        </h3>
         <span className="text-sm text-zinc-600 dark:text-zinc-400">
-          <span className="hidden sm:inline">Ćwiczenie</span> {index + 1} z {total}
+          <span className="hidden sm:inline">Ćwiczenie</span> {index + 1} z{" "}
+          {total}
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline">
-          {EXERCISE_TYPE_LABELS[exercise.exercise_type_at_time] ||
-            exercise.exercise_type_at_time}
-        </Badge>
+        {exercise.exercise_type_at_time && (
+          <ExerciseTypeBadge type={exercise.exercise_type_at_time} />
+        )}
         <Badge variant="outline">
           {EXERCISE_PART_LABELS[exercise.exercise_part_at_time] ||
             exercise.exercise_part_at_time}
