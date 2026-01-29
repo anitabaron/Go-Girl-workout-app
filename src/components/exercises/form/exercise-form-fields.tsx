@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { FormField } from "@/components/ui/form-field";
 import {
   Select,
   SelectContent,
@@ -36,7 +37,6 @@ export function ExerciseFormFields({
 }: Readonly<ExerciseFormFieldsProps>) {
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Automatyczne ustawienie focus na pierwsze pole przy załadowaniu
   useEffect(() => {
     if (titleInputRef.current) {
       titleInputRef.current.focus();
@@ -45,35 +45,28 @@ export function ExerciseFormFields({
 
   return (
     <div className="space-y-4">
-      {/* Title */}
-      <div className="space-y-2">
-        <label htmlFor="title" className="text-sm font-medium">
-          Tytuł <span className="text-destructive">*</span>
-        </label>
+      <FormField label="Tytuł" htmlFor="title" error={errors.title} required>
         <Input
           ref={titleInputRef}
           id="title"
           type="text"
+          data-test-id="exercise-form-title"
           value={fields.title}
           onChange={(e) => onChange("title", e.target.value)}
           onBlur={() => onBlur("title")}
           disabled={disabled}
           aria-invalid={errors.title ? "true" : "false"}
           aria-describedby={errors.title ? "title-error" : undefined}
-          data-test-id="exercise-form-title"
         />
-        {errors.title && (
-          <p id="title-error" className="text-sm text-destructive" role="alert">
-            {errors.title}
-          </p>
-        )}
-      </div>
+      </FormField>
+
       <div className="sm:flex gap-2 justify-between items-center">
-        {/* Type */}
-        <div className="space-y-2 w-full">
-          <label htmlFor="type" className="text-sm font-medium">
-            Typ
-          </label>
+        <FormField
+          label="Typ"
+          htmlFor="type"
+          error={errors.type}
+          className="w-full"
+        >
           <Select
             value={fields.type}
             onValueChange={(value) => onChange("type", value)}
@@ -95,21 +88,14 @@ export function ExerciseFormFields({
               ))}
             </SelectContent>
           </Select>
-          {errors.type && (
-            <p
-              id="type-error"
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {errors.type}
-            </p>
-          )}
-        </div>
-        {/* Part */}
-        <div className="space-y-2 w-full">
-          <label htmlFor="part" className="text-sm font-medium">
-            Partia
-          </label>
+        </FormField>
+
+        <FormField
+          label="Partia"
+          htmlFor="part"
+          error={errors.part}
+          className="w-full"
+        >
           <Select
             value={fields.part}
             onValueChange={(value) => onChange("part", value)}
@@ -131,21 +117,14 @@ export function ExerciseFormFields({
               ))}
             </SelectContent>
           </Select>
-          {errors.part && (
-            <p
-              id="part-error"
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {errors.part}
-            </p>
-          )}
-        </div>
-        {/* Level */}
-        <div className="space-y-2 w-full">
-          <label htmlFor="level" className="text-sm font-medium">
-            Poziom
-          </label>
+        </FormField>
+
+        <FormField
+          label="Poziom"
+          htmlFor="level"
+          error={errors.level}
+          className="w-full"
+        >
           <Select
             value={fields.level || ""}
             onValueChange={(value) =>
@@ -168,23 +147,10 @@ export function ExerciseFormFields({
               <SelectItem value="Advanced">Advanced</SelectItem>
             </SelectContent>
           </Select>
-          {errors.level && (
-            <p
-              id="level-error"
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {errors.level}
-            </p>
-          )}
-        </div>
+        </FormField>
       </div>
 
-      {/* Details */}
-      <div className="space-y-2">
-        <label htmlFor="details" className="text-sm font-medium">
-          Szczegóły
-        </label>
+      <FormField label="Szczegóły" htmlFor="details" error={errors.details}>
         <Textarea
           id="details"
           value={fields.details}
@@ -196,22 +162,15 @@ export function ExerciseFormFields({
           aria-describedby={errors.details ? "details-error" : undefined}
           data-test-id="exercise-form-details"
         />
-        {errors.details && (
-          <p
-            id="details-error"
-            className="text-sm text-destructive"
-            role="alert"
-          >
-            {errors.details}
-          </p>
-        )}
-      </div>
-      <div className="flex gap-2 justify-between items-center ">
-        {/* Reps */}
-        <div className="space-y-2 w-full">
-          <label htmlFor="reps" className="text-sm font-medium">
-            Powtórzenia
-          </label>
+      </FormField>
+
+      <div className="flex gap-2 justify-between items-center">
+        <FormField
+          label="Powtórzenia"
+          htmlFor="reps"
+          error={errors.reps}
+          className="w-full"
+        >
           <Input
             id="reps"
             type="number"
@@ -224,22 +183,14 @@ export function ExerciseFormFields({
             aria-describedby={errors.reps ? "reps-error" : undefined}
             data-test-id="exercise-form-reps"
           />
-          {errors.reps && (
-            <p
-              id="reps-error"
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {errors.reps}
-            </p>
-          )}
-        </div>
-        <p className="text-sm font-medium mt-7 ">lub</p>
-        {/* Duration */}
-        <div className="space-y-2 w-full">
-          <label htmlFor="duration_seconds" className="text-sm font-medium">
-            Czas (sek)
-          </label>
+        </FormField>
+        <p className="text-sm font-medium mt-7">lub</p>
+        <FormField
+          label="Czas (sek)"
+          htmlFor="duration_seconds"
+          error={errors.duration_seconds}
+          className="w-full"
+        >
           <Input
             id="duration_seconds"
             type="number"
@@ -254,22 +205,13 @@ export function ExerciseFormFields({
             }
             data-test-id="exercise-form-duration"
           />
-          {errors.duration_seconds && (
-            <p
-              id="duration_seconds-error"
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {errors.duration_seconds}
-            </p>
-          )}
-        </div>
-
-        {/* Series */}
-        <div className="space-y-2">
-          <label htmlFor="series" className="text-sm font-medium">
-            Serie <span className="text-destructive">*</span>
-          </label>
+        </FormField>
+        <FormField
+          label="Serie"
+          htmlFor="series"
+          error={errors.series}
+          required
+        >
           <Input
             id="series"
             type="number"
@@ -282,26 +224,16 @@ export function ExerciseFormFields({
             aria-describedby={errors.series ? "series-error" : undefined}
             data-test-id="exercise-form-series"
           />
-          {errors.series && (
-            <p
-              id="series-error"
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {errors.series}
-            </p>
-          )}
-        </div>
+        </FormField>
       </div>
+
       <div className="sm:flex gap-2 justify-between items-center">
-        {/* Rest in between */}
-        <div className="space-y-2 w-full">
-          <label
-            htmlFor="rest_in_between_seconds"
-            className="text-sm font-medium"
-          >
-            Odpoczynek między seriami (sekundy)
-          </label>
+        <FormField
+          label="Odpoczynek między seriami (sekundy)"
+          htmlFor="rest_in_between_seconds"
+          error={errors.rest_in_between_seconds}
+          className="w-full"
+        >
           <Input
             id="rest_in_between_seconds"
             type="number"
@@ -320,25 +252,13 @@ export function ExerciseFormFields({
             }
             data-test-id="exercise-form-rest-between"
           />
-          {errors.rest_in_between_seconds && (
-            <p
-              id="rest_in_between_seconds-error"
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {errors.rest_in_between_seconds}
-            </p>
-          )}
-        </div>
-
-        {/* Rest after series */}
-        <div className="space-y-2 w-full">
-          <label
-            htmlFor="rest_after_series_seconds"
-            className="text-sm font-medium"
-          >
-            Odpoczynek po seriach (sekundy)
-          </label>
+        </FormField>
+        <FormField
+          label="Odpoczynek po seriach (sekundy)"
+          htmlFor="rest_after_series_seconds"
+          error={errors.rest_after_series_seconds}
+          className="w-full"
+        >
           <Input
             id="rest_after_series_seconds"
             type="number"
@@ -357,26 +277,14 @@ export function ExerciseFormFields({
             }
             data-test-id="exercise-form-rest-after"
           />
-          {errors.rest_after_series_seconds && (
-            <p
-              id="rest_after_series_seconds-error"
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {errors.rest_after_series_seconds}
-            </p>
-          )}
-        </div>
+        </FormField>
       </div>
 
-      {/* Estimated set time */}
-      <div className="space-y-2">
-        <label
-          htmlFor="estimated_set_time_seconds"
-          className="text-sm font-medium"
-        >
-          Szacunkowy czas zestawu (sekundy)
-        </label>
+      <FormField
+        label="Szacunkowy czas zestawu (sekundy)"
+        htmlFor="estimated_set_time_seconds"
+        error={errors.estimated_set_time_seconds}
+      >
         <Input
           id="estimated_set_time_seconds"
           type="number"
@@ -395,16 +303,7 @@ export function ExerciseFormFields({
           }
           data-test-id="exercise-form-estimated-set-time"
         />
-        {errors.estimated_set_time_seconds && (
-          <p
-            id="estimated_set_time_seconds-error"
-            className="text-sm text-destructive"
-            role="alert"
-          >
-            {errors.estimated_set_time_seconds}
-          </p>
-        )}
-      </div>
+      </FormField>
     </div>
   );
 }
