@@ -7,7 +7,7 @@ import {
 } from "@/lib/validation/exercises";
 
 export const WORKOUT_PLAN_MAX_LIMIT = 100;
-export const WORKOUT_PLAN_DEFAULT_LIMIT = 20;
+export const WORKOUT_PLAN_DEFAULT_LIMIT = 30;
 
 export const workoutPlanSortFields = [
   "created_at",
@@ -25,8 +25,18 @@ const plannedSetsSchema = z.number().int().positive().nullable().optional();
 const plannedRepsSchema = z.number().int().positive().nullable().optional();
 const plannedDurationSchema = z.number().int().positive().nullable().optional();
 const plannedRestSchema = z.number().int().nonnegative().nullable().optional();
-const plannedRestAfterSeriesSchema = z.number().int().nonnegative().nullable().optional();
-const estimatedSetTimeSchema = z.number().int().positive().nullable().optional();
+const plannedRestAfterSeriesSchema = z
+  .number()
+  .int()
+  .nonnegative()
+  .nullable()
+  .optional();
+const estimatedSetTimeSchema = z
+  .number()
+  .int()
+  .positive()
+  .nullable()
+  .optional();
 
 /**
  * Schema dla pojedynczego ćwiczenia w planie treningowym.
@@ -40,7 +50,7 @@ export const workoutPlanExerciseInputSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "exercise_id musi być prawidłowym UUID"
+        "exercise_id musi być prawidłowym UUID",
       ),
     section_type: sectionTypeSchema,
     section_order: sectionOrderSchema,
@@ -63,13 +73,13 @@ export const workoutPlanExerciseUpdateSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "id musi być prawidłowym UUID ćwiczenia w planie"
+        "id musi być prawidłowym UUID ćwiczenia w planie",
       ),
     exercise_id: z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "exercise_id musi być prawidłowym UUID"
+        "exercise_id musi być prawidłowym UUID",
       )
       .optional(),
     section_type: sectionTypeSchema.optional(),
@@ -95,14 +105,14 @@ export const workoutPlanExerciseUpdateOrCreateSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "id musi być prawidłowym UUID ćwiczenia w planie"
+        "id musi być prawidłowym UUID ćwiczenia w planie",
       )
       .optional(),
     exercise_id: z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "exercise_id musi być prawidłowym UUID"
+        "exercise_id musi być prawidłowym UUID",
       )
       .optional()
       .nullable(),
@@ -167,7 +177,7 @@ export const workoutPlanCreateSchema = z
       ctx.addIssue({
         code: "custom",
         message,
-      })
+      }),
     );
   });
 
@@ -191,15 +201,19 @@ export const workoutPlanUpdateSchema = z
     if (data.exercises !== undefined && data.exercises.length > 0) {
       // Walidacja reguł biznesowych dla wszystkich ćwiczeń
       const exercisesForBusinessRules: WorkoutPlanExerciseInput[] = [];
-      
+
       for (let i = 0; i < data.exercises.length; i++) {
         const exercise = data.exercises[i];
-        
+
         // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego
         // Jeśli nie ma id, to jest nowym ćwiczeniem i wymaga wszystkich pól
         if (!exercise.id) {
           // Nowe ćwiczenie - sprawdź czy ma wszystkie wymagane pola
-          if (!exercise.exercise_id || !exercise.section_type || !exercise.section_order) {
+          if (
+            !exercise.exercise_id ||
+            !exercise.section_type ||
+            !exercise.section_order
+          ) {
             ctx.addIssue({
               code: "custom",
               message: `Nowe ćwiczenie na pozycji ${i} musi mieć exercise_id, section_type i section_order.`,
@@ -214,7 +228,8 @@ export const workoutPlanUpdateSchema = z
               planned_reps: exercise.planned_reps,
               planned_duration_seconds: exercise.planned_duration_seconds,
               planned_rest_seconds: exercise.planned_rest_seconds,
-              planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds,
+              planned_rest_after_series_seconds:
+                exercise.planned_rest_after_series_seconds,
               estimated_set_time_seconds: exercise.estimated_set_time_seconds,
             });
           }
@@ -225,15 +240,17 @@ export const workoutPlanUpdateSchema = z
           // Więc pomijamy walidację reguł biznesowych dla aktualizacji
         }
       }
-      
+
       // Walidacja reguł biznesowych tylko dla nowych ćwiczeń
       if (exercisesForBusinessRules.length > 0) {
-        const errors = validateWorkoutPlanBusinessRules(exercisesForBusinessRules);
+        const errors = validateWorkoutPlanBusinessRules(
+          exercisesForBusinessRules,
+        );
         errors.forEach((message) =>
           ctx.addIssue({
             code: "custom",
             message,
-          })
+          }),
         );
       }
     }
@@ -265,7 +282,7 @@ export const workoutPlanQuerySchema = z
  * - Pozytywne wartości dla planned_* (jeśli podane)
  */
 export function validateWorkoutPlanBusinessRules(
-  exercises: WorkoutPlanExerciseInput[]
+  exercises: WorkoutPlanExerciseInput[],
 ): string[] {
   const errors: string[] = [];
 
@@ -289,7 +306,7 @@ export function validateWorkoutPlanBusinessRules(
 
     if (orders.has(order)) {
       errors.push(
-        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`
+        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     } else {
       orders.add(order);
@@ -302,7 +319,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_sets <= 0
     ) {
       errors.push(
-        `planned_sets musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_sets musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
 
@@ -312,7 +329,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_reps <= 0
     ) {
       errors.push(
-        `planned_reps musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_reps musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
 
@@ -322,7 +339,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_duration_seconds <= 0
     ) {
       errors.push(
-        `planned_duration_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_duration_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
 
@@ -332,7 +349,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_rest_seconds < 0
     ) {
       errors.push(
-        `planned_rest_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_rest_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
 
@@ -342,7 +359,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.planned_rest_after_series_seconds < 0
     ) {
       errors.push(
-        `planned_rest_after_series_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_rest_after_series_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
 
@@ -352,7 +369,7 @@ export function validateWorkoutPlanBusinessRules(
       exercise.estimated_set_time_seconds <= 0
     ) {
       errors.push(
-        `estimated_set_time_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `estimated_set_time_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
   }
@@ -362,7 +379,7 @@ export function validateWorkoutPlanBusinessRules(
 
 /**
  * Schema dla ćwiczenia w planie przy imporcie (obsługuje exercise_id, match_by_name lub snapshot).
- * 
+ *
  * Opcje:
  * - exercise_id: UUID istniejącego ćwiczenia w bazie
  * - match_by_name: nazwa ćwiczenia do znalezienia w bazie (znormalizowana, case-insensitive)
@@ -375,7 +392,7 @@ export const workoutPlanExerciseImportSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "exercise_id musi być prawidłowym UUID"
+        "exercise_id musi być prawidłowym UUID",
       )
       .optional()
       .nullable(),
@@ -398,16 +415,19 @@ export const workoutPlanExerciseImportSchema = z
   })
   .strict()
   .superRefine((data, ctx) => {
-    const hasExerciseId = data.exercise_id !== undefined && data.exercise_id !== null;
-    const hasMatchByName = data.match_by_name !== undefined && data.match_by_name !== null;
-    const hasSnapshot = 
+    const hasExerciseId =
+      data.exercise_id !== undefined && data.exercise_id !== null;
+    const hasMatchByName =
+      data.match_by_name !== undefined && data.match_by_name !== null;
+    const hasSnapshot =
       data.exercise_title !== undefined && data.exercise_title !== null;
 
     // Musi być co najmniej jedna opcja: exercise_id, match_by_name, lub snapshot
     if (!hasExerciseId && !hasMatchByName && !hasSnapshot) {
       ctx.addIssue({
         code: "custom",
-        message: "Musisz podać albo exercise_id, albo match_by_name, albo exercise_title (exercise_type i exercise_part są opcjonalne)",
+        message:
+          "Musisz podać albo exercise_id, albo match_by_name, albo exercise_title (exercise_type i exercise_part są opcjonalne)",
         path: ["exercise_id"],
       });
     }
@@ -425,7 +445,8 @@ export const workoutPlanExerciseImportSchema = z
     if (hasExerciseId && hasSnapshot) {
       ctx.addIssue({
         code: "custom",
-        message: "Nie można podać jednocześnie exercise_id i snapshot pól (exercise_title, opcjonalnie exercise_type i exercise_part)",
+        message:
+          "Nie można podać jednocześnie exercise_id i snapshot pól (exercise_title, opcjonalnie exercise_type i exercise_part)",
         path: ["exercise_id"],
       });
     }
@@ -434,7 +455,8 @@ export const workoutPlanExerciseImportSchema = z
     if (hasMatchByName && hasSnapshot) {
       ctx.addIssue({
         code: "custom",
-        message: "Nie można podać jednocześnie match_by_name i snapshot pól (exercise_title, opcjonalnie exercise_type i exercise_part)",
+        message:
+          "Nie można podać jednocześnie match_by_name i snapshot pól (exercise_title, opcjonalnie exercise_type i exercise_part)",
         path: ["match_by_name"],
       });
     }
@@ -455,24 +477,29 @@ export const workoutPlanImportSchema = z
   .strict()
   .superRefine((data, ctx) => {
     // Walidacja reguł biznesowych (unikalność pozycji, wartości dodatnie)
-    const exercisesForBusinessRules: WorkoutPlanExerciseInput[] = data.exercises.map((e) => ({
-      exercise_id: e.exercise_id ?? undefined,
-      section_type: e.section_type,
-      section_order: e.section_order,
-      planned_sets: e.planned_sets,
-      planned_reps: e.planned_reps,
-      planned_duration_seconds: e.planned_duration_seconds,
-      planned_rest_seconds: e.planned_rest_seconds,
-      planned_rest_after_series_seconds: e.planned_rest_after_series_seconds,
-      estimated_set_time_seconds: e.estimated_set_time_seconds,
-    } as WorkoutPlanExerciseInput));
+    const exercisesForBusinessRules: WorkoutPlanExerciseInput[] =
+      data.exercises.map(
+        (e) =>
+          ({
+            exercise_id: e.exercise_id ?? undefined,
+            section_type: e.section_type,
+            section_order: e.section_order,
+            planned_sets: e.planned_sets,
+            planned_reps: e.planned_reps,
+            planned_duration_seconds: e.planned_duration_seconds,
+            planned_rest_seconds: e.planned_rest_seconds,
+            planned_rest_after_series_seconds:
+              e.planned_rest_after_series_seconds,
+            estimated_set_time_seconds: e.estimated_set_time_seconds,
+          }) as WorkoutPlanExerciseInput,
+      );
 
     const errors = validateWorkoutPlanBusinessRules(exercisesForBusinessRules);
     errors.forEach((message) =>
       ctx.addIssue({
         code: "custom",
         message,
-      })
+      }),
     );
   });
 
@@ -499,7 +526,7 @@ export function decodeCursor(cursor: string): {
 } {
   try {
     const parsed = JSON.parse(
-      Buffer.from(cursor, "base64url").toString("utf8")
+      Buffer.from(cursor, "base64url").toString("utf8"),
     ) as {
       sort: string;
       order: string;
@@ -509,7 +536,7 @@ export function decodeCursor(cursor: string): {
 
     if (
       !workoutPlanSortFields.includes(
-        parsed.sort as unknown as (typeof workoutPlanSortFields)[number]
+        parsed.sort as unknown as (typeof workoutPlanSortFields)[number],
       )
     ) {
       throw new Error("Unsupported sort field");
@@ -517,7 +544,7 @@ export function decodeCursor(cursor: string): {
 
     if (
       !workoutPlanOrderValues.includes(
-        parsed.order as unknown as (typeof workoutPlanOrderValues)[number]
+        parsed.order as unknown as (typeof workoutPlanOrderValues)[number],
       )
     ) {
       throw new Error("Unsupported order value");

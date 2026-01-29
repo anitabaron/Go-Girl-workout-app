@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { SessionListQueryParams } from "@/types";
 
 export const SESSION_MAX_LIMIT = 100;
-export const SESSION_DEFAULT_LIMIT = 20;
+export const SESSION_DEFAULT_LIMIT = 30;
 
 export const sessionStatusValues = ["in_progress", "completed"] as const;
 
@@ -27,7 +27,7 @@ export const sessionStartSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "workout_plan_id musi być prawidłowym UUID"
+        "workout_plan_id musi być prawidłowym UUID",
       ),
   })
   .strict();
@@ -40,23 +40,20 @@ export const sessionListQuerySchema = z
     status: z.enum(sessionStatusValues).optional(),
     plan_id: z
       .string()
-      .refine(
-        (val) => uuidRegex.test(val),
-        "plan_id musi być prawidłowym UUID"
-      )
+      .refine((val) => uuidRegex.test(val), "plan_id musi być prawidłowym UUID")
       .optional(),
     from: z
       .string()
       .refine(
         (val) => !Number.isNaN(Date.parse(val)),
-        "from musi być prawidłową datą ISO 8601"
+        "from musi być prawidłową datą ISO 8601",
       )
       .optional(),
     to: z
       .string()
       .refine(
         (val) => !Number.isNaN(Date.parse(val)),
-        "to musi być prawidłową datą ISO 8601"
+        "to musi być prawidłową datą ISO 8601",
       )
       .optional(),
     sort: z.enum(sessionSortFields).default("started_at"),
@@ -94,14 +91,14 @@ export const sessionTimerUpdateSchema = z
       .string()
       .refine(
         (val) => !Number.isNaN(Date.parse(val)),
-        "last_timer_started_at musi być prawidłowym timestampem ISO 8601"
+        "last_timer_started_at musi być prawidłowym timestampem ISO 8601",
       )
       .optional(),
     last_timer_stopped_at: z
       .string()
       .refine(
         (val) => !Number.isNaN(Date.parse(val)),
-        "last_timer_stopped_at musi być prawidłowym timestampem ISO 8601"
+        "last_timer_stopped_at musi być prawidłowym timestampem ISO 8601",
       )
       .optional(),
   })
@@ -113,7 +110,7 @@ export const sessionTimerUpdateSchema = z
       data.last_timer_stopped_at !== undefined,
     {
       message: "Co najmniej jedno pole musi być podane w body żądania.",
-    }
+    },
   );
 
 /**
@@ -121,8 +118,16 @@ export const sessionTimerUpdateSchema = z
  */
 const sessionExerciseSetSchema = z
   .object({
-    set_number: z.number().int().positive("set_number musi być liczbą całkowitą większą od 0"),
-    reps: z.number().int().nonnegative("reps musi być >= 0").nullable().optional(),
+    set_number: z
+      .number()
+      .int()
+      .positive("set_number musi być liczbą całkowitą większą od 0"),
+    reps: z
+      .number()
+      .int()
+      .nonnegative("reps musi być >= 0")
+      .nullable()
+      .optional(),
     duration_seconds: z
       .number()
       .int()
@@ -143,7 +148,7 @@ const sessionExerciseSetSchema = z
     {
       message:
         "Każda seria musi mieć co najmniej jedną metrykę (reps, duration_seconds, lub weight_kg)",
-    }
+    },
   );
 
 /**
@@ -221,7 +226,7 @@ export const sessionExerciseAutosaveSchema = z
           (set) =>
             set.reps !== null ||
             set.duration_seconds !== null ||
-            set.weight_kg !== null
+            set.weight_kg !== null,
         );
       }
       return true;
@@ -229,7 +234,7 @@ export const sessionExerciseAutosaveSchema = z
     {
       message:
         "Jeśli is_skipped = false, każda seria musi mieć co najmniej jedną metrykę",
-    }
+    },
   )
   .refine(
     (data) => {
@@ -243,7 +248,7 @@ export const sessionExerciseAutosaveSchema = z
     },
     {
       message: "set_number musi być unikalne w tablicy sets",
-    }
+    },
   );
 
 /**
@@ -269,7 +274,7 @@ export function decodeCursor(cursor: string): {
 } {
   try {
     const parsed = JSON.parse(
-      Buffer.from(cursor, "base64url").toString("utf8")
+      Buffer.from(cursor, "base64url").toString("utf8"),
     ) as {
       sort: string;
       order: string;
@@ -279,7 +284,7 @@ export function decodeCursor(cursor: string): {
 
     if (
       !sessionSortFields.includes(
-        parsed.sort as unknown as (typeof sessionSortFields)[number]
+        parsed.sort as unknown as (typeof sessionSortFields)[number],
       )
     ) {
       throw new Error("Unsupported sort field");
@@ -287,7 +292,7 @@ export function decodeCursor(cursor: string): {
 
     if (
       !sessionOrderValues.includes(
-        parsed.order as unknown as (typeof sessionOrderValues)[number]
+        parsed.order as unknown as (typeof sessionOrderValues)[number],
       )
     ) {
       throw new Error("Unsupported order value");
