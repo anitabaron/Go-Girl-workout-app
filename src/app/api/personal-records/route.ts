@@ -1,29 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { personalRecordQuerySchema } from "@/lib/validation/personal-records";
+import { getUserIdFromSession } from "@/lib/auth-api";
 import { respondWithServiceError } from "@/lib/http/errors";
 import {
   listPersonalRecordsService,
   ServiceError,
 } from "@/services/personal-records";
-import { createClient } from "@/db/supabase.server";
-
-/**
- * Pobiera ID użytkownika z sesji Supabase dla API routes.
- * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
- */
-async function getUserIdFromSession(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.id) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return user.id;
-}
+import { personalRecordQuerySchema } from "@/lib/validation/personal-records";
 
 export async function GET(request: Request) {
   try {
@@ -42,8 +25,11 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
 
@@ -54,7 +40,7 @@ export async function GET(request: Request) {
     console.error("GET /api/personal-records unexpected error", error);
     return NextResponse.json(
       { message: "Wystąpił błąd serwera." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

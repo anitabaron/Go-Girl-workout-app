@@ -1,33 +1,16 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { getUserIdFromSession } from "@/lib/auth-api";
 import { respondWithServiceError } from "@/lib/http/errors";
 import {
   updateWorkoutSessionStatusService,
   ServiceError,
 } from "@/services/workout-sessions";
-import { createClient } from "@/db/supabase.server";
-
-/**
- * Pobiera ID użytkownika z sesji Supabase dla API routes.
- * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
- */
-async function getUserIdFromSession(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.id) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return user.id;
-}
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    value
+    value,
   );
 }
 
@@ -45,18 +28,23 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const sessionId = id ?? new URL(request.url).searchParams.get("id");
 
     if (!sessionId) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] Missing sessionId");
+      console.error(
+        "[PATCH /api/workout-sessions/[id]/status] Missing sessionId",
+      );
       return NextResponse.json(
         { message: "Brak identyfikatora sesji treningowej w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!isUuid(sessionId)) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] Invalid sessionId format:", sessionId);
+      console.error(
+        "[PATCH /api/workout-sessions/[id]/status] Invalid sessionId format:",
+        sessionId,
+      );
       return NextResponse.json(
         { message: "Nieprawidłowy format UUID identyfikatora sesji." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -64,33 +52,42 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.error("[PATCH /api/workout-sessions/[id]/status] JSON parse error:", jsonError);
+      console.error(
+        "[PATCH /api/workout-sessions/[id]/status] JSON parse error:",
+        jsonError,
+      );
       return NextResponse.json(
         {
           message: "Nieprawidłowy format JSON w body żądania.",
           code: "BAD_REQUEST",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const updated = await updateWorkoutSessionStatusService(
       userId,
       sessionId,
-      body
+      body,
     );
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
-    console.error("[PATCH /api/workout-sessions/[id]/status] Error caught:", error);
-    
+    console.error(
+      "[PATCH /api/workout-sessions/[id]/status] Error caught:",
+      error,
+    );
+
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
-    
+
     if (error instanceof ServiceError) {
       console.error("[PATCH /api/workout-sessions/[id]/status] ServiceError:", {
         code: error.code,
@@ -114,20 +111,20 @@ export async function PATCH(request: Request, { params }: RouteContext) {
           code: "BAD_REQUEST",
           details: error.issues.map((issue) => issue.message).join("; "),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error(
       "[PATCH /api/workout-sessions/[id]/status] Unexpected error:",
-      error
+      error,
     );
     return NextResponse.json(
       {
         message: "Wystąpił błąd serwera.",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

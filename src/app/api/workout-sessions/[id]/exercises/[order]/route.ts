@@ -1,29 +1,12 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { getUserIdFromSession } from "@/lib/auth-api";
 import { respondWithServiceError } from "@/lib/http/errors";
 import {
   autosaveWorkoutSessionExerciseService,
   ServiceError,
 } from "@/services/workout-sessions";
-import { createClient } from "@/db/supabase.server";
-
-/**
- * Pobiera ID użytkownika z sesji Supabase dla API routes.
- * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
- */
-async function getUserIdFromSession(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.id) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return user.id;
-}
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(

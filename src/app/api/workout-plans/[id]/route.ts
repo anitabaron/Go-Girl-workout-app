@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getUserIdFromSession } from "@/lib/auth-api";
 import { respondWithServiceError } from "@/lib/http/errors";
 import {
   deleteWorkoutPlanService,
@@ -7,24 +8,6 @@ import {
   ServiceError,
   updateWorkoutPlanService,
 } from "@/services/workout-plans";
-import { createClient } from "@/db/supabase.server";
-
-/**
- * Pobiera ID użytkownika z sesji Supabase dla API routes.
- * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
- */
-async function getUserIdFromSession(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.id) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return user.id;
-}
 
 type RouteContext = {
   params: Promise<{
@@ -42,7 +25,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     if (!workoutPlanId) {
       return NextResponse.json(
         { message: "Brak identyfikatora planu treningowego w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -52,8 +35,11 @@ export async function GET(request: Request, { params }: RouteContext) {
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
 
@@ -64,7 +50,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     console.error("GET /api/workout-plans/[id] unexpected error", error);
     return NextResponse.json(
       { message: "Wystąpił błąd serwera." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -79,7 +65,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     if (!workoutPlanId) {
       return NextResponse.json(
         { message: "Brak identyfikatora planu treningowego w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -88,7 +74,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     if (!contentType || !contentType.includes("application/json")) {
       return NextResponse.json(
         { message: "Content-Type musi być application/json." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -99,7 +85,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       if (!text || text.trim() === "") {
         return NextResponse.json(
           { message: "Body żądania nie może być puste." },
-          { status: 400 }
+          { status: 400 },
         );
       }
       body = JSON.parse(text);
@@ -107,7 +93,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       if (parseError instanceof SyntaxError) {
         return NextResponse.json(
           { message: "Nieprawidłowy format JSON w body żądania." },
-          { status: 400 }
+          { status: 400 },
         );
       }
       throw parseError;
@@ -119,8 +105,11 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
 
@@ -131,7 +120,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     console.error("PATCH /api/workout-plans/[id] unexpected error", error);
     return NextResponse.json(
       { message: "Wystąpił błąd serwera." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -146,7 +135,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     if (!workoutPlanId) {
       return NextResponse.json(
         { message: "Brak identyfikatora planu treningowego w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -156,8 +145,11 @@ export async function DELETE(request: Request, { params }: RouteContext) {
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
 
@@ -168,7 +160,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     console.error("DELETE /api/workout-plans/[id] unexpected error", error);
     return NextResponse.json(
       { message: "Wystąpił błąd serwera." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

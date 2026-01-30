@@ -1,31 +1,14 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { sessionListQuerySchema } from "@/lib/validation/workout-sessions";
+import { getUserIdFromSession } from "@/lib/auth-api";
 import { respondWithServiceError } from "@/lib/http/errors";
 import {
   listWorkoutSessionsService,
   startWorkoutSessionService,
   ServiceError,
 } from "@/services/workout-sessions";
-import { createClient } from "@/db/supabase.server";
-
-/**
- * Pobiera ID użytkownika z sesji Supabase dla API routes.
- * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
- */
-async function getUserIdFromSession(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.id) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return user.id;
-}
+import { sessionListQuerySchema } from "@/lib/validation/workout-sessions";
 
 export async function GET(request: Request) {
   try {
@@ -80,8 +63,11 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
 
@@ -96,7 +82,7 @@ export async function GET(request: Request) {
           code: "BAD_REQUEST",
           details: error.issues.map((issue) => issue.message).join("; "),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -106,7 +92,7 @@ export async function GET(request: Request) {
         message: "Wystąpił błąd serwera.",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -119,16 +105,13 @@ export async function POST(request: Request) {
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.error(
-        "POST /api/workout-sessions JSON parse error",
-        jsonError
-      );
+      console.error("POST /api/workout-sessions JSON parse error", jsonError);
       return NextResponse.json(
         {
           message: "Nieprawidłowy format JSON w body żądania.",
           code: "BAD_REQUEST",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -138,8 +121,11 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
 
@@ -148,23 +134,20 @@ export async function POST(request: Request) {
         "POST /api/workout-sessions ServiceError:",
         error.code,
         error.message,
-        error.details
+        error.details,
       );
       return respondWithServiceError(error);
     }
 
     if (error instanceof ZodError) {
-      console.error(
-        "POST /api/workout-sessions ZodError:",
-        error.issues
-      );
+      console.error("POST /api/workout-sessions ZodError:", error.issues);
       return NextResponse.json(
         {
           message: "Nieprawidłowe dane wejściowe.",
           code: "BAD_REQUEST",
           details: error.issues.map((issue) => issue.message).join("; "),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -174,7 +157,7 @@ export async function POST(request: Request) {
         message: "Wystąpił błąd serwera.",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
