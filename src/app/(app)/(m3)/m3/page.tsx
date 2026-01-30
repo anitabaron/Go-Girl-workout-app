@@ -62,8 +62,21 @@ export default function M3Page() {
               Create and follow workout plans. Build routines that fit your
               goals and schedule.
             </p>
-            <Button asChild variant="secondary" className="mt-6">
-              <Link href="/m3">Coming soon</Link>
+            <Button asChild className="mt-6 m3-cta">
+              <Link href="/m3/workout-plans">Go to Plans</Link>
+            </Button>
+          </Surface>
+        </ScrollReveal>
+
+        <ScrollReveal start="top 85%">
+          <Surface variant="high" className="h-full">
+            <h2 className="m3-headline">Workout sessions</h2>
+            <p className="m3-body mt-3 m3-prose text-muted-foreground">
+              Track your workout history. Start a session from a plan and record
+              your progress.
+            </p>
+            <Button asChild className="mt-6 m3-cta">
+              <Link href="/m3/workout-sessions">Go to Sessions</Link>
             </Button>
           </Surface>
         </ScrollReveal>

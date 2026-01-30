@@ -45,10 +45,24 @@ export async function proxy(request: NextRequest) {
   // Design mode rewrite (po odświeżeniu sesji)
   if (shouldUseM3(request)) {
     const { pathname } = request.nextUrl;
+    const isWorkoutSessions =
+      pathname === "/workout-sessions" ||
+      pathname.startsWith("/workout-sessions/");
+    const isActivePage = /^\/workout-sessions\/[^/]+\/active$/.test(pathname);
+    const isPersonalRecords =
+      pathname === "/personal-records" ||
+      pathname.startsWith("/personal-records/");
+    const isImportInstruction = pathname === "/import-instruction";
+
     const shouldRewrite =
       pathname === "/" ||
       pathname === "/exercises" ||
-      pathname.startsWith("/exercises/");
+      pathname.startsWith("/exercises/") ||
+      pathname === "/workout-plans" ||
+      pathname.startsWith("/workout-plans/") ||
+      (isWorkoutSessions && !isActivePage) ||
+      isPersonalRecords ||
+      isImportInstruction;
 
     if (shouldRewrite) {
       const url = request.nextUrl.clone();
@@ -69,7 +83,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all request paths except: _next/static, _next/image, favicon.ico, image files
+    // Plain string instead of String.raw – SonarQube + Next.js static extraction
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

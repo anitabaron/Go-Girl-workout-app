@@ -1,0 +1,45 @@
+---
+description: M3 migration boundaries – import rules and style conventions for M3 routes
+globs: src/app/(app)/(m3)/**/*
+alwaysApply: false
+---
+
+# M3 Migration Rules
+
+## Scope
+
+- **M3-ready**: Routes under `(m3)/m3/`; components under `m3/_components/` or `m3/_ui/`; only `m3.css` tokens (`--m3-*`, `.m3-*`).
+- **Legacy-only**: Routes under `(legacy)/`; components under `components/`; may use globals.css tokens and legacy patterns.
+
+## Import Boundaries (M3 routes)
+
+### Forbidden imports
+
+M3 routes and M3 components **must not** import:
+
+- `@/components/layout/*`
+- `@/components/navigation/*` (TopNavigation, BottomNavigation, PageHeader from legacy)
+- `@/components/exercises/*` (ExerciseCard, ExercisesList, ExerciseFilters, ExerciseSort, AddExerciseButton, DeleteExerciseDialog)
+- `@/components/workout-plans/*`, `@/components/workout-sessions/*`, `@/components/personal-records/*`
+- `@/components/shared/empty-state` (use `m3/_components/EmptyState` instead)
+
+### Allowed imports
+
+M3 routes may import:
+
+- `@/components/ui/*` (shadcn primitives)
+- `m3/_components/*`, `m3/_ui/*`
+- `@/services/*`, `@/hooks/*`, `@/lib/*`, `@/types`
+
+## Style Conventions (M3)
+
+- **No legacy Tailwind classes**: Avoid `bg-secondary`, `text-zinc-*`, `dark:bg-zinc-*`, `rounded-2xl`, `border-border` in M3 components.
+- **Use M3 tokens**: Prefer `var(--m3-*)`, `.m3-headline`, `.m3-label`, `.m3-cta`, `.m3-chip`.
+- **Links**: M3 internal links must target `/m3/*` (e.g. `/m3/exercises/new`, `/m3/exercises/[id]`), not legacy paths like `/exercises/new`.
+
+## Shadcn Purity
+
+Components in `src/components/ui/` must remain **clean** – no hardcoded legacy colors, `dark:` overrides, or legacy classes. M3 styling is applied via:
+
+1. **m3.css** – overrides CSS vars (`--background`, `--primary`, etc.) under `.ui-m3`
+2. **M3 wrappers** – add `.m3-*` classes to shadcn primitives when needed
