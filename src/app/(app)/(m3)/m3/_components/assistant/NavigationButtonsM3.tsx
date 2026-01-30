@@ -76,8 +76,7 @@ export function NavigationButtonsM3({
         aria-label="Pomiń ćwiczenie"
         data-test-id="workout-assistant-skip-button"
       >
-        <RedoDot className="size-5 shrink-0 sm:mr-2" />
-        <span className="hidden sm:inline">Pomiń</span>
+        <RedoDot className="size-5 shrink-0" />
       </Button>
 
       <Button

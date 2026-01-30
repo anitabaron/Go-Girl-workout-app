@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import { formatTotalDuration } from "@/lib/utils/time-format";
 import { toast } from "sonner";
 import type { ExerciseDTO } from "@/types";
 
@@ -26,11 +29,6 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const params: string[] = [`Serie: ${exercise.series}`];
-  if (exercise.reps) params.push(`Powtórzenia: ${exercise.reps}`);
-  if (exercise.duration_seconds)
-    params.push(`Czas: ${exercise.duration_seconds}s`);
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -118,24 +116,61 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
             <h3 className="m3-card-title line-clamp-2 pr-16">
               {exercise.title}
             </h3>
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
-              <span className="m3-card-meta px-1.5 py-0.5 rounded bg-[var(--m3-surface-container-high)]">
-                {EXERCISE_TYPE_LABELS[exercise.type]}
-              </span>
-              <span className="m3-card-meta px-1.5 py-0.5 rounded bg-[var(--m3-surface-container-high)]">
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              <ExerciseTypeBadge type={exercise.type} />
+              <Badge variant="outline" className="border-primary text-primary">
                 {EXERCISE_PART_LABELS[exercise.part]}
-              </span>
+              </Badge>
               {exercise.level && (
-                <span className="m3-card-meta px-1.5 py-0.5 rounded bg-[var(--m3-surface-container-high)]">
-                  {exercise.level}
-                </span>
+                <Badge variant="outline">{exercise.level}</Badge>
               )}
             </div>
           </CardHeader>
-          <CardContent className="pt-0 px-4 pb-3 space-y-1.5">
-            <p className="m3-card-meta">{params.join(" · ")}</p>
+          <CardContent className="pt-0 px-4 pb-3 space-y-2.5">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+              <span>
+                <span className="text-muted-foreground">Serie </span>
+                <span className="font-semibold text-foreground">
+                  {exercise.series}
+                </span>
+              </span>
+              {exercise.reps != null && (
+                <span>
+                  <span className="text-muted-foreground">Powtórzenia </span>
+                  <span className="font-semibold text-foreground">
+                    {exercise.reps}
+                  </span>
+                </span>
+              )}
+              {exercise.duration_seconds != null && (
+                <span>
+                  <span className="text-muted-foreground">Czas </span>
+                  <span className="font-semibold text-foreground">
+                    {exercise.duration_seconds}s
+                  </span>
+                </span>
+              )}
+              {exercise.rest_in_between_seconds != null && (
+                <span>
+                  <span className="text-muted-foreground">Przerwa między </span>
+                  <span className="font-medium text-foreground">
+                    {formatTotalDuration(exercise.rest_in_between_seconds)}
+                  </span>
+                </span>
+              )}
+              {exercise.rest_after_series_seconds != null && (
+                <span>
+                  <span className="text-muted-foreground">Przerwa po </span>
+                  <span className="font-medium text-foreground">
+                    {formatTotalDuration(exercise.rest_after_series_seconds)}
+                  </span>
+                </span>
+              )}
+            </div>
             {exercise.details && (
-              <p className="m3-card-body line-clamp-2">{exercise.details}</p>
+              <p className="text-[0.8125rem] leading-relaxed text-muted-foreground line-clamp-2">
+                {exercise.details}
+              </p>
             )}
           </CardContent>
         </Link>

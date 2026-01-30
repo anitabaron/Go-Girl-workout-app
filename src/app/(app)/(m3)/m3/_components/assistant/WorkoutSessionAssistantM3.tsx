@@ -70,7 +70,7 @@ export function WorkoutSessionAssistantM3({
         errorMessage={autosaveError}
       />
 
-      <div className="flex-1 overflow-y-auto md:pt-4">
+      <div className="flex-1 overflow-y-auto pb-[10.5rem] md:pb-0 md:pt-4">
         <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6">
           <WorkoutTimerM3
             activeDurationSeconds={session.active_duration_seconds ?? 0}
@@ -98,7 +98,7 @@ export function WorkoutSessionAssistantM3({
         </div>
       </div>
 
-      <div className="border-t border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-4">
+      <div className="fixed left-0 right-0 bottom-above-mobile-nav z-40 border-t border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-4 shadow-[0_-2px_10px_rgb(0_0_0/0.08)] md:static md:bottom-auto md:z-auto md:shadow-none">
         <div className="mx-auto w-full max-w-4xl">
           <NavigationButtonsM3
             onPrevious={handlePrevious}

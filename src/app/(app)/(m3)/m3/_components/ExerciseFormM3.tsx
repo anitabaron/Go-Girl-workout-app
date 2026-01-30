@@ -393,9 +393,11 @@ function ExerciseFormM3Fields({
           )}
         />
       </div>
-      <p className="m3-label text-muted-foreground">Provide exactly one: reps or duration</p>
+      <p className="m3-label text-muted-foreground">
+        Provide exactly one: reps or duration
+      </p>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Controller
           name="rest_in_between_seconds"
           control={control}
@@ -436,31 +438,30 @@ function ExerciseFormM3Fields({
             />
           )}
         />
+        <Controller
+          name="estimated_set_time_seconds"
+          control={control}
+          render={({ field }) => (
+            <FormNumberInput
+              id="estimated_set_time_seconds"
+              label="Estimated set time (sec)"
+              value={String(field.value ?? "")}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              error={
+                errors.estimated_set_time_seconds?.message as string | undefined
+              }
+              disabled={disabled}
+              min={1}
+              data-test-id="exercise-form-estimated-set-time"
+              className="w-full"
+            />
+          )}
+        />
       </div>
       <p className="m3-label text-muted-foreground">
         Provide at least one rest field
       </p>
-
-      <Controller
-        name="estimated_set_time_seconds"
-        control={control}
-        render={({ field }) => (
-          <FormNumberInput
-            id="estimated_set_time_seconds"
-            label="Estimated set time (sec)"
-            value={String(field.value ?? "")}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-            error={
-              errors.estimated_set_time_seconds?.message as string | undefined
-            }
-            disabled={disabled}
-            min={1}
-            data-test-id="exercise-form-estimated-set-time"
-            className="w-full sm:max-w-xs"
-          />
-        )}
-      />
     </div>
   );
 }

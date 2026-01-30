@@ -49,9 +49,7 @@ type SortValue = (typeof SORT_OPTIONS)[number]["value"];
 
 function parseSortValue(sort?: string, order?: string): SortValue {
   const key = `${sort ?? "created_at"}-${order ?? "desc"}`;
-  const found = SORT_OPTIONS.find(
-    (o) => o.sort === (sort ?? "created_at") && o.order === (order ?? "desc"),
-  );
+  const found = SORT_OPTIONS.find((o) => o.value === key);
   return found?.value ?? "created_at-desc";
 }
 
@@ -103,7 +101,7 @@ export function WorkoutPlansToolbar({
   const hasActiveFilters = part != null && part !== "";
 
   return (
-    <Toolbar className="flex flex-wrap items-center gap-4 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-highest)] p-4">
+    <Toolbar className="flex flex-wrap items-center gap-4">
       <div className="flex flex-col gap-1">
         <label htmlFor="part-filter" className="sr-only">
           Filter by body part

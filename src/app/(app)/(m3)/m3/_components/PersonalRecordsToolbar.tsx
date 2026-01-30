@@ -139,7 +139,7 @@ export function PersonalRecordsToolbar({
   const hasActiveFilters = exerciseId != null || metricType != null;
 
   return (
-    <Toolbar className="flex flex-wrap items-center gap-4 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-highest)] p-4">
+    <Toolbar className="flex flex-wrap items-center gap-4">
       <div className="flex flex-col gap-1">
         <label htmlFor="exercise-filter" className="sr-only">
           Filtruj po ćwiczeniu

@@ -119,6 +119,9 @@
   align-self: stretch;
   overflow-wrap: normal;
   word-break: normal;
+
+  /* Mobile bottom nav height (h-16 + safe-area) – for sticky/fixed elements above it */
+  --m3-mobile-nav-height: calc(4rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
 
 /* Theme transition – smooth switch for all color-using elements */
@@ -584,9 +587,20 @@ body:has(.ui-m3) [data-slot="sheet-overlay"] {
 /* ============================================
    NAVIGATION RAIL - fixed positioning, safe areas
    ============================================ */
+/* Ensure document scrolls when content exceeds viewport (fixes "can't scroll to bottom") */
+html:has(.ui-m3) {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Mobile bottom nav: safe area inset for devices with home indicator */
 .ui-m3 .safe-area-pb {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Fixed bottom bar above mobile nav – for workout session controls etc. */
+.ui-m3 .bottom-above-mobile-nav {
+  bottom: var(--m3-mobile-nav-height);
 }
 
 /* ============================================

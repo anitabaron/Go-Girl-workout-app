@@ -116,6 +116,7 @@ export function PersonalRecordMetricItemM3({
           href={`/m3/workout-sessions/${metric.sessionId}`}
           className="ml-4 shrink-0 m3-label text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
           aria-label={`Zobacz szczegóły sesji treningowej, w której osiągnięto ten rekord`}
+          onClick={(e) => e.stopPropagation()}
         >
           Zobacz sesję
         </Link>

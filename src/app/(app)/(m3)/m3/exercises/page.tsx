@@ -4,7 +4,10 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exerciseQuerySchema } from "@/lib/validation/exercises";
 import { requireAuth } from "@/lib/auth";
-import { listExercisesService } from "@/services/exercises";
+import {
+  listExercisesService,
+  listExerciseTitlesService,
+} from "@/services/exercises";
 import type { ExerciseQueryParams } from "@/types";
 import {
   PageHeader,
@@ -31,6 +34,14 @@ export default async function ExercisesPage({
     : exerciseQuerySchema.parse({});
 
   const userId = await requireAuth();
+
+  let exercisesForFilters: { id: string; title: string }[] = [];
+  try {
+    exercisesForFilters = await listExerciseTitlesService(userId, 50);
+  } catch (error) {
+    console.error("Error loading exercises for filters:", error);
+  }
+
   const result = await listExercisesService(userId, parsedQuery);
   const exercises = result.items;
   const isEmpty = exercises.length === 0;
@@ -58,9 +69,11 @@ export default async function ExercisesPage({
           fallback={<div className="h-14 animate-pulse rounded-lg bg-muted" />}
         >
           <ExercisesToolbar
+            exercises={exercisesForFilters}
             search={parsedQuery.search}
-            sort={parsedQuery.sort}
-            order={parsedQuery.order}
+            part={parsedQuery.part ?? null}
+            type={parsedQuery.type ?? null}
+            exerciseId={parsedQuery.exercise_id ?? null}
           />
         </Suspense>
 

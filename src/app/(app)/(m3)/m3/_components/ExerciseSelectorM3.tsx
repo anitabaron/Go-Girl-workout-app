@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
 import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
+import { formatTotalDuration } from "@/lib/utils/time-format";
 
 type ExerciseSelectorM3Props = {
   selectedExerciseIds: string[];
@@ -218,21 +219,74 @@ export function ExerciseSelectorM3({
                     />
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-2.5 pt-0">
                   <div className="flex flex-wrap gap-2">
-                    <ExerciseTypeBadge
-                      type={exercise.type}
-                      className="text-xs"
-                    />
-                    <Badge variant="outline" className="text-xs">
+                    <ExerciseTypeBadge type={exercise.type} />
+                    <Badge
+                      variant="outline"
+                      className="border-primary text-primary"
+                    >
                       {EXERCISE_PART_LABELS[exercise.part]}
                     </Badge>
                     {exercise.level && (
-                      <Badge variant="outline" className="text-xs">
-                        {exercise.level}
-                      </Badge>
+                      <Badge variant="outline">{exercise.level}</Badge>
                     )}
                   </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                    <span>
+                      <span className="text-muted-foreground">Serie </span>
+                      <span className="font-semibold text-foreground">
+                        {exercise.series}
+                      </span>
+                    </span>
+                    {exercise.reps != null && (
+                      <span>
+                        <span className="text-muted-foreground">
+                          Powtórzenia{" "}
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {exercise.reps}
+                        </span>
+                      </span>
+                    )}
+                    {exercise.duration_seconds != null && (
+                      <span>
+                        <span className="text-muted-foreground">Czas </span>
+                        <span className="font-semibold text-foreground">
+                          {exercise.duration_seconds}s
+                        </span>
+                      </span>
+                    )}
+                    {exercise.rest_in_between_seconds != null && (
+                      <span>
+                        <span className="text-muted-foreground">
+                          Przerwa między{" "}
+                        </span>
+                        <span className="font-medium text-foreground">
+                          {formatTotalDuration(
+                            exercise.rest_in_between_seconds,
+                          )}
+                        </span>
+                      </span>
+                    )}
+                    {exercise.rest_after_series_seconds != null && (
+                      <span>
+                        <span className="text-muted-foreground">
+                          Przerwa po{" "}
+                        </span>
+                        <span className="font-medium text-foreground">
+                          {formatTotalDuration(
+                            exercise.rest_after_series_seconds,
+                          )}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                  {exercise.details && (
+                    <p className="text-[0.8125rem] leading-relaxed text-muted-foreground line-clamp-2">
+                      {exercise.details}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             );
