@@ -9,9 +9,10 @@ import {
 } from "@/services/workout-sessions";
 import { listWorkoutPlansService } from "@/services/workout-plans";
 import type { SessionDetailDTO } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
 import { ResumeSessionCard } from "@/components/workout-sessions/start/resume-session-card";
 import { WorkoutPlanSelector } from "@/components/workout-sessions/start/workout-plan-selector";
-import { EmptyState } from "@/components/workout-sessions/start/empty-state";
+import { Calendar, Plus } from "lucide-react";
 import { PageHeader } from "@/components/navigation/page-header";
 
 export const metadata: Metadata = {
@@ -40,7 +41,7 @@ export default async function StartWorkoutSessionPage() {
       // Pobierz pełne szczegóły sesji
       inProgressSession = await getWorkoutSessionService(
         userId,
-        sessionsResult.items[0].id
+        sessionsResult.items[0].id,
       );
     }
   } catch (error) {
@@ -97,7 +98,20 @@ export default async function StartWorkoutSessionPage() {
         <PageHeader backHref="/workout-sessions" />
         <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
           <h1 className="mb-6 text-3xl font-bold">Rozpocznij trening</h1>
-          <EmptyState />
+          <EmptyState
+            icon={<Calendar className="h-8 w-8 text-muted-foreground" />}
+            title="Brak planów treningowych"
+            description="Utwórz swój pierwszy plan treningowy, aby rozpocząć treningi"
+            actionHref="/workout-plans/new"
+            actionLabel="Utwórz plan treningowy"
+            actionContent={
+              <>
+                <Plus className="mr-2 h-4 w-4" />
+                Utwórz plan
+              </>
+            }
+            variant="muted"
+          />
         </main>
       </div>
     );

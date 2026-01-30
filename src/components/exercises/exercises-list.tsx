@@ -1,6 +1,7 @@
 import type { ExerciseDTO } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Dumbbell } from "lucide-react";
 import { ExerciseCard } from "./exercise-card";
-import { EmptyState } from "./empty-state";
 
 type ExercisesListProps = {
   readonly exercises: ExerciseDTO[];
@@ -28,7 +29,18 @@ export function ExercisesList({
         </div>
       );
     }
-    return <EmptyState />;
+    return (
+      <EmptyState
+        icon={
+          <Dumbbell className="h-8 w-8 text-destructive" aria-hidden="true" />
+        }
+        title="Nie masz jeszcze żadnych ćwiczeń"
+        description="Dodaj pierwsze ćwiczenie, aby rozpocząć budowanie swojej biblioteki treningowej"
+        actionHref="/exercises/new"
+        actionLabel="Dodaj pierwsze ćwiczenie"
+        testId="exercises-empty-state"
+      />
+    );
   }
 
   return (
