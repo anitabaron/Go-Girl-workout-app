@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { handleRouteError } from "@/lib/api-route-utils";
 import { getUserIdFromSession } from "@/lib/auth-api";
-import { respondWithServiceError } from "@/lib/http/errors";
-import {
-  listPersonalRecordsService,
-  ServiceError,
-} from "@/services/personal-records";
+import { listPersonalRecordsService } from "@/services/personal-records";
 import { personalRecordQuerySchema } from "@/lib/validation/personal-records";
 
 export async function GET(request: Request) {
@@ -23,24 +20,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error("GET /api/personal-records unexpected error", error);
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 },
-    );
+    return handleRouteError(error, "GET /api/personal-records");
   }
 }

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 
+import { handleRouteError } from "@/lib/api-route-utils";
 import { getUserIdFromSession } from "@/lib/auth-api";
-import { respondWithServiceError } from "@/lib/http/errors";
 import {
   deleteExerciseService,
   getExerciseService,
-  ServiceError,
   updateExerciseService,
 } from "@/services/exercises";
 
@@ -33,25 +32,7 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     return NextResponse.json(exercise, { status: 200 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error("GET /api/exercises/[id] unexpected error", error);
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 },
-    );
+    return handleRouteError(error, "GET /api/exercises/[id]");
   }
 }
 
@@ -74,25 +55,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error("PATCH /api/exercises/[id] unexpected error", error);
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 },
-    );
+    return handleRouteError(error, "PATCH /api/exercises/[id]");
   }
 }
 
@@ -114,24 +77,6 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error("DELETE /api/exercises/[id] unexpected error", error);
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 },
-    );
+    return handleRouteError(error, "DELETE /api/exercises/[id]");
   }
 }

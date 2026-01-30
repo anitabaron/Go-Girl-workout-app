@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
 
+import { handleRouteError } from "@/lib/api-route-utils";
 import { getUserIdFromSession } from "@/lib/auth-api";
-import { respondWithServiceError } from "@/lib/http/errors";
-import {
-  updateWorkoutSessionTimerService,
-  ServiceError,
-} from "@/services/workout-sessions";
+import { updateWorkoutSessionTimerService } from "@/services/workout-sessions";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -78,37 +74,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     return NextResponse.json({ data: updated }, { status: 200 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        {
-          message: "Nieprawidłowe dane wejściowe.",
-          code: "BAD_REQUEST",
-          details: error.issues.map((issue) => issue.message).join("; "),
-        },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        message: "Wystąpił błąd serwera.",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
+    return handleRouteError(error, "PATCH /api/workout-sessions/[id]/timer");
   }
 }

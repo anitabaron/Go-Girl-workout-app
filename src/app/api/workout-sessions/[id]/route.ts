@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 
+import { handleRouteError } from "@/lib/api-route-utils";
 import { getUserIdFromSession } from "@/lib/auth-api";
-import { respondWithServiceError } from "@/lib/http/errors";
 import {
   getWorkoutSessionService,
   deleteWorkoutSessionService,
-  ServiceError,
 } from "@/services/workout-sessions";
 
 function isUuid(value: string) {
@@ -45,28 +44,7 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     return NextResponse.json(session, { status: 200 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error("GET /api/workout-sessions/[id] unexpected error", error);
-    return NextResponse.json(
-      {
-        message: "Wystąpił błąd serwera.",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
+    return handleRouteError(error, "GET /api/workout-sessions/[id]");
   }
 }
 
@@ -95,24 +73,6 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error("DELETE /api/workout-sessions/[id] unexpected error", error);
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 },
-    );
+    return handleRouteError(error, "DELETE /api/workout-sessions/[id]");
   }
 }

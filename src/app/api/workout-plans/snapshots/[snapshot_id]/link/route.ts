@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { handleRouteError } from "@/lib/api-route-utils";
 import { getUserIdFromSession } from "@/lib/auth-api";
-import { respondWithServiceError } from "@/lib/http/errors";
-import {
-  linkSnapshotToExerciseService,
-  ServiceError,
-} from "@/services/workout-plans";
+import { linkSnapshotToExerciseService } from "@/services/workout-plans";
 
 type RouteContext = {
   params: Promise<{
@@ -84,27 +81,9 @@ export async function POST(request: Request, { params }: RouteContext) {
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error(
-      "POST /api/workout-plans/snapshots/[snapshot_id]/link unexpected error",
+    return handleRouteError(
       error,
-    );
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 },
+      "POST /api/workout-plans/snapshots/[snapshot_id]/link",
     );
   }
 }

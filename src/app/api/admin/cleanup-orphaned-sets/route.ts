@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { handleRouteError } from "@/lib/api-route-utils";
 import { getUserIdFromSession } from "@/lib/auth-api";
 import { createClient } from "@/db/supabase.server";
 
@@ -93,18 +94,7 @@ export async function GET() {
       orphanedIds: orphanedIds,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    console.error("Error finding orphaned set logs:", error);
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return handleRouteError(error, "GET /api/admin/cleanup-orphaned-sets");
   }
 }
 
@@ -150,17 +140,6 @@ export async function POST() {
       deletedCount: orphanedIds.length,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    console.error("Error cleaning up orphaned set logs:", error);
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return handleRouteError(error, "POST /api/admin/cleanup-orphaned-sets");
   }
 }
