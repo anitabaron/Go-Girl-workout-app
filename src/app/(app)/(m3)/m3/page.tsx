@@ -59,6 +59,31 @@ export default function M3Page() {
           </Button>
         </Surface>
       </div>
+      <div className="space-y-6">
+        <div className="h-[120vh] rounded-xl border-2 border-[var(--m3-primary)] p-6 flex flex-col items-center justify-center gap-4 bg-[var(--m3-primary-container)]/30">
+          <span className="m3-chip">Lenis scroll test 1</span>
+          <p className="m3-body text-center text-muted-foreground">
+            Scroll down – jeśli widzisz płynne przewijanie zamiast skoków, Lenis
+            działa.
+          </p>
+          <div className="h-1 w-32 rounded-full bg-[var(--m3-primary)]" />
+        </div>
+        <div className="h-[120vh] rounded-xl border-2 border-[var(--m3-outline)] p-6 flex flex-col items-center justify-center gap-4 bg-[var(--m3-surface-container)]">
+          <span className="m3-chip">Lenis scroll test 2</span>
+          <p className="m3-body text-center text-muted-foreground">
+            Drugi blok – sprawdź czy momentum i easing są płynne.
+          </p>
+          <div className="h-1 w-32 rounded-full bg-[var(--m3-outline)]" />
+        </div>
+        <div className="h-[120vh] rounded-xl border-2 border-[var(--m3-primary)] p-6 flex flex-col items-center justify-center gap-4 bg-[var(--m3-primary-container)]/20">
+          <span className="m3-chip">Lenis scroll test 3</span>
+          <p className="m3-body text-center text-muted-foreground">
+            Trzeci blok – koniec testu. Native scroll = sztywne skoki, Lenis =
+            płynna animacja.
+          </p>
+          <div className="h-1 w-32 rounded-full bg-[var(--m3-primary)]" />
+        </div>
+      </div>
     </div>
   );
 }

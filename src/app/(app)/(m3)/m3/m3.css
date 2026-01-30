@@ -5,6 +5,9 @@
  * Aligned with m3.material.io color system.
  */
 
+/* Lenis smooth scroll - required for Lenis to work (html.lenis only when m3 route) */
+@import "lenis/dist/lenis.css";
+
 /* ============================================
    M3 COLOR TOKENS (light + dark, peach/pink family)
    ============================================ */
@@ -479,6 +482,14 @@ body:has(.ui-m3) [data-slot="select-item"][data-highlighted] {
 
 .ui-m3 [data-slot="skeleton"].m3-skeleton-card {
   border-radius: var(--m3-radius-large) !important;
+}
+
+/* ============================================
+   NAVIGATION RAIL - fixed positioning, safe areas
+   ============================================ */
+/* Mobile bottom nav: safe area inset for devices with home indicator */
+.ui-m3 .safe-area-pb {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 /* ============================================
