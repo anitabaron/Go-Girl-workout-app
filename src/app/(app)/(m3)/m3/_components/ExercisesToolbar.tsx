@@ -105,7 +105,11 @@ export function ExercisesToolbar({
           disabled={isPending}
         />
       </div>
-      <Select value={sortValue} onValueChange={handleSortChange} disabled={isPending}>
+      <Select
+        value={sortValue}
+        onValueChange={handleSortChange}
+        disabled={isPending}
+      >
         <SelectTrigger className="w-full sm:w-[180px]" aria-label="Sort by">
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>

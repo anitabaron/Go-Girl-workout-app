@@ -54,7 +54,9 @@ export default async function ExercisesPage({
       />
 
       <Surface variant="high">
-        <Suspense fallback={<div className="h-14 animate-pulse rounded-lg bg-muted" />}>
+        <Suspense
+          fallback={<div className="h-14 animate-pulse rounded-lg bg-muted" />}
+        >
           <ExercisesToolbar
             search={parsedQuery.search}
             sort={parsedQuery.sort}
