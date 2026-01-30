@@ -68,9 +68,8 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
 ### 3.1 Konta i bezpieczeństwo dostępu
 
 3.1.1 Aplikacja musi obsługiwać logowanie użytkowników przez Supabase Auth z użyciem tradycyjnego formularza email/password. Aplikacja powinna również obsługiwać rejestrację nowych użytkowników oraz reset hasła.
-3.1.2 Formularz logowania musi zawierać checkbox "Zapamiętaj mnie" (Remember Me), który pozwala użytkowniczce przedłużyć czas trwania sesji. Wartość checkboxa jest przekazywana do Supabase Auth podczas logowania.
-3.1.3 Wszystkie dane domenowe (ćwiczenia, plany, sesje, PR, logi AI) muszą być prywatne per użytkownik i zabezpieczone na poziomie bazy przez RLS z filtrem user_id.
-3.1.4 Frontend nie może zakładać zaufania do danych po stronie klienta; egzekwowanie dostępu musi działać niezależnie od UI.
+3.1.2 Wszystkie dane domenowe (ćwiczenia, plany, sesje, PR, logi AI) muszą być prywatne per użytkownik i zabezpieczone na poziomie bazy przez RLS z filtrem user_id.
+3.1.3 Frontend nie może zakładać zaufania do danych po stronie klienta; egzekwowanie dostępu musi działać niezależnie od UI.
 
 ### 3.2 Biblioteka ćwiczeń (Exercise) - CRUD
 
@@ -221,13 +220,9 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Rejestracja/logowanie przez Supabase Auth
   Opis: Jako użytkowniczka chcę móc się zalogować do aplikacji, aby mieć prywatny dostęp do swoich ćwiczeń i treningów.
   Kryteria akceptacji:
-
   - Użytkowniczka może zalogować się używając formularza email/password i zakończyć proces logowania sukcesem.
   - Użytkowniczka może zarejestrować nowe konto używając formularza rejestracji.
   - Użytkowniczka może zresetować hasło, jeśli je zapomniała.
-  - Formularz logowania zawiera checkbox "Zapamiętaj mnie" (Remember Me), który pozwala przedłużyć czas trwania sesji.
-  - Jeśli użytkowniczka zaznaczy "Zapamiętaj mnie", sesja pozostaje aktywna dłużej (zgodnie z konfiguracją Supabase Auth).
-  - Jeśli użytkowniczka nie zaznaczy "Zapamiętaj mnie", sesja wygasa zgodnie z domyślnymi ustawieniami.
   - Po zalogowaniu aplikacja przechodzi do widoku głównego.
   - Po wylogowaniu dane użytkowniczki nie są widoczne.
   - Funkcjonalności aplikacji poza stroną główną '/' i dedykowanymi stronami do logowania, rejestracji, odzyskiwania hasła - nie są dostępne dla niezalogowanego uytkownika (US-010 - US-090)
@@ -240,7 +235,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Izolacja danych użytkowników (RLS)
   Opis: Jako użytkowniczka chcę mieć pewność, że nikt nie zobaczy moich danych nawet przy próbie manipulacji identyfikatorami.
   Kryteria akceptacji:
-
   - Próba odczytu zasobu innego użytkownika (np. poprzez zmianę ID w URL lub zapytaniu) kończy się brakiem dostępu/brakiem danych.
   - Próba edycji/usunięcia zasobu innego użytkownika kończy się błędem autoryzacji.
   - Działa to niezależnie od UI (weryfikacja na poziomie bazy przez RLS).
@@ -258,7 +252,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Dodanie ćwiczenia
   Opis: Jako użytkowniczka chcę dodać ćwiczenie do swojej biblioteki, aby móc budować z niego plany.
   Kryteria akceptacji:
-
   - Formularz umożliwia wpisanie title, wybór type i part.
   - Formularz wymaga podania co najmniej jednego z: time lub series lub reps lub rest lub restAfter.
   - Po zapisie ćwiczenie jest widoczne na liście.
@@ -267,7 +260,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Walidacja unikalności tytułu ćwiczenia (case-insensitive)
   Opis: Jako użytkowniczka chcę uniknąć duplikatów ćwiczeń, aby biblioteka była uporządkowana.
   Kryteria akceptacji:
-
   - Jeśli istnieje ćwiczenie o tym samym tytule po normalizacji (trim + lowercase + redukcja spacji), zapis jest blokowany.
   - Aplikacja pokazuje komunikat o duplikacie.
   - Reguła działa niezależnie od wielkości liter i wielokrotnych spacji.
@@ -276,7 +268,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Lista ćwiczeń
   Opis: Jako użytkowniczka chcę przeglądać listę ćwiczeń, aby szybko znaleźć potrzebne ćwiczenie.
   Kryteria akceptacji:
-
   - Lista pokazuje co najmniej title, type, part.
   - Lista wyświetla tylko ćwiczenia zalogowanej użytkowniczki.
 
@@ -284,7 +275,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Pusty stan listy ćwiczeń
   Opis: Jako użytkowniczka chcę dostać jasny komunikat, gdy nie mam jeszcze ćwiczeń, abym wiedziała co zrobić dalej.
   Kryteria akceptacji:
-
   - Jeśli użytkowniczka nie ma żadnych ćwiczeń, lista pokazuje pusty stan i CTA do dodania ćwiczenia.
   - Pusty stan nie pokazuje danych innych użytkowników.
 
@@ -299,7 +289,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Edycja ćwiczenia
   Opis: Jako użytkowniczka chcę edytować ćwiczenie, aby poprawić opis lub parametry.
   Kryteria akceptacji:
-
   - Użytkowniczka może zmienić pola zgodnie z wymaganiami walidacyjnymi.
   - Zapis nie może stworzyć duplikatu title po normalizacji.
   - Po zapisie zmiany są widoczne na liście i w planach, które używają ćwiczenia (referencja po ID).
@@ -308,7 +297,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Usuwanie ćwiczenia bez powiązań
   Opis: Jako użytkowniczka chcę móc usuwać niepotrzebne ćwiczenia, jeśli nie wpływa to na historię.
   Kryteria akceptacji:
-
   - Jeśli ćwiczenie nie ma powiązań z WorkoutSession/PR, można je usunąć.
   - Po usunięciu ćwiczenie znika z listy i nie jest dostępne w edytorze planu.
 
@@ -325,7 +313,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Utworzenie planu treningowego
   Opis: Jako użytkowniczka chcę utworzyć plan treningu, aby móc go wielokrotnie wykonywać.
   Kryteria akceptacji:
-
   - Użytkowniczka może podać name i opcjonalnie description.
   - Do tworzenia planu wykorzystuje zapisane w swoim koncie pojedyncze ćwiczenia
   - Po zapisaniu plan pojawia się na liście planów.
@@ -334,7 +321,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Walidacja planu bez ćwiczeń
   Opis: Jako użytkowniczka chcę, aby aplikacja nie pozwoliła mi zapisać lub uruchomić pustego planu.
   Kryteria akceptacji:
-
   - Zapis planu bez żadnych ćwiczeń jest zablokowany lub plan nie może zostać uruchomiony (jedno zachowanie konsekwentnie w całej aplikacji).
   - UI pokazuje komunikat o wymaganiu dodania co najmniej jednego ćwiczenia.
 
@@ -342,7 +328,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Dodanie ćwiczeń do planu w stałej kolejności
   Opis: Jako użytkowniczka chcę dodać ćwiczenia do planu w określonej kolejności, aby asystent mógł mnie prowadzić.
   Kryteria akceptacji:
-
   - Użytkowniczka może wybrać ćwiczenia z własnej biblioteki.
   - Plan zapisuje ćwiczenia w kolejności dodania.
   - W MVP brak funkcji zmiany kolejności w ramach sesji; kolejność w planie determinuje sesję.
@@ -351,7 +336,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Ustawienie domyślnych parametrów planu per ćwiczenie
   Opis: Jako użytkowniczka chcę zapisać planowane parametry ćwiczeń, aby mieć bazę do wykonania.
   Kryteria akceptacji:
-
   - Dla każdego ćwiczenia w planie można ustawić planned\_\* (np. planned_sets/reps/duration/rest/restAfter).
   - Walidacja pozwala pominąć nieadekwatne pola zależnie od typu ćwiczenia (np. izometria może mieć duration).
   - Parametry są widoczne w asystencie sesji jako “planowane”.
@@ -360,7 +344,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Edycja planu treningowego
   Opis: Jako użytkowniczka chcę edytować plan, aby zmienić listę ćwiczeń lub parametry.
   Kryteria akceptacji:
-
   - Można zmienić metadane planu oraz skład planu.
   - Zmiany wpływają na przyszłe sesje; już zapisane sesje nie zmieniają się (mają własną kopię).
 
@@ -368,7 +351,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Usunięcie planu treningowego
   Opis: Jako użytkowniczka chcę usuwać plany, które nie są mi potrzebne.
   Kryteria akceptacji:
-
   - Plan można usunąć.
   - Usunięcie planu nie usuwa historii sesji (WorkoutSession pozostaje w historii jako zapis wykonania).
 
@@ -376,7 +358,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Lista planów treningowych
   Opis: Jako użytkowniczka chcę przeglądać plany, aby szybko wybrać trening.
   Kryteria akceptacji:
-
   - Lista zawiera name, part oraz liczbę ćwiczeń.
   - Widoczne są tylko plany użytkowniczki.
 
@@ -393,7 +374,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Rozpoczęcie sesji z planu
   Opis: Jako użytkowniczka chcę rozpocząć sesję na podstawie planu, aby aplikacja poprowadziła mnie przez ćwiczenia.
   Kryteria akceptacji:
-
   - Kliknięcie “Start” tworzy WorkoutSession ze statusem in_progress.
   - Sesja zawiera listę ćwiczeń z planu w tej samej kolejności.
   - Dla każdego ćwiczenia sesja ma planned\_\* skopiowane z planu.
@@ -402,7 +382,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Timer globalny sesji
   Opis: Jako użytkowniczka chcę widzieć czas trwania sesji, aby kontrolować trening.
   Kryteria akceptacji:
-
   - Timer startuje przy rozpoczęciu sesji.
   - Pause zatrzymuje timer, a wznowienie kontynuuje od zatrzymanego czasu.
   - Wyjście z aktywnego asystenta trening zatrzymuje timer
@@ -413,7 +392,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Timer ćwiczenia
   Opis: Jako użytkowniczka chcę widzieć czas aktualnie wykonywanego ćwiczenia, aby kontrolować trening.
   Kryteria akceptacji:
-
   - Timer startuje przy rozpoczęciu setu ćwiczeń i odlicza od planowanego czasu do 0.
   - Jeśli ćwiczenie posiada planowane 20 sekund w jednej serii to czas odlicza się od 20 do 0
   - Przerwa pomiędzy ćwiczeniami odliczana jest od planowanego czasu odpoczynku pomiędzy seriami do 0
@@ -422,13 +400,12 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   - Wyjście z aktywnego asystenta trening zatrzymuje timer
   - Tylko w momencie otwartego asystenta treningu w aplikacji timer odlicza czas
   - Wyświetlony jest czas dla danej serii ćwiczenia lub odpoczynku z nim związanym
-  - Dla ćwiczeń które nie posiadają planowanych wartości w sekundach, ale w liczbie powtórzeń, w miejscu timera aktualnej serii wyświetlana jest liczba powtórzeń. Poniewaz nie ma wtedy odliczania to przejście od wykonywania powórzeń do odliczania odpoczynku odbywa się poprzez naciśnięcie dodatkowego przycisku OK umieszczonego przy biezącej liczbie powtorzeń ćwiczenia  
+  - Dla ćwiczeń które nie posiadają planowanych wartości w sekundach, ale w liczbie powtórzeń, w miejscu timera aktualnej serii wyświetlana jest liczba powtórzeń. Poniewaz nie ma wtedy odliczania to przejście od wykonywania powórzeń do odliczania odpoczynku odbywa się poprzez naciśnięcie dodatkowego przycisku OK umieszczonego przy biezącej liczbie powtorzeń ćwiczenia
 
 - ID: US-032
   Tytuł: Wyświetlenie bieżącego ćwiczenia z parametrami planowanymi
   Opis: Jako użytkowniczka chcę widzieć planowane parametry ćwiczenia, aby wiedzieć co wykonać.
   Kryteria akceptacji:
-
   - Widok bieżącego ćwiczenia pokazuje:
     - tytuł ćwiczenia
     - typ ćwiczenia (Warm-up | Main Workout | Cool-down)
@@ -444,7 +421,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Zapis faktycznego wykonania ćwiczenia (actual\_\*)
   Opis: Jako użytkowniczka chcę móc wpisać faktyczne wykonanie, gdy różni się od planu.
   Kryteria akceptacji:
-
   - Użytkowniczka wprowadza dane wykonania przez set logs (dla każdej serii: powtórzenia, czas trwania, waga).
   - Wartości faktyczne są obliczane automatycznie z set logs:
     - liczba serii faktycznych = liczba wprowadzonych serii
@@ -458,7 +434,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Nawigacja next zapisuje stan ćwiczenia
   Opis: Jako użytkowniczka chcę, aby przejście dalej zapisało moje dane i przeniosło mnie do kolejnego ćwiczenia.
   Kryteria akceptacji:
-
   - Kliknięcie next zapisuje aktualne dane ćwiczenia (planned*\* i actual*\* oraz set logs).
   - Po zapisie aplikacja przechodzi do następnego ćwiczenia.
   - Jeśli zapis się nie uda, aplikacja pokazuje błąd i nie przechodzi dalej.
@@ -467,7 +442,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Nawigacja previous do poprzedniego ćwiczenia
   Opis: Jako użytkowniczka chcę wrócić do poprzedniego ćwiczenia, aby je podejrzeć lub wykonać później.
   Kryteria akceptacji:
-
   - Kliknięcie previous przenosi do poprzedniego ćwiczenia na liście.
   - Dane zapisane wcześniej są widoczne w formularzu.
 
@@ -475,7 +449,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Skip ćwiczenia
   Opis: Jako użytkowniczka chcę pominąć ćwiczenie, jeśli nie mogę go wykonać.
   Kryteria akceptacji:
-
   - Kliknięcie skip oznacza ćwiczenie jako pominięte w ramach sesji i przechodzi do następnego.
   - Skip nie tworzy set logs, jeśli użytkowniczka nic nie zapisała dla tego ćwiczenia.
   - Sesja może zostać ukończona mimo pominięć.
@@ -485,7 +458,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Autosave przy pauzie
   Opis: Jako użytkowniczka chcę nie tracić danych, gdy robię przerwę.
   Kryteria akceptacji:
-
   - Kliknięcie pause zapisuje bieżący stan sesji.
   - Po wznowieniu dane pozostają dostępne.
 
@@ -493,7 +465,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Wznowienie przerwanej sesji
   Opis: Jako użytkowniczka chcę wznowić sesję in_progress, aby dokończyć trening.
   Kryteria akceptacji:
-
   - Jeśli istnieje sesja in_progress, aplikacja oferuje opcję wznowienia.
   - Wznowienie przenosi użytkowniczkę do ostatniego miejsca w sesji (ostatnio aktywne ćwiczenie lub następne po zapisanym).
 
@@ -501,7 +472,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Blokada startu nowej sesji przy in_progress
   Opis: Jako użytkowniczka chcę uniknąć sytuacji, w której mam kilka “rozgrzebanych” treningów naraz.
   Kryteria akceptacji:
-
   - Jeśli istnieje sesja in_progress, próba rozpoczęcia nowej sesji jest blokowana lub przekierowuje do wznowienia istniejącej sesji (z komunikatem).
   - Aplikacja nie tworzy drugiej sesji in_progress.
 
@@ -509,7 +479,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Obsługa błędu autosave/next przy problemach z siecią
   Opis: Jako użytkowniczka chcę nie stracić danych, gdy zapis chwilowo nie działa.
   Kryteria akceptacji:
-
   - Jeśli zapis przy next/pause nie powiedzie się, aplikacja pokazuje błąd i nie przechodzi do następnego ćwiczenia.
   - Wprowadzone dane pozostają w formularzu (nie znikają po błędzie).
 
@@ -517,7 +486,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Zakończenie sesji po dotarciu do końca listy
   Opis: Jako użytkowniczka chcę ukończyć sesję, gdy przejdę przez wszystkie ćwiczenia.
   Kryteria akceptacji:
-
   - Po przejściu przez ostatnie ćwiczenie i wykonaniu next, sesja uzyskuje status completed.
   - Completed jest możliwe nawet, jeśli w sesji wystąpiły skip.
 
@@ -525,7 +493,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Przypadek przerwania sesji bez ukończenia
   Opis: Jako użytkowniczka chcę móc przerwać sesję i wrócić później.
   Kryteria akceptacji:
-
   - Jeśli użytkowniczka opuści asystenta przed końcem listy, sesja pozostaje in_progress.
   - Aplikacja umożliwia wznowienie tej sesji.
 
@@ -543,7 +510,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Wprowadzanie logów per seria
   Opis: Jako użytkowniczka chcę zapisać wykonanie w podziale na serie, aby PR były wiarygodne.
   Kryteria akceptacji:
-
   - UI pozwala dodać i edytować listę serii dla ćwiczenia (set logs).
   - Każda seria umożliwia wprowadzenie wartości takich jak reps/time/weight (zgodnie z docelowym formatem).
   - Nie ma moliwości wprowadzania zmian do rest i restAfter, odpoczynek nie jest tu kluczowy pod względem weryfikacji wykonania i aktualizowania PR
@@ -553,7 +519,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Walidacja minimalnych danych w serii
   Opis: Jako użytkowniczka chcę, aby aplikacja nie zapisała pustej serii, która psuje PR.
   Kryteria akceptacji:
-
   - System blokuje zapis serii bez żadnych wartości roboczych (np. wszystkie pola puste).
   - Komunikat walidacyjny wskazuje, które pola wymagają uzupełnienia.
   - Przy pominięciu ćwiczenia skip wpisuje do historii biezacej sesji reps lub time jako 0
@@ -564,7 +529,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Automatyczne wykrywanie PR po zapisie serii
   Opis: Jako użytkowniczka chcę, aby aplikacja wykryła nowy rekord, gdy zapiszę lepszy (wieksza liczba) wynik.
   Kryteria akceptacji:
-
   - Po zapisie sesji system porównuje nowe set logs z dotychczasowym PR dla danego ćwiczenia.
   - Jeśli wynik jest lepszy według reguł PR, system zapisuje nowy PR i oznacza go jako “nowy”.
 
@@ -572,7 +536,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: PR liczone z częściowo wykonanych sesji
   Opis: Jako użytkowniczka chcę, aby rekordy z częściowego treningu też były uwzględniane, jeśli zapisałam serie.
   Kryteria akceptacji:
-
   - PR są aktualizowane na podstawie set logs zapisanych w sesji in_progress, jeśli dane zostały zatwierdzone przez next.
   - Brak wymogu ukończenia sesji, aby PR zostały uwzględnione.
 
@@ -580,7 +543,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Przeliczenie PR po edycji wcześniejszych danych
   Opis: Jako użytkowniczka chcę, aby korekta logów zmieniła rekordy, jeśli ma na to wpływ.
   Kryteria akceptacji:
-
   - Po nadpisaniu logów serii system przelicza PR dla danego ćwiczenia.
   - Jeśli wcześniejszy PR przestaje być najlepszy, system aktualizuje PR do poprawnej wartości wynikającej z danych.
   - PR posiada oprócz samego rekordu take datę jego wykonania.
@@ -600,7 +562,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Lista historii sesji
   Opis: Jako użytkowniczka chcę widzieć wszystkie sesje, aby móc do nich wrócić.
   Kryteria akceptacji:
-
   - Lista pokazuje datę, nazwę planu oraz status (in_progress/completed).
   - Użytkowniczka może przejść do szczegółów wybranej sesji.
 
@@ -608,7 +569,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Szczegóły sesji z planned vs actual
   Opis: Jako użytkowniczka chcę widzieć różnice pomiędzy planem a wykonaniem.
   Kryteria akceptacji:
-
   - Widok sesji pokazuje listę ćwiczeń w kolejności z sesji.
   - Dla każdego ćwiczenia widoczne są planned*\* i actual*\* oraz set logs.
 
@@ -625,7 +585,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Formularz “na żądanie” do generowania treningu
   Opis: Jako użytkowniczka chcę podać parametry (cel/poziom/czas/partie/sprzęt), aby otrzymać propozycję treningu.
   Kryteria akceptacji:
-
   - Formularz zawiera pola: cel, poziom, czas, partie, sprzęt.
   - Po wysłaniu system rozpoczyna wywołanie AI i pokazuje stan ładowania.
 
@@ -633,7 +592,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Generowanie planu tylko z moich ćwiczeń
   Opis: Jako użytkowniczka chcę, aby AI używało wyłącznie ćwiczeń z mojej biblioteki.
   Kryteria akceptacji:
-
   - Odpowiedź AI jest walidowana: każdy exercise_id musi należeć do użytkowniczki.
   - Jeśli AI zwróci exercise_id spoza biblioteki, system odrzuca wynik i pokazuje błąd.
 
@@ -641,7 +599,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Optymalizacja istniejącego planu przez AI
   Opis: Jako użytkowniczka chcę zoptymalizować istniejący plan, aby lepiej pasował do parametrów.
   Kryteria akceptacji:
-
   - Użytkowniczka może wybrać plan do optymalizacji.
   - System wysyła do AI tylko niezbędne dane: parametry formularza + plan.
   - Zwrócony plan jest walidowany jak w generowaniu.
@@ -650,7 +607,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Kontrakt JSON i obsługa błędów formatu
   Opis: Jako użytkowniczka chcę dostać czytelny komunikat, gdy AI zwróci błędny format.
   Kryteria akceptacji:
-
   - Jeśli JSON jest niepoprawny lub nie przechodzi walidacji, aplikacja pokazuje komunikat o błędzie.
   - Aplikacja nie zapisuje częściowo niepoprawnego planu.
 
@@ -658,7 +614,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Limit 5 akcji AI na miesiąc na użytkownika
   Opis: Jako użytkowniczka chcę wiedzieć, ile mam pozostałych użyć AI, aby kontrolować limit.
   Kryteria akceptacji:
-
   - System blokuje wywołanie AI po przekroczeniu limitu.
   - UI pokazuje informację o pozostałych użyciach oraz dacie resetu (1. dzień miesiąca).
 
@@ -666,7 +621,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Blokada użycia AI, gdy brak ćwiczeń
   Opis: Jako użytkowniczka chcę wiedzieć, że AI nie zadziała bez mojej biblioteki ćwiczeń.
   Kryteria akceptacji:
-
   - Jeśli użytkowniczka nie ma żadnych ćwiczeń, AI generuj/optymalizuj jest zablokowane.
   - UI pokazuje komunikat i prowadzi do dodania pierwszego ćwiczenia.
 
@@ -674,7 +628,6 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   Tytuł: Retry nie liczy się przy błędzie systemowym
   Opis: Jako użytkowniczka chcę ponowić próbę, jeśli system zawiedzie, bez utraty limitu.
   Kryteria akceptacji:
-
   - Jeśli wywołanie zakończyło się błędem systemowym, ponowienie nie zmniejsza limitu.
   - Jeśli wywołanie zakończyło się poprawnie (nawet z odrzuconym planem z powodu walidacji), traktowane jest jako zużycie limitu.
 

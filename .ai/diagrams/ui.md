@@ -21,7 +21,6 @@
 - **LoginFormFields** (`src/components/auth/login/login-form-fields.tsx`) - Pola formularza logowania
 - **EmailInput** (`src/components/auth/login/email-input.tsx`) - Pole email
 - **PasswordInput** (`src/components/auth/login/password-input.tsx`) - Pole hasła
-- **RememberMeCheckbox** (`src/components/auth/login/remember-me-checkbox.tsx`) - Checkbox "Zapamiętaj mnie"
 - **ValidationErrors** (`src/components/auth/login/validation-errors.tsx`) - Wyświetlanie błędów walidacji
 - **LoginButton** (`src/components/auth/login/login-button.tsx`) - Przycisk logowania
 - **LoginLinks** (`src/components/auth/login/login-links.tsx`) - Linki (reset hasła, rejestracja)
@@ -144,7 +143,7 @@
 
 - **LoginPage**: Sprawdza sesję, przekierowuje zalogowanych, renderuje formularz logowania
 - **LoginForm**: Integruje useLoginForm, renderuje strukturę formularza
-- **useLoginForm**: Zarządza stanem (email, password, rememberMe), waliduje, obsługuje submit, integruje Supabase Auth
+- **useLoginForm**: Zarządza stanem (email, password), waliduje, obsługuje submit, integruje Supabase Auth
 - **RegisterPage**: Sprawdza sesję, przekierowuje zalogowanych, renderuje formularz rejestracji
 - **RegisterForm**: Zarządza stanem, waliduje, integruje Supabase Auth
 - **ResetPasswordPage**: Renderuje formularz resetu hasła (wysyłanie linku)
@@ -185,7 +184,6 @@ flowchart TD
         LoginFormFields["LoginFormFields<br/>(Client Component)"]
         EmailInputLogin["EmailInput<br/>(Client Component)"]
         PasswordInputLogin["PasswordInput<br/>(Client Component)"]
-        RememberMeCheckbox["RememberMeCheckbox<br/>(Client Component)"]
         ValidationErrors["ValidationErrors<br/>(Client Component)"]
         LoginButton["LoginButton<br/>(Client Component)"]
         LoginLinks["LoginLinks<br/>(Client Component)"]
@@ -262,7 +260,6 @@ flowchart TD
 
     %% Struktura formularza logowania
     LoginForm --> LoginFormFields
-    LoginForm --> RememberMeCheckbox
     LoginForm --> ValidationErrors
     LoginForm --> LoginButton
     LoginForm --> LoginLinks
@@ -315,10 +312,10 @@ flowchart TD
     %% Server Components do funkcji pomocniczych
     AppLayout --> createClient
     AppLayout --> requireAuth
-    
+
     %% AuthProvider do authStore
     AuthProviderComp --> authStore
-    
+
     %% Hooks do authStore
     useLoginForm --> authStore
     TopNavigation --> authStore
@@ -352,7 +349,7 @@ flowchart TD
     classDef store fill:#fff9c4,stroke:#f57f17,stroke-width:2px
 
     class LoginPage,RegisterPage,ResetPasswordPage,ResetPasswordConfirmPage,AppLayout,AuthCallbackRoute serverComponent
-    class LoginForm,RegisterForm,ResetPasswordForm,ResetPasswordConfirmForm,LoginFormFields,EmailInputLogin,PasswordInputLogin,RememberMeCheckbox,ValidationErrors,LoginButton,LoginLinks,EmailInputRegister,PasswordInputRegister,ConfirmPasswordInput,SubmitButton,LoginLink,ResetPasswordFormFields,ResetPasswordInstructions,ResetPasswordButton,BackToLoginLink,ResetPasswordConfirmFormFields,ResetPasswordConfirmButton,TopNavigation,BottomNavigation,PageHeader,AuthProvider,AuthProviderComp clientComponent
+    class LoginForm,RegisterForm,ResetPasswordForm,ResetPasswordConfirmForm,LoginFormFields,EmailInputLogin,PasswordInputLogin,ValidationErrors,LoginButton,LoginLinks,EmailInputRegister,PasswordInputRegister,ConfirmPasswordInput,SubmitButton,LoginLink,ResetPasswordFormFields,ResetPasswordInstructions,ResetPasswordButton,BackToLoginLink,ResetPasswordConfirmFormFields,ResetPasswordConfirmButton,TopNavigation,BottomNavigation,PageHeader,AuthProvider,AuthProviderComp clientComponent
     class useLoginForm,useResetPasswordForm,useResetPasswordConfirmForm hook
     class getUserId,createClient,validateRegisterForm function
     class SupabaseAuth external

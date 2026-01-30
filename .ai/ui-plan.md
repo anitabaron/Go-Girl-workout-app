@@ -24,7 +24,6 @@ Aplikacja wykorzystuje shadcn/ui jako bazę systemu komponentów, zapewniając d
 - **Główny cel**: Umożliwienie zalogowania użytkowniczki do aplikacji
 - **Kluczowe informacje do wyświetlenia**:
   - Formularz z polami: email, password
-  - Checkbox "Zapamiętaj mnie" (opcjonalnie)
   - Link do resetu hasła
   - Link do rejestracji (jeśli użytkowniczka nie ma konta)
 - **Kluczowe komponenty widoku**:

@@ -2,7 +2,6 @@
 
 import { useLoginForm } from "@/hooks/use-login-form";
 import { LoginFormFields } from "./login-form-fields";
-import { RememberMeCheckbox } from "./remember-me-checkbox";
 import { ValidationErrors } from "@/components/shared/validation-errors";
 import { LoginButton } from "./login-button";
 import { LoginLinks } from "./login-links";
@@ -23,12 +22,6 @@ export function LoginForm() {
         errors={errors}
         onChange={handleChange}
         onBlur={handleBlur}
-        disabled={isLoading}
-      />
-
-      <RememberMeCheckbox
-        checked={fields.rememberMe}
-        onChange={(checked) => handleChange("rememberMe", checked)}
         disabled={isLoading}
       />
 

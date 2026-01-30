@@ -12,7 +12,6 @@ import { mapAuthError } from "@/lib/auth-errors";
 export type LoginFormState = {
   email: string;
   password: string;
-  rememberMe: boolean;
 };
 
 // Błędy walidacji
@@ -30,7 +29,6 @@ const loginFormSchema = z.object({
     .min(1, "Email jest wymagany")
     .email("Nieprawidłowy format email"),
   password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
-  rememberMe: z.boolean().optional().default(false),
 });
 
 type UseLoginFormProps = {
@@ -43,18 +41,16 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
   const [fields, setFields] = useState<LoginFormState>({
     email: "",
     password: "",
-    rememberMe: false,
   });
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
 
   // Walidacja pojedynczego pola
   const validateField = useCallback(
-    (field: keyof LoginFormState, value: string | boolean): string | undefined => {
-      if (field === "rememberMe") {
-        return undefined; // rememberMe nie wymaga walidacji
-      }
-
+    (
+      field: keyof LoginFormState,
+      value: string | boolean,
+    ): string | undefined => {
       const fieldSchema =
         field === "email"
           ? loginFormSchema.shape.email
@@ -68,7 +64,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
 
       return undefined;
     },
-    []
+    [],
   );
 
   // Handler zmiany wartości pola
@@ -77,7 +73,10 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
       setFields((prev) => ({ ...prev, [field]: value }));
 
       // Czyszczenie błędu dla tego pola przy zmianie wartości
-      if ((field === "email" && errors.email) || (field === "password" && errors.password)) {
+      if (
+        (field === "email" && errors.email) ||
+        (field === "password" && errors.password)
+      ) {
         setErrors((prev) => {
           const newErrors = { ...prev };
           if (field === "email") {
@@ -98,7 +97,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         });
       }
     },
-    [errors]
+    [errors],
   );
 
   // Handler blur dla walidacji
@@ -125,7 +124,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         });
       }
     },
-    [fields, validateField]
+    [fields, validateField],
   );
 
   // Handler submit formularza
@@ -137,7 +136,6 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
       const validationResult = loginFormSchema.safeParse({
         email: fields.email.trim(),
         password: fields.password,
-        rememberMe: fields.rememberMe,
       });
 
       if (!validationResult.success) {
@@ -153,11 +151,11 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
           }
         });
         setErrors(fieldErrors);
-        
+
         // Scroll do pierwszego błędu walidacji
         setTimeout(() => {
           const firstErrorElement = document.querySelector(
-            '[aria-invalid="true"]'
+            '[aria-invalid="true"]',
           );
           if (firstErrorElement) {
             firstErrorElement.scrollIntoView({
@@ -200,7 +198,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
           // Scroll do pierwszego błędu
           setTimeout(() => {
             const firstErrorElement = document.querySelector(
-              '[aria-invalid="true"], [role="alert"]'
+              '[aria-invalid="true"], [role="alert"]',
             );
             if (firstErrorElement) {
               firstErrorElement.scrollIntoView({
@@ -215,36 +213,12 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
             }
           }, 100);
         } else if (data.session && data.user) {
-          // Remember Me - próba ustawienia dłuższego czasu wygaśnięcia cookies
-          if (fields.rememberMe) {
-            try {
-              // Pobranie projectRef z URL Supabase
-              const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-              const projectRef = supabaseUrl.split("//")[1]?.split(".")[0] || "";
-              
-              if (projectRef) {
-                // Próba ustawienia dłuższego maxAge dla cookies Supabase (30 dni)
-                const cookieName = `sb-${projectRef}-auth-token`;
-                const maxAge = 30 * 24 * 60 * 60; // 30 dni w sekundach
-                
-                // Ustawienie cookie z dłuższym czasem wygaśnięcia
-                // Uwaga: Cookies Supabase mogą być httpOnly, więc ta operacja może nie zadziałać
-                // W takim przypadku, długość sesji jest kontrolowana przez konfigurację Supabase
-                document.cookie = `${cookieName}=${data.session.access_token}; max-age=${maxAge}; path=/; SameSite=Lax`;
-              }
-            } catch {
-              // Ignorowanie błędów związanych z cookies (mogą być httpOnly)
-              // Długość sesji jest kontrolowana przez konfigurację Supabase
-              console.debug("Remember Me: Cookie modification not possible (may be httpOnly)");
-            }
-          }
-
           // Aktualizacja Zustand store
           setUser(data.user);
 
           // Sukces - przekierowanie
           toast.success("Zalogowano pomyślnie");
-          
+
           if (onSuccess) {
             onSuccess();
           } else {
@@ -256,7 +230,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
       } catch (error) {
         // Obsługa błędów sieci i innych nieoczekiwanych błędów
         const errorMessage = mapAuthError(error as Error);
-        
+
         toast.error(errorMessage);
         setErrors({
           _form: [errorMessage],
@@ -264,9 +238,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
 
         // Scroll do pierwszego błędu
         setTimeout(() => {
-          const firstErrorElement = document.querySelector(
-            '[role="alert"]'
-          );
+          const firstErrorElement = document.querySelector('[role="alert"]');
           if (firstErrorElement) {
             firstErrorElement.scrollIntoView({
               behavior: "smooth",
@@ -278,7 +250,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         setIsLoading(false);
       }
     },
-    [fields, router, onSuccess, setUser]
+    [fields, router, onSuccess, setUser],
   );
 
   return {

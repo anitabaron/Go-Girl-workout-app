@@ -9,11 +9,11 @@ Niniejsza specyfikacja opisuje architekturę modułu rejestracji, logowania i od
 Moduł autentykacji obejmuje:
 
 - **Rejestrację** nowych użytkowników (`/register`)
-- **Logowanie** istniejących użytkowników (`/login`) z checkboxem "Zapamiętaj mnie" (Remember Me)
+- **Logowanie** istniejących użytkowników (`/login`)
 - **Reset hasła** dla zapomnianych haseł (`/reset-password` i `/reset-password/confirm`)
 - **Potwierdzenie emaila** (jeśli wymagane przez konfigurację Supabase) (`/auth/callback`)
 - **Wylogowywanie** użytkowników
-- **Zarządzanie sesją** użytkownika (odświeżanie, walidacja, przedłużenie sesji przez Remember Me)
+- **Zarządzanie sesją** użytkownika (odświeżanie, walidacja)
 - **Ochronę tras** aplikacji przed nieautoryzowanym dostępem
 
 ### 1.2 Założenia techniczne
@@ -37,35 +37,30 @@ Moduł autentykacji obejmuje:
 **Strony dostępne bez autoryzacji:**
 
 1. **`/` (strona główna)**
-
    - Server Component: `src/app/(app)/page.tsx`
    - Dostęp: publiczny (niezalogowani i zalogowani)
    - Layout: `(app)` layout z nawigacją (warunkowo wyświetlaną)
    - Funkcjonalność: prezentacja aplikacji, możliwość przejścia do logowania
 
 2. **`/login` (logowanie)**
-
    - Server Component: `src/app/login/page.tsx`
    - Dostęp: tylko niezalogowani (przekierowanie zalogowanych do `/`)
    - Layout: własny layout bez nawigacji aplikacji
    - Funkcjonalność: formularz logowania email/password
 
 3. **`/register` (rejestracja)**
-
    - Server Component: `src/app/register/page.tsx`
    - Dostęp: tylko niezalogowani (przekierowanie zalogowanych do `/`)
    - Layout: własny layout bez nawigacji aplikacji
    - Funkcjonalność: formularz rejestracji z walidacją haseł
 
 4. **`/reset-password` (reset hasła)**
-
    - Server Component: `src/app/reset-password/page.tsx`
    - Dostęp: publiczny (niezalogowani i zalogowani)
    - Layout: własny layout bez nawigacji aplikacji
    - Funkcjonalność: formularz resetu hasła przez email
 
 5. **`/reset-password/confirm` (potwierdzenie resetu hasła)**
-
    - Server Component: `src/app/reset-password/confirm/page.tsx`
    - Dostęp: publiczny (tylko z ważnym tokenem z emaila)
    - Layout: własny layout bez nawigacji aplikacji
@@ -161,7 +156,6 @@ LoginPage (Server Component)
     ├── LoginFormFields (Client Component)
     │   ├── EmailInput (Client Component)
     │   └── PasswordInput (Client Component)
-    ├── RememberMeCheckbox (Client Component)
     ├── ValidationErrors (Client Component)
     ├── LoginButton (Client Component)
     └── LoginLinks (Client Component)
@@ -193,7 +187,7 @@ LoginPage (Server Component)
 
 - **Lokalizacja:** `src/hooks/use-login-form.ts`
 - **Odpowiedzialność:**
-  - Zarządzanie stanem formularza (email, password, rememberMe)
+  - Zarządzanie stanem formularza (email, password)
   - Walidacja pól z użyciem Zod schema
   - Obsługa submit z integracją Supabase Auth
   - Obsługa błędów (walidacja, autoryzacja, sieć)
@@ -201,39 +195,12 @@ LoginPage (Server Component)
 - **Walidacja:**
   - Email: wymagany, format email, trim
   - Password: wymagany, minimum 6 znaków
-  - RememberMe: boolean, domyślnie `false` (wymagane przez PRD - checkbox "Zapamiętaj mnie")
 - **Obsługa błędów:**
   - Email niepotwierdzony → komunikat o konieczności aktywacji
   - Rate limit → komunikat o zbyt wielu próbach
   - Błąd serwera (5xx) → komunikat o błędzie serwera
   - Nieprawidłowe dane → komunikat ogólny (bez ujawniania, czy email istnieje)
 - **Integracja:** `supabase.auth.signInWithPassword()` z `@/db/supabase.client`
-- **Remember Me:**
-  - Wartość `rememberMe` jest przekazywana do Supabase Auth podczas logowania
-  - Jeśli `rememberMe = true`, sesja jest przedłużona zgodnie z konfiguracją Supabase (dłuższy czas wygaśnięcia refresh_token)
-  - Jeśli `rememberMe = false`, sesja wygasa zgodnie z domyślnymi ustawieniami Supabase
-  - Implementacja: przekazanie opcji `persistSession` lub odpowiedniej konfiguracji w `signInWithPassword()`
-
-**RememberMeCheckbox (Client Component):**
-
-- **Lokalizacja:** `src/components/auth/login/remember-me-checkbox.tsx`
-- **Odpowiedzialność:**
-  - Renderowanie checkboxa "Zapamiętaj mnie"
-  - Zarządzanie stanem zaznaczenia (checked/unchecked)
-  - Przekazywanie wartości do `useLoginForm` hook
-- **Props:**
-  ```typescript
-  interface RememberMeCheckboxProps {
-    checked: boolean;
-    onChange: (checked: boolean) => void;
-    disabled?: boolean;
-  }
-  ```
-- **Funkcjonalność:**
-  - Checkbox jest widoczny w formularzu logowania
-  - Domyślnie niezaznaczony (`checked = false`)
-  - Wartość jest synchronizowana ze stanem formularza w `useLoginForm`
-  - Podczas submit wartość jest przekazywana do Supabase Auth
 
 #### 2.2.2 Widok rejestracji (`/register`)
 
@@ -433,20 +400,20 @@ AuthCallbackRoute (API Route Handler)
 
     if (error || !session) {
       return NextResponse.redirect(
-        new URL("/login?error=invalid_token", requestUrl.origin)
+        new URL("/login?error=invalid_token", requestUrl.origin),
       );
     }
 
     // Przekierowanie w zależności od typu callbacku
     if (type === "recovery") {
       return NextResponse.redirect(
-        new URL("/reset-password/confirm", requestUrl.origin)
+        new URL("/reset-password/confirm", requestUrl.origin),
       );
     }
 
     // Domyślnie: potwierdzenie emaila
     return NextResponse.redirect(
-      new URL("/login?confirmed=true", requestUrl.origin)
+      new URL("/login?confirmed=true", requestUrl.origin),
     );
   }
   ```
@@ -599,13 +566,11 @@ export function MyComponent() {
 **Zasady walidacji:**
 
 1. **Email:**
-
    - Wymagany
    - Format email (walidacja Zod)
    - Trim przed walidacją
 
 2. **Password:**
-
    - Wymagany
    - Minimum 6 znaków (zgodnie z wymaganiami Supabase)
    - Dla rejestracji: walidacja zgodności z confirmPassword
@@ -625,13 +590,11 @@ export function MyComponent() {
 **Typy komunikatów:**
 
 1. **Błędy walidacji (inline):**
-
    - Wyświetlane pod polem formularza
    - Czerwony border pola (`aria-invalid="true"`)
    - Komunikat tekstowy w `<span>` lub `<p>`
 
 2. **Błędy formularza (globalne):**
-
    - Wyświetlane w komponencie `ValidationErrors`
    - Lista błędów w `<ul>` z klasą `destructive`
    - Scroll do pierwszego błędu przy submit
@@ -667,22 +630,11 @@ export function MyComponent() {
 **Kroki:**
 
 1. Użytkownik wprowadza email i hasło
-2. Użytkownik może zaznaczyć checkbox "Zapamiętaj mnie" (Remember Me) - opcjonalnie
-3. Walidacja po stronie klienta (Zod)
-4. Jeśli błędy walidacji → wyświetlenie błędów, brak wysłania
-5. Wywołanie `supabase.auth.signInWithPassword()` z wartością `rememberMe`
-6. Jeśli błąd → wyświetlenie komunikatu błędu (toast + inline)
-7. Jeśli sukces → przekierowanie do `/` + toast sukcesu
-
-**Remember Me:**
-
-- Jeśli checkbox jest zaznaczony (`rememberMe = true`):
-  - Sesja jest przedłużona zgodnie z konfiguracją Supabase
-  - Refresh token ma dłuższy czas wygaśnięcia
-  - Użytkownik pozostaje zalogowany dłużej po zamknięciu przeglądarki
-- Jeśli checkbox nie jest zaznaczony (`rememberMe = false`):
-  - Sesja wygasa zgodnie z domyślnymi ustawieniami Supabase
-  - Standardowy czas wygaśnięcia refresh token
+2. Walidacja po stronie klienta (Zod)
+3. Jeśli błędy walidacji → wyświetlenie błędów, brak wysłania
+4. Wywołanie `supabase.auth.signInWithPassword()`
+5. Jeśli błąd → wyświetlenie komunikatu błędu (toast + inline)
+6. Jeśli sukces → przekierowanie do `/` + toast sukcesu
 
 **Przypadki brzegowe:**
 
@@ -932,12 +884,10 @@ export default async function ExercisesPage() {
 **Typy błędów:**
 
 1. **Brak sesji:**
-
    - Występuje w `getUserId()` gdy użytkownik nie jest zalogowany
    - Obsługa: przekierowanie do `/login` lub wyświetlenie błędu w komponencie
 
 2. **Sesja wygasła:**
-
    - Middleware próbuje odświeżyć sesję
    - Jeśli nie można odświeżyć → użytkownik musi się zalogować ponownie
 
@@ -1039,10 +989,8 @@ rate_limit_max_frequency = "1s"  # Minimalny odstęp między żądaniami
 site_url = "http://localhost:3000"  # Development
 additional_redirect_urls = ["http://localhost:3000/auth/callback"]
 
-# Konfiguracja sesji (Remember Me)
+# Konfiguracja sesji
 jwt_expiry = 3600  # Czas wygaśnięcia JWT token (w sekundach) - domyślnie 1 godzina
-# Dla "Remember Me" można ustawić dłuższy czas wygaśnięcia refresh_token
-# lub użyć konfiguracji cookies w aplikacji
 ```
 
 **Uwagi:**
@@ -1050,7 +998,6 @@ jwt_expiry = 3600  # Czas wygaśnięcia JWT token (w sekundach) - domyślnie 1 g
 - `enable_email_autoconfirm = true` → użytkownicy są automatycznie logowani po rejestracji
 - Jeśli `enable_email_autoconfirm = false` → wymagane potwierdzenie emaila
 - Aplikacja obsługuje oba scenariusze (sprawdzenie `data.session` w `RegisterForm`)
-- **Remember Me:** Checkbox "Zapamiętaj mnie" pozwala użytkownikowi przedłużyć sesję. Implementacja może wymagać konfiguracji cookies (np. `maxAge`) w aplikacji, aby sesja była przechowywana dłużej
 
 #### 4.1.2 Metody autentykacji
 
@@ -1066,25 +1013,11 @@ jwt_expiry = 3600  # Czas wygaśnięcia JWT token (w sekundach) - domyślnie 1 g
 1. **Logowanie:**
 
    ```typescript
-   const { data, error } = await supabase.auth.signInWithPassword(
-     {
-       email: "user@example.com",
-       password: "password123",
-     },
-     {
-       // Remember Me - przedłużenie sesji
-       // Jeśli rememberMe = true, sesja jest przedłużona zgodnie z konfiguracją Supabase
-       // Implementacja zależy od wersji @supabase/ssr - może wymagać dodatkowej konfiguracji
-     }
-   );
+   const { data, error } = await supabase.auth.signInWithPassword({
+     email: "user@example.com",
+     password: "password123",
+   });
    ```
-
-   **Remember Me:**
-
-   - Wartość `rememberMe` z formularza jest przekazywana do Supabase Auth
-   - W Supabase Auth, przedłużenie sesji jest kontrolowane przez konfigurację `jwt_expiry` i `refresh_token_rotation_enabled` w `config.toml`
-   - Aplikacja przekazuje preferencję użytkownika, ale ostateczna długość sesji zależy od konfiguracji Supabase
-   - W praktyce, checkbox "Zapamiętaj mnie" może wpływać na sposób przechowywania sesji (np. localStorage vs sessionStorage) lub na konfigurację cookies
 
 2. **Rejestracja:**
 
@@ -1105,7 +1038,7 @@ jwt_expiry = 3600  # Czas wygaśnięcia JWT token (w sekundach) - domyślnie 1 g
      "user@example.com",
      {
        redirectTo: `${window.location.origin}/reset-password/confirm`,
-     }
+     },
    );
    ```
 
@@ -1125,33 +1058,21 @@ jwt_expiry = 3600  # Czas wygaśnięcia JWT token (w sekundach) - domyślnie 1 g
 **Cykl życia sesji:**
 
 1. **Logowanie:**
-
    - `signInWithPassword()` zwraca `session` z access_token i refresh_token
    - Tokens zapisywane w cookies przez `@supabase/ssr`
-   - **Remember Me:** Jeśli checkbox "Zapamiętaj mnie" jest zaznaczony:
-     - Cookies mogą mieć dłuższy czas wygaśnięcia (`maxAge`)
-     - Refresh token może mieć dłuższy czas ważności (zgodnie z konfiguracją Supabase)
-     - Sesja pozostaje aktywna dłużej, nawet po zamknięciu przeglądarki
-   - Jeśli checkbox nie jest zaznaczony:
-     - Cookies mają standardowy czas wygaśnięcia (sesja przeglądarki)
-     - Sesja wygasa po zamknięciu przeglądarki lub zgodnie z domyślnymi ustawieniami
+   - Długość sesji kontrolowana przez konfigurację Supabase (`jwt_expiry`, `config.toml`)
 
 2. **Odświeżanie:**
-
    - Middleware wywołuje `getUser()` → automatyczne odświeżenie jeśli wygasła
    - `@supabase/ssr` zarządza refresh_token automatycznie
-   - **Remember Me:** Dla sesji z "Zapamiętaj mnie", odświeżanie działa dłużej dzięki dłuższemu czasowi ważności refresh_token
 
 3. **Wylogowanie:**
-
    - `signOut()` usuwa tokens z cookies
    - Sesja unieważniona po stronie Supabase
-   - **Remember Me:** Wylogowanie działa identycznie niezależnie od ustawienia "Zapamiętaj mnie"
 
 4. **Wygasanie:**
    - Jeśli refresh_token wygasł → użytkownik musi się zalogować ponownie
    - `getUserId()` rzuca błąd → przekierowanie do `/login`
-   - **Remember Me:** Dla sesji z "Zapamiętaj mnie", refresh_token wygasa później, więc użytkownik pozostaje zalogowany dłużej
 
 ### 4.2 Callback dla resetu hasła
 
@@ -1222,12 +1143,14 @@ import { createClient } from "@/db/supabase.server";
 
 async function getUserIdFromSession(): Promise<string> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user?.id) {
     throw new Error("UNAUTHORIZED");
   }
-  
+
   return user.id;
 }
 
@@ -1245,8 +1168,11 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
+        {
+          message: "Brak autoryzacji. Zaloguj się ponownie.",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 },
       );
     }
     // Obsługa innych błędów
@@ -1255,6 +1181,7 @@ export async function GET(request: Request) {
 ```
 
 **Ważne:**
+
 - API routes nie powinny używać `DEFAULT_USER_ID` w produkcji - to jest tylko dla developmentu
 - Wszystkie API routes powinny używać `getUserIdFromSession()` lub podobnej funkcji
 - Zwracanie błędu 401 (UNAUTHORIZED) przy braku autoryzacji
@@ -1267,22 +1194,18 @@ export async function GET(request: Request) {
 **Zaimplementowane zabezpieczenia:**
 
 1. **Rate limiting:**
-
    - Supabase Auth ogranicza liczbę żądań (2 emaile/godzinę dla resetu hasła)
    - Aplikacja obsługuje błędy rate limit z komunikatem użytkownika
 
 2. **Ochrona przed wyciekiem informacji:**
-
    - Reset hasła zawsze zwraca pozytywny komunikat (nawet jeśli email nie istnieje)
    - Logowanie nie ujawnia, czy email istnieje (ogólny komunikat błędu)
 
 3. **Walidacja po stronie klienta i serwera:**
-
    - Walidacja Zod po stronie klienta (UX)
    - Walidacja Supabase Auth po stronie serwera (bezpieczeństwo)
 
 4. **HTTPS:**
-
    - Wymagane w produkcji (Vercel automatycznie używa HTTPS)
    - Cookies z flagą `Secure` w produkcji
 
@@ -1325,18 +1248,15 @@ export async function GET(request: Request) {
 **Do poprawy/rozszerzenia:**
 
 1. **Widok potwierdzenia resetu hasła:**
-
    - Brak implementacji `/reset-password/confirm`
    - Użytkownik po kliknięciu linku w emailu nie może ustawić nowego hasła w aplikacji
    - **Rekomendacja:** Implementacja widoku z formularzem do ustawienia nowego hasła
 
 2. **Obsługa błędów autoryzacji w Server Components:**
-
    - `getUserId()` rzuca błąd, ale nie ma centralnej obsługi przekierowania
    - **Rekomendacja:** Wrapper `requireAuth()` lub Error Boundary z przekierowaniem
 
 3. **Callback dla rejestracji:**
-
    - `emailRedirectTo: /auth/callback` w `signUp()`, ale brak implementacji `/auth/callback`
    - **Wymagane:** Jeśli `enable_email_autoconfirm = false` w konfiguracji Supabase, callback jest **niezbędny** do obsługi potwierdzenia emaila po rejestracji
    - **Implementacja wymagana:** API route `/auth/callback` powinien:
@@ -1361,9 +1281,7 @@ export async function GET(request: Request) {
 - ✅ Przekierowanie po zalogowaniu do `/`
 - ✅ Wylogowanie przez przycisk w nawigacji
 - ✅ Funkcjonalności chronione (wymagają autoryzacji)
-- ✅ Checkbox "Zapamiętaj mnie" (Remember Me) w formularzu logowania (wymagane przez PRD)
-
-**US-002: Izolacja danych użytkowników (RLS)**
+  **US-002: Izolacja danych użytkowników (RLS)**
 
 - ✅ RLS włączone w bazie danych (zgodnie z migracjami)
 - ✅ Weryfikacja autoryzacji w Server Components przez `getUserId()`
@@ -1385,17 +1303,14 @@ export async function GET(request: Request) {
 **Zastosowane wzorce:**
 
 1. **Server Components dla stron:**
-
    - Weryfikacja autoryzacji po stronie serwera
    - Pobieranie danych przed renderowaniem
 
 2. **Client Components dla formularzy:**
-
    - Interaktywność (walidacja, submit)
    - Integracja z Supabase Auth przez client-side API
 
 3. **Middleware do odświeżania sesji:**
-
    - Synchronizacja cookies przed renderowaniem
    - Nie blokuje dostępu (weryfikacja w komponentach)
 
@@ -1408,7 +1323,6 @@ export async function GET(request: Request) {
 **Wymagane dla MVP (US-001, US-003):**
 
 1. **Implementacja `/reset-password/confirm` (WYMAGANE dla US-001):**
-
    - Widok do ustawienia nowego hasła po kliknięciu linku w emailu
    - Formularz z polami: newPassword, confirmPassword
    - Walidacja: minimum 6 znaków, zgodność haseł
@@ -1417,14 +1331,12 @@ export async function GET(request: Request) {
    - Obsługa błędów (nieprawidłowy/wygasły token, błędy sieci)
 
 2. **Implementacja `/auth/callback` (WYMAGANE jeśli `enable_email_autoconfirm = false`):**
-
    - API route do obsługi callbacków z Supabase (potwierdzenie emaila, reset hasła)
    - Weryfikacja tokenu przez `supabase.auth.getSession()`
    - Przekierowanie do odpowiedniej strony po weryfikacji
    - Obsługa błędów (nieprawidłowy token, wygasły token)
 
 3. **Centralna obsługa błędów autoryzacji (WYMAGANE dla US-003):**
-
    - Error Boundary z przekierowaniem do `/login` przy wygasłej sesji
    - Wrapper `requireAuth()` dla Server Components (opcjonalnie, alternatywa dla Error Boundary)
    - Zachowanie informacji o próbie dostępu do chronionej strony (opcjonalnie, dla redirect po logowaniu)
@@ -1432,7 +1344,6 @@ export async function GET(request: Request) {
 **Opcjonalne (nie wymagane przez PRD):**
 
 4. **Ulepszenie UX:**
-
    - Loading states podczas logowania/rejestracji
    - Progress indicators dla długotrwałych operacji
 
@@ -1452,6 +1363,5 @@ Architektura modułu autentykacji jest zgodna z wymaganiami PRD i wykorzystuje n
 1. **Widok `/reset-password/confirm`** - wymagany dla kompletnej funkcjonalności resetu hasła (US-001)
 2. **Widok `/auth/callback`** - wymagany jeśli `enable_email_autoconfirm = false` w konfiguracji Supabase (US-001)
 3. **Error Boundary lub wrapper `requireAuth()`** - wymagany dla automatycznego przekierowania przy wygasłej sesji (US-003)
-4. **Checkbox "Zapamiętaj mnie" (Remember Me)** - wymagany w formularzu logowania (US-001)
 
 Architektura jest gotowa do dalszego rozwoju i łatwego dodawania nowych funkcjonalności związanych z autentykacją. Po implementacji wymienionych powyżej widoków i mechanizmów, moduł autentykacji będzie w pełni zgodny z wymaganiami PRD.

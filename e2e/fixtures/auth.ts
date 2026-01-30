@@ -53,14 +53,12 @@ export function getTestUserCredentials(): TestUserCredentials {
  * @param page - Playwright Page object
  * @param email - User email (optional, uses E2E_USERNAME from env if not provided)
  * @param password - User password (optional, uses E2E_PASSWORD from env if not provided)
- * @param rememberMe - Whether to check "Remember me" checkbox (default: false)
  * @returns Promise that resolves when authentication is complete
  */
 export async function authenticateUser(
   page: Page,
   email?: string,
   password?: string,
-  rememberMe: boolean = false,
 ): Promise<void> {
   const credentials = getTestUserCredentials();
   const loginPage = new LoginPage(page);
@@ -70,7 +68,6 @@ export async function authenticateUser(
   await loginPage.login(
     email || credentials.email,
     password || credentials.password,
-    rememberMe,
   );
 
   // Wait for navigation after login (should redirect to home page "/" or exercises)

@@ -11,37 +11,42 @@ Dokument opisuje weryfikację i implementację elementów interfejsu użytkownik
 ## 1. Ujednolicenie stylistyki stron autentykacji
 
 ### Problem
+
 Strony autentykacji używały różnych layoutów:
+
 - `/login` - używała komponentu `Card`
 - `/register` - używała własnego layoutu z `header`
 - `/reset-password` - używała własnego layoutu z `header`
 
 ### Rozwiązanie
+
 Wszystkie strony autentykacji zostały ujednolicone do użycia komponentu `Card` z Shadcn UI, zapewniając spójny wygląd i doświadczenie użytkownika.
 
 ### Zmiany
 
 #### `/register` (`src/app/register/page.tsx`)
+
 - ✅ Dodano import `Card`, `CardContent`, `CardDescription`, `CardHeader`, `CardTitle`
 - ✅ Zastąpiono własny layout komponentem `Card`
 - ✅ Ujednolicono strukturę z `/login`
 
 #### `/reset-password` (`src/app/reset-password/page.tsx`)
+
 - ✅ Dodano import `Card`, `CardContent`, `CardDescription`, `CardHeader`, `CardTitle`
 - ✅ Zastąpiono własny layout komponentem `Card`
 - ✅ Dodano `CardDescription` z instrukcjami dla użytkownika
 
 ### Rezultat
+
 Wszystkie trzy strony autentykacji (`/login`, `/register`, `/reset-password`) mają teraz identyczną strukturę:
+
 ```tsx
 <Card className="w-full max-w-md">
   <CardHeader className="space-y-1">
     <CardTitle className="text-2xl font-bold">Tytuł</CardTitle>
     <CardDescription>Opis</CardDescription>
   </CardHeader>
-  <CardContent>
-    {/* Formularz */}
-  </CardContent>
+  <CardContent>{/* Formularz */}</CardContent>
 </Card>
 ```
 
@@ -54,13 +59,13 @@ Wszystkie trzy strony autentykacji (`/login`, `/register`, `/reset-password`) ma
 **Status:** ✅ Zgodny ze specyfikacją
 
 **Struktura komponentów:**
+
 ```
 LoginPage (Server Component)
 └── LoginForm (Client Component)
     ├── LoginFormFields
     │   ├── EmailInput
     │   └── PasswordInput
-    ├── RememberMeCheckbox ✅ (wymagane przez PRD)
     ├── ValidationErrors
     ├── LoginButton
     └── LoginLinks
@@ -69,14 +74,15 @@ LoginPage (Server Component)
 ```
 
 **Weryfikacja:**
+
 - ✅ Server Component sprawdza sesję i przekierowuje zalogowanych użytkowników
 - ✅ Formularz używa hooka `useLoginForm` do zarządzania stanem
-- ✅ Checkbox "Zapamiętaj mnie" jest zaimplementowany (`RememberMeCheckbox`)
 - ✅ Walidacja po stronie klienta (Zod)
 - ✅ Obsługa błędów z Supabase Auth
 - ✅ Komponenty mają odpowiednie atrybuty ARIA
 
 **Lokalizacja:**
+
 - Strona: `src/app/login/page.tsx`
 - Formularz: `src/components/auth/login/login-form.tsx`
 - Hook: `src/hooks/use-login-form.ts`
@@ -86,6 +92,7 @@ LoginPage (Server Component)
 **Status:** ✅ Zgodny ze specyfikacją
 
 **Struktura komponentów:**
+
 ```
 RegisterPage (Server Component)
 └── RegisterForm (Client Component)
@@ -97,6 +104,7 @@ RegisterPage (Server Component)
 ```
 
 **Weryfikacja:**
+
 - ✅ Server Component sprawdza sesję i przekierowuje zalogowanych użytkowników
 - ✅ Formularz zarządza stanem lokalnie
 - ✅ Walidacja pól: email, password (min 6 znaków), confirmPassword (zgodność)
@@ -105,6 +113,7 @@ RegisterPage (Server Component)
 - ✅ Komponenty mają odpowiednie atrybuty ARIA
 
 **Lokalizacja:**
+
 - Strona: `src/app/register/page.tsx`
 - Formularz: `src/components/auth/register/register-form.tsx`
 - Walidacja: `src/lib/validation/register-form.ts`
@@ -114,6 +123,7 @@ RegisterPage (Server Component)
 **Status:** ✅ Zgodny ze specyfikacją
 
 **Struktura komponentów:**
+
 ```
 ResetPasswordPage (Server Component)
 └── ResetPasswordForm (Client Component)
@@ -125,6 +135,7 @@ ResetPasswordPage (Server Component)
 ```
 
 **Weryfikacja:**
+
 - ✅ Server Component renderuje formularz (brak sprawdzania sesji - dostępny dla wszystkich)
 - ✅ Formularz używa hooka `useResetPasswordForm`
 - ✅ Walidacja emaila
@@ -132,6 +143,7 @@ ResetPasswordPage (Server Component)
 - ✅ Komponenty mają odpowiednie atrybuty ARIA
 
 **Lokalizacja:**
+
 - Strona: `src/app/reset-password/page.tsx`
 - Formularz: `src/components/reset-password/reset-password-form.tsx`
 - Hook: `src/hooks/use-reset-password-form.ts`
@@ -143,6 +155,7 @@ ResetPasswordPage (Server Component)
 ### Status: ✅ Zaimplementowany (tylko UI)
 
 ### Opis
+
 Utworzono widok potwierdzenia resetu hasła zgodnie ze specyfikacją `auth-spec.md` sekcja 2.2.4. Widok umożliwia użytkownikowi ustawienie nowego hasła po kliknięciu linku w emailu.
 
 ### Struktura komponentów
@@ -181,6 +194,7 @@ ResetPasswordConfirmPage (Server Component)
 ### Funkcjonalność
 
 **Zaimplementowane (UI):**
+
 - ✅ Formularz z polami: newPassword, confirmPassword
 - ✅ Możliwość pokazania/ukrycia haseł
 - ✅ Przycisk submit z loading state
@@ -189,6 +203,7 @@ ResetPasswordConfirmPage (Server Component)
 - ✅ Komponenty mają odpowiednie atrybuty ARIA
 
 **Do zaimplementowania (backend):**
+
 - ⏳ Weryfikacja tokenu z URL (hash fragment `#access_token=...`)
 - ⏳ Sprawdzenie ważności tokenu przez `supabase.auth.getSession()`
 - ⏳ Przekierowanie do `/login` jeśli token nieprawidłowy/wygasły
@@ -210,43 +225,50 @@ Zgodnie z `auth-spec.md` sekcja 2.2.4, widok `/reset-password/confirm` jest **wy
 ### Sprawdzone komponenty
 
 #### Pola formularzy (Input)
+
 - ✅ `aria-invalid` - ustawiane na `"true"` gdy pole ma błąd
 - ✅ `aria-describedby` - powiązanie z komunikatem błędu przez unikalne ID
 - ✅ `useId()` - generowanie unikalnych ID dla każdego pola
 - ✅ `autoComplete` - odpowiednie wartości dla pól (email, password, new-password, current-password)
 
 #### Komunikaty błędów
+
 - ✅ `role="alert"` - dla komunikatów błędów
 - ✅ `aria-live="polite"` - dla dynamicznie aktualizowanych komunikatów
 - ✅ Unikalne ID dla każdego komunikatu błędu
 
 #### Przyciski
+
 - ✅ `aria-label` - dla przycisków bez widocznego tekstu (np. pokaż/ukryj hasło)
 - ✅ `aria-pressed` - dla przycisków toggle (pokazywanie/ukrywanie hasła)
 - ✅ `aria-busy` - dla przycisków w stanie ładowania
 - ✅ `aria-hidden="true"` - dla ikon dekoracyjnych
 
 #### Checkboxy
-- ✅ `aria-label` - dla checkboxa "Zapamiętaj mnie"
+
 - ✅ Powiązanie label z checkboxem przez `htmlFor` i `id`
 
 ### Przykłady implementacji
 
 **EmailInput:**
+
 ```tsx
 <Input
   aria-invalid={error ? "true" : "false"}
   aria-describedby={error ? errorId : undefined}
   // ...
-/>
-{error && (
-  <p id={errorId} role="alert" aria-live="polite">
-    {error}
-  </p>
-)}
+/>;
+{
+  error && (
+    <p id={errorId} role="alert" aria-live="polite">
+      {error}
+    </p>
+  );
+}
 ```
 
 **PasswordInput (toggle visibility):**
+
 ```tsx
 <Button
   aria-label={isVisible ? "Ukryj hasło" : "Pokaż hasło"}
@@ -262,6 +284,7 @@ Zgodnie z `auth-spec.md` sekcja 2.2.4, widok `/reset-password/confirm` jest **wy
 ```
 
 **SubmitButton (loading state):**
+
 ```tsx
 <Button
   aria-busy={isLoading}
@@ -284,6 +307,7 @@ Zgodnie z `auth-spec.md` sekcja 2.2.4, widok `/reset-password/confirm` jest **wy
 ## 5. Struktura plików
 
 ### Strony (Server Components)
+
 ```
 src/app/
 ├── login/
@@ -297,6 +321,7 @@ src/app/
 ```
 
 ### Komponenty formularzy (Client Components)
+
 ```
 src/components/
 ├── auth/
@@ -305,7 +330,6 @@ src/components/
 │   │   ├── login-form-fields.tsx ✅
 │   │   ├── email-input.tsx ✅
 │   │   ├── password-input.tsx ✅
-│   │   ├── remember-me-checkbox.tsx ✅
 │   │   ├── validation-errors.tsx ✅
 │   │   ├── login-button.tsx ✅
 │   │   └── login-links.tsx ✅
@@ -329,6 +353,7 @@ src/components/
 ```
 
 ### Hooks
+
 ```
 src/hooks/
 ├── use-login-form.ts ✅
@@ -342,24 +367,28 @@ src/hooks/
 ### Sprawdzone wymagania z `auth-spec.md`
 
 #### 2.1 Struktura routingu i layoutów
+
 - ✅ `/login` - Server Component, przekierowanie zalogowanych, layout z Card
 - ✅ `/register` - Server Component, przekierowanie zalogowanych, layout z Card
 - ✅ `/reset-password` - Server Component, dostępny dla wszystkich, layout z Card
 - ✅ `/reset-password/confirm` - Server Component, layout z Card (UI gotowe)
 
 #### 2.2 Komponenty widoków autentykacji
+
 - ✅ **LoginForm** - zgodny ze specyfikacją sekcja 2.2.1
 - ✅ **RegisterForm** - zgodny ze specyfikacją sekcja 2.2.2
 - ✅ **ResetPasswordForm** - zgodny ze specyfikacją sekcja 2.2.3
 - ✅ **ResetPasswordConfirmForm** - zgodny ze specyfikacją sekcja 2.2.4 (UI gotowe)
 
 #### 2.5 Walidacja i komunikaty błędów
+
 - ✅ Walidacja po stronie klienta (Zod)
 - ✅ Komunikaty błędów inline pod polami
 - ✅ Komunikaty błędów globalne w formularzu
 - ✅ Mapowanie błędów Supabase na komunikaty użytkownika
 
 #### 2.6 Obsługa scenariuszy
+
 - ✅ Scenariusz logowania - UI gotowe
 - ✅ Scenariusz rejestracji - UI gotowe
 - ✅ Scenariusz resetu hasła (część 1 - wysłanie linku) - UI gotowe
@@ -419,6 +448,7 @@ src/hooks/
 ## 9. Wnioski
 
 ### ✅ Zrealizowane
+
 - Wszystkie strony autentykacji mają spójną stylistykę (Card)
 - Wszystkie komponenty są zgodne ze specyfikacją
 - Widok `/reset-password/confirm` został utworzony (UI)
@@ -426,11 +456,13 @@ src/hooks/
 - Struktura komponentów jest zgodna z wymaganiami
 
 ### ⏳ Do ukończenia
+
 - Logika backendowa dla `/reset-password/confirm` (hook, walidacja, integracja z Supabase)
 - Weryfikacja tokenu w Server Component
 - Callback `/auth/callback` (jeśli wymagany przez konfigurację Supabase)
 
 ### 📝 Uwagi
+
 - Wszystkie zmiany dotyczą wyłącznie warstwy prezentacji (UI)
 - Logika backendowa i modyfikacje stanu aplikacji będą zaimplementowane w dalszej kolejności
 - Komponenty są gotowe do podłączenia logiki backendowej
