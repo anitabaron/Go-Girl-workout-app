@@ -144,6 +144,22 @@
   letter-spacing: -0.03em;
 }
 
+/* Page header title - smaller on mobile, hero on desktop */
+.ui-m3 .m3-page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+@media (min-width: 768px) {
+  .ui-m3 .m3-page-title {
+    font-size: var(--m3-font-hero-sm);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+}
+
 .ui-m3 .m3-headline {
   font-size: var(--m3-font-headline);
   font-weight: 600;
@@ -171,6 +187,27 @@
   font-size: var(--m3-font-label);
   font-weight: 500;
   line-height: var(--m3-line-height-normal);
+  color: var(--m3-on-surface-variant);
+}
+
+/* Compact typography for cards – dense info display */
+.ui-m3 .m3-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.ui-m3 .m3-card-meta {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--m3-on-surface-variant);
+}
+
+.ui-m3 .m3-card-body {
+  font-size: 0.8125rem;
+  line-height: 1.35;
   color: var(--m3-on-surface-variant);
 }
 
@@ -276,16 +313,25 @@
    BUTTONS - full M3 override (no legacy styles)
    ============================================ */
 
-/* Base: reset legacy scale/shadow/ring, M3 radius */
+/* Base: reset legacy scale/shadow/ring, M3 radius, cross-browser reset */
 .ui-m3 [data-slot="button"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
   border-radius: var(--m3-radius-lg) !important;
   transform: none !important;
   box-shadow: none !important;
+  margin: 0 !important;
   transition:
     background 0.2s,
     box-shadow 0.2s,
     border-color 0.2s,
     transform 0.15s;
+}
+
+/* Firefox: remove default focus-inner padding that affects button shape */
+.ui-m3 [data-slot="button"]::-moz-focus-inner {
+  border: 0 !important;
+  padding: 0 !important;
 }
 
 .ui-m3 [data-slot="button"]:hover {
@@ -461,6 +507,20 @@
     0 0 0 4px var(--m3-primary) !important;
 }
 
+/* Portal content (Select, Dialog, Sheet) renders outside .ui-m3 - body needs M3 vars for inheritance */
+body:has(.ui-m3) {
+  --m3-surface-container-high: #f0e9e7;
+  --m3-on-surface: #1c1b1f;
+  --m3-outline-variant: #cac4d0;
+  --m3-primary-container: #fcdce0;
+  --m3-on-primary-container: #5c282c;
+  --m3-radius-md: 1rem;
+  --m3-radius-sm: 0.75rem;
+  --m3-shadow-2:
+    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
+    0 8px 16px -4px rgb(0 0 0 / 0.04);
+}
+
 /* SelectContent renders in portal - target when body has .ui-m3 */
 body:has(.ui-m3) [data-slot="select-content"] {
   background: var(--m3-surface-container-high) !important;
@@ -626,6 +686,17 @@ body:has(.ui-m3) [data-slot="sheet-overlay"] {
     border-color: var(--m3-on-primary-container);
   }
 
+  /* Portal content - dark vars on body */
+  body:has(.ui-m3) {
+    --m3-surface-container-high: #2c2827;
+    --m3-on-surface: #e6e1e5;
+    --m3-outline-variant: #49454f;
+    --m3-primary-container: #8b4a52;
+    --m3-on-primary-container: #fcdce0;
+    --m3-shadow-2:
+      0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+  }
+
   /* Dark mode button hover/active - lighten instead of darken */
   .ui-m3 [data-slot="button"][data-variant="default"]:hover {
     background: color-mix(in srgb, var(--m3-primary) 90%, white) !important;
@@ -759,6 +830,17 @@ body:has(.ui-m3) [data-slot="sheet-overlay"] {
   --sidebar-accent-foreground: var(--m3-on-primary-container);
   --sidebar-border: var(--m3-outline-variant);
   --sidebar-ring: var(--m3-primary);
+}
+
+/* Portal content - dark vars on body for manual dark toggle */
+body:has(.ui-m3.dark) {
+  --m3-surface-container-high: #2c2827;
+  --m3-on-surface: #e6e1e5;
+  --m3-outline-variant: #49454f;
+  --m3-primary-container: #8b4a52;
+  --m3-on-primary-container: #fcdce0;
+  --m3-shadow-2:
+    0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
 }
 
 /* Dark mode button overrides for .ui-m3.dark (manual toggle) */

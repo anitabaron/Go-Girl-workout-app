@@ -147,10 +147,10 @@ export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
               variant="outline"
               size="lg"
               className="w-full sm:w-auto"
-              aria-label="Cancel session"
+              aria-label="Cancel"
             >
               <X className="mr-2 size-4" />
-              Cancel session
+              Cancel
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>

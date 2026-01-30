@@ -67,7 +67,7 @@ export function PersonalRecordMetricItemM3({
     : [];
 
   return (
-    <div className="flex items-center justify-between border-b border-[var(--m3-outline-variant)] py-3 last:border-b-0">
+    <div className="flex items-center justify-between border-b border-[var(--m3-outline-variant)] py-1 last:border-b-0">
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="m3-label font-semibold">{metric.label}:</span>
@@ -87,7 +87,7 @@ export function PersonalRecordMetricItemM3({
                       <span
                         className={
                           isExceptional
-                            ? "font-semibold text-[var(--m3-tertiary)]"
+                            ? "font-semibold text-[var(--m3-primary)]"
                             : ""
                         }
                       >
@@ -100,14 +100,15 @@ export function PersonalRecordMetricItemM3({
               </span>
             </>
           )}
+          <span className="text-muted-foreground">·</span>
+          <span className=" text-muted-foreground text-xs">
+            {metric.achievedAt}
+          </span>
           {metric.isNew && (
             <Badge variant="default" className="shrink-0">
               Nowy
             </Badge>
           )}
-        </div>
-        <div className="mt-1 m3-body text-muted-foreground text-sm">
-          Osiągnięto: {metric.achievedAt}
         </div>
       </div>
       {metric.sessionId && (

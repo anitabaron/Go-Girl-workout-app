@@ -216,10 +216,10 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
                 e.stopPropagation();
                 setIsCancelDialogOpen(true);
               }}
-              aria-label="Cancel session"
+              aria-label="Cancel"
             >
               <X className="mr-2 size-4" />
-              Cancel session
+              Cancel
             </Button>
           </CardFooter>
         )}

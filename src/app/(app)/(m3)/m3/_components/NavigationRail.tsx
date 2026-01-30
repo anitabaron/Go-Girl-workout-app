@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Dumbbell, Calendar, History, Trophy } from "lucide-react";
+import { Home, Play, Dumbbell, Calendar, History, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "./DarkModeToggle";
 
@@ -12,7 +12,18 @@ const NAV_ITEMS = [
   { href: "/m3/workout-plans", label: "Plans", icon: Calendar },
   { href: "/m3/workout-sessions", label: "Sessions", icon: History },
   { href: "/m3/personal-records", label: "Records", icon: Trophy },
+  { href: "/m3/workout-sessions/start", label: "Start", icon: Play },
 ] as const;
+
+function isNavItemActive(href: string, pathname: string): boolean {
+  if (href === "/m3") return pathname === "/m3";
+  if (href === "/m3/workout-sessions")
+    return (
+      pathname.startsWith("/m3/workout-sessions") &&
+      !pathname.startsWith("/m3/workout-sessions/start")
+    );
+  return pathname.startsWith(href);
+}
 
 /**
  * M3 Navigation Rail - desktop: vertical rail on left; mobile: bottom nav bar.
@@ -30,8 +41,7 @@ export function NavigationRail() {
       >
         <div className="flex flex-col items-center gap-1 py-4 px-2">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const isActive =
-              href === "/m3" ? pathname === "/m3" : pathname.startsWith(href);
+            const isActive = isNavItemActive(href, pathname);
             return (
               <Link
                 key={href}
@@ -41,7 +51,7 @@ export function NavigationRail() {
                   "flex flex-col items-center justify-center gap-1 w-full min-w-[56px] h-14 rounded-[var(--m3-radius-lg)] transition-colors",
                   isActive
                     ? "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    : "text-muted-foreground hover:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))] hover:text-foreground",
                 )}
               >
                 <Icon className="size-6" aria-hidden />
@@ -62,15 +72,14 @@ export function NavigationRail() {
       >
         <div className="flex items-center justify-around h-16 px-2">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const isActive =
-              href === "/m3" ? pathname === "/m3" : pathname.startsWith(href);
+            const isActive = isNavItemActive(href, pathname);
             return (
               <Link
                 key={href}
                 href={href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
                   isActive
                     ? "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]"
                     : "text-muted-foreground",

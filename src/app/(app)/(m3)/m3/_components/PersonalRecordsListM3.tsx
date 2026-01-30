@@ -93,8 +93,8 @@ export function PersonalRecordsListM3({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3">
         {records.map((recordGroup) => (
           <M3PersonalRecordCard
             key={recordGroup.exerciseId}
@@ -104,7 +104,7 @@ export function PersonalRecordsListM3({
         ))}
       </div>
       {nextCursor && !isLoadingMore && (
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center pt-2">
           <Button
             variant="outline"
             onClick={() => handleLoadMore(nextCursor)}
