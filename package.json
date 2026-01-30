@@ -11,6 +11,7 @@
     "type-check:watch": "tsc --noEmit --watch",
     "prepare": "husky",
     "check:supabase": "node scripts/check-supabase-config.js",
+    "check:m3": "bash scripts/check-m3-imports.sh && bash scripts/check-m3-links.sh && bash scripts/check-shadcn-purity.sh",
     "backup:db": "node scripts/backup-db.js",
     "backup:db:data": "node scripts/backup-db.js --data-only",
     "db:reset": "node scripts/safe-db-reset.js",
