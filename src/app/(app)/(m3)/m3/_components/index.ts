@@ -1,3 +1,4 @@
+export { DarkModeToggle } from "./DarkModeToggle";
 export { PageHeader } from "./PageHeader";
 export { Surface } from "./Surface";
 export { Toolbar } from "./Toolbar";

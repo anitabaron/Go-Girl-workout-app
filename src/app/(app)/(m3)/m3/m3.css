@@ -104,6 +104,13 @@
 
   color-scheme: light;
 
+  /* Smooth theme transition (light ↔ dark) */
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -112,6 +119,15 @@
   align-self: stretch;
   overflow-wrap: normal;
   word-break: normal;
+}
+
+/* Theme transition – smooth switch for all color-using elements */
+.ui-m3 * {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
 }
 
 .ui-m3 .m3-hero {
@@ -610,6 +626,62 @@ body:has(.ui-m3) [data-slot="select-item"][data-highlighted] {
       white
     ) !important;
   }
+}
+
+/* Light mode - manual override when user chose light (overrides prefers-color-scheme) */
+.ui-m3.light {
+  color-scheme: light;
+  --m3-primary: #e07d8a;
+  --m3-on-primary: #ffffff;
+  --m3-primary-container: #fcdce0;
+  --m3-on-primary-container: #5c282c;
+
+  --m3-surface: #fafafa;
+  --m3-on-surface: #1c1b1f;
+  --m3-on-surface-variant: #49454f;
+  --m3-surface-container: #f5f0ef;
+  --m3-surface-container-high: #f0e9e7;
+  --m3-surface-container-highest: #ebe3e0;
+
+  --m3-outline: #79747e;
+  --m3-outline-variant: #cac4d0;
+
+  --m3-shadow-1:
+    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2:
+    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
+    0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-hero:
+    0 4px 6px -2px rgb(0 0 0 / 0.05), 0 10px 20px -5px rgb(0 0 0 / 0.06),
+    0 20px 40px -10px rgb(0 0 0 / 0.05);
+
+  --background: var(--m3-surface);
+  --foreground: var(--m3-on-surface);
+  --card: var(--m3-surface-container);
+  --card-foreground: var(--m3-on-surface);
+  --popover: var(--m3-surface-container-high);
+  --popover-foreground: var(--m3-on-surface);
+  --primary: var(--m3-primary);
+  --primary-foreground: var(--m3-on-primary);
+  --secondary: var(--m3-primary-container);
+  --secondary-foreground: var(--m3-on-primary-container);
+  --muted: var(--m3-surface-container);
+  --muted-foreground: var(--m3-on-surface-variant);
+  --accent: var(--m3-primary-container);
+  --accent-foreground: var(--m3-on-primary-container);
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --border: var(--m3-outline-variant);
+  --input: var(--m3-outline-variant);
+  --ring: var(--m3-primary);
+  --sidebar: var(--m3-surface-container);
+  --sidebar-foreground: var(--m3-on-surface);
+  --sidebar-primary: var(--m3-primary);
+  --sidebar-primary-foreground: var(--m3-on-primary);
+  --sidebar-accent: var(--m3-primary-container);
+  --sidebar-accent-foreground: var(--m3-on-primary-container);
+  --sidebar-border: var(--m3-outline-variant);
+  --sidebar-ring: var(--m3-primary);
 }
 
 /* Dark mode - manual toggle via .ui-m3.dark */

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DarkModeToggle } from "./DarkModeToggle";
 
 const NAV_ITEMS = [
   { href: "/m3", label: "Home", icon: Home },
@@ -45,6 +46,9 @@ export function NavigationRail() {
               </Link>
             );
           })}
+          <div className="mt-auto pt-4">
+            <DarkModeToggle aria-label="Przełącz tryb ciemny" />
+          </div>
         </div>
       </nav>
 
@@ -76,6 +80,9 @@ export function NavigationRail() {
               </Link>
             );
           })}
+          <div className="flex flex-col items-center justify-center py-2">
+            <DarkModeToggle aria-label="Przełącz tryb ciemny" />
+          </div>
         </div>
       </nav>
     </>
