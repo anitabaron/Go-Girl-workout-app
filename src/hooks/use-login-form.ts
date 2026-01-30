@@ -27,7 +27,7 @@ const loginFormSchema = z.object({
     .string()
     .trim()
     .min(1, "Email jest wymagany")
-    .email("Nieprawidłowy format email"),
+    .pipe(z.email({ error: "Nieprawidłowy format email" })),
   password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
 });
 

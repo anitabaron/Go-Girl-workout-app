@@ -7,7 +7,7 @@ import {
 import type { ExerciseQueryParams } from "@/types";
 import { ExercisesList } from "@/components/exercises/exercises-list";
 import { ExerciseFilters } from "@/components/exercises/exercise-filters";
-import { ExerciseSort } from "@/components/exercises/exercise-sort";
+import { ExerciseSort } from "@/components/exercises";
 import { AddExerciseButton } from "@/components/exercises/add-exercise-button";
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
@@ -32,12 +32,6 @@ export default async function ExercisesPage({
 
   // Pobranie user ID (wymaga autoryzacji)
   const userId = await requireAuth();
-
-  const filterParams = {
-    sort: "title" as const,
-    order: "asc" as const,
-    limit: 50,
-  };
 
   const canReuseForFilters =
     parsedQuery.sort === "title" &&

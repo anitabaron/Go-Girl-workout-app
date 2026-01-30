@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { SessionDetailDTO } from "@/types";
+import type { SessionDetailDTO, SessionExerciseDTO } from "@/types";
 import { useWorkoutSessionStore } from "@/stores/workout-session-store";
 import { useSaveExercise } from "@/hooks/use-save-exercise";
 import { useSessionForm } from "@/hooks/use-session-form";
@@ -11,7 +11,6 @@ import { useSessionNavigation } from "@/hooks/use-session-navigation";
 import { useAutoPause } from "@/hooks/use-auto-pause";
 import { ExerciseTimer } from "@/components/workout-sessions/assistant/exercise-timer";
 import type { FormErrors } from "@/types/workout-session-assistant";
-import type { SessionExerciseDTO } from "@/types";
 
 export type UseWorkoutSessionAssistantProps = {
   readonly sessionId: string;
@@ -90,16 +89,13 @@ export function useWorkoutSessionAssistant({
     isAutoTransitioningRef,
   } = useSessionNavigation(sessionId, saveExercise, formDataRef, validateForm);
 
-  const { autoPause } = useAutoPause(
-    sessionId,
-    stopTimer,
-    saveExercise,
+  const { autoPause } = useAutoPause(sessionId, stopTimer, saveExercise, {
     timerInitializedRef,
     isMountedRef,
     isFirstRenderRef,
     isAutoTransitioningRef,
     formDataRef,
-  );
+  });
 
   useEffect(() => {
     if (autosaveStatus === "saved") {

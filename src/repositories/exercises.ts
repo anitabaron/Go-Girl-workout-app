@@ -11,7 +11,6 @@ import {
   applyCursorFilter,
   decodeCursor,
   encodeCursor,
-  type CursorPayload,
 } from "@/lib/cursor-utils";
 import {
   EXERCISE_DEFAULT_LIMIT,
@@ -23,8 +22,6 @@ import {
 
 type DbClient = SupabaseClient<Database>;
 type ExerciseRow = Database["public"]["Tables"]["exercises"]["Row"];
-type SortField = (typeof exerciseSortFields)[number];
-type SortOrder = (typeof exerciseOrderValues)[number];
 
 const exerciseSelectColumns =
   "id,title,type,part,level,details,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds,created_at,updated_at,title_normalized,user_id";

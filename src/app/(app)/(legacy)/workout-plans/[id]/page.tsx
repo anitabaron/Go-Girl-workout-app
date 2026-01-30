@@ -8,7 +8,7 @@ import { ExerciseLibraryBadge } from "@/components/workout-plans/details/exercis
 import { PageHeader } from "@/components/navigation/page-header";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import { formatDuration, formatTotalDuration } from "@/lib/utils/time-format";
 
 type WorkoutPlanDetailsPageProps = {

@@ -19,6 +19,40 @@ type StopTimerFn = () => Promise<void>;
 
 type RefLike<T> = { current: T };
 
+type UseAutoPauseRefs = {
+  timerInitializedRef: RefLike<boolean>;
+  isMountedRef: RefLike<boolean>;
+  isFirstRenderRef: RefLike<boolean>;
+  isAutoTransitioningRef: RefLike<boolean>;
+  formDataRef: RefLike<ExerciseFormData | null>;
+};
+
+function isSessionStateError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.includes("nie jest w statusie 'in_progress'")
+  );
+}
+
+async function trySaveProgress(
+  saveProgress: boolean,
+  formDataRef: RefLike<ExerciseFormData | null>,
+  saveExercise: SaveExerciseFn,
+  context: string,
+): Promise<void> {
+  if (!saveProgress) return;
+  const currentFormData = formDataRef.current;
+  if (!currentFormData) return;
+
+  try {
+    await saveExercise(currentFormData, false);
+  } catch (error) {
+    if (!isSessionStateError(error)) {
+      console.error(`[useAutoPause] ${context}:`, error);
+    }
+  }
+}
+
 /**
  * Hook do auto-pauzy przy opuszczeniu strony, zamknięciu przeglądarki, visibilitychange.
  */
@@ -26,12 +60,15 @@ export function useAutoPause(
   sessionId: string,
   _stopTimer: StopTimerFn,
   saveExercise: SaveExerciseFn,
-  timerInitializedRef: RefLike<boolean>,
-  isMountedRef: RefLike<boolean>,
-  isFirstRenderRef: RefLike<boolean>,
-  isAutoTransitioningRef: RefLike<boolean>,
-  formDataRef: RefLike<ExerciseFormData | null>,
+  refs: UseAutoPauseRefs,
 ) {
+  const {
+    timerInitializedRef,
+    isMountedRef,
+    isFirstRenderRef,
+    isAutoTransitioningRef,
+    formDataRef,
+  } = refs;
   const pathname = usePathname();
 
   const isPaused = useWorkoutSessionStore((s) => s.isPaused);
@@ -48,53 +85,30 @@ export function useAutoPause(
 
   const autoPause = useCallback(
     async (saveProgress = false) => {
-      if (isFirstRenderRef.current) return;
-      if (!isMountedRef.current) return;
-      if (session?.status !== "in_progress") return;
-      if (isPaused) return;
-      if (!timerInitializedRef.current) return;
+      const canRun =
+        !isFirstRenderRef.current &&
+        isMountedRef.current &&
+        session?.status === "in_progress" &&
+        !isPaused &&
+        timerInitializedRef.current;
+      if (!canRun) return;
 
       if (isAutoTransitioningRef.current) {
-        if (saveProgress && session?.status === "in_progress") {
-          try {
-            const currentFormData = formDataRef.current;
-            if (currentFormData) {
-              await saveExercise(currentFormData, false);
-            }
-          } catch (error) {
-            if (
-              !(
-                error instanceof Error &&
-                error.message.includes("nie jest w statusie 'in_progress'")
-              )
-            ) {
-              console.error(
-                "[useAutoPause] Error saving progress during auto-transition:",
-                error,
-              );
-            }
-          }
-        }
+        await trySaveProgress(
+          saveProgress,
+          formDataRef,
+          saveExercise,
+          "Error saving progress during auto-transition",
+        );
         return;
       }
 
-      if (saveProgress) {
-        try {
-          const currentFormData = formDataRef.current;
-          if (currentFormData) {
-            await saveExercise(currentFormData, false);
-          }
-        } catch (error) {
-          if (
-            !(
-              error instanceof Error &&
-              error.message.includes("nie jest w statusie 'in_progress'")
-            )
-          ) {
-            console.error("[useAutoPause] Error saving progress:", error);
-          }
-        }
-      }
+      await trySaveProgress(
+        saveProgress,
+        formDataRef,
+        saveExercise,
+        "Error saving progress",
+      );
 
       const now = new Date().toISOString();
       try {
