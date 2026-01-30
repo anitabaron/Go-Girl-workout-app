@@ -2,27 +2,27 @@
 
 import type { SessionDetailDTO } from "@/types";
 import { useWorkoutSessionAssistant } from "@/hooks/use-workout-session-assistant";
-import { WorkoutTimer } from "./workout-timer";
-import { CurrentExerciseInfo } from "./current-exercise-info";
-import { ExerciseExecutionForm } from "./exercise-execution-form";
-import { ExerciseTimer } from "./exercise-timer";
-import { NavigationButtons } from "./navigation-buttons";
-import { AutosaveIndicator } from "./autosave-indicator";
-import { ExitSessionButton } from "./exit-session-button";
+import { WorkoutTimerM3 } from "./WorkoutTimerM3";
+import { CurrentExerciseInfoM3 } from "./CurrentExerciseInfoM3";
+import { ExerciseExecutionFormM3 } from "./ExerciseExecutionFormM3";
+import { ExerciseTimerM3 } from "./ExerciseTimerM3";
+import { NavigationButtonsM3 } from "./NavigationButtonsM3";
+import { AutosaveIndicatorM3 } from "./AutosaveIndicatorM3";
+import { ExitSessionButtonM3 } from "./ExitSessionButtonM3";
 
-export type WorkoutSessionAssistantProps = {
+export type WorkoutSessionAssistantM3Props = {
   readonly sessionId: string;
   readonly initialSession: SessionDetailDTO;
 };
 
 /**
- * Główny komponent asystenta treningowego.
- * Cienki warstwa prezentacyjna – logika orchestracji w useWorkoutSessionAssistant.
+ * M3 version of WorkoutSessionAssistant – training assistant UI.
+ * Uses M3-styled components and redirects to /m3/workout-sessions on exit.
  */
-export function WorkoutSessionAssistant({
+export function WorkoutSessionAssistantM3({
   sessionId,
   initialSession,
-}: Readonly<WorkoutSessionAssistantProps>) {
+}: Readonly<WorkoutSessionAssistantM3Props>) {
   const {
     session,
     currentExercise,
@@ -43,12 +43,16 @@ export function WorkoutSessionAssistant({
     handlePause,
     handleResume,
     stopTimer,
-  } = useWorkoutSessionAssistant({ sessionId, initialSession });
+  } = useWorkoutSessionAssistant({
+    sessionId,
+    initialSession,
+    exitHref: "/m3/workout-sessions",
+  });
 
   if (!currentExercise) {
     return (
-      <div className="fixed inset-x-0 top-0 bottom-16 md:bottom-0 flex items-center justify-center bg-secondary">
-        <p className="text-lg">Brak ćwiczeń w sesji</p>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="m3-body">Brak ćwiczeń w sesji</p>
       </div>
     );
   }
@@ -58,14 +62,17 @@ export function WorkoutSessionAssistant({
   }
 
   return (
-    <div className="fixed inset-x-0 top-0 bottom-16 md:bottom-0 flex flex-col bg-secondary overflow-hidden">
-      <ExitSessionButton onExit={handleExit} />
+    <div className="flex min-h-[50vh] flex-col overflow-hidden">
+      <ExitSessionButtonM3 onExit={handleExit} />
 
-      <AutosaveIndicator status={autosaveStatus} errorMessage={autosaveError} />
+      <AutosaveIndicatorM3
+        status={autosaveStatus}
+        errorMessage={autosaveError}
+      />
 
-      <div className="flex-1 overflow-y-auto md:pt-16">
-        <div className="mx-auto w-full max-w-4xl px-4 py-6 space-y-6">
-          <WorkoutTimer
+      <div className="flex-1 overflow-y-auto md:pt-4">
+        <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6">
+          <WorkoutTimerM3
             activeDurationSeconds={session.active_duration_seconds ?? 0}
             lastTimerStartedAt={session.last_timer_started_at ?? null}
             lastTimerStoppedAt={session.last_timer_stopped_at ?? null}
@@ -75,15 +82,15 @@ export function WorkoutSessionAssistant({
             totalExercises={session.exercises.length}
             exerciseTimerContent={
               exerciseTimerProps ? (
-                <ExerciseTimer {...exerciseTimerProps} />
+                <ExerciseTimerM3 {...exerciseTimerProps} />
               ) : null
             }
             onTimerStop={stopTimer}
           />
 
-          <CurrentExerciseInfo exercise={currentExercise} />
+          <CurrentExerciseInfoM3 exercise={currentExercise} />
 
-          <ExerciseExecutionForm
+          <ExerciseExecutionFormM3
             exercise={currentExercise}
             onChange={setFormData}
             errors={formErrors}
@@ -91,9 +98,9 @@ export function WorkoutSessionAssistant({
         </div>
       </div>
 
-      <div className="border-t border-border bg-white p-4 dark:border-border dark:bg-zinc-950">
+      <div className="border-t border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-4">
         <div className="mx-auto w-full max-w-4xl">
-          <NavigationButtons
+          <NavigationButtonsM3
             onPrevious={handlePrevious}
             onPause={handlePause}
             onResume={handleResume}

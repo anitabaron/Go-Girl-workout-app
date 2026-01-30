@@ -48,7 +48,6 @@ export async function proxy(request: NextRequest) {
     const isWorkoutSessions =
       pathname === "/workout-sessions" ||
       pathname.startsWith("/workout-sessions/");
-    const isActivePage = /^\/workout-sessions\/[^/]+\/active$/.test(pathname);
     const isPersonalRecords =
       pathname === "/personal-records" ||
       pathname.startsWith("/personal-records/");
@@ -60,7 +59,7 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith("/exercises/") ||
       pathname === "/workout-plans" ||
       pathname.startsWith("/workout-plans/") ||
-      (isWorkoutSessions && !isActivePage) ||
+      isWorkoutSessions ||
       isPersonalRecords ||
       isImportInstruction;
 

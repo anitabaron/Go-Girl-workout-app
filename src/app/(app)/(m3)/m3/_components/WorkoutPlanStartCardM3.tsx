@@ -80,7 +80,7 @@ export function WorkoutPlanStartCardM3({
 
       if (sessionId) {
         toast.success("Workout session started");
-        router.push(`/workout-sessions/${sessionId}/active`);
+        router.push(`/m3/workout-sessions/${sessionId}/active`);
       } else {
         toast.error("Failed to get session ID");
       }

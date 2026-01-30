@@ -129,7 +129,7 @@ export function WorkoutSessionDetailContent({
           {isInProgress && (
             <div className="mt-6">
               <Button asChild className="m3-cta">
-                <Link href={`/workout-sessions/${session.id}/active`}>
+                <Link href={`/m3/workout-sessions/${session.id}/active`}>
                   <Play className="mr-2 size-4" />
                   Resume workout
                 </Link>
