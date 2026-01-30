@@ -24,15 +24,19 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="min-w-0 flex-1 space-y-2">
-        <h1 className="m3-hero-sm">{title}</h1>
+      {actions && (
+        <div className="order-1 flex w-full shrink-0 flex-wrap items-center gap-3 sm:order-2 sm:mt-0 sm:w-auto">
+          {actions}
+        </div>
+      )}
+      <div className="order-2 min-w-0 flex-1 space-y-2 sm:order-1">
+        <h1 className="m3-page-title">{title}</h1>
         {description && (
           <p className="m3-body m3-prose text-muted-foreground">
             {description}
           </p>
         )}
       </div>
-      {actions && <div className="shrink-0 sm:mt-0">{actions}</div>}
     </header>
   );
 }

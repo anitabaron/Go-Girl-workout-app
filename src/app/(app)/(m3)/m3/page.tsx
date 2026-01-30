@@ -1,123 +1,195 @@
+import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import {
+  Dumbbell,
+  Calendar,
+  History,
+  Trophy,
+  ClipboardClock,
+  FileJson,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/db/supabase.server";
 import { HeroReveal, ScrollReveal, Surface } from "./_components";
 
-export default function M3Page() {
+const FEATURES = [
+  {
+    id: "exercises",
+    title: "Biblioteka ćwiczeń",
+    description:
+      "Przeglądaj i zarządzaj swoją biblioteką ćwiczeń. Dodawaj własne ćwiczenia, filtruj po części ciała i typie, śledź swoje ulubione.",
+    icon: Dumbbell,
+    href: "/m3/exercises",
+  },
+  {
+    id: "workout-plans",
+    title: "Plany treningowe",
+    description:
+      "Twórz i zarządzaj planami treningowymi dostosowanymi do Twoich celów. Organizuj ćwiczenia w sekcje, ustaw parametry treningowe.",
+    icon: Calendar,
+    href: "/m3/workout-plans",
+  },
+  {
+    id: "workout-sessions",
+    title: "Historia sesji",
+    description:
+      "Śledź historię swoich treningów. Przeglądaj zakończone sesje, analizuj postępy i wznawiaj przerwane treningi.",
+    icon: History,
+    href: "/m3/workout-sessions",
+  },
+  {
+    id: "personal-records",
+    title: "Rekordy osobiste",
+    description:
+      "Śledź swoje rekordy osobiste w różnych metrykach. Osiągaj nowe PR i obserwuj swoje postępy w czasie.",
+    icon: Trophy,
+    href: "/m3/personal-records",
+  },
+  {
+    id: "assistant",
+    title: "Asystent treningowy",
+    description:
+      "Asystent treningowy pomaga Ci w organizacji i wykonywaniu treningów. Generuje plany treningowe, dostosowane do Twoich potrzeb i umiejscowienia.",
+    icon: ClipboardClock,
+    href: "/m3/workout-sessions/start",
+  },
+  {
+    id: "import-workout-plan",
+    title: "Import planu treningowego",
+    description:
+      "Importuj plan treningowy z pliku JSON. Aplikacja przeanalizuje plik i wygeneruje plan treningowy dostosowany do Twoich potrzeb.",
+    icon: FileJson,
+    href: "/m3/import-instruction",
+  },
+] as const;
+
+export default async function M3Page({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}>) {
+  const params = await searchParams;
+  const code = params.code;
+
+  // Obsługa parametru `code` z Supabase Auth (reset hasła, potwierdzenie emaila)
+  if (code && typeof code === "string") {
+    const supabase = await createClient();
+
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error || !session) {
+        redirect("/reset-password?error=invalid_token");
+      }
+
+      redirect("/reset-password/confirm");
+    } catch (error) {
+      console.error("Error exchanging code for session:", error);
+      redirect("/reset-password?error=invalid_token");
+    }
+  }
+
   return (
     <div className="space-y-10 md:space-y-16 w-full min-w-0">
-      {/* Hero section - tonal primaryContainer, large radius */}
-      <Surface variant="hero" className="overflow-hidden">
+      {/* Hero section – logo + headline */}
+      <Surface variant="hero" className="overflow-hidden p-3 sm:p-4 md:p-5">
         <HeroReveal
           stagger={[".hero-headline", ".hero-desc", ".hero-cta", ".hero-illus"]}
           staggerDelay={0.1}
         >
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 md:items-center">
-            {/* Left: headline + description + CTA */}
-            <div className="space-y-6">
-              <h1 className="hero-headline m3-hero text-foreground">Go Girl</h1>
-              <p className="hero-desc m3-body-large m3-prose text-muted-foreground">
-                Your personal workout companion. Track exercises, build plans,
-                and stay consistent with Material 3–inspired design.
-              </p>
-              <div className="hero-cta flex items-center gap-3">
-                <Button asChild className="m3-cta">
-                  <Link href="/m3/exercises">Get started</Link>
-                </Button>
-                <span className="m3-chip">Material 3</span>
-              </div>
-            </div>
-
-            {/* Right: illustration/media placeholder */}
-            <div
-              className="hero-illus min-h-[200px] md:min-h-[280px] rounded-[var(--m3-radius-hero)] bg-[var(--m3-surface-container)]/80 flex items-center justify-center border border-[var(--m3-outline-variant)]"
-              aria-hidden
-            >
-              <div className="text-[var(--m3-on-surface-variant)]/60 text-sm font-medium">
-                Illustration placeholder
-              </div>
+          <div className="flex flex-col items-center text-center px-2 py-4 md:py-5">
+            <Image
+              src="/logo-pin.png"
+              alt="Go Girl Workout App"
+              width={450}
+              height={180}
+              priority
+              className="hero-illus h-auto w-[110px] sm:w-[90px] md:w-[80px]"
+            />
+            <h1 className="hero-headline m3-headline mt-3 text-foreground md:m3-hero-sm md:mt-4">
+              designed to help you stay on track with your goals
+            </h1>
+            <div className="hero-cta mt-3 flex items-center gap-3 md:mt-4">
+              <Button asChild className="m3-cta">
+                <Link href="/m3/exercises">Get started</Link>
+              </Button>
             </div>
           </div>
         </HeroReveal>
       </Surface>
 
-      {/* Feature cards - 2-col desktop, 1-col mobile */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <ScrollReveal>
-          <Surface variant="high" className="h-full">
-            <h2 className="m3-headline">Exercises</h2>
-            <p className="m3-body mt-3 m3-prose text-muted-foreground">
-              Browse and manage your exercise library. Add custom exercises and
-              organize by type and muscle group.
-            </p>
-            <Button asChild className="mt-6 m3-cta">
-              <Link href="/m3/exercises">Go to Exercises</Link>
-            </Button>
-          </Surface>
-        </ScrollReveal>
-
-        <ScrollReveal start="top 80%">
-          <Surface variant="high" className="h-full">
-            <h2 className="m3-headline">Workout plans</h2>
-            <p className="m3-body mt-3 m3-prose text-muted-foreground">
-              Create and follow workout plans. Build routines that fit your
-              goals and schedule.
-            </p>
-            <Button asChild className="mt-6 m3-cta">
-              <Link href="/m3/workout-plans">Go to Plans</Link>
-            </Button>
-          </Surface>
-        </ScrollReveal>
-
-        <ScrollReveal start="top 85%">
-          <Surface variant="high" className="h-full">
-            <h2 className="m3-headline">Workout sessions</h2>
-            <p className="m3-body mt-3 m3-prose text-muted-foreground">
-              Track your workout history. Start a session from a plan and record
-              your progress.
-            </p>
-            <Button asChild className="mt-6 m3-cta">
-              <Link href="/m3/workout-sessions">Go to Sessions</Link>
-            </Button>
-          </Surface>
-        </ScrollReveal>
-      </div>
-      {/* GSAP demo – scroll down to see ScrollReveal animations */}
+      {/* Features overview – wszystkie 6 funkcji */}
       <section className="space-y-6 w-full min-w-0">
-        <div className="w-full">
-          <h2 className="m3-headline text-center">GSAP demo</h2>
-          <p className="m3-body text-center text-muted-foreground mt-2 max-w-[65ch] mx-auto">
-            Przewiń w dół – każdy blok animuje się (fade + slide) gdy wejdzie w
-            viewport.
+        <h2 className="m3-headline">Odkryj wszystkie możliwości aplikacji</h2>
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {FEATURES.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <ScrollReveal
+                key={feature.id}
+                start={index < 2 ? "top 90%" : "top 85%"}
+              >
+                <Surface variant="high" className="h-full">
+                  <Link
+                    href={feature.href}
+                    className="block h-full group"
+                    aria-label={`Przejdź do ${feature.title}`}
+                  >
+                    <div className="mb-3">
+                      <Icon className="size-6 text-primary" />
+                    </div>
+                    <h3 className="m3-title group-hover:text-primary transition-colors">
+                      {feature.title}
+                    </h3>
+                    <p className="mt-2 text-sm m3-prose text-muted-foreground">
+                      {feature.description}
+                    </p>
+                    <span className="mt-4 inline-block text-sm font-medium text-primary group-hover:underline">
+                      Przejdź do {feature.title} →
+                    </span>
+                  </Link>
+                </Surface>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-[var(--m3-outline-variant)] pt-8 pb-4">
+        <div className="flex flex-col items-center text-center gap-3">
+          <p className="m3-title">
+            &quot;Strong today, unstoppable tomorrow.&quot;
+          </p>
+          <div className="flex justify-center gap-5 text-sm font-semibold">
+            <a
+              href="https://github.com/anitabaron"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline underline-offset-4"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://linkedin.com/in/anita-baron"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline underline-offset-4"
+            >
+              LinkedIn
+            </a>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} Go Girl Workout App. All rights
+            reserved.
           </p>
         </div>
-
-        <ScrollReveal>
-          <div className="h-[40vh] min-h-[200px] rounded-xl border-2 border-[var(--m3-primary)] p-6 flex flex-col items-center justify-center gap-4 bg-[var(--m3-primary-container)]/30">
-            <span className="m3-chip">GSAP ScrollReveal 1</span>
-            <p className="m3-body text-center text-muted-foreground">
-              Ten blok pojawia się z animacją przy scrollu.
-            </p>
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal start="top 85%">
-          <div className="h-[40vh] min-h-[200px] rounded-xl border-2 border-[var(--m3-outline)] p-6 flex flex-col items-center justify-center gap-4 bg-[var(--m3-surface-container)]">
-            <span className="m3-chip">GSAP ScrollReveal 2</span>
-            <p className="m3-body text-center text-muted-foreground">
-              Drugi blok – ScrollTrigger działa.
-            </p>
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal start="top 85%">
-          <div className="h-[40vh] min-h-[200px] rounded-xl border-2 border-[var(--m3-primary)] p-6 flex flex-col items-center justify-center gap-4 bg-[var(--m3-primary-container)]/20">
-            <span className="m3-chip">GSAP ScrollReveal 3</span>
-            <p className="m3-body text-center text-muted-foreground">
-              Trzeci blok – GSAP + ScrollTrigger działają poprawnie.
-            </p>
-          </div>
-        </ScrollReveal>
-      </section>
+      </footer>
     </div>
   );
 }

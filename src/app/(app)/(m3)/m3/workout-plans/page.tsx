@@ -40,14 +40,16 @@ export default async function WorkoutPlansPage({
         title="Workout plans"
         description="Browse and manage your workout plans."
         actions={
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="m3-chip">{plans.length} plans</span>
-            <Button asChild className="m3-cta">
-              <Link href="/m3/workout-plans/new">
-                <Plus className="mr-2 size-4" />
-                Create plan
-              </Link>
-            </Button>
+          <div className="flex flex-col gap-3 items-end">
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <span className="m3-chip">{plans.length} plans</span>
+              <Button asChild className="m3-cta">
+                <Link href="/m3/workout-plans/new">
+                  <Plus className="mr-2 size-4" />
+                  Create plan
+                </Link>
+              </Button>
+            </div>
             <ImportPlanButtonM3 />
           </div>
         }

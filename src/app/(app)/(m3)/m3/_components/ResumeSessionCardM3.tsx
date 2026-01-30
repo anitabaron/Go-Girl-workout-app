@@ -43,7 +43,9 @@ export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
     isCancelling,
     isCancelDialogOpen,
     setIsCancelDialogOpen,
-  } = useResumeSession(session);
+  } = useResumeSession(session, {
+    redirectHref: `/m3/workout-sessions/${session.id}/active`,
+  });
 
   const totalExercises = session.exercises.length;
   const currentExerciseNumber = Math.max(1, session.current_position ?? 0);
@@ -145,10 +147,10 @@ export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
               variant="outline"
               size="lg"
               className="w-full sm:w-auto"
-              aria-label="Cancel session"
+              aria-label="Cancel"
             >
               <X className="mr-2 size-4" />
-              Cancel session
+              Cancel
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>

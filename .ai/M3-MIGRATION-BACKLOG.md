@@ -200,8 +200,8 @@
 - [x] `/m3/workout-sessions` – lista (real data, load more)
 - [x] `/m3/workout-sessions/[id]` – szczegóły (WorkoutSessionDetailContent)
 - [x] `/m3/workout-sessions/start` – start (ResumeSessionCardM3 lub WorkoutPlansStartListM3)
-- [x] proxy.ts – rewrite `/workout-sessions`, `/workout-sessions/*` (bez `/active`) → M3
-- [ ] `/m3/workout-sessions/[id]/active` – aktywna sesja (legacy – złożony asystent)
+- [x] proxy.ts – rewrite `/workout-sessions`, `/workout-sessions/*` → M3 (w tym `/active`)
+- [x] `/m3/workout-sessions/[id]/active` – aktywna sesja (WorkoutSessionAssistantM3)
 
 ## Personal records (M3) – DONE
 

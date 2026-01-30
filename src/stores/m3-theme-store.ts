@@ -21,8 +21,8 @@ function applyTheme(root: Element | null, isDark: M3ThemeMode) {
 }
 
 function applyThemeToDom(isDark: M3ThemeMode) {
-  const root = document.querySelector(M3_ROOT);
-  applyTheme(root, isDark);
+  const roots = document.querySelectorAll(M3_ROOT);
+  roots.forEach((root) => applyTheme(root, isDark));
 }
 
 /**
@@ -58,7 +58,7 @@ export const useM3ThemeStore = create<M3ThemeStore>()(
       name: STORAGE_KEY,
       partialize: (state) => ({ isDark: state.isDark }),
       onRehydrateStorage: () => (state) => {
-        if (state?.isDark != null) {
+        if (state?.isDark != null && globalThis.window !== undefined) {
           applyThemeToDom(state.isDark);
         }
       },

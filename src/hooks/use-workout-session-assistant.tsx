@@ -9,12 +9,16 @@ import { useSessionForm } from "@/hooks/use-session-form";
 import { useSessionTimer } from "@/hooks/use-session-timer";
 import { useSessionNavigation } from "@/hooks/use-session-navigation";
 import { useAutoPause } from "@/hooks/use-auto-pause";
-import { ExerciseTimer } from "@/components/workout-sessions/assistant/exercise-timer";
-import type { FormErrors } from "@/types/workout-session-assistant";
+import type {
+  ExerciseTimerProps,
+  FormErrors,
+} from "@/types/workout-session-assistant";
 
 export type UseWorkoutSessionAssistantProps = {
   readonly sessionId: string;
   readonly initialSession: SessionDetailDTO;
+  /** Where to redirect on exit. Default "/" for legacy, use "/m3/workout-sessions" for M3. */
+  readonly exitHref?: string;
 };
 
 export type UseWorkoutSessionAssistantResult = {
@@ -30,7 +34,8 @@ export type UseWorkoutSessionAssistantResult = {
   autosaveError: string | undefined;
   canGoNext: boolean;
   canGoPrevious: boolean;
-  exerciseTimerContent: React.ReactNode;
+  /** Props for ExerciseTimer – caller renders timer (legacy or M3). Null when no current exercise. */
+  exerciseTimerProps: ExerciseTimerProps | null;
   handleExit: () => Promise<void>;
   handlePrevious: () => void;
   handleNext: () => Promise<void>;
@@ -47,6 +52,7 @@ export type UseWorkoutSessionAssistantResult = {
 export function useWorkoutSessionAssistant({
   sessionId,
   initialSession,
+  exitHref = "/",
 }: UseWorkoutSessionAssistantProps): UseWorkoutSessionAssistantResult {
   const router = useRouter();
   const resetStore = useWorkoutSessionStore((s) => s.resetStore);
@@ -132,23 +138,23 @@ export function useWorkoutSessionAssistant({
     } catch {
       // Ignoruj błędy - przekieruj użytkownika
     } finally {
-      router.push("/");
+      router.push(exitHref);
     }
-  }, [autoPause, router]);
+  }, [autoPause, router, exitHref]);
 
-  const exerciseTimerContent = useMemo(
+  const exerciseTimerProps: ExerciseTimerProps | null = useMemo(
     () =>
-      currentExercise ? (
-        <ExerciseTimer
-          exercise={currentExercise}
-          currentSetNumber={currentSetNumber}
-          isPaused={isPaused}
-          onSetComplete={handleSetComplete}
-          onRestBetweenComplete={handleRestBetweenComplete}
-          onRestAfterSeriesComplete={handleRestAfterSeriesComplete}
-          onRepsComplete={handleRepsComplete}
-        />
-      ) : null,
+      currentExercise
+        ? {
+            exercise: currentExercise,
+            currentSetNumber,
+            isPaused,
+            onSetComplete: handleSetComplete,
+            onRestBetweenComplete: handleRestBetweenComplete,
+            onRestAfterSeriesComplete: handleRestAfterSeriesComplete,
+            onRepsComplete: handleRepsComplete,
+          }
+        : null,
     [
       currentExercise,
       currentSetNumber,
@@ -173,7 +179,7 @@ export function useWorkoutSessionAssistant({
     autosaveError,
     canGoNext,
     canGoPrevious,
-    exerciseTimerContent,
+    exerciseTimerProps,
     handleExit,
     handlePrevious,
     handleNext,

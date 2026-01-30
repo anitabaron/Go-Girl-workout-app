@@ -180,8 +180,10 @@ export function useAutoPause(
     if (!timerInitializedRef.current) return;
     if (isFirstRenderRef.current) return;
 
-    const activePagePath = `/workout-sessions/${sessionId}/active`;
-    const isOnActivePage = pathname === activePagePath;
+    const legacyActivePath = `/workout-sessions/${sessionId}/active`;
+    const m3ActivePath = `/m3/workout-sessions/${sessionId}/active`;
+    const isOnActivePage =
+      pathname === legacyActivePath || pathname === m3ActivePath;
     const pathnameChanged = previousPathnameRef.current !== pathname;
     const previousPathname = previousPathnameRef.current;
     previousPathnameRef.current = pathname;
@@ -190,7 +192,8 @@ export function useAutoPause(
       !isOnActivePage &&
       !isPaused &&
       pathname &&
-      pathname !== activePagePath &&
+      pathname !== legacyActivePath &&
+      pathname !== m3ActivePath &&
       pathname.trim() !== ""
     ) {
       if (autoPauseExecutedRef.current !== pathname) {
@@ -200,7 +203,8 @@ export function useAutoPause(
     } else if (
       isOnActivePage &&
       pathnameChanged &&
-      previousPathname !== activePagePath
+      previousPathname !== legacyActivePath &&
+      previousPathname !== m3ActivePath
     ) {
       autoPauseExecutedRef.current = null;
     }

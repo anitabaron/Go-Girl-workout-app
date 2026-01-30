@@ -9,23 +9,34 @@ import {
 } from "@/lib/api/workout-sessions";
 import type { SessionDetailDTO } from "@/types";
 
-export function useResumeSession(session: SessionDetailDTO) {
+type UseResumeSessionOptions = {
+  /** Where to redirect on resume. Default legacy path. Use /m3/workout-sessions/[id]/active for M3. */
+  redirectHref?: string;
+};
+
+export function useResumeSession(
+  session: SessionDetailDTO,
+  options?: UseResumeSessionOptions,
+) {
   const router = useRouter();
   const [isResuming, setIsResuming] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 
+  const redirectHref =
+    options?.redirectHref ?? `/workout-sessions/${session.id}/active`;
+
   const handleResume = useCallback(async () => {
     setIsResuming(true);
     try {
-      router.push(`/workout-sessions/${session.id}/active`);
+      router.push(redirectHref);
     } catch (error) {
       console.error("Error resuming session:", error);
       toast.error("Nie udało się wznowić sesji treningowej");
     } finally {
       setIsResuming(false);
     }
-  }, [router, session.id]);
+  }, [router, redirectHref]);
 
   const handleCancel = useCallback(async () => {
     setIsCancelling(true);

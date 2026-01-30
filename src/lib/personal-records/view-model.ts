@@ -90,14 +90,14 @@ function formatMetricValue(metricType: PRMetricType, value: number): string {
 }
 
 /**
- * Formatuje datę osiągnięcia rekordu w formacie polskim.
+ * Formatuje datę osiągnięcia rekordu w formacie DD.MM.YYYY.
  */
 function formatAchievedDate(isoDate: string): string {
   const date = new Date(isoDate);
   return new Intl.DateTimeFormat("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
     year: "numeric",
-    month: "long",
-    day: "numeric",
   }).format(date);
 }
 

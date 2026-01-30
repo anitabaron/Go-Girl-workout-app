@@ -78,7 +78,7 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
   const handleResume = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    router.push(`/workout-sessions/${session.id}/active`);
+    router.push(`/m3/workout-sessions/${session.id}/active`);
   };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -135,7 +135,7 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
         <Link
           href={
             isInProgress
-              ? `/workout-sessions/${session.id}/active`
+              ? `/m3/workout-sessions/${session.id}/active`
               : `/m3/workout-sessions/${session.id}`
           }
           className="block h-full"
@@ -216,10 +216,10 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
                 e.stopPropagation();
                 setIsCancelDialogOpen(true);
               }}
-              aria-label="Cancel session"
+              aria-label="Cancel"
             >
               <X className="mr-2 size-4" />
-              Cancel session
+              Cancel
             </Button>
           </CardFooter>
         )}

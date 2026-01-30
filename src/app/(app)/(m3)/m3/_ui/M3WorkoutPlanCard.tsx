@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { memo, useMemo, useState } from "react";
-import { Clock10, Dumbbell, AlertCircle, Pencil, Trash2 } from "lucide-react";
+import {
+  Clock10,
+  Dumbbell,
+  AlertCircle,
+  Pencil,
+  Play,
+  Trash2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +46,7 @@ function M3WorkoutPlanCardComponent({
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
 
   const formattedDate = useMemo(
     () => formatDateTime(plan.created_at),
@@ -68,6 +76,58 @@ function M3WorkoutPlanCardComponent({
     setIsDeleteDialogOpen(true);
   };
 
+  const handleStart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (finalExerciseCount === 0) {
+      toast.error("Add exercises to the plan before starting");
+      return;
+    }
+    setIsStarting(true);
+    try {
+      const response = await fetch("/api/workout-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workout_plan_id: plan.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const msg = (errorData as { message?: string }).message;
+
+        if (response.status === 400) {
+          toast.error(msg ?? "Invalid input. Check plan selection.");
+        } else if (response.status === 404) {
+          toast.error("Workout plan not found or does not belong to you.");
+        } else if (response.status === 409) {
+          toast.error("You already have an active session. Resume it.");
+          router.refresh();
+        } else if (response.status === 401 || response.status === 403) {
+          toast.error("Unauthorized. Please log in again.");
+          router.push("/login");
+        } else {
+          toast.error(msg ?? "Failed to start workout session");
+        }
+        return;
+      }
+
+      const data = await response.json();
+      const sessionId = data.id ?? (data.data as { id?: string })?.id;
+
+      if (sessionId) {
+        toast.success("Workout session started");
+        router.push(`/m3/workout-sessions/${sessionId}/active`);
+      } else {
+        toast.error("Failed to get session ID");
+      }
+    } catch (error) {
+      console.error("Error starting workout:", error);
+      toast.error("An error occurred while starting the workout");
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -92,7 +152,7 @@ function M3WorkoutPlanCardComponent({
       toast.success("Workout plan deleted");
       setIsDeleteDialogOpen(false);
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while deleting the workout plan");
     } finally {
       setIsDeleting(false);
@@ -103,6 +163,16 @@ function M3WorkoutPlanCardComponent({
     <>
       <Card className="group relative h-full overflow-hidden transition-shadow hover:shadow-md">
         <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full !bg-[var(--m3-primary)] !text-[var(--m3-on-primary)] hover:!bg-[var(--m3-primary)] hover:!opacity-90"
+            onClick={handleStart}
+            disabled={isStarting || finalExerciseCount === 0}
+            aria-label={`Start workout: ${plan.name}`}
+          >
+            <Play className="size-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -129,7 +199,7 @@ function M3WorkoutPlanCardComponent({
           aria-label={`View plan details: ${plan.name}`}
         >
           <CardHeader>
-            <h3 className="m3-headline line-clamp-2 pr-16">{plan.name}</h3>
+            <h3 className="m3-headline line-clamp-2 pr-28">{plan.name}</h3>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3">

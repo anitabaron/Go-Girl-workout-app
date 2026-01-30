@@ -11,61 +11,64 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Toolbar } from "./Toolbar";
+import {
+  exercisePartValues,
+  exerciseTypeValues,
+} from "@/lib/validation/exercises";
+import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
+import type { ExercisePart, ExerciseType } from "@/types";
 
-const SORT_OPTIONS = [
-  { value: "title-asc", label: "Title (A–Z)" },
-  { value: "title-desc", label: "Title (Z–A)" },
-  { value: "created-desc", label: "Newest first" },
-  { value: "created-asc", label: "Oldest first" },
-] as const;
-
-type SortValue = (typeof SORT_OPTIONS)[number]["value"];
-
-function parseSortValue(sort?: string, order?: string): SortValue {
-  if (sort === "title" && order === "asc") return "title-asc";
-  if (sort === "title" && order === "desc") return "title-desc";
-  if (sort === "created_at" && order === "desc") return "created-desc";
-  if (sort === "created_at" && order === "asc") return "created-asc";
-  return "title-asc";
-}
-
-function sortValueToParams(value: SortValue): { sort: string; order: string } {
-  const [sort, order] = value.split("-") as [string, string];
-  return {
-    sort: sort === "created" ? "created_at" : sort,
-    order: order ?? "asc",
-  };
-}
+type ExerciseTitle = { id: string; title: string };
 
 type ExercisesToolbarProps = {
+  exercises: ExerciseTitle[];
   search?: string;
-  sort?: string;
-  order?: string;
+  part?: string | null;
+  type?: string | null;
+  exerciseId?: string | null;
 };
 
 /**
- * Exercises toolbar - search + sort. Updates URL; page re-renders with new data.
+ * Exercises toolbar - search + filters + sort. Updates URL; page re-renders with new data.
  */
 export function ExercisesToolbar({
+  exercises,
   search = "",
-  sort = "title",
-  order = "asc",
+  part = null,
+  type = null,
+  exerciseId = null,
 }: ExercisesToolbarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const sortValue = parseSortValue(sort, order);
 
   const updateParams = useCallback(
-    (updates: { search?: string; sort?: string; order?: string }) => {
+    (updates: {
+      search?: string;
+      part?: string | null;
+      type?: string | null;
+      exercise_id?: string | null;
+    }) => {
       const params = new URLSearchParams(searchParams.toString());
       if (updates.search !== undefined) {
         if (updates.search) params.set("search", updates.search);
         else params.delete("search");
       }
-      if (updates.sort !== undefined) params.set("sort", updates.sort);
-      if (updates.order !== undefined) params.set("order", updates.order);
+      if (updates.part !== undefined) {
+        if (updates.part) params.set("part", updates.part);
+        else params.delete("part");
+      }
+      if (updates.type !== undefined) {
+        if (updates.type) params.set("type", updates.type);
+        else params.delete("type");
+      }
+      if (updates.exercise_id !== undefined) {
+        if (updates.exercise_id) params.set("exercise_id", updates.exercise_id);
+        else params.delete("exercise_id");
+      }
+      params.delete("cursor");
       startTransition(() => {
         router.push(`/m3/exercises?${params.toString()}`);
       });
@@ -73,9 +76,35 @@ export function ExercisesToolbar({
     [router, searchParams],
   );
 
-  const handleSortChange = (value: SortValue) => {
-    const { sort: s, order: o } = sortValueToParams(value);
-    updateParams({ sort: s, order: o });
+  const handlePartChange = (value: string) => {
+    const partValue =
+      value && value !== "all" && exercisePartValues.includes(value as ExercisePart)
+        ? (value as ExercisePart)
+        : null;
+    updateParams({ part: partValue });
+  };
+
+  const handleTypeChange = (value: string) => {
+    const typeValue =
+      value && value !== "all" && exerciseTypeValues.includes(value as ExerciseType)
+        ? (value as ExerciseType)
+        : null;
+    updateParams({ type: typeValue });
+  };
+
+  const handleExerciseChange = (value: string) => {
+    const exerciseIdValue = value && value !== "all" ? value : null;
+    if (
+      exerciseIdValue &&
+      !exercises.some((ex) => ex.id === exerciseIdValue)
+    ) {
+      return;
+    }
+    updateParams({ exercise_id: exerciseIdValue });
+  };
+
+  const handleClearFilters = () => {
+    updateParams({ part: null, type: null, exercise_id: null });
   };
 
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -90,37 +119,114 @@ export function ExercisesToolbar({
     [updateParams],
   );
 
+  const hasActiveFilters =
+    part != null || type != null || exerciseId != null;
+
   return (
-    <Toolbar className="rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-highest)] p-4">
-      <div className="relative w-full sm:max-w-xs">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          key={`search-${search}-${sort}-${order}`}
-          type="search"
-          placeholder="Search exercises..."
-          className="pl-9"
-          aria-label="Search exercises"
-          defaultValue={search}
-          onChange={handleSearchChange}
-          disabled={isPending}
-        />
+    <Toolbar className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative min-w-[180px] flex-1 sm:max-w-[280px]">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            key={`search-${search}`}
+            type="search"
+            placeholder="Search exercises..."
+            className="pl-9"
+            aria-label="Search exercises"
+            defaultValue={search}
+            onChange={handleSearchChange}
+            disabled={isPending}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="exercise-filter" className="sr-only">
+            Filter by exercise
+          </label>
+          <Select
+            value={exerciseId ?? "all"}
+            onValueChange={handleExerciseChange}
+            disabled={isPending}
+          >
+            <SelectTrigger
+              id="exercise-filter"
+              className="w-[180px]"
+              aria-label="Filter by exercise"
+            >
+              <SelectValue placeholder="Exercise" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All exercises</SelectItem>
+              {exercises.map((exercise) => (
+                <SelectItem key={exercise.id} value={exercise.id}>
+                  {exercise.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="part-filter" className="sr-only">
+            Filter by body part
+          </label>
+          <Select
+            value={part ?? "all"}
+            onValueChange={handlePartChange}
+            disabled={isPending}
+          >
+            <SelectTrigger
+              id="part-filter"
+              className="w-[140px]"
+              aria-label="Filter by body part"
+            >
+              <SelectValue placeholder="Body part" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All parts</SelectItem>
+              {exercisePartValues.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {EXERCISE_PART_LABELS[p]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="type-filter" className="sr-only">
+            Filter by exercise type
+          </label>
+          <Select
+            value={type ?? "all"}
+            onValueChange={handleTypeChange}
+            disabled={isPending}
+          >
+            <SelectTrigger
+              id="type-filter"
+              className="w-[140px]"
+              aria-label="Filter by exercise type"
+            >
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {exerciseTypeValues.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {EXERCISE_TYPE_LABELS[t]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <Select
-        value={sortValue}
-        onValueChange={handleSortChange}
-        disabled={isPending}
-      >
-        <SelectTrigger className="w-full sm:w-[180px]" aria-label="Sort by">
-          <SelectValue placeholder="Sort by" />
-        </SelectTrigger>
-        <SelectContent>
-          {SORT_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {hasActiveFilters && (
+        <Button
+          variant="outline"
+          onClick={handleClearFilters}
+          disabled={isPending}
+          aria-label="Clear filters"
+        >
+          Clear filters
+        </Button>
+      )}
     </Toolbar>
   );
 }

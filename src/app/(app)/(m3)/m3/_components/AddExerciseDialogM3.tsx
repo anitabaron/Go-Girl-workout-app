@@ -88,9 +88,8 @@ export function AddExerciseDialogM3({
       <DialogTrigger asChild>
         <Button
           type="button"
-          variant="outline"
           disabled={disabled}
-          className="gap-2"
+          className="m3-cta gap-2"
         >
           <Plus className="size-4" />
           Add exercise
