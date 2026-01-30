@@ -10,6 +10,7 @@ import type {
   WorkoutPlanExerciseDTO,
   WorkoutPlanExerciseInput,
 } from "@/types";
+import { applyCursorFilter } from "@/lib/cursor-utils";
 import {
   WORKOUT_PLAN_DEFAULT_LIMIT,
   WORKOUT_PLAN_MAX_LIMIT,
@@ -26,14 +27,8 @@ type WorkoutPlanExerciseRow =
 type SortField = (typeof workoutPlanSortFields)[number];
 type SortOrder = (typeof workoutPlanOrderValues)[number];
 
-const planSelectColumns = "id,name,description,part,estimated_total_time_seconds,created_at,updated_at";
-
-type CursorPayload = {
-  sort: SortField;
-  order: SortOrder;
-  value: string | number;
-  id: string;
-};
+const planSelectColumns =
+  "id,name,description,part,estimated_total_time_seconds,created_at,updated_at";
 
 /**
  * Pobiera plan treningowy po ID i user_id.
@@ -41,7 +36,7 @@ type CursorPayload = {
 export async function findWorkoutPlanById(
   client: DbClient,
   userId: string,
-  id: string
+  id: string,
 ) {
   const { data, error } = await client
     .from("workout_plans")
@@ -60,15 +55,19 @@ export async function findWorkoutPlansByUserId(
   client: DbClient,
   userId: string,
   params: Required<Pick<PlanQueryParams, "sort" | "order" | "limit">> &
-    PlanQueryParams
+    PlanQueryParams,
 ): Promise<{
-  data?: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number; exercise_names?: string[]; has_missing_exercises?: boolean })[];
+  data?: (Omit<WorkoutPlanDTO, "exercises"> & {
+    exercise_count?: number;
+    exercise_names?: string[];
+    has_missing_exercises?: boolean;
+  })[];
   nextCursor?: string | null;
   error?: PostgrestError | null;
 }> {
   const limit = Math.min(
     params.limit ?? WORKOUT_PLAN_DEFAULT_LIMIT,
-    WORKOUT_PLAN_MAX_LIMIT
+    WORKOUT_PLAN_MAX_LIMIT,
   );
   const sort = params.sort ?? "created_at";
   const order = params.order ?? "desc";
@@ -117,11 +116,12 @@ export async function findWorkoutPlansByUserId(
     const tail = items.pop()!;
 
     // sort może być tylko "created_at" lub "name" (z workoutPlanSortFields)
-    const sortValue = sort === "created_at" 
-      ? tail.created_at 
-      : sort === "name" 
-        ? tail.name 
-        : tail.created_at; // fallback
+    const sortValue =
+      sort === "created_at"
+        ? tail.created_at
+        : sort === "name"
+          ? tail.name
+          : tail.created_at; // fallback
     nextCursor = encodeCursor({
       sort,
       order,
@@ -135,7 +135,7 @@ export async function findWorkoutPlansByUserId(
   const exerciseCounts: Record<string, number> = {};
   const exercisesByPlanId = new Map<string, string[]>();
   const hasMissingExercisesByPlanId = new Map<string, boolean>();
-  
+
   if (planIds.length > 0) {
     const { data: exercisesData, error: exercisesError } = await client
       .from("workout_plan_exercises")
@@ -147,17 +147,18 @@ export async function findWorkoutPlansByUserId(
     if (!exercisesError && exercisesData) {
       for (const row of exercisesData) {
         const planId = row.plan_id;
-        const exerciseTitle = (row.exercises as { title: string } | null)?.title ?? 
-                               (row as { exercise_title?: string | null }).exercise_title;
-        
+        const exerciseTitle =
+          (row.exercises as { title: string } | null)?.title ??
+          (row as { exercise_title?: string | null }).exercise_title;
+
         // Policz ćwiczenia
         exerciseCounts[planId] = (exerciseCounts[planId] ?? 0) + 1;
-        
+
         // Sprawdź czy ćwiczenie ma exercise_id (czy jest w bibliotece)
         if (row.exercise_id === null) {
           hasMissingExercisesByPlanId.set(planId, true);
         }
-        
+
         // Zbierz nazwy ćwiczeń
         if (exerciseTitle) {
           if (!exercisesByPlanId.has(planId)) {
@@ -189,7 +190,7 @@ export async function insertWorkoutPlan(
   userId: string,
   input: Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
     estimated_total_time_seconds?: number | null;
-  }
+  },
 ) {
   const { data, error } = await client
     .from("workout_plans")
@@ -212,13 +213,15 @@ export async function insertWorkoutPlan(
 export async function insertWorkoutPlanExercises(
   client: DbClient,
   planId: string,
-  exercises: Array<WorkoutPlanExerciseInput & {
-    exercise_title?: string | null;
-    exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
-    exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
-    exercise_details?: string | null;
-    snapshot_id?: string | null;
-  }>
+  exercises: Array<
+    WorkoutPlanExerciseInput & {
+      exercise_title?: string | null;
+      exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
+      exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+      exercise_details?: string | null;
+      snapshot_id?: string | null;
+    }
+  >,
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
     plan_id: planId,
@@ -234,14 +237,15 @@ export async function insertWorkoutPlanExercises(
     planned_reps: exercise.planned_reps ?? null,
     planned_duration_seconds: exercise.planned_duration_seconds ?? null,
     planned_rest_seconds: exercise.planned_rest_seconds ?? null,
-    planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
+    planned_rest_after_series_seconds:
+      exercise.planned_rest_after_series_seconds ?? null,
     estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
   }));
 
   // Type assertion - pola snapshot są w bazie
   // Używamy 'as any' aby obejść problemy z cache schematu Supabase PostgREST
   // Cache może wymagać odświeżenia po migracjach - zrestartuj serwer deweloperski
-   
+
   const { data, error } = await (client
     .from("workout_plan_exercises")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -259,9 +263,11 @@ export async function updateWorkoutPlan(
   client: DbClient,
   userId: string,
   id: string,
-  input: Partial<Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
-    estimated_total_time_seconds?: number | null;
-  }>
+  input: Partial<
+    Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
+      estimated_total_time_seconds?: number | null;
+    }
+  >,
 ) {
   const updateData: {
     name?: string;
@@ -283,7 +289,8 @@ export async function updateWorkoutPlan(
   }
 
   if (input.estimated_total_time_seconds !== undefined) {
-    updateData.estimated_total_time_seconds = input.estimated_total_time_seconds;
+    updateData.estimated_total_time_seconds =
+      input.estimated_total_time_seconds;
   }
 
   if (Object.keys(updateData).length === 0) {
@@ -323,7 +330,7 @@ export async function updateWorkoutPlanExercise(
     planned_rest_seconds?: number | null;
     planned_rest_after_series_seconds?: number | null;
     estimated_set_time_seconds?: number | null;
-  }
+  },
 ) {
   const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] & {
     planned_rest_after_series_seconds?: number | null;
@@ -364,7 +371,8 @@ export async function updateWorkoutPlanExercise(
     updateData.planned_rest_seconds = input.planned_rest_seconds;
   }
   if (input.planned_rest_after_series_seconds !== undefined) {
-    updateData.planned_rest_after_series_seconds = input.planned_rest_after_series_seconds;
+    updateData.planned_rest_after_series_seconds =
+      input.planned_rest_after_series_seconds;
   }
   if (input.estimated_set_time_seconds !== undefined) {
     updateData.estimated_set_time_seconds = input.estimated_set_time_seconds;
@@ -389,7 +397,10 @@ export async function updateWorkoutPlanExercise(
 /**
  * Usuwa wszystkie ćwiczenia z planu treningowego.
  */
-export async function deleteWorkoutPlanExercises(client: DbClient, planId: string) {
+export async function deleteWorkoutPlanExercises(
+  client: DbClient,
+  planId: string,
+) {
   const { error } = await client
     .from("workout_plan_exercises")
     .delete()
@@ -405,7 +416,7 @@ export async function deleteWorkoutPlanExercises(client: DbClient, planId: strin
 export async function updateWorkoutPlanExercisesBySnapshotId(
   client: DbClient,
   snapshotId: string,
-  exerciseId: string
+  exerciseId: string,
 ) {
   const { data, error } = await client
     .from("workout_plan_exercises")
@@ -428,14 +439,15 @@ export async function updateWorkoutPlanExercisesBySnapshotId(
  */
 export async function listWorkoutPlanExercises(
   client: DbClient,
-  planId: string
+  planId: string,
 ): Promise<{
   data?: WorkoutPlanExerciseDTO[];
   error?: PostgrestError | null;
 }> {
   const { data, error } = await client
     .from("workout_plan_exercises")
-    .select(`
+    .select(
+      `
       *,
       exercises (
         id,
@@ -446,7 +458,8 @@ export async function listWorkoutPlanExercises(
         estimated_set_time_seconds,
         rest_after_series_seconds
       )
-    `)
+    `,
+    )
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
     .order("section_order", { ascending: true });
@@ -490,16 +503,19 @@ export async function listWorkoutPlanExercises(
 
     // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
     // For estimated_set_time_seconds, prioritize workout_plan_exercises value if it's not null/undefined
-    const finalEstimatedSetTime = rowWithSnapshot.estimated_set_time_seconds !== null && rowWithSnapshot.estimated_set_time_seconds !== undefined
-      ? rowWithSnapshot.estimated_set_time_seconds 
-      : exercise?.estimated_set_time_seconds ?? null;
-    
+    const finalEstimatedSetTime =
+      rowWithSnapshot.estimated_set_time_seconds !== null &&
+      rowWithSnapshot.estimated_set_time_seconds !== undefined
+        ? rowWithSnapshot.estimated_set_time_seconds
+        : (exercise?.estimated_set_time_seconds ?? null);
+
     // For planned_rest_after_series_seconds, always use value from workout_plan_exercises if it's defined (even if null)
     // This ensures that imported plans with explicit null values are preserved
     // Only fall back to exercise default if the value is truly undefined (not present in DB result)
-    const finalRestAfterSeries = rowWithSnapshot.planned_rest_after_series_seconds !== undefined
-      ? rowWithSnapshot.planned_rest_after_series_seconds
-      : (exercise?.rest_after_series_seconds ?? null);
+    const finalRestAfterSeries =
+      rowWithSnapshot.planned_rest_after_series_seconds !== undefined
+        ? rowWithSnapshot.planned_rest_after_series_seconds
+        : (exercise?.rest_after_series_seconds ?? null);
 
     // Pobierz exercise_details z snapshot (jeśli dostępne) lub z exercises.details
     const exerciseDetails = row.exercise_id
@@ -522,7 +538,8 @@ export async function listWorkoutPlanExercises(
       exercise_type: exerciseType,
       exercise_part: exercisePart,
       exercise_estimated_set_time_seconds: finalEstimatedSetTime,
-      exercise_rest_after_series_seconds: exercise?.rest_after_series_seconds ?? null,
+      exercise_rest_after_series_seconds:
+        exercise?.rest_after_series_seconds ?? null,
       planned_rest_after_series_seconds: finalRestAfterSeries,
       is_exercise_in_library: row.exercise_id !== null,
     };
@@ -537,7 +554,7 @@ export async function listWorkoutPlanExercises(
 export async function findExercisesByIds(
   client: DbClient,
   userId: string,
-  exerciseIds: string[]
+  exerciseIds: string[],
 ) {
   if (exerciseIds.length === 0) {
     return { data: [], error: null };
@@ -558,7 +575,7 @@ export async function findExercisesByIds(
 export async function findExercisesByIdsWithFullData(
   client: DbClient,
   userId: string,
-  exerciseIds: string[]
+  exerciseIds: string[],
 ) {
   if (exerciseIds.length === 0) {
     return { data: [], error: null };
@@ -566,7 +583,9 @@ export async function findExercisesByIdsWithFullData(
 
   const { data, error } = await client
     .from("exercises")
-    .select("id,series,reps,duration_seconds,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds")
+    .select(
+      "id,series,reps,duration_seconds,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds",
+    )
     .eq("user_id", userId)
     .in("id", exerciseIds);
 
@@ -578,7 +597,9 @@ export async function findExercisesByIdsWithFullData(
  */
 type WorkoutPlanSelectResult = Omit<WorkoutPlanRow, "user_id">;
 
-export function mapToDTO(row: WorkoutPlanRow | WorkoutPlanSelectResult): Omit<WorkoutPlanDTO, "exercises"> {
+export function mapToDTO(
+  row: WorkoutPlanRow | WorkoutPlanSelectResult,
+): Omit<WorkoutPlanDTO, "exercises"> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user_id, ...rest } = row as WorkoutPlanRow;
   return rest;
@@ -590,14 +611,27 @@ export function mapToDTO(row: WorkoutPlanRow | WorkoutPlanSelectResult): Omit<Wo
  */
 export function mapExerciseToDTO(
   row: WorkoutPlanExerciseRow & {
-    exercises?: { title: string; type?: string; part?: string; estimated_set_time_seconds?: number | null; rest_after_series_seconds?: number | null } | null;
+    exercises?: {
+      title: string;
+      type?: string;
+      part?: string;
+      estimated_set_time_seconds?: number | null;
+      rest_after_series_seconds?: number | null;
+    } | null;
     estimated_set_time_seconds?: number | null; // Override value from workout_plan_exercises
     planned_rest_after_series_seconds?: number | null; // Override value from workout_plan_exercises
-  }
+  },
 ): WorkoutPlanExerciseDTO {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { plan_id, created_at, exercises, estimated_set_time_seconds, planned_rest_after_series_seconds, ...rest } = row;
-  
+   
+  const {
+    plan_id,
+    created_at,
+    exercises,
+    estimated_set_time_seconds,
+    planned_rest_after_series_seconds,
+    ...rest
+  } = row;
+
   // Type assertion dla pól snapshot (dodanych w migracji, ale jeszcze nie w typach)
   const rowWithSnapshot = row as WorkoutPlanExerciseRow & {
     exercise_title?: string | null;
@@ -606,16 +640,18 @@ export function mapExerciseToDTO(
     estimated_set_time_seconds?: number | null;
     planned_rest_after_series_seconds?: number | null;
   };
-  
+
   // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
-  const finalEstimatedSetTime = estimated_set_time_seconds !== undefined 
-    ? estimated_set_time_seconds 
-    : exercises?.estimated_set_time_seconds ?? null;
-  
-  const finalRestAfterSeries = planned_rest_after_series_seconds !== undefined
-    ? planned_rest_after_series_seconds
-    : exercises?.rest_after_series_seconds ?? null;
-  
+  const finalEstimatedSetTime =
+    estimated_set_time_seconds !== undefined
+      ? estimated_set_time_seconds
+      : (exercises?.estimated_set_time_seconds ?? null);
+
+  const finalRestAfterSeries =
+    planned_rest_after_series_seconds !== undefined
+      ? planned_rest_after_series_seconds
+      : (exercises?.rest_after_series_seconds ?? null);
+
   // Użyj snapshot jeśli exercise_id jest NULL, w przeciwnym razie użyj danych z exercises
   const exerciseTitle = rest.exercise_id
     ? (exercises?.title ?? null)
@@ -626,7 +662,7 @@ export function mapExerciseToDTO(
   const exercisePart = rest.exercise_id
     ? ((exercises?.part as ExercisePart | undefined) ?? null)
     : (rowWithSnapshot.exercise_part ?? null);
-  
+
   return {
     ...rest,
     estimated_set_time_seconds: finalEstimatedSetTime, // Pole z workout_plan_exercises
@@ -634,27 +670,9 @@ export function mapExerciseToDTO(
     exercise_type: exerciseType,
     exercise_part: exercisePart,
     exercise_estimated_set_time_seconds: finalEstimatedSetTime,
-    exercise_rest_after_series_seconds: exercises?.rest_after_series_seconds ?? null,
+    exercise_rest_after_series_seconds:
+      exercises?.rest_after_series_seconds ?? null,
     planned_rest_after_series_seconds: finalRestAfterSeries,
     is_exercise_in_library: rest.exercise_id !== null,
   };
-}
-
-/**
- * Zastosowuje filtr kursora do zapytania.
- */
-function applyCursorFilter(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  query: any,
-  sort: SortField,
-  order: SortOrder,
-  cursor: CursorPayload
-) {
-  const direction = order === "asc" ? "gt" : "lt";
-  const encodedValue = encodeURIComponent(String(cursor.value));
-  const encodedId = encodeURIComponent(cursor.id);
-
-  return query.or(
-    `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`
-  );
 }

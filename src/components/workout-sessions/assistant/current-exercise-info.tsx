@@ -2,10 +2,8 @@
 
 import type { SessionExerciseDTO } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import {
-  EXERCISE_PART_LABELS,
-  EXERCISE_TYPE_LABELS,
-} from "@/lib/constants";
+import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import { formatDuration } from "@/lib/utils/time-format";
 
 type CurrentExerciseInfoProps = {
@@ -16,7 +14,9 @@ type CurrentExerciseInfoProps = {
  * Komponent wyświetlający informacje o bieżącym ćwiczeniu:
  * tytuł, typ, partię oraz parametry planowane (planned_*).
  */
-export function CurrentExerciseInfo({ exercise }: Readonly<CurrentExerciseInfoProps>) {
+export function CurrentExerciseInfo({
+  exercise,
+}: Readonly<CurrentExerciseInfoProps>) {
   return (
     <div className="space-y-4 rounded-lg border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-zinc-950">
       {/* Tytuł ćwiczenia */}
@@ -27,13 +27,7 @@ export function CurrentExerciseInfo({ exercise }: Readonly<CurrentExerciseInfoPr
       {/* Badge z typem i partią */}
       <div className="flex flex-wrap gap-2">
         {exercise.exercise_type_at_time && (
-          <Badge
-            variant="secondary"
-            className="bg-secondary text-destructive hover:bg-primary"
-          >
-            {EXERCISE_TYPE_LABELS[exercise.exercise_type_at_time] ||
-              exercise.exercise_type_at_time}
-          </Badge>
+          <ExerciseTypeBadge type={exercise.exercise_type_at_time} />
         )}
         {exercise.exercise_part_at_time && (
           <Badge
@@ -54,9 +48,7 @@ export function CurrentExerciseInfo({ exercise }: Readonly<CurrentExerciseInfoPr
               <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                 Serii planowanych
               </p>
-              <p className="text-lg font-semibold">
-                {exercise.planned_sets}
-              </p>
+              <p className="text-lg font-semibold">{exercise.planned_sets}</p>
             </div>
           )}
 
@@ -66,9 +58,7 @@ export function CurrentExerciseInfo({ exercise }: Readonly<CurrentExerciseInfoPr
               <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                 Powtórzeń planowanych
               </p>
-              <p className="text-lg font-semibold">
-                {exercise.planned_reps}
-              </p>
+              <p className="text-lg font-semibold">{exercise.planned_reps}</p>
             </div>
           )}
 
@@ -84,29 +74,29 @@ export function CurrentExerciseInfo({ exercise }: Readonly<CurrentExerciseInfoPr
             </div>
           )}
 
-        {(exercise.rest_in_between_seconds !== null &&
-          exercise.rest_in_between_seconds !== undefined) && (
-          <div>
-            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Przerwa między seriami
-            </p>
-            <p className="text-lg font-semibold">
-              {formatDuration(exercise.rest_in_between_seconds)}
-            </p>
-          </div>
-        )}
+        {exercise.rest_in_between_seconds !== null &&
+          exercise.rest_in_between_seconds !== undefined && (
+            <div>
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                Przerwa między seriami
+              </p>
+              <p className="text-lg font-semibold">
+                {formatDuration(exercise.rest_in_between_seconds)}
+              </p>
+            </div>
+          )}
 
-        {(exercise.rest_after_series_seconds !== null &&
-          exercise.rest_after_series_seconds !== undefined) && (
-          <div>
-            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Przerwa po zakończonych seriach
-            </p>
-            <p className="text-lg font-semibold">
-              {formatDuration(exercise.rest_after_series_seconds)}
-            </p>
-          </div>
-        )}
+        {exercise.rest_after_series_seconds !== null &&
+          exercise.rest_after_series_seconds !== undefined && (
+            <div>
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                Przerwa po zakończonych seriach
+              </p>
+              <p className="text-lg font-semibold">
+                {formatDuration(exercise.rest_after_series_seconds)}
+              </p>
+            </div>
+          )}
       </div>
     </div>
   );

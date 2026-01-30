@@ -1,6 +1,8 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
 import { useExerciseForm } from "@/hooks/use-exercise-form";
 import { useBeforeUnload } from "@/hooks/use-before-unload";
 import { ExerciseFormFields } from "./exercise-form-fields";
@@ -20,12 +22,11 @@ export function ExerciseForm({
 }: Readonly<ExerciseFormProps>) {
   const router = useRouter();
   const {
-    fields,
+    control,
     errors,
+    formErrors,
     isLoading,
     hasUnsavedChanges,
-    handleChange,
-    handleBlur,
     handleSubmit,
   } = useExerciseForm({
     initialData,
@@ -47,16 +48,12 @@ export function ExerciseForm({
       data-test-id="exercise-form"
     >
       <ExerciseFormFields
-        fields={fields}
+        control={control as Control<ExerciseFormValues>}
         errors={errors}
-        onChange={handleChange}
-        onBlur={handleBlur}
         disabled={isLoading}
       />
 
-      {errors._form && errors._form.length > 0 && (
-        <ValidationErrors errors={errors._form} />
-      )}
+      {formErrors.length > 0 && <ValidationErrors errors={formErrors} />}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
         <CancelButton hasUnsavedChanges={hasUnsavedChanges} />

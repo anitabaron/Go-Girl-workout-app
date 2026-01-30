@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function ExercisesError({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -12,7 +18,7 @@ export default function ExercisesError({
   reset: () => void;
 }) {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 md:pt-24">
       <Card>
         <CardHeader>
           <CardTitle>Wystąpił błąd</CardTitle>

@@ -1,5 +1,12 @@
 import { z } from "zod";
-import type { WorkoutPlanFormState, WorkoutPlanExerciseItemState } from "@/types/workout-plan-form";
+import type {
+  WorkoutPlanFormState,
+  WorkoutPlanExerciseItemState,
+} from "@/types/workout-plan-form";
+import type {
+  WorkoutPlanCreateCommand,
+  WorkoutPlanUpdateCommand,
+} from "@/types";
 import {
   exercisePartValues,
   exerciseTypeValues,
@@ -36,7 +43,7 @@ export const workoutPlanPartSchema = z
  * Schema dla walidacji section_type
  */
 export const workoutPlanSectionTypeSchema = z.enum(exerciseTypeValues, {
-    message: "Typ sekcji jest wymagany",
+  message: "Typ sekcji jest wymagany",
 });
 
 /**
@@ -116,10 +123,12 @@ const uuidRegex =
 
 export const workoutPlanExerciseIdSchema = z
   .union([
-    z.string().refine(
-      (val) => uuidRegex.test(val),
-      "exercise_id musi być prawidłowym UUID"
-    ),
+    z
+      .string()
+      .refine(
+        (val) => uuidRegex.test(val),
+        "exercise_id musi być prawidłowym UUID",
+      ),
     z.null(),
   ])
   .optional();
@@ -139,6 +148,7 @@ export const workoutPlanExerciseTitleSchema = z
  */
 export const workoutPlanExerciseItemFormSchema = z
   .object({
+    id: z.string().optional(),
     exercise_id: workoutPlanExerciseIdSchema,
     exercise_title: workoutPlanExerciseTitleSchema,
     exercise_type: z.enum(exerciseTypeValues).optional(),
@@ -155,19 +165,30 @@ export const workoutPlanExerciseItemFormSchema = z
   .refine(
     (data) => {
       // Musi mieć exercise_id LUB exercise_title
-      const hasExerciseId = data.exercise_id && typeof data.exercise_id === "string" && data.exercise_id.trim() !== "";
-      const hasExerciseTitle = data.exercise_title && typeof data.exercise_title === "string" && data.exercise_title.trim() !== "";
+      const hasExerciseId =
+        data.exercise_id &&
+        typeof data.exercise_id === "string" &&
+        data.exercise_id.trim() !== "";
+      const hasExerciseTitle =
+        data.exercise_title &&
+        typeof data.exercise_title === "string" &&
+        data.exercise_title.trim() !== "";
       return hasExerciseId || hasExerciseTitle;
     },
     {
-      message: "Ćwiczenie musi mieć exercise_id lub exercise_title (dla snapshot)",
+      message:
+        "Ćwiczenie musi mieć exercise_id lub exercise_title (dla snapshot)",
       path: ["exercise_id"],
-    }
+    },
   )
   .refine(
     (data) => {
       // Jeśli exercise_id jest podane, musi być prawidłowym UUID
-      if (data.exercise_id && typeof data.exercise_id === "string" && data.exercise_id.trim() !== "") {
+      if (
+        data.exercise_id &&
+        typeof data.exercise_id === "string" &&
+        data.exercise_id.trim() !== ""
+      ) {
         return uuidRegex.test(data.exercise_id);
       }
       return true;
@@ -175,7 +196,7 @@ export const workoutPlanExerciseItemFormSchema = z
     {
       message: "exercise_id musi być prawidłowym UUID",
       path: ["exercise_id"],
-    }
+    },
   );
 
 /**
@@ -193,16 +214,81 @@ export const workoutPlanFormSchema = z
   .strict()
   .superRefine((data, ctx) => {
     const errors = validateWorkoutPlanFormBusinessRules(
-      data.exercises as WorkoutPlanExerciseItemState[]
+      data.exercises as WorkoutPlanExerciseItemState[],
     );
 
     errors.forEach((message) =>
       ctx.addIssue({
         code: "custom",
         message,
-      })
+      }),
     );
   });
+
+export type WorkoutPlanFormValues = z.infer<typeof workoutPlanFormSchema>;
+
+/**
+ * Konwertuje wartości formularza na WorkoutPlanCreateCommand.
+ */
+export function formValuesToCreateCommand(
+  data: WorkoutPlanFormValues,
+): WorkoutPlanCreateCommand {
+  return {
+    name: data.name.trim(),
+    description: data.description?.trim() || null,
+    part: data.part ?? null,
+    exercises: data.exercises.map((ex) => ({
+      exercise_id: ex.exercise_id ?? undefined,
+      section_type: ex.section_type,
+      section_order: ex.section_order,
+      planned_sets: ex.planned_sets ?? undefined,
+      planned_reps: ex.planned_reps ?? undefined,
+      planned_duration_seconds: ex.planned_duration_seconds ?? undefined,
+      planned_rest_seconds: ex.planned_rest_seconds ?? undefined,
+      planned_rest_after_series_seconds:
+        ex.planned_rest_after_series_seconds ?? undefined,
+      estimated_set_time_seconds: ex.estimated_set_time_seconds ?? undefined,
+    })),
+  };
+}
+
+/**
+ * Konwertuje wartości formularza na WorkoutPlanUpdateCommand.
+ */
+export function formValuesToUpdateCommand(
+  data: WorkoutPlanFormValues,
+): WorkoutPlanUpdateCommand {
+  return {
+    name: data.name.trim(),
+    description: data.description?.trim() || null,
+    part: data.part ?? null,
+    exercises: data.exercises.map((ex) => {
+      const base = {
+        exercise_id: ex.exercise_id,
+        section_type: ex.section_type,
+        section_order: ex.section_order,
+        planned_sets: ex.planned_sets ?? null,
+        planned_reps: ex.planned_reps ?? null,
+        planned_duration_seconds: ex.planned_duration_seconds ?? null,
+        planned_rest_seconds: ex.planned_rest_seconds ?? null,
+        planned_rest_after_series_seconds:
+          ex.planned_rest_after_series_seconds ?? null,
+        estimated_set_time_seconds: ex.estimated_set_time_seconds ?? null,
+      };
+
+      if (!ex.exercise_id) {
+        return {
+          ...base,
+          exercise_title: ex.exercise_title ?? null,
+          exercise_type: ex.exercise_type ?? null,
+          exercise_part: ex.exercise_part ?? null,
+          ...(ex.id && { id: ex.id }),
+        };
+      }
+      return ex.id ? { ...base, id: ex.id } : base;
+    }),
+  };
+}
 
 /**
  * Walidacja reguł biznesowych dla formularza planu treningowego.
@@ -211,7 +297,7 @@ export const workoutPlanFormSchema = z
  * - Unikalność section_order w ramach każdej sekcji
  */
 export function validateWorkoutPlanFormBusinessRules(
-  exercises: WorkoutPlanExerciseItemState[]
+  exercises: WorkoutPlanExerciseItemState[],
 ): string[] {
   const errors: string[] = [];
 
@@ -235,7 +321,7 @@ export function validateWorkoutPlanFormBusinessRules(
 
     if (orders.has(order)) {
       errors.push(
-        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`
+        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     } else {
       orders.add(order);
@@ -248,7 +334,7 @@ export function validateWorkoutPlanFormBusinessRules(
       exercise.planned_sets <= 0
     ) {
       errors.push(
-        `planned_sets musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_sets musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
 
@@ -258,7 +344,7 @@ export function validateWorkoutPlanFormBusinessRules(
       exercise.planned_reps <= 0
     ) {
       errors.push(
-        `planned_reps musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_reps musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
 
@@ -268,7 +354,7 @@ export function validateWorkoutPlanFormBusinessRules(
       exercise.planned_duration_seconds <= 0
     ) {
       errors.push(
-        `planned_duration_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_duration_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
 
@@ -278,7 +364,7 @@ export function validateWorkoutPlanFormBusinessRules(
       exercise.planned_rest_seconds < 0
     ) {
       errors.push(
-        `planned_rest_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
+        `planned_rest_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     }
   }
@@ -291,7 +377,7 @@ export function validateWorkoutPlanFormBusinessRules(
  */
 export function validateWorkoutPlanFormField(
   field: keyof WorkoutPlanFormState,
-  value: unknown
+  value: unknown,
 ): string | undefined {
   try {
     switch (field) {
@@ -313,7 +399,11 @@ export function validateWorkoutPlanFormField(
     }
     return undefined;
   } catch (error) {
-    if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+    if (
+      error instanceof z.ZodError &&
+      error.issues &&
+      error.issues.length > 0
+    ) {
       return error.issues[0].message;
     }
     return undefined;
@@ -324,8 +414,14 @@ export function validateWorkoutPlanFormField(
  * Walidacja pojedynczego parametru planned_* lub estimated_set_time_seconds
  */
 export function validatePlannedParam(
-  field: "planned_sets" | "planned_reps" | "planned_duration_seconds" | "planned_rest_seconds" | "planned_rest_after_series_seconds" | "estimated_set_time_seconds",
-  value: number | null
+  field:
+    | "planned_sets"
+    | "planned_reps"
+    | "planned_duration_seconds"
+    | "planned_rest_seconds"
+    | "planned_rest_after_series_seconds"
+    | "estimated_set_time_seconds",
+  value: number | null,
 ): string | undefined {
   try {
     switch (field) {
@@ -350,7 +446,11 @@ export function validatePlannedParam(
     }
     return undefined;
   } catch (error) {
-    if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+    if (
+      error instanceof z.ZodError &&
+      error.issues &&
+      error.issues.length > 0
+    ) {
       return error.issues[0]?.message;
     }
     return undefined;

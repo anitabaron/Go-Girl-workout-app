@@ -70,6 +70,7 @@ export type ExerciseQueryParams = {
   search?: string;
   part?: ExercisePart;
   type?: ExerciseType;
+  exercise_id?: string;
   sort?: "created_at" | "title" | "part" | "type";
   order?: "asc" | "desc";
   limit?: number;
@@ -125,11 +126,11 @@ export type WorkoutPlanExerciseDTO = Omit<
   WorkoutPlanExerciseEntity,
   "plan_id" | "created_at"
 > & {
-  snapshot_id?: string | null;  // UUID identyfikujący unikalny snapshot (ten sam snapshot = ten sam UUID)
-  exercise_title?: string | null;  // Z snapshot lub z exercises
+  snapshot_id?: string | null; // UUID identyfikujący unikalny snapshot (ten sam snapshot = ten sam UUID)
+  exercise_title?: string | null; // Z snapshot lub z exercises
   exercise_type?: ExerciseType | null;
   exercise_part?: ExercisePart | null;
-  exercise_details?: string | null;  // Opis ćwiczenia (z JSON importu, przekazywany jako details przy tworzeniu)
+  exercise_details?: string | null; // Opis ćwiczenia (z JSON importu, przekazywany jako details przy tworzeniu)
   exercise_estimated_set_time_seconds?: number | null;
   exercise_rest_after_series_seconds?: number | null;
   planned_rest_after_series_seconds?: number | null;

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import type { WorkoutPlanExerciseDTO } from "@/types";
+import { useExerciseExists } from "@/hooks/use-exercise-exists";
+import { useAddSnapshotToLibrary } from "@/hooks/use-add-snapshot-to-library";
 
 type AddSnapshotExerciseButtonProps = {
   readonly exercise: WorkoutPlanExerciseDTO;
@@ -20,302 +19,27 @@ export function AddSnapshotExerciseButton({
   exercise,
   planId,
 }: AddSnapshotExerciseButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [exerciseExists, setExerciseExists] = useState<boolean | null>(null);
-  const router = useRouter();
+  const exerciseExists = useExerciseExists(
+    exercise.exercise_title ?? null,
+    exercise.is_exercise_in_library === true,
+  );
+  const { addToLibrary, isLoading } = useAddSnapshotToLibrary(exercise, planId);
 
-  // Konwersja danych snapshot na dane ćwiczenia
-  const convertSnapshotToExerciseData = () => {
-    if (!exercise.exercise_title || !exercise.exercise_part) {
-      throw new Error("Brak wymaganych danych ćwiczenia (tytuł lub partia)");
-    }
-
-    // Użyj exercise_type jeśli dostępne, w przeciwnym razie section_type
-    const exerciseType = exercise.exercise_type ?? exercise.section_type;
-
-    if (!exerciseType) {
-      throw new Error("Brak typu ćwiczenia");
-    }
-
-    // Konwersja planned_* na pola ćwiczenia
-    const exerciseData: {
-      title: string;
-      type: string;
-      part: string;
-      series: number;
-      reps?: number | null;
-      duration_seconds?: number | null;
-      rest_in_between_seconds?: number | null;
-      rest_after_series_seconds?: number | null;
-      estimated_set_time_seconds?: number | null;
-      details?: string | null;
-    } = {
-      title: exercise.exercise_title,
-      type: exerciseType,
-      part: exercise.exercise_part,
-      series: exercise.planned_sets ?? 1,
-    };
-
-    // Dodaj opis (details) jeśli dostępny
-    if (exercise.exercise_details) {
-      exerciseData.details = exercise.exercise_details;
-    }
-
-    // Dodaj reps lub duration_seconds (musi być dokładnie jedno)
-    if (exercise.planned_reps !== null && exercise.planned_reps !== undefined) {
-      exerciseData.reps = exercise.planned_reps;
-    } else if (
-      exercise.planned_duration_seconds !== null &&
-      exercise.planned_duration_seconds !== undefined
-    ) {
-      exerciseData.duration_seconds = exercise.planned_duration_seconds;
-    } else {
-      // Jeśli brak obu, użyj domyślnej wartości (reps = 10)
-      exerciseData.reps = 10;
-    }
-
-    // Dodaj odpoczynek (wymagane co najmniej jedno)
-    if (
-      exercise.planned_rest_seconds !== null &&
-      exercise.planned_rest_seconds !== undefined
-    ) {
-      exerciseData.rest_in_between_seconds = exercise.planned_rest_seconds;
-    }
-
-    if (
-      exercise.planned_rest_after_series_seconds !== null &&
-      exercise.planned_rest_after_series_seconds !== undefined
-    ) {
-      exerciseData.rest_after_series_seconds =
-        exercise.planned_rest_after_series_seconds;
-    }
-
-    // Jeśli brak obu pól odpoczynku, użyj domyślnej wartości
-    if (
-      !exerciseData.rest_in_between_seconds &&
-      !exerciseData.rest_after_series_seconds
-    ) {
-      exerciseData.rest_after_series_seconds = 60;
-    }
-
-    // Dodaj estimated_set_time_seconds jeśli dostępne
-    if (
-      exercise.exercise_estimated_set_time_seconds !== null &&
-      exercise.exercise_estimated_set_time_seconds !== undefined
-    ) {
-      exerciseData.estimated_set_time_seconds =
-        exercise.exercise_estimated_set_time_seconds;
-    }
-
-    return exerciseData;
-  };
-
-  // Sprawdź czy ćwiczenie już istnieje w bazie przed wyświetleniem przycisku
-  useEffect(() => {
-    if (exercise.is_exercise_in_library === false && exercise.exercise_title) {
-      const checkExerciseExists = async () => {
-        try {
-          const title = exercise.exercise_title;
-          if (!title) return;
-          
-          const response = await fetch(
-            `/api/exercises/by-title?title=${encodeURIComponent(title)}`
-          );
-          
-          if (response.ok) {
-            const existingExercise = await response.json();
-            if (existingExercise && existingExercise.id) {
-              setExerciseExists(true);
-            } else {
-              setExerciseExists(false);
-            }
-          } else if (response.status === 404) {
-            setExerciseExists(false);
-          } else {
-            // W przypadku błędu, zakładamy że nie istnieje (przycisk się pokaże)
-            setExerciseExists(false);
-          }
-        } catch (error) {
-          console.error("Error checking if exercise exists:", error);
-          // W przypadku błędu, zakładamy że nie istnieje
-          setExerciseExists(false);
-        }
-      };
-
-      checkExerciseExists();
-    } else {
-      setExerciseExists(false);
-    }
-  }, [exercise.is_exercise_in_library, exercise.exercise_title]);
-
-  const handleAddToLibrary = async () => {
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    try {
-      // Konwertuj snapshot na dane ćwiczenia
-      const exerciseData = convertSnapshotToExerciseData();
-
-      // 1. Najpierw sprawdź czy ćwiczenie już istnieje
-      const checkResponse = await fetch(
-        `/api/exercises/by-title?title=${encodeURIComponent(exerciseData.title)}`
-      );
-
-      let exerciseId: string;
-
-      if (checkResponse.ok) {
-        // Ćwiczenie już istnieje
-        const existingExercise = await checkResponse.json();
-        if (existingExercise && existingExercise.id) {
-          exerciseId = existingExercise.id;
-          toast.info("Ćwiczenie już istnieje w bazie. Łączenie z istniejącym ćwiczeniem.");
-        } else {
-          // Nie powinno się zdarzyć, ale obsługujemy
-          throw new Error("Ćwiczenie istnieje, ale nie udało się pobrać jego ID.");
-        }
-      } else if (checkResponse.status === 404) {
-        // Ćwiczenie nie istnieje - utwórz je
-        const createResponse = await fetch("/api/exercises", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(exerciseData),
-        });
-
-        if (!createResponse.ok) {
-          const errorData = await createResponse.json().catch(() => ({}));
-          
-          if (createResponse.status === 409) {
-            // Ćwiczenie zostało utworzone między sprawdzeniem a utworzeniem - znajdź je
-            const searchResponse = await fetch(
-              `/api/exercises/by-title?title=${encodeURIComponent(exerciseData.title)}`
-            );
-
-            if (!searchResponse.ok || searchResponse.status === 404) {
-              toast.error(
-                "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć."
-              );
-              return;
-            }
-
-            const foundExercise = await searchResponse.json();
-            if (!foundExercise || !foundExercise.id) {
-              toast.error(
-                "Ćwiczenie o tej nazwie już istnieje, ale nie udało się go znaleźć."
-              );
-              return;
-            }
-
-            exerciseId = foundExercise.id;
-            toast.info("Ćwiczenie już istnieje w bazie. Łączenie z istniejącym ćwiczeniem.");
-          } else if (createResponse.status === 400) {
-            toast.error(
-              errorData.message || "Nieprawidłowe dane ćwiczenia."
-            );
-            return;
-          } else {
-            throw new Error(
-              errorData.message || "Nie udało się dodać ćwiczenia do bazy."
-            );
-          }
-        } else {
-          const createdExercise = await createResponse.json();
-          exerciseId = createdExercise.id;
-        }
-      } else {
-        throw new Error("Wystąpił błąd podczas sprawdzania czy ćwiczenie istnieje.");
-      }
-
-
-      // 2. Zaktualizuj wszystkie wystąpienia snapshotu w planie (używając snapshot_id)
-      if (!exercise.snapshot_id) {
-        // Fallback: jeśli nie ma snapshot_id, użyj starej metody (aktualizuj tylko jedno ćwiczenie)
-        const updateResponse = await fetch(`/api/workout-plans/${planId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            exercises: [
-              {
-                id: exercise.id,
-                exercise_id: exerciseId,
-                // Usuń pola snapshot (ustaw na null)
-                exercise_title: null,
-                exercise_type: null,
-                exercise_part: null,
-              },
-            ],
-          }),
-        });
-
-        if (!updateResponse.ok) {
-          const errorData = await updateResponse.json().catch(() => ({}));
-          throw new Error(
-            errorData.message ||
-              "Nie udało się zaktualizować planu treningowego."
-          );
-        }
-      } else {
-        // Użyj nowej metody: masowa aktualizacja wszystkich wystąpień snapshotu
-        const linkResponse = await fetch(
-          `/api/workout-plans/snapshots/${exercise.snapshot_id}/link`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              exercise_id: exerciseId,
-            }),
-          }
-        );
-
-        if (!linkResponse.ok) {
-          const errorData = await linkResponse.json().catch(() => ({}));
-          throw new Error(
-            errorData.message ||
-              "Nie udało się połączyć snapshotu z ćwiczeniem w bazie."
-          );
-        }
-      }
-
-      toast.success("Ćwiczenie zostało połączone z bazą ćwiczeń.");
-      
-      // Odśwież stronę, aby pokazać zaktualizowane dane
-      router.refresh();
-    } catch (error) {
-      console.error("Error adding exercise to library:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Wystąpił błąd podczas dodawania ćwiczenia do bazy."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Przycisk wyświetla się tylko dla ćwiczeń, które nie są w bibliotece
   if (exercise.is_exercise_in_library !== false) {
     return null;
   }
 
-  // Jeśli ćwiczenie już istnieje, nie pokazuj przycisku
   if (exerciseExists === true) {
     return null;
   }
 
-  // Jeśli jeszcze sprawdzamy, nie pokazuj przycisku (lub pokaż z disabled)
   if (exerciseExists === null) {
     return null;
   }
 
   return (
     <Button
-      onClick={handleAddToLibrary}
+      onClick={addToLibrary}
       disabled={isLoading}
       variant="outline"
       size="sm"

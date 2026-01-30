@@ -15,10 +15,8 @@ import { exerciseTypeValues } from "@/lib/validation/exercises";
 import type { WorkoutPlanExerciseItemProps } from "@/types/workout-plan-form";
 import { PlannedParamsEditor } from "./planned-params-editor";
 import { useId, useMemo } from "react";
-import {
-  EXERCISE_PART_LABELS,
-  EXERCISE_TYPE_LABELS,
-} from "@/lib/constants";
+import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
+import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 
 export function WorkoutPlanExerciseItem({
   exercise,
@@ -58,7 +56,7 @@ export function WorkoutPlanExerciseItem({
 
     // Znajdź pozycję bieżącego ćwiczenia (porównaj po indexie w oryginalnej tablicy)
     const currentPosition = exercisesInSection.findIndex(
-      ({ originalIndex }) => originalIndex === index
+      ({ originalIndex }) => originalIndex === index,
     );
 
     if (currentPosition === -1) {
@@ -98,7 +96,7 @@ export function WorkoutPlanExerciseItem({
   }
 
   // Generate stable test ID based on exercise_id or id
-  const exerciseTestId = exercise.id 
+  const exerciseTestId = exercise.id
     ? `workout-plan-exercise-item-${exercise.id}`
     : `workout-plan-exercise-item-${exercise.exercise_id}-${index}`;
 
@@ -107,16 +105,20 @@ export function WorkoutPlanExerciseItem({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
-            <h3 className="font-semibold">{exercise.exercise_title || "Brak nazwy"}</h3>
+            <h3 className="font-semibold">
+              {exercise.exercise_title || "Brak nazwy"}
+            </h3>
             <div className="mt-2 flex flex-wrap gap-2">
               {exercise.exercise_type && (
-                <Badge variant="secondary" className="text-xs">
-                  {EXERCISE_TYPE_LABELS[exercise.exercise_type] || exercise.exercise_type}
-                </Badge>
+                <ExerciseTypeBadge
+                  type={exercise.exercise_type}
+                  className="text-xs"
+                />
               )}
               {exercise.exercise_part && (
                 <Badge variant="outline" className="text-xs">
-                  {EXERCISE_PART_LABELS[exercise.exercise_part] || exercise.exercise_part}
+                  {EXERCISE_PART_LABELS[exercise.exercise_part] ||
+                    exercise.exercise_part}
                 </Badge>
               )}
             </div>
@@ -148,11 +150,17 @@ export function WorkoutPlanExerciseItem({
             <Select
               value={exercise.section_type}
               onValueChange={(value) =>
-                onChange({ section_type: value as typeof exercise.section_type })
+                onChange({
+                  section_type: value as typeof exercise.section_type,
+                })
               }
               disabled={disabled}
             >
-              <SelectTrigger id={sectionTypeId} className="mt-1" data-test-id={`${exerciseTestId}-section-type`}>
+              <SelectTrigger
+                id={sectionTypeId}
+                className="mt-1"
+                data-test-id={`${exerciseTestId}-section-type`}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -223,13 +231,14 @@ export function WorkoutPlanExerciseItem({
           <label className="block text-xs font-medium text-muted-foreground mb-2">
             Parametry planowane (opcjonalne)
           </label>
-            <PlannedParamsEditor
+          <PlannedParamsEditor
             params={{
               planned_sets: exercise.planned_sets,
               planned_reps: exercise.planned_reps,
               planned_duration_seconds: exercise.planned_duration_seconds,
               planned_rest_seconds: exercise.planned_rest_seconds,
-              planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds,
+              planned_rest_after_series_seconds:
+                exercise.planned_rest_after_series_seconds,
               estimated_set_time_seconds: exercise.estimated_set_time_seconds,
             }}
             onChange={(field, value) => onChange({ [field]: value })}

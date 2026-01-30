@@ -18,21 +18,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ExercisePart, ExerciseType } from "@/types";
+import type { ExerciseDTO, ExercisePart, ExerciseType } from "@/types";
 import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
-import {
-  EXERCISE_PART_LABELS,
-  EXERCISE_TYPE_LABELS,
-} from "@/lib/constants";
+import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 
-export function ExerciseFilters() {
+type ExerciseFiltersProps = {
+  exercises: ExerciseDTO[];
+};
+
+export function ExerciseFilters({ exercises }: Readonly<ExerciseFiltersProps>) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
+  const currentExerciseId = searchParams.get("exercise_id");
   const currentPart = searchParams.get("part") as ExercisePart | null;
   const currentType = searchParams.get("type") as ExerciseType | null;
   const currentSearch = searchParams.get("search") || "";
@@ -76,9 +78,25 @@ export function ExerciseFilters() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue]);
 
+  const handleExerciseChange = (exerciseId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (exerciseId && exerciseId !== "all") {
+      const exerciseExists = exercises.some((ex) => ex.id === exerciseId);
+      if (exerciseExists) {
+        params.set("exercise_id", exerciseId);
+      }
+    } else {
+      params.delete("exercise_id");
+    }
+
+    params.delete("cursor");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   const handleFilterChange = (
     filterType: "part" | "type",
-    value: string | null
+    value: string | null,
   ) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -105,6 +123,7 @@ export function ExerciseFilters() {
 
   const handleClearFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("exercise_id");
     params.delete("part");
     params.delete("type");
     params.delete("search");
@@ -114,7 +133,10 @@ export function ExerciseFilters() {
   };
 
   const hasActiveFilters =
-    currentPart !== null || currentType !== null || currentSearch !== "";
+    currentExerciseId !== null ||
+    currentPart !== null ||
+    currentType !== null ||
+    currentSearch !== "";
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -126,7 +148,22 @@ export function ExerciseFilters() {
           className="h-8 w-full sm:w-[180px] text-sm"
           aria-label="Wyszukaj ćwiczenie po nazwie"
         />
-
+        <Select
+          value={currentExerciseId || "all"}
+          onValueChange={handleExerciseChange}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Ćwiczenie" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie ćwiczenia</SelectItem>
+            {exercises.map((exercise) => (
+              <SelectItem key={exercise.id} value={exercise.id}>
+                {exercise.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select
           value={currentPart || "all"}
           onValueChange={(value) =>

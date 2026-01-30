@@ -1,13 +1,9 @@
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Json } from "@/db/database.types";
-import type {
-  SessionDetailDTO,
-  SessionExerciseDTO,
-  SessionExerciseSetDTO,
-  SessionListQueryParams,
-  SessionSummaryDTO,
-} from "@/types";
+import type { SessionListQueryParams, SessionSummaryDTO } from "@/types";
+import { mapToSummaryDTO } from "@/lib/workout-sessions/mappers";
+import { applyCursorFilter } from "@/lib/cursor-utils";
 import {
   SESSION_DEFAULT_LIMIT,
   SESSION_MAX_LIMIT,
@@ -16,6 +12,7 @@ import {
   sessionOrderValues,
   sessionSortFields,
 } from "@/lib/validation/workout-sessions";
+import { calculateTimerUpdates } from "@/lib/workout-sessions/timer";
 
 type DbClient = SupabaseClient<Database>;
 type WorkoutSessionRow =
@@ -29,13 +26,6 @@ type SortOrder = (typeof sessionOrderValues)[number];
 
 const sessionSelectColumns =
   "id,workout_plan_id,status,plan_name_at_time,started_at,completed_at,current_position,user_id,last_action_at,active_duration_seconds,last_timer_started_at,last_timer_stopped_at";
-
-type CursorPayload = {
-  sort: SortField;
-  order: SortOrder;
-  value: string | number;
-  id: string;
-};
 
 /**
  * Znajduje sesję treningową ze statusem 'in_progress' dla użytkownika.
@@ -57,7 +47,7 @@ export async function findInProgressSession(client: DbClient, userId: string) {
 export async function findWorkoutSessionById(
   client: DbClient,
   userId: string,
-  id: string
+  id: string,
 ) {
   const { data, error } = await client
     .from("workout_sessions")
@@ -76,7 +66,7 @@ export async function findWorkoutSessionById(
 export async function deleteWorkoutSession(
   client: DbClient,
   userId: string,
-  id: string
+  id: string,
 ) {
   const { error } = await client
     .from("workout_sessions")
@@ -94,7 +84,7 @@ export async function findWorkoutSessionsByUserId(
   client: DbClient,
   userId: string,
   params: Required<Pick<SessionListQueryParams, "sort" | "order" | "limit">> &
-    SessionListQueryParams
+    SessionListQueryParams,
 ): Promise<{
   data?: SessionSummaryDTO[];
   nextCursor?: string | null;
@@ -102,14 +92,16 @@ export async function findWorkoutSessionsByUserId(
 }> {
   const limit = Math.min(
     params.limit ?? SESSION_DEFAULT_LIMIT,
-    SESSION_MAX_LIMIT
+    SESSION_MAX_LIMIT,
   );
   const sort = params.sort ?? "started_at";
   const order = params.order ?? "desc";
 
   let query = client
     .from("workout_sessions")
-    .select(`${sessionSelectColumns},workout_plans(estimated_total_time_seconds)`)
+    .select(
+      `${sessionSelectColumns},workout_plans(estimated_total_time_seconds)`,
+    )
     .eq("user_id", userId);
 
   if (params.status) {
@@ -150,15 +142,17 @@ export async function findWorkoutSessionsByUserId(
     .order("id", { ascending: order === "asc" })
     .limit(limit + 1);
 
-  const { data, error } = await query; 
+  const { data, error } = await query;
 
   if (error) {
     return { error };
   }
 
-  const items = (data ?? []) as Array<WorkoutSessionRow & {
-    workout_plans?: { estimated_total_time_seconds: number | null } | null;
-  }>;
+  const items = (data ?? []) as Array<
+    WorkoutSessionRow & {
+      workout_plans?: { estimated_total_time_seconds: number | null } | null;
+    }
+  >;
   let nextCursor: string | null = null;
 
   if (items.length > limit) {
@@ -175,7 +169,7 @@ export async function findWorkoutSessionsByUserId(
   // Fetch exercise names for all sessions
   const sessionIds = items.map((item) => item.id);
   const exercisesBySessionId = new Map<string, string[]>();
-  
+
   if (sessionIds.length > 0) {
     const { data: exercisesData, error: exercisesError } = await client
       .from("workout_session_exercises")
@@ -189,14 +183,17 @@ export async function findWorkoutSessionsByUserId(
         if (!exercisesBySessionId.has(sessionId)) {
           exercisesBySessionId.set(sessionId, []);
         }
-        exercisesBySessionId.get(sessionId)!.push(exercise.exercise_title_at_time);
+        exercisesBySessionId
+          .get(sessionId)!
+          .push(exercise.exercise_title_at_time);
       }
     }
   }
 
   const mappedData = items.map((item) => {
     const exerciseNames = exercisesBySessionId.get(item.id) ?? [];
-    const estimatedTotalTimeSeconds = item.workout_plans?.estimated_total_time_seconds ?? null;
+    const estimatedTotalTimeSeconds =
+      item.workout_plans?.estimated_total_time_seconds ?? null;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { workout_plans, ...sessionRow } = item;
     return mapToSummaryDTO(sessionRow, {
@@ -222,7 +219,7 @@ export async function insertWorkoutSession(
   input: {
     workout_plan_id: string;
     plan_name_at_time: string;
-  }
+  },
 ) {
   const { data, error } = await client
     .from("workout_sessions")
@@ -259,7 +256,7 @@ export async function insertWorkoutSessionExercises(
     planned_rest_seconds: number | null;
     planned_rest_after_series_seconds: number | null;
     exercise_order: number;
-  }>
+  }>,
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
     session_id: sessionId,
@@ -271,7 +268,8 @@ export async function insertWorkoutSessionExercises(
     planned_reps: exercise.planned_reps,
     planned_duration_seconds: exercise.planned_duration_seconds,
     planned_rest_seconds: exercise.planned_rest_seconds,
-    planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds,
+    planned_rest_after_series_seconds:
+      exercise.planned_rest_after_series_seconds,
     exercise_order: exercise.exercise_order,
     actual_sets: null,
     actual_reps: null,
@@ -296,7 +294,7 @@ export async function updateWorkoutSessionStatus(
   userId: string,
   id: string,
   status: Database["public"]["Enums"]["workout_session_status"],
-  completedAt: string | null
+  completedAt: string | null,
 ) {
   const updateData: Database["public"]["Tables"]["workout_sessions"]["Update"] =
     {
@@ -334,7 +332,7 @@ export async function updateWorkoutSessionTimer(
     active_duration_seconds?: number;
     last_timer_started_at?: string;
     last_timer_stopped_at?: string;
-  }
+  },
 ): Promise<{
   data: {
     id: string;
@@ -356,45 +354,30 @@ export async function updateWorkoutSessionTimer(
     return { data: null, error: null };
   }
 
-  // Przygotuj dane do aktualizacji
   const sessionWithTimer = existingSession as WorkoutSessionRow & {
     active_duration_seconds: number | null;
     last_timer_started_at: string | null;
     last_timer_stopped_at: string | null;
   };
 
-  const currentActiveDuration = sessionWithTimer.active_duration_seconds ?? 0;
-  const currentLastTimerStartedAt = sessionWithTimer.last_timer_started_at;
+  const timerResult = calculateTimerUpdates(
+    {
+      active_duration_seconds: sessionWithTimer.active_duration_seconds,
+      last_timer_started_at: sessionWithTimer.last_timer_started_at,
+    },
+    updates,
+  );
 
-  let newActiveDuration = currentActiveDuration;
-  let elapsedFromTimer = 0;
-
-  // Jeśli last_timer_stopped_at jest podane i last_timer_started_at istnieje, oblicz elapsed
-  if (
-    updates.last_timer_stopped_at &&
-    currentLastTimerStartedAt
-  ) {
-    const startedAt = new Date(currentLastTimerStartedAt).getTime();
-    const stoppedAt = new Date(updates.last_timer_stopped_at).getTime();
-    elapsedFromTimer = Math.max(0, Math.floor((stoppedAt - startedAt) / 1000));
-  }
-
-  // Dodaj elapsed time do active_duration_seconds
-  newActiveDuration += elapsedFromTimer;
-
-  // Jeśli active_duration_seconds jest podane w updates, dodaj do cumulative
-  if (updates.active_duration_seconds !== undefined) {
-    newActiveDuration += updates.active_duration_seconds;
-  }
-
-  // Przygotuj obiekt aktualizacji
   const updateData: Database["public"]["Tables"]["workout_sessions"]["Update"] =
     {
       last_action_at: new Date().toISOString(),
     };
 
-  if (updates.active_duration_seconds !== undefined || elapsedFromTimer > 0) {
-    updateData.active_duration_seconds = newActiveDuration;
+  if (
+    updates.active_duration_seconds !== undefined ||
+    (updates.last_timer_stopped_at && sessionWithTimer.last_timer_started_at)
+  ) {
+    updateData.active_duration_seconds = timerResult.active_duration_seconds;
   }
 
   if (updates.last_timer_started_at !== undefined) {
@@ -411,7 +394,9 @@ export async function updateWorkoutSessionTimer(
     .update(updateData)
     .eq("user_id", userId)
     .eq("id", sessionId)
-    .select("id,active_duration_seconds,last_timer_started_at,last_timer_stopped_at")
+    .select(
+      "id,active_duration_seconds,last_timer_started_at,last_timer_stopped_at",
+    )
     .single();
 
   if (updateError) {
@@ -446,7 +431,7 @@ export async function updateWorkoutSessionTimer(
  */
 export async function findWorkoutSessionExercises(
   client: DbClient,
-  sessionId: string
+  sessionId: string,
 ) {
   const { data, error } = await client
     .from("workout_session_exercises")
@@ -469,7 +454,7 @@ export async function findWorkoutSessionExercises(
  */
 export async function findWorkoutSessionSets(
   client: DbClient,
-  sessionExerciseIds: string[]
+  sessionExerciseIds: string[],
 ) {
   if (sessionExerciseIds.length === 0) {
     return { data: [], error: null };
@@ -498,7 +483,7 @@ export async function findWorkoutSessionSets(
 export async function findExercisesByIdsForSnapshots(
   client: DbClient,
   userId: string,
-  exerciseIds: string[]
+  exerciseIds: string[],
 ) {
   if (exerciseIds.length === 0) {
     return { data: [], error: null };
@@ -507,7 +492,7 @@ export async function findExercisesByIdsForSnapshots(
   const { data, error } = await client
     .from("exercises")
     .select(
-      "id,title,type,part,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds"
+      "id,title,type,part,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds",
     )
     .eq("user_id", userId)
     .in("id", exerciseIds);
@@ -515,152 +500,11 @@ export async function findExercisesByIdsForSnapshots(
   return { data, error };
 }
 
-/**
- * Mapuje wiersz z bazy danych na SessionSummaryDTO.
- */
-export function mapToSummaryDTO(
-  row: WorkoutSessionRow,
-  exerciseInfo?: { 
-    exercise_count: number; 
-    exercise_names: string[];
-    estimated_total_time_seconds?: number | null;
-  }
-): SessionSummaryDTO {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { user_id, last_action_at, ...rest } = row;
-  return {
-    ...rest,
-    exercise_count: exerciseInfo?.exercise_count,
-    exercise_names: exerciseInfo?.exercise_names,
-    estimated_total_time_seconds: exerciseInfo?.estimated_total_time_seconds,
-  };
-}
-
-/**
- * Mapuje wiersz z bazy danych na SessionDetailDTO z ćwiczeniami i seriami.
- */
-export function mapToDetailDTO(
-  session: WorkoutSessionRow,
-  exercises: Array<
-    WorkoutSessionExerciseRow & {
-      exercises?: {
-        rest_in_between_seconds: number | null;
-        rest_after_series_seconds: number | null;
-      } | null;
-    }
-  >,
-  sets: WorkoutSessionSetRow[],
-  exerciseInfo?: {
-    exercise_count: number;
-    exercise_names: string[];
-    estimated_total_time_seconds?: number | null;
-  }
-): SessionDetailDTO {
-  const sessionSummary = mapToSummaryDTO(session, exerciseInfo);
-
-  // Grupuj serie po session_exercise_id
-  const setsByExerciseId = new Map<string, WorkoutSessionSetRow[]>();
-  for (const set of sets) {
-    const exerciseId = set.session_exercise_id;
-    if (!setsByExerciseId.has(exerciseId)) {
-      setsByExerciseId.set(exerciseId, []);
-    }
-    setsByExerciseId.get(exerciseId)!.push(set);
-  }
-
-  const exerciseDTOs: SessionExerciseDTO[] = exercises.map((exercise) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { session_id, created_at, updated_at, actual_sets, actual_reps, exercises: exerciseData, ...exerciseRest } = exercise;
-
-    const setDTOs: SessionExerciseSetDTO[] = (
-      setsByExerciseId.get(exercise.id) ?? []
-    ).map((set) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { session_exercise_id, created_at, updated_at, ...setRest } = set;
-      return setRest;
-    });
-
-    // Wyciągnij wartości rest z zjoinowanej tabeli exercises
-    const restInBetweenSeconds = exerciseData?.rest_in_between_seconds ?? null;
-    const restAfterSeriesSeconds = exerciseData?.rest_after_series_seconds ?? null;
-
-    return {
-      ...exerciseRest,
-      // Mapowanie nazw z bazy danych na nazwy API
-      actual_count_sets: actual_sets,
-      actual_sum_reps: actual_reps,
-      sets: setDTOs,
-      // Wartości rest z ćwiczenia
-      rest_in_between_seconds: restInBetweenSeconds,
-      rest_after_series_seconds: restAfterSeriesSeconds,
-    };
-  });
-
-  return {
-    ...sessionSummary,
-    exercises: exerciseDTOs,
-  };
-}
-
-/**
- * Mapuje pojedyncze ćwiczenie sesji z seriami na SessionExerciseDTO.
- * Mapuje nazwy z bazy danych (actual_sets, actual_reps) na nazwy API (actual_count_sets, actual_sum_reps).
- */
-export function mapExerciseToDTO(
-  exercise: WorkoutSessionExerciseRow & {
-    exercises?: {
-      rest_in_between_seconds: number | null;
-      rest_after_series_seconds: number | null;
-    } | null;
-  },
-  sets: WorkoutSessionSetRow[]
-): SessionExerciseDTO {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { session_id, created_at, updated_at, actual_sets, actual_reps, exercises: exerciseData, ...exerciseRest } = exercise;
-
-  const setDTOs: SessionExerciseSetDTO[] = sets
-    .filter((set) => set.session_exercise_id === exercise.id)
-    .map((set) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { session_exercise_id, created_at, updated_at, ...setRest } = set;
-      return setRest;
-    })
-    .sort((a, b) => a.set_number - b.set_number);
-
-  // Wyciągnij wartości rest z zjoinowanej tabeli exercises
-  const restInBetweenSeconds = exerciseData?.rest_in_between_seconds ?? null;
-  const restAfterSeriesSeconds = exerciseData?.rest_after_series_seconds ?? null;
-
-  return {
-    ...exerciseRest,
-    // Mapowanie nazw z bazy danych na nazwy API
-    actual_count_sets: actual_sets,
-    actual_sum_reps: actual_reps,
-    sets: setDTOs,
-    // Wartości rest z ćwiczenia
-    rest_in_between_seconds: restInBetweenSeconds,
-    rest_after_series_seconds: restAfterSeriesSeconds,
-  };
-}
-
-/**
- * Zastosowuje filtr kursora do zapytania.
- */
-function applyCursorFilter(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  query: any,
-  sort: SortField,
-  order: SortOrder,
-  cursor: CursorPayload
-) {
-  const direction = order === "asc" ? "gt" : "lt";
-  const encodedValue = encodeURIComponent(String(cursor.value));
-  const encodedId = encodeURIComponent(cursor.id);
-
-  return query.or(
-    `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`
-  );
-}
+export {
+  mapExerciseToDTO,
+  mapToDetailDTO,
+  mapToSummaryDTO,
+} from "@/lib/workout-sessions/mappers";
 
 /**
  * Znajduje ćwiczenie sesji treningowej po session_id i order.
@@ -668,7 +512,7 @@ function applyCursorFilter(
 export async function findWorkoutSessionExerciseByOrder(
   client: DbClient,
   sessionId: string,
-  order: number
+  order: number,
 ) {
   const { data, error } = await client
     .from("workout_session_exercises")
@@ -691,7 +535,7 @@ export async function updateWorkoutSessionExercise(
     planned_reps?: number | null;
     planned_duration_seconds?: number | null;
     planned_rest_seconds?: number | null;
-  }
+  },
 ) {
   const { data, error } = await client
     .from("workout_session_exercises")
@@ -709,7 +553,7 @@ export async function updateWorkoutSessionExercise(
 export async function updateWorkoutSessionCursor(
   client: DbClient,
   sessionId: string,
-  currentPosition: number
+  currentPosition: number,
 ) {
   const { data, error } = await client
     .from("workout_sessions")
@@ -734,7 +578,7 @@ export async function updateWorkoutSessionCursor(
 export async function findNextExerciseOrder(
   client: DbClient,
   sessionId: string,
-  currentOrder: number
+  currentOrder: number,
 ) {
   const { data, error } = await client
     .from("workout_session_exercises")
@@ -774,7 +618,7 @@ export async function callSaveWorkoutSessionExercise(
       duration_seconds?: number | null;
       weight_kg?: number | null;
     }> | null;
-  }
+  },
 ) {
   // Mapuj sets na format JSONB (bez set_number, bo funkcja DB nie potrzebuje)
   // Jeśli p_sets_data jest pustą tablicą [], wyślij [] aby wyczyścić serie
@@ -818,7 +662,10 @@ export async function callSaveWorkoutSessionExercise(
     p_sets_data: setsDataJson as Json | undefined,
   } as Database["public"]["Functions"]["save_workout_session_exercise"]["Args"];
 
-  const { data, error } = await client.rpc("save_workout_session_exercise", rpcParams);
+  const { data, error } = await client.rpc(
+    "save_workout_session_exercise",
+    rpcParams,
+  );
 
   if (error) {
     return { data: null, error };

@@ -109,6 +109,7 @@ export const exerciseQuerySchema = z
     search: z.string().trim().max(100).optional(),
     part: z.enum(exercisePartValues).optional(),
     type: z.enum(exerciseTypeValues).optional(),
+    exercise_id: z.string().uuid().optional(),
     sort: z.enum(exerciseSortFields).default("created_at"),
     order: z.enum(exerciseOrderValues).default("desc"),
     limit: z

@@ -16,27 +16,25 @@ export default async function WorkoutSessionsPage({
 }>) {
   const params = await searchParams;
 
-
   // Walidacja i parsowanie query params
   const parseResult = sessionListQuerySchema.safeParse({
     ...params,
     limit: params.limit ? Number(params.limit) : undefined,
   });
 
-
-
   // Fallback do domyślnych wartości przy błędzie walidacji
   const parsedQuery: SessionListQueryParams = parseResult.success
     ? parseResult.data
     : sessionListQuerySchema.parse({});
-
 
   // Weryfikacja autoryzacji - automatyczne przekierowanie niezalogowanych użytkowników
   const userId = await requireAuth();
 
   // Pobierz dane - obsługa błędów przez zwrócenie pustych danych
   let sessionsData = {
-    items: [] as Awaited<ReturnType<typeof listWorkoutSessionsService>>["items"],
+    items: [] as Awaited<
+      ReturnType<typeof listWorkoutSessionsService>
+    >["items"],
     nextCursor: null as string | null,
   };
 
@@ -57,8 +55,6 @@ export default async function WorkoutSessionsPage({
     // W przypadku błędu, użyj pustych danych (sessionsData już ma wartości domyślne)
     // Error boundary lub error.tsx obsłuży błędy renderowania
   }
-
-  console.log("sessions page", sessionsData.items);
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
