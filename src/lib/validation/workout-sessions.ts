@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 import type { SessionListQueryParams } from "@/types";
+import {
+  decodeCursor as decodeCursorBase,
+  encodeCursor as encodeCursorBase,
+  type CursorPayload,
+} from "@/lib/cursor-utils";
 
 export const SESSION_MAX_LIMIT = 100;
 export const SESSION_DEFAULT_LIMIT = 30;
@@ -260,7 +265,7 @@ export function encodeCursor(cursor: {
   value: string | number;
   id: string;
 }): string {
-  return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
+  return encodeCursorBase(cursor as CursorPayload);
 }
 
 /**
@@ -272,43 +277,14 @@ export function decodeCursor(cursor: string): {
   value: string | number;
   id: string;
 } {
-  try {
-    const parsed = JSON.parse(
-      Buffer.from(cursor, "base64url").toString("utf8"),
-    ) as {
-      sort: string;
-      order: string;
-      value: string | number;
-      id: string;
-    };
-
-    if (
-      !sessionSortFields.includes(
-        parsed.sort as unknown as (typeof sessionSortFields)[number],
-      )
-    ) {
-      throw new Error("Unsupported sort field");
-    }
-
-    if (
-      !sessionOrderValues.includes(
-        parsed.order as unknown as (typeof sessionOrderValues)[number],
-      )
-    ) {
-      throw new Error("Unsupported order value");
-    }
-
-    if (!parsed.id || parsed.value === undefined || parsed.value === null) {
-      throw new Error("Cursor missing fields");
-    }
-
-    return {
-      sort: parsed.sort as (typeof sessionSortFields)[number],
-      order: parsed.order as (typeof sessionOrderValues)[number],
-      value: parsed.value,
-      id: parsed.id,
-    };
-  } catch (error) {
-    throw new Error("INVALID_CURSOR", { cause: error });
-  }
+  const parsed = decodeCursorBase(cursor, {
+    sortFields: sessionSortFields,
+    orderValues: sessionOrderValues,
+  });
+  return parsed as {
+    sort: (typeof sessionSortFields)[number];
+    order: (typeof sessionOrderValues)[number];
+    value: string | number;
+    id: string;
+  };
 }
