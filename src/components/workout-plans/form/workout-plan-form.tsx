@@ -3,7 +3,7 @@
 import { useWorkoutPlanForm } from "@/hooks/use-workout-plan-form";
 import type { WorkoutPlanFormProps } from "@/types/workout-plan-form";
 import { WorkoutPlanMetadataFields } from "./workout-plan-metadata-fields";
-import { ValidationErrors } from "./validation-errors";
+import { ValidationErrors } from "@/components/shared/validation-errors";
 import { SaveButton } from "./save-button";
 import { CancelButton } from "./cancel-button";
 import { AddExerciseDialog } from "./add-exercise-dialog";
@@ -31,10 +31,14 @@ export function WorkoutPlanForm({
   });
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" data-test-id="workout-plan-form">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      data-test-id="workout-plan-form"
+    >
       {/* Błędy walidacji na poziomie formularza */}
       {errors._form && errors._form.length > 0 && (
-        <ValidationErrors errors={errors._form} />
+        <ValidationErrors errors={errors._form} title="Błędy walidacji" />
       )}
 
       {/* Pola metadanych planu */}
@@ -64,11 +68,16 @@ export function WorkoutPlanForm({
           <AddExerciseDialog
             onAddExercise={handleAddExercise}
             disabled={isLoading}
-            existingExerciseIds={fields.exercises.map((e) => e.exercise_id).filter((id): id is string => id !== null)}
+            existingExerciseIds={fields.exercises
+              .map((e) => e.exercise_id)
+              .filter((id): id is string => id !== null)}
           />
         </div>
         {fields.exercises.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-8 text-center" data-test-id="workout-plan-form-exercises-empty">
+          <div
+            className="rounded-lg border border-dashed border-border p-8 text-center"
+            data-test-id="workout-plan-form-exercises-empty"
+          >
             <p className="text-muted-foreground">
               Brak ćwiczeń w planie. Dodaj pierwsze ćwiczenie, aby rozpocząć.
             </p>
@@ -88,12 +97,7 @@ export function WorkoutPlanForm({
 
       {/* Przyciski akcji */}
       <div className="flex flex-col-reverse gap-4 pt-6 sm:flex-row sm:justify-end">
-        <CancelButton
-          hasUnsavedChanges={hasUnsavedChanges}
-          onCancel={() => {
-            // Przekierowanie obsługiwane przez CancelButton
-          }}
-        />
+        <CancelButton hasUnsavedChanges={hasUnsavedChanges} />
         <SaveButton isLoading={isLoading} disabled={isLoading} />
       </div>
     </form>

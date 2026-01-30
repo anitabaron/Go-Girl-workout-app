@@ -85,7 +85,7 @@ export function TopNavigation({
                     "px-4 py-2 text-sm font-medium transition-colors hover:text-primary",
                     isActive
                       ? "text-primary underline underline-offset-4"
-                      : "text-muted-foreground"
+                      : "text-muted-foreground",
                   )}
                   aria-current={isActive ? "page" : undefined}
                 >

@@ -1,28 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { respondWithServiceError } from "@/lib/http/errors";
-import {
-  linkSnapshotToExerciseService,
-  ServiceError,
-} from "@/services/workout-plans";
-import { createClient } from "@/db/supabase.server";
-
-/**
- * Pobiera ID użytkownika z sesji Supabase dla API routes.
- * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
- */
-async function getUserIdFromSession(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.id) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return user.id;
-}
+import { handleRouteError } from "@/lib/api-route-utils";
+import { getUserIdFromSession } from "@/lib/auth-api";
+import { linkSnapshotToExerciseService } from "@/services/workout-plans";
 
 type RouteContext = {
   params: Promise<{
@@ -40,12 +20,13 @@ export async function POST(request: Request, { params }: RouteContext) {
     const userId = await getUserIdFromSession();
 
     const { snapshot_id } = await params;
-    const snapshotId = snapshot_id ?? new URL(request.url).searchParams.get("snapshot_id");
+    const snapshotId =
+      snapshot_id ?? new URL(request.url).searchParams.get("snapshot_id");
 
     if (!snapshotId) {
       return NextResponse.json(
         { message: "Brak identyfikatora snapshotu w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,7 +35,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     if (!contentType || !contentType.includes("application/json")) {
       return NextResponse.json(
         { message: "Content-Type musi być application/json." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +46,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       if (!text || text.trim() === "") {
         return NextResponse.json(
           { message: "Body żądania nie może być puste." },
-          { status: 400 }
+          { status: 400 },
         );
       }
       body = JSON.parse(text);
@@ -73,7 +54,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       if (parseError instanceof SyntaxError) {
         return NextResponse.json(
           { message: "Nieprawidłowy format JSON w body żądania." },
-          { status: 400 }
+          { status: 400 },
         );
       }
       throw parseError;
@@ -83,7 +64,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     if (typeof body !== "object" || body === null || !("exercise_id" in body)) {
       return NextResponse.json(
         { message: "Body musi zawierać pole exercise_id." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -92,7 +73,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     if (typeof exercise_id !== "string" || !exercise_id) {
       return NextResponse.json(
         { message: "exercise_id musi być niepustym stringiem." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -100,21 +81,9 @@ export async function POST(request: Request, { params }: RouteContext) {
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error("POST /api/workout-plans/snapshots/[snapshot_id]/link unexpected error", error);
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 }
+    return handleRouteError(
+      error,
+      "POST /api/workout-plans/snapshots/[snapshot_id]/link",
     );
   }
 }

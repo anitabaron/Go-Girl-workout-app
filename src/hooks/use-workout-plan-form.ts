@@ -22,6 +22,7 @@ import {
   formValuesToUpdateCommand,
   type WorkoutPlanFormValues,
 } from "@/lib/validation/workout-plan-form";
+import { useFormErrorHandlers } from "./use-form-error-handlers";
 import { useBeforeUnload } from "./use-before-unload";
 
 type UseWorkoutPlanFormProps = {
@@ -124,6 +125,15 @@ export function useWorkoutPlanForm({
     handleSubmit: rhfHandleSubmit,
   } = form;
   const { errors, isSubmitting, isDirty } = formState;
+
+  const { handleBadRequest, handleConflict, handleNotFound, handleAuth } =
+    useFormErrorHandlers<WorkoutPlanFormValues>({
+      setError,
+      fieldMapping: { name: "name", description: "description", part: "part" },
+      conflictMessage: "Duplikat pozycji w sekcji planu treningowego.",
+      notFoundRedirect: "/workout-plans",
+      authRedirect: "/",
+    });
 
   useEffect(() => {
     reset(formStateToFormValues(dtoToFormState(initialData)));
@@ -305,63 +315,6 @@ export function useWorkoutPlanForm({
     });
   };
 
-  const handleValidationError = (errorData: {
-    message?: string;
-    details?: string;
-  }) => {
-    const message = errorData.message ?? "";
-    const details = errorData.details ?? "";
-    const errorMessages = message.split("; ").filter((m) => m.trim());
-    if (details && !errorMessages.some((m) => details.includes(m))) {
-      errorMessages.push(details);
-    }
-
-    const fieldMapping: Record<string, keyof WorkoutPlanFormValues> = {
-      name: "name",
-      description: "description",
-      part: "part",
-    };
-
-    const formLevelErrors: string[] = [];
-    for (const errorMsg of errorMessages) {
-      let assigned = false;
-      for (const [apiField, formField] of Object.entries(fieldMapping)) {
-        if (errorMsg.toLowerCase().includes(apiField.toLowerCase())) {
-          setError(formField, { message: errorMsg });
-          assigned = true;
-          break;
-        }
-      }
-      if (!assigned) {
-        formLevelErrors.push(errorMsg);
-      }
-    }
-    if (formLevelErrors.length > 0) {
-      setError("root", { message: formLevelErrors.join("; ") });
-    }
-    toast.error("Popraw błędy w formularzu.");
-  };
-
-  const handleConflictError = (errorData: { message?: string }) => {
-    setError("root", {
-      message:
-        errorData.message || "Duplikat pozycji w sekcji planu treningowego.",
-    });
-    toast.error(
-      errorData.message || "Duplikat pozycji w sekcji planu treningowego.",
-    );
-  };
-
-  const handleNotFoundError = () => {
-    toast.error("Plan treningowy nie został znaleziony.");
-    setTimeout(() => router.push("/workout-plans"), 1500);
-  };
-
-  const handleAuthError = () => {
-    toast.error("Brak autoryzacji. Zaloguj się ponownie.");
-    setTimeout(() => router.push("/"), 1500);
-  };
-
   const onSubmit = async (data: WorkoutPlanFormValues) => {
     const result =
       mode === "create"
@@ -373,19 +326,19 @@ export function useWorkoutPlanForm({
 
     if (!result.success) {
       if (result.code === "BAD_REQUEST") {
-        handleValidationError({
+        handleBadRequest({
           message: result.error,
           details: result.details,
         });
       } else if (result.code === "CONFLICT") {
-        handleConflictError({ message: result.error });
+        handleConflict({ message: result.error });
       } else if (result.error.includes("nie został znaleziony")) {
-        handleNotFoundError();
+        handleNotFound();
       } else if (
         result.error.includes("autoryzacji") ||
         result.error.includes("Zaloguj")
       ) {
-        handleAuthError();
+        handleAuth();
       } else {
         toast.error(result.error);
       }

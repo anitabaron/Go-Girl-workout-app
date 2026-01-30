@@ -9,7 +9,7 @@
 4. Walidacja formularzy: dwupoziomowa - po stronie klienta (Zod) i serwera (odpowiedzi API). Komunikaty błędów inline przy polach oraz toast notifications dla błędów globalnych. Specyficzne kody błędów (409, 429) z dedykowanymi komunikatami po polsku. Retry przy błędach sieciowych z zachowaniem danych.
 5. Architektura komponentów: listy (ćwiczenia, plany, historia) jako Server Components. Formularze CRUD i asystent sesji jako Client Components z zarządzaniem stanem lokalnym i optymistycznymi aktualizacjami. Szczegóły sesji (read-only) jako Server Components, edycja w sesji in_progress wymaga Client Component.
 6. Widok szczegółów sesji: lista ćwiczeń w kolejności z sekcjami "Planowane" i "Wykonane" obok siebie (tryb porównawczy). Set logs jako tabela/lista serii. Różnice między planem a wykonaniem wizualnie wyróżnione. Dla sesji in_progress możliwość edycji przez powrót do asystenta.
-7. Logowanie: dedykowany widok logowania z tradycyjnym formularzem email/password (Supabase Auth). Formularz zawiera pola: email (lub username, w zależności od konfiguracji Supabase), password, oraz opcjonalnie "Zapamiętaj mnie". Obsługa rejestracji nowych użytkowników oraz resetu hasła. Przekierowanie do głównego widoku po zalogowaniu. Middleware chroni wszystkie route'y wymagające autoryzacji. Sprawdzanie stanu sesji po stronie serwera (middleware) i klienta (Client Components).
+7. Logowanie: dedykowany widok logowania z tradycyjnym formularzem email/password (Supabase Auth). Formularz zawiera pola: email (lub username, w zależności od konfiguracji Supabase), password. Obsługa rejestracji nowych użytkowników oraz resetu hasła. Przekierowanie do głównego widoku po zalogowaniu. Middleware chroni wszystkie route'y wymagające autoryzacji. Sprawdzanie stanu sesji po stronie serwera (middleware) i klienta (Client Components).
 8. Widok PR: lista ćwiczeń z możliwością rozwijania szczegółów. Dla każdego ćwiczenia wszystkie dostępne typy rekordów (max_reps, max_duration, max_weight) z wartością, datą osiągnięcia i opcjonalnie linkiem do sesji. Filtrowanie po exercise_id lub wszystkie PR użytkowniczki. Sortowanie domyślnie po dacie osiągnięcia (najnowsze pierwsze).
 9. Optymistyczne aktualizacje: włączone dla operacji CRUD z rollbackiem przy błędzie. Dla autosave w sesji treningowej szczególnie ważne - natychmiastowa aktualizacja UI, zapis w tle z wskaźnikiem statusu. Przy błędzie zapisu dane pozostają w formularzu z komunikatem błędu.
 10. Puste stany: dedykowane puste stany dla każdej listy z ikoną, komunikatem i CTA. Blokady funkcjonalności wizualnie oznaczone (disabled buttons) z tooltipami/komunikatami wyjaśniającymi wymagania.
@@ -61,7 +61,7 @@
 #### 1. Widok logowania/rejestracji
 
 - Dedykowany widok z tradycyjnym formularzem email/password (Supabase Auth)
-- Formularz zawiera pola: email (lub username), password, "Zapamiętaj mnie"
+- Formularz zawiera pola: email (lub username), password
 - Obsługa rejestracji nowych użytkowników oraz resetu hasła
 - Przekierowanie do głównego widoku po zalogowaniu
 - Middleware chroni route'y wymagające autoryzacji

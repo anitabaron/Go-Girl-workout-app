@@ -2,6 +2,11 @@ import { z } from "zod";
 
 import type { PlanQueryParams, WorkoutPlanExerciseInput } from "@/types";
 import {
+  decodeCursor as decodeCursorBase,
+  encodeCursor as encodeCursorBase,
+  type CursorPayload,
+} from "@/lib/cursor-utils";
+import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
@@ -512,7 +517,7 @@ export function encodeCursor(cursor: {
   value: string | number;
   id: string;
 }): string {
-  return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
+  return encodeCursorBase(cursor as CursorPayload);
 }
 
 /**
@@ -524,43 +529,14 @@ export function decodeCursor(cursor: string): {
   value: string | number;
   id: string;
 } {
-  try {
-    const parsed = JSON.parse(
-      Buffer.from(cursor, "base64url").toString("utf8"),
-    ) as {
-      sort: string;
-      order: string;
-      value: string | number;
-      id: string;
-    };
-
-    if (
-      !workoutPlanSortFields.includes(
-        parsed.sort as unknown as (typeof workoutPlanSortFields)[number],
-      )
-    ) {
-      throw new Error("Unsupported sort field");
-    }
-
-    if (
-      !workoutPlanOrderValues.includes(
-        parsed.order as unknown as (typeof workoutPlanOrderValues)[number],
-      )
-    ) {
-      throw new Error("Unsupported order value");
-    }
-
-    if (!parsed.id || parsed.value === undefined || parsed.value === null) {
-      throw new Error("Cursor missing fields");
-    }
-
-    return {
-      sort: parsed.sort as (typeof workoutPlanSortFields)[number],
-      order: parsed.order as (typeof workoutPlanOrderValues)[number],
-      value: parsed.value,
-      id: parsed.id,
-    };
-  } catch (error) {
-    throw new Error("INVALID_CURSOR", { cause: error });
-  }
+  const parsed = decodeCursorBase(cursor, {
+    sortFields: workoutPlanSortFields,
+    orderValues: workoutPlanOrderValues,
+  });
+  return parsed as {
+    sort: (typeof workoutPlanSortFields)[number];
+    order: (typeof workoutPlanOrderValues)[number];
+    value: string | number;
+    id: string;
+  };
 }

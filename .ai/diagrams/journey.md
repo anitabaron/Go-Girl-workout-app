@@ -7,7 +7,7 @@
 ### Ścieżki publiczne (niezalogowani):
 
 1. **Strona główna (`/`)** - dostępna dla wszystkich, możliwość przejścia do logowania
-2. **Logowanie (`/login`)** - formularz email/password z checkboxem "Zapamiętaj mnie"
+2. **Logowanie (`/login`)** - formularz email/password
 3. **Rejestracja (`/register`)** - formularz email/password/confirmPassword
 4. **Reset hasła (`/reset-password`)** - formularz wysłania linku resetującego
 5. **Potwierdzenie resetu hasła (`/reset-password/confirm`)** - formularz ustawienia nowego hasła po kliknięciu linku w emailu
@@ -70,31 +70,25 @@
 - **Ścieżka A:** `true` → AutomatyczneLogowanie → StronaGlownaZalogowana
 - **Ścieżka B:** `false` → PotwierdzenieEmaila → FormularzLogowania
 
-### Punkt decyzyjny 2: Logowanie - czy zaznaczono "Zapamiętaj mnie"?
-
-- **Warunek:** Wartość checkboxa "Zapamiętaj mnie"
-- **Ścieżka A:** `true` → SesjaPrzedluzona → DluzejZalogowany
-- **Ścieżka B:** `false` → SesjaStandardowa → StandardowyCzasWaznosci
-
-### Punkt decyzyjny 3: Weryfikacja sesji przy dostępie do chronionych funkcjonalności
+### Punkt decyzyjny 2: Weryfikacja sesji przy dostępie do chronionych funkcjonalności
 
 - **Warunek:** Czy sesja jest ważna?
 - **Ścieżka A:** Sesja ważna → DostepDoFunkcjonalnosci
 - **Ścieżka B:** Sesja wygasła → PrzekierowanieDoLogowania
 
-### Punkt decyzyjny 4: Reset hasła - czy token jest ważny?
+### Punkt decyzyjny 3: Reset hasła - czy token jest ważny?
 
 - **Warunek:** Czy token z emaila jest ważny?
 - **Ścieżka A:** Token ważny → FormularzPotwierdzeniaResetu
 - **Ścieżka B:** Token nieprawidłowy/wygasły → PrzekierowanieDoResetuHasla
 
-### Punkt decyzyjny 5: Logowanie - czy dane są poprawne?
+### Punkt decyzyjny 4: Logowanie - czy dane są poprawne?
 
 - **Warunek:** Czy email i hasło są poprawne?
 - **Ścieżka A:** Dane poprawne → SukcesLogowania
 - **Ścieżka B:** Dane niepoprawne → BladLogowania
 
-### Punkt decyzyjny 6: Rejestracja - czy konto już istnieje?
+### Punkt decyzyjny 5: Rejestracja - czy konto już istnieje?
 
 - **Warunek:** Czy email jest już zarejestrowany?
 - **Ścieżka A:** Konto nie istnieje → KontynuacjaRejestracji
@@ -103,7 +97,7 @@
 ## 4. Opis celu każdego stanu
 
 - **StronaGlowna:** Prezentacja aplikacji, możliwość przejścia do logowania/rejestracji
-- **FormularzLogowania:** Wprowadzenie danych logowania (email, hasło, checkbox "Zapamiętaj mnie")
+- **FormularzLogowania:** Wprowadzenie danych logowania (email, hasło)
 - **FormularzRejestracji:** Wprowadzenie danych rejestracji (email, hasło, potwierdzenie hasła)
 - **WalidacjaDanych:** Sprawdzenie poprawności wprowadzonych danych (Zod)
 - **WeryfikacjaDanych:** Weryfikacja danych w Supabase Auth
@@ -249,7 +243,6 @@ stateDiagram-v2
         Formularz zawiera pola:
         - Email
         - Hasło
-        - Checkbox "Zapamiętaj mnie"
         oraz linki do rejestracji i resetu hasła
     end note
 
@@ -281,7 +274,7 @@ stateDiagram-v2
         - Plany treningowe
         - Sesje treningowe
         - Rekordy osobiste
-        
+
         Wszystkie strony używają requireAuth()
         do weryfikacji autoryzacji
     end note

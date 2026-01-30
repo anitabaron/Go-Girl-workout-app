@@ -10,7 +10,6 @@ export class LoginPage {
   readonly form: Locator;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
-  readonly rememberMeCheckbox: Locator;
   readonly submitButton: Locator;
 
   constructor(page: Page) {
@@ -18,9 +17,6 @@ export class LoginPage {
     this.form = page.locator('[data-test-id="login-form"]');
     this.emailInput = page.locator('[data-test-id="login-email-input"]');
     this.passwordInput = page.locator('[data-test-id="login-password-input"]');
-    this.rememberMeCheckbox = page.locator(
-      '[data-test-id="login-remember-me-checkbox"]',
-    );
     this.submitButton = page.locator('[data-test-id="login-submit-button"]');
   }
 
@@ -46,16 +42,6 @@ export class LoginPage {
   }
 
   /**
-   * Toggle remember me checkbox
-   */
-  async toggleRememberMe(checked: boolean = true) {
-    const isChecked = await this.rememberMeCheckbox.isChecked();
-    if (isChecked !== checked) {
-      await this.rememberMeCheckbox.click();
-    }
-  }
-
-  /**
    * Submit login form
    */
   async submit() {
@@ -65,12 +51,9 @@ export class LoginPage {
   /**
    * Complete login flow with email and password
    */
-  async login(email: string, password: string, rememberMe: boolean = false) {
+  async login(email: string, password: string) {
     await this.fillEmail(email);
     await this.fillPassword(password);
-    if (rememberMe) {
-      await this.toggleRememberMe(true);
-    }
     await this.submit();
   }
 

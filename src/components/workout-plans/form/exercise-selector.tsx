@@ -32,22 +32,20 @@ export function ExerciseSelector({
   const [type, setType] = useState<ExerciseType | "all">("all");
   const [currentExerciseId, setCurrentExerciseId] = useState<string>("all");
   const [exercises, setExercises] = useState<ExerciseDTO[]>([]);
-  const [allExercises, setAllExercises] = useState<ExerciseDTO[]>([]);
+  const [allExercises, setAllExercises] = useState<
+    { id: string; title: string }[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAllExercises = useCallback(async () => {
     try {
-      const params = new URLSearchParams({
-        sort: "title",
-        order: "asc",
-        limit: "50",
-      });
-      const response = await fetch(`/api/exercises?${params.toString()}`);
+      const response = await fetch("/api/exercises/titles?limit=50");
       if (!response.ok) return;
       const data = await response.json();
       const filtered = data.items.filter(
-        (ex: ExerciseDTO) => !excludedExerciseIds.includes(ex.id),
+        (ex: { id: string; title: string }) =>
+          !excludedExerciseIds.includes(ex.id),
       );
       setAllExercises(filtered);
     } catch {

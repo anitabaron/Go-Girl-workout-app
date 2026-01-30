@@ -1,8 +1,9 @@
 "use client";
 
 import type { PersonalRecordMetricViewModel } from "@/lib/personal-records/view-model";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Trophy } from "lucide-react";
 import { PersonalRecordMetricCard } from "./personal-record-metric-card";
-import { EmptyRecordsState } from "./empty-records-state";
 
 type PersonalRecordDetailsProps = {
   records: PersonalRecordMetricViewModel[];
@@ -18,7 +19,17 @@ export function PersonalRecordDetails({
 }: Readonly<PersonalRecordDetailsProps>) {
   // Obsługa pustego stanu
   if (records.length === 0) {
-    return <EmptyRecordsState />;
+    return (
+      <EmptyState
+        icon={
+          <Trophy className="h-8 w-8 text-destructive" aria-hidden="true" />
+        }
+        title="Brak rekordów dla tego ćwiczenia"
+        description="Nie masz jeszcze żadnych rekordów dla tego ćwiczenia. Rozpocznij trening, aby ustanowić pierwszy rekord!"
+        actionHref="/workout-plans"
+        actionLabel="Rozpocznij trening"
+      />
+    );
   }
 
   return (

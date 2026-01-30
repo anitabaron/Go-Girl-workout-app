@@ -3,10 +3,11 @@
 import { useEffect, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import type { SessionSummaryDTO } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
+import { History } from "lucide-react";
 import { WorkoutSessionCard } from "./workout-session-card";
-import { EmptyState } from "./empty-state";
-import { LoadMoreButton } from "../workout-plans/load-more-button";
-import { SkeletonLoader } from "../workout-plans/skeleton-loader";
+import { LoadMoreButton } from "@/components/shared/load-more-button";
+import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 
 type WorkoutSessionsListProps = {
   initialSessions: SessionSummaryDTO[];
@@ -29,7 +30,7 @@ export function WorkoutSessionsList({
   // Reset listy gdy zmieniają się filtry/sortowanie (brak kursora w URL)
   useEffect(() => {
     const currentCursor = searchParams.get("cursor");
-    
+
     // Jeśli nie ma kursora w URL, resetujemy do początkowych wartości
     if (!currentCursor) {
       setSessions(initialSessions);
@@ -43,15 +44,17 @@ export function WorkoutSessionsList({
     try {
       const params = new URLSearchParams(searchParams.toString());
       params.set("cursor", cursor);
-      
-      const response = await fetch(`/api/workout-sessions?${params.toString()}`);
-      
+
+      const response = await fetch(
+        `/api/workout-sessions?${params.toString()}`,
+      );
+
       if (!response.ok) {
         throw new Error("Failed to load more sessions");
       }
 
       const data = await response.json();
-      
+
       // Append nowych sesji do istniejącej listy
       startTransition(() => {
         setSessions((prev) => [...prev, ...data.items]);
@@ -67,7 +70,17 @@ export function WorkoutSessionsList({
   };
 
   if (sessions.length === 0 && !isPending) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        icon={
+          <History className="h-8 w-8 text-destructive" aria-hidden="true" />
+        }
+        title="Nie masz jeszcze żadnych sesji treningowych"
+        description="Rozpocznij swój pierwszy trening, aby zobaczyć historię sesji"
+        actionHref="/workout-sessions/start"
+        actionLabel="Rozpocznij trening"
+      />
+    );
   }
 
   return (
@@ -87,7 +100,12 @@ export function WorkoutSessionsList({
 
       {hasMore && nextCursor && !isLoadingMore && (
         <div className="flex justify-center pt-4">
-          <LoadMoreButton nextCursor={nextCursor} onLoadMore={handleLoadMore} />
+          <LoadMoreButton
+            nextCursor={nextCursor}
+            onLoadMore={handleLoadMore}
+            ariaLabel="Załaduj więcej sesji treningowych"
+            errorMessage="Nie udało się załadować więcej sesji. Spróbuj ponownie."
+          />
         </div>
       )}
     </div>

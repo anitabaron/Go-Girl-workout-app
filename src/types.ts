@@ -6,6 +6,14 @@ import type {
 } from "./db/database.types";
 
 /**
+ * Shared DTOs, API contracts, and DB-derived types.
+ *
+ * Convention:
+ * - types.ts: shared DTOs, API contracts, entities, DB-derived types
+ * - types/*: feature-specific form/UI state (e.g. workout-plan-form, workout-session-assistant)
+ */
+
+/**
  * Enum re-exports to keep API types aligned with DB schema.
  */
 export type ExercisePart = Enums<"exercise_part">;

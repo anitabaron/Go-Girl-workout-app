@@ -1,29 +1,8 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
 
-import { respondWithServiceError } from "@/lib/http/errors";
-import {
-  autosaveWorkoutSessionExerciseService,
-  ServiceError,
-} from "@/services/workout-sessions";
-import { createClient } from "@/db/supabase.server";
-
-/**
- * Pobiera ID użytkownika z sesji Supabase dla API routes.
- * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
- */
-async function getUserIdFromSession(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.id) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return user.id;
-}
+import { handleRouteError } from "@/lib/api-route-utils";
+import { getUserIdFromSession } from "@/lib/auth-api";
+import { autosaveWorkoutSessionExerciseService } from "@/services/workout-sessions";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -98,43 +77,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     return NextResponse.json({ data: result }, { status: 200 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        {
-          message: "Brak autoryzacji. Zaloguj się ponownie.",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      console.error(
-        "[PATCH exercises] ServiceError:",
-        error.code,
-        error.message,
-        error.details,
-      );
-      return respondWithServiceError(error);
-    }
-
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        {
-          message: "Nieprawidłowe dane wejściowe.",
-          code: "BAD_REQUEST",
-          details: error.issues.map((issue) => issue.message).join("; "),
-        },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        message: "Wystąpił błąd serwera.",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
+    return handleRouteError(
+      error,
+      "PATCH /api/workout-sessions/[id]/exercises/[order]",
     );
   }
 }

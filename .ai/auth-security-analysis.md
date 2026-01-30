@@ -15,22 +15,26 @@ Niniejszy dokument zawiera kompleksową analizę mechanizmu autentykacji i autor
 **Status:** ✅ Częściowo zaimplementowane
 
 **Lokalizacja weryfikacji:**
+
 - **Server Components:** `src/app/(app)/layout.tsx` - pobiera `user` przez `createClient()`
 - **Chronione strony:** Używają `getUserId()` z `src/lib/auth.ts` do weryfikacji autoryzacji
 - **Client Components:** Otrzymują `user` jako props z Server Components
 
 **Mechanizm:**
+
 1. Middleware odświeża sesję przed każdym żądaniem (`src/middleware.ts`)
 2. Server Component w `(app)/layout.tsx` pobiera `user` przez `supabase.auth.getUser()`
 3. `user` jest przekazywany do komponentów nawigacji (`TopNavigation`, `BottomNavigation`)
 4. Chronione strony używają `getUserId()` do weryfikacji autoryzacji przed renderowaniem
 
 **Co działa:**
+
 - ✅ Middleware odświeża sesję automatycznie
 - ✅ Server Components weryfikują autoryzację przed renderowaniem
 - ✅ Przyciski wylogowania są wyświetlane tylko dla zalogowanych użytkowników (`user !== null`)
 
 **Co wymaga poprawy:**
+
 - ⚠️ Brak Zustand authStore do zarządzania stanem w Client Components
 - ⚠️ Brak synchronizacji stanu autentykacji między Server i Client Components
 - ⚠️ Brak automatycznego czyszczenia store przy wylogowaniu
@@ -42,31 +46,35 @@ Niniejszy dokument zawiera kompleksową analizę mechanizmu autentykacji i autor
 **Status:** ✅ Zaimplementowane (wymaga poprawy)
 
 **Lokalizacja:**
+
 - `src/components/navigation/top-navigation.tsx` - przycisk wylogowania (desktop)
 - `src/components/navigation/bottom-navigation.tsx` - przycisk wylogowania (mobile)
 - `src/components/navigation/user-menu.tsx` - opcja wylogowania w menu
 
 **Obecna implementacja:**
+
 ```typescript
 const handleSignOut = async () => {
   const { error } = await supabase.auth.signOut();
-  
+
   if (error) {
     toast.error("Nie udało się wylogować. Spróbuj ponownie.");
     return;
   }
-  
+
   router.push("/login");
   router.refresh();
 };
 ```
 
 **Co działa:**
+
 - ✅ Wywołanie `supabase.auth.signOut()` usuwa sesję z Supabase
 - ✅ Przekierowanie do `/login` po udanym wylogowaniu
 - ✅ `router.refresh()` odświeża Server Components
 
 **Co wymaga poprawy:**
+
 - ❌ Brak czyszczenia Zustand authStore (`clearUser()`)
 - ❌ Brak synchronizacji z `onAuthStateChange` w AuthProvider
 - ⚠️ Brak obsługi błędów sieciowych (timeout, brak połączenia)
@@ -83,6 +91,7 @@ Dodać wywołanie `clearUser()` z Zustand store po udanym `signOut()` oraz subsk
 **Status:** ✅ Brak krytycznych luk
 
 System autentykacji jest zabezpieczony przez:
+
 - RLS (Row Level Security) w bazie danych - główna warstwa bezpieczeństwa
 - Weryfikację autoryzacji w Server Components przed renderowaniem
 - Izolację danych na poziomie bazy niezależnie od UI
@@ -102,15 +111,18 @@ System autentykacji jest zabezpieczony przez:
 **Ryzyko:** Średnie (głównie UX, ale może prowadzić do niespójności)
 
 **Opis:**
+
 - Jeśli `getUserId()` rzuca błąd w Server Component, nie ma centralnej obsługi przekierowania
 - Każda chroniona strona musi obsługiwać błąd indywidualnie (try-catch + redirect)
 - Może prowadzić do niespójnego UX (różne komunikaty błędów)
 
 **Obecny stan:**
+
 - Niektóre strony używają try-catch z `getUserId()` i przekierowują do `/login`
 - Niektóre strony mogą nie obsługiwać błędów poprawnie
 
 **Rozwiązanie:**
+
 - Implementacja Error Boundary w `src/app/(app)/error.tsx` (Krok 7 z auth-plan.md)
 - Wrapper `requireAuth()` z automatycznym przekierowaniem (Krok 6 z auth-plan.md)
 
@@ -123,16 +135,19 @@ System autentykacji jest zabezpieczony przez:
 **Ryzyko:** Średnie (funkcjonalność)
 
 **Opis:**
+
 - Widok `/reset-password/confirm` nie weryfikuje tokenu z URL przed wyświetleniem formularza
 - Użytkownik może zobaczyć formularz nawet z nieprawidłowym/wygasłym tokenem
 - Formularz wyświetli błąd dopiero po próbie zapisu
 
 **Obecny stan:**
+
 - UI jest zaimplementowane (`src/app/reset-password/confirm/page.tsx`)
 - Brak weryfikacji tokenu w Server Component
 - Brak hooka `useResetPasswordConfirmForm` z logiką backendową
 
 **Rozwiązanie:**
+
 - Weryfikacja tokenu w Server Component przed renderowaniem formularza
 - Przekierowanie do `/reset-password` jeśli token nieprawidłowy/wygasły
 - Implementacja hooka z walidacją i integracją Supabase
@@ -141,45 +156,24 @@ System autentykacji jest zabezpieczony przez:
 
 ---
 
-#### 2.3.3 Remember Me - modyfikacja cookies po stronie klienta
-
-**Ryzyko:** Średnie (funkcjonalność)
-
-**Opis:**
-- Plan zakłada modyfikację `maxAge` cookies po stronie klienta po logowaniu
-- Cookies Supabase mogą być `httpOnly`, co uniemożliwia modyfikację z JavaScript
-- Może być konieczne alternatywne podejście (konfiguracja w middleware lub Supabase)
-
-**Obecny stan:**
-- Plan implementacji zakłada helper do modyfikacji cookies (Krok 8 z auth-plan.md)
-- Nie zweryfikowano, czy cookies są dostępne do modyfikacji
-
-**Rozwiązanie:**
-- Sprawdzenie, czy cookies Supabase są dostępne do modyfikacji po stronie klienta
-- Rozważenie alternatywnego podejścia:
-  - Konfiguracja `maxAge` w middleware (sprawdzanie flagi w cookie)
-  - Użycie localStorage do przechowywania flagi "Remember Me"
-  - Konfiguracja w Supabase (`jwt_expiry`, `refresh_token_rotation_enabled`)
-
-**Status:** ⏳ Do weryfikacji i implementacji
-
----
-
-#### 2.3.4 DEFAULT_USER_ID jako fallback w development
+#### 2.3.3 DEFAULT_USER_ID jako fallback w development
 
 **Ryzyko:** Średnie (tylko w development, ale może maskować problemy)
 
 **Opis:**
+
 - `getUserId()` używa `DEFAULT_USER_ID` jako fallback w development
 - Może maskować problemy z autentykacją (użytkownik nie jest zalogowany, ale aplikacja działa)
 - Może prowadzić do niespójności między środowiskami (development vs production)
 
 **Obecny stan:**
+
 - `DEFAULT_USER_ID` jest używany w `src/lib/auth.ts`
 - Brak dokumentacji, że jest tylko dla developmentu
 - Brak sprawdzenia, że nie jest ustawiony w produkcji
 
 **Rozwiązanie:**
+
 - Wyraźna dokumentacja, że `DEFAULT_USER_ID` jest tylko dla developmentu
 - Sprawdzenie w kodzie, że w produkcji `DEFAULT_USER_ID` nie jest używany
 - Rozważenie usunięcia fallbacku i wymuszenia poprawnej autentykacji
@@ -195,11 +189,13 @@ System autentykacji jest zabezpieczony przez:
 **Ryzyko:** Niskie (głównie UX)
 
 **Opis:**
+
 - Po wylogowaniu Zustand store nadal zawiera dane użytkownika
 - Może prowadzić do niespójności UI (komponenty mogą wyświetlać stare dane)
 - Nie jest to luka bezpieczeństwa, ale problem UX
 
 **Rozwiązanie:**
+
 - Wywołanie `clearUser()` w funkcjach wylogowania (Krok 9 z auth-plan.md)
 - Subskrypcja `onAuthStateChange` w AuthProvider z automatycznym czyszczeniem
 
@@ -212,11 +208,13 @@ System autentykacji jest zabezpieczony przez:
 **Ryzyko:** Niskie (głównie UX)
 
 **Opis:**
+
 - Client Components używają `authStore` do sprawdzania autoryzacji
 - Store może być niezsynchronizowany z rzeczywistą sesją Supabase
 - Może prowadzić do wyświetlania nieprawidłowych danych
 
 **Rozwiązanie:**
+
 - `AuthProvider` z subskrypcją `onAuthStateChange` zapewni synchronizację (Krok 2 z auth-plan.md)
 - Server Components nadal są źródłem prawdy dla autoryzacji
 
@@ -231,11 +229,13 @@ System autentykacji jest zabezpieczony przez:
 **Status:** ✅ Zgodne z architekturą projektu
 
 **Opis:**
+
 - Middleware tylko odświeża sesję, ale nie blokuje dostępu do chronionych tras
 - Ochrona odbywa się w Server Components przez `getUserId()`
 - To nie jest luka - to zamierzone podejście zgodne z `auth-spec.md`
 
 **Uzasadnienie:**
+
 - Weryfikacja w komponentach pozwala na bardziej elastyczne zarządzanie dostępem
 - RLS w bazie danych zapewnia bezpieczeństwo niezależnie od weryfikacji w aplikacji
 - Middleware odświeża sesję, co jest wystarczające dla Server Components
@@ -247,11 +247,13 @@ System autentykacji jest zabezpieczony przez:
 **Status:** ⚠️ Niespójność
 
 **Opis:**
+
 - Niektóre strony używają try-catch z `getUserId()` i przekierowują do `/login`
 - Niektóre strony mogą nie obsługiwać błędów poprawnie
 - Brak jednolitego podejścia do obsługi błędów autoryzacji
 
 **Rozwiązanie:**
+
 - Wrapper `requireAuth()` zapewni jednolite podejście (Krok 6 z auth-plan.md)
 - Error Boundary jako backup dla błędów, które nie zostały obsłużone (Krok 7 z auth-plan.md)
 
@@ -283,12 +285,7 @@ System autentykacji jest zabezpieczony przez:
    - Przekierowanie do `/reset-password` jeśli token nieprawidłowy
    - Implementacja hooka z logiką backendową
 
-3. **Weryfikacja implementacji Remember Me**
-   - Sprawdzenie, czy cookies są dostępne do modyfikacji
-   - Rozważenie alternatywnego podejścia jeśli cookies są `httpOnly`
-   - Dokumentacja wybranego rozwiązania
-
-4. **Dokumentacja DEFAULT_USER_ID**
+3. **Dokumentacja DEFAULT_USER_ID**
    - Wyraźne oznaczenie, że jest tylko dla developmentu
    - Sprawdzenie, że nie jest ustawiony w produkcji
    - Rozważenie usunięcia fallbacku
@@ -314,12 +311,14 @@ System autentykacji jest zabezpieczony przez:
 **Ocena:** ✅ Dobra
 
 System autentykacji jest dobrze zaprojektowany z:
+
 - ✅ RLS jako główną warstwą bezpieczeństwa
 - ✅ Weryfikacją autoryzacji w Server Components
 - ✅ Izolacją danych na poziomie bazy niezależnie od UI
 - ✅ Prawidłowym zarządzaniem sesjami przez `@supabase/ssr`
 
 **Zidentyfikowane problemy:**
+
 - 0 krytycznych luk
 - 0 luk wysokiego ryzyka
 - 4 problemy średniego ryzyka (głównie UX i kompletność implementacji)
@@ -327,16 +326,15 @@ System autentykacji jest dobrze zaprojektowany z:
 
 ### 5.2 Zgodność z wymaganiami
 
-**US-001:** ✅ Zgodne (wymaga implementacji Remember Me i poprawy wylogowania)
+**US-001:** ✅ Zgodne (wymaga poprawy wylogowania)
 **US-002:** ✅ Zgodne (RLS zapewnia izolację danych)
 **US-003:** ✅ Zgodne (wymaga Error Boundary dla automatycznego przekierowania)
 
 ### 5.3 Następne kroki
 
 1. ✅ Implementacja wszystkich kroków z `auth-plan.md` (10 kroków)
-2. ✅ Weryfikacja implementacji Remember Me (sprawdzenie dostępności cookies)
-3. ✅ Dokumentacja DEFAULT_USER_ID
-4. ✅ Testowanie scenariuszy bezpieczeństwa po implementacji
+2. ✅ Dokumentacja DEFAULT_USER_ID
+3. ✅ Testowanie scenariuszy bezpieczeństwa po implementacji
 
 ---
 

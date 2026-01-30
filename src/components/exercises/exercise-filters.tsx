@@ -18,15 +18,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ExerciseDTO, ExercisePart, ExerciseType } from "@/types";
+import type { ExercisePart, ExerciseType } from "@/types";
 import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
 import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 
+type ExerciseTitle = { id: string; title: string };
+
 type ExerciseFiltersProps = {
-  exercises: ExerciseDTO[];
+  exercises: ExerciseTitle[];
 };
 
 export function ExerciseFilters({ exercises }: Readonly<ExerciseFiltersProps>) {

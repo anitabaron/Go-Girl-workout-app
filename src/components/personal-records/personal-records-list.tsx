@@ -4,10 +4,11 @@ import { useEffect, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import type { PersonalRecordsPageResponse } from "@/lib/personal-records/view-model";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Trophy } from "lucide-react";
 import { PersonalRecordCard } from "./personal-record-card";
-import { EmptyState } from "./empty-state";
-import { LoadMoreButton } from "./load-more-button";
-import { SkeletonLoader } from "./skeleton-loader";
+import { LoadMoreButton } from "@/components/shared/load-more-button";
+import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 import { mapPersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
 
 type PersonalRecordsListProps = {
@@ -42,7 +43,9 @@ export function PersonalRecordsList({
       const params = new URLSearchParams(searchParams.toString());
       params.set("cursor", cursor);
 
-      const response = await fetch(`/api/personal-records?${params.toString()}`);
+      const response = await fetch(
+        `/api/personal-records?${params.toString()}`,
+      );
 
       if (!response.ok) {
         throw new Error("Failed to load more records");
@@ -53,7 +56,7 @@ export function PersonalRecordsList({
       // Mapowanie nowych danych do ViewModel
       const newViewModel = mapPersonalRecordsToViewModel(
         data.items,
-        data.nextCursor
+        data.nextCursor,
       );
 
       // Append nowych rekordów do istniejącej listy
@@ -63,9 +66,7 @@ export function PersonalRecordsList({
       });
     } catch (error) {
       console.error("Error loading more records:", error);
-      toast.error(
-        "Nie udało się załadować więcej rekordów. Spróbuj ponownie."
-      );
+      toast.error("Nie udało się załadować więcej rekordów. Spróbuj ponownie.");
       throw error;
     } finally {
       setIsLoadingMore(false);
@@ -83,20 +84,38 @@ export function PersonalRecordsList({
 
   // Wyświetlanie pustego stanu
   if (records.length === 0 && !isPending && !isLoadingMore) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        icon={
+          <Trophy className="h-8 w-8 text-destructive" aria-hidden="true" />
+        }
+        title="Nie masz jeszcze żadnych rekordów"
+        description="Nie masz jeszcze żadnych rekordów. Rozpocznij trening, aby zacząć śledzić postępy!"
+        actionHref="/workout-plans"
+        actionLabel="Rozpocznij trening"
+      />
+    );
   }
 
   return (
     <div className="space-y-4">
       {records.map((recordGroup) => (
-        <PersonalRecordCard key={recordGroup.exerciseId} recordGroup={recordGroup} />
+        <PersonalRecordCard
+          key={recordGroup.exerciseId}
+          recordGroup={recordGroup}
+        />
       ))}
 
-      {isLoadingMore && <SkeletonLoader count={2} />}
+      {isLoadingMore && <SkeletonLoader count={2} variant="compact" />}
 
       {nextCursor && !isLoadingMore && (
         <div className="flex justify-center pt-4">
-          <LoadMoreButton nextCursor={nextCursor} onLoadMore={handleLoadMore} />
+          <LoadMoreButton
+            nextCursor={nextCursor}
+            onLoadMore={handleLoadMore}
+            ariaLabel="Załaduj więcej rekordów"
+            errorMessage="Nie udało się załadować więcej rekordów. Spróbuj ponownie."
+          />
         </div>
       )}
     </div>

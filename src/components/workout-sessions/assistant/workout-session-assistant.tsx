@@ -1,16 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import type { SessionDetailDTO } from "@/types";
-import { useWorkoutSessionStore } from "@/stores/workout-session-store";
-import { useSaveExercise } from "@/hooks/use-save-exercise";
-import { useSessionForm } from "@/hooks/use-session-form";
-import { useSessionTimer } from "@/hooks/use-session-timer";
-import { useSessionNavigation } from "@/hooks/use-session-navigation";
-import { useAutoPause } from "@/hooks/use-auto-pause";
+import { useWorkoutSessionAssistant } from "@/hooks/use-workout-session-assistant";
 import { WorkoutTimer } from "./workout-timer";
-import { ExerciseTimer } from "./exercise-timer";
 import { CurrentExerciseInfo } from "./current-exercise-info";
 import { ExerciseExecutionForm } from "./exercise-execution-form";
 import { NavigationButtons } from "./navigation-buttons";
@@ -24,126 +16,33 @@ export type WorkoutSessionAssistantProps = {
 
 /**
  * Główny komponent asystenta treningowego.
- * Zarządza stanem sesji przez Zustand, koordynuje hooki i renderuje UI.
+ * Cienki warstwa prezentacyjna – logika orchestracji w useWorkoutSessionAssistant.
  */
 export function WorkoutSessionAssistant({
   sessionId,
   initialSession,
 }: Readonly<WorkoutSessionAssistantProps>) {
-  const router = useRouter();
-  const resetStore = useWorkoutSessionStore((s) => s.resetStore);
-  const setAutosaveStatus = useWorkoutSessionStore((s) => s.setAutosaveStatus);
-
-  useEffect(() => {
-    resetStore(sessionId, initialSession);
-  }, [sessionId, initialSession, resetStore]);
-
-  const { saveExercise, autosaveStatus, autosaveError } = useSaveExercise();
-
   const {
-    formData,
-    setFormData,
-    formDataRef,
-    formErrors,
-    validateForm,
-    currentSetNumber,
-    handleSetComplete,
-    handleRestBetweenComplete,
-    handleRepsComplete,
+    session,
     currentExercise,
-  } = useSessionForm();
-
-  const {
+    currentExerciseIndex,
+    currentSetNumber,
+    setFormData,
+    formErrors,
     isPaused,
-    stopTimer,
+    autosaveStatus,
+    autosaveError,
+    canGoNext,
+    canGoPrevious,
+    exerciseTimerContent,
+    handleExit,
+    handlePrevious,
+    handleNext,
+    handleSkip,
     handlePause,
     handleResume,
-    timerInitializedRef,
-    isMountedRef,
-    isFirstRenderRef,
-  } = useSessionTimer(sessionId, saveExercise);
-
-  const {
-    handleNext,
-    handlePrevious,
-    handleSkip,
-    markAutoTransition,
-    isAutoTransitioningRef,
-  } = useSessionNavigation(sessionId, saveExercise, formDataRef, validateForm);
-
-  const { autoPause } = useAutoPause(
-    sessionId,
     stopTimer,
-    saveExercise,
-    timerInitializedRef,
-    isMountedRef,
-    isFirstRenderRef,
-    isAutoTransitioningRef,
-    formDataRef,
-  );
-
-  useEffect(() => {
-    if (autosaveStatus === "saved") {
-      const timer = setTimeout(() => {
-        setAutosaveStatus("idle");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [autosaveStatus, setAutosaveStatus]);
-
-  const handleRestAfterSeriesComplete = useCallback(() => {
-    markAutoTransition();
-    void handleNext();
-  }, [markAutoTransition, handleNext]);
-
-  const session = useWorkoutSessionStore((s) => s.session);
-  const currentExerciseIndex = useWorkoutSessionStore(
-    (s) => s.currentExerciseIndex,
-  );
-
-  const canGoNext = useMemo(() => {
-    if (!formData) return false;
-    if (formData.is_skipped) return true;
-    if (formData.sets.length === 0) return false;
-    const errors = validateForm(formData);
-    return Object.keys(errors).length === 0;
-  }, [formData, validateForm]);
-
-  const canGoPrevious = currentExerciseIndex > 0;
-
-  const handleExit = async () => {
-    try {
-      await autoPause(true);
-    } catch {
-      // Ignoruj błędy - przekieruj użytkownika
-    } finally {
-      router.push("/");
-    }
-  };
-
-  const exerciseTimerContent = useMemo(
-    () =>
-      currentExercise ? (
-        <ExerciseTimer
-          exercise={currentExercise}
-          currentSetNumber={currentSetNumber}
-          isPaused={isPaused}
-          onSetComplete={handleSetComplete}
-          onRestBetweenComplete={handleRestBetweenComplete}
-          onRestAfterSeriesComplete={handleRestAfterSeriesComplete}
-          onRepsComplete={handleRepsComplete}
-        />
-      ) : null,
-    [
-      currentExercise,
-      currentSetNumber,
-      isPaused,
-      handleSetComplete,
-      handleRestBetweenComplete,
-      handleRestAfterSeriesComplete,
-      handleRepsComplete,
-    ],
-  );
+  } = useWorkoutSessionAssistant({ sessionId, initialSession });
 
   if (!currentExercise) {
     return (

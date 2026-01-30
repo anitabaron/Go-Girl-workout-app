@@ -51,7 +51,7 @@ export function BottomNavigation({
 
   // Filtrujemy elementy nawigacji, aby wykluczyć "workout-sessions" z listy (bo jest w środku jako FAB)
   const navItemsForBottom = navigationItems.filter(
-    (item) => item.id !== "workout-sessions"
+    (item) => item.id !== "workout-sessions",
   );
 
   return (
@@ -126,7 +126,7 @@ export function BottomNavigation({
           >
             {(() => {
               const HistoryIcon = navigationItems.find(
-                (item) => item.id === "workout-sessions"
+                (item) => item.id === "workout-sessions",
               )?.icon;
               return HistoryIcon ? <HistoryIcon className="h-5 w-5" /> : null;
             })()}

@@ -3,13 +3,17 @@
 import { useEffect, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import type { WorkoutPlanDTO } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Calendar } from "lucide-react";
 import { WorkoutPlanCard } from "./workout-plan-card";
-import { EmptyState } from "./empty-state";
-import { LoadMoreButton } from "./load-more-button";
-import { SkeletonLoader } from "./skeleton-loader";
+import { LoadMoreButton } from "@/components/shared/load-more-button";
+import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 
 type WorkoutPlansListProps = {
-  initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & { exercise_count?: number; has_missing_exercises?: boolean })[];
+  initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & {
+    exercise_count?: number;
+    has_missing_exercises?: boolean;
+  })[];
   initialNextCursor?: string | null;
   initialHasMore: boolean;
 };
@@ -29,7 +33,7 @@ export function WorkoutPlansList({
   // Reset listy gdy zmieniają się filtry/sortowanie (brak kursora w URL)
   useEffect(() => {
     const currentCursor = searchParams.get("cursor");
-    
+
     // Jeśli nie ma kursora w URL, resetujemy do początkowych wartości
     if (!currentCursor) {
       setPlans(initialPlans);
@@ -43,15 +47,15 @@ export function WorkoutPlansList({
     try {
       const params = new URLSearchParams(searchParams.toString());
       params.set("cursor", cursor);
-      
+
       const response = await fetch(`/api/workout-plans?${params.toString()}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to load more plans");
       }
 
       const data = await response.json();
-      
+
       // Append nowych planów do istniejącej listy
       startTransition(() => {
         setPlans((prev) => [...prev, ...data.items]);
@@ -82,7 +86,18 @@ export function WorkoutPlansList({
   };
 
   if (plans.length === 0 && !isPending) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        icon={
+          <Calendar className="h-8 w-8 text-destructive" aria-hidden="true" />
+        }
+        title="Nie masz jeszcze planów treningowych"
+        description="Utwórz swój pierwszy plan, aby rozpocząć treningi"
+        actionHref="/workout-plans/new"
+        actionLabel="Utwórz pierwszy plan"
+        testId="workout-plans-empty-state"
+      />
+    );
   }
 
   return (
@@ -107,7 +122,12 @@ export function WorkoutPlansList({
 
       {hasMore && nextCursor && !isLoadingMore && (
         <div className="flex justify-center pt-4">
-          <LoadMoreButton nextCursor={nextCursor} onLoadMore={handleLoadMore} />
+          <LoadMoreButton
+            nextCursor={nextCursor}
+            onLoadMore={handleLoadMore}
+            ariaLabel="Załaduj więcej planów treningowych"
+            errorMessage="Nie udało się załadować więcej planów. Spróbuj ponownie."
+          />
         </div>
       )}
     </div>

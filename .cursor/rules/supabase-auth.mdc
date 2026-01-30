@@ -20,7 +20,6 @@ VERY IMPORTANT: Ask me which pages or components should behave differently after
 4. Implement proper session management with middleware based on JWT (Supabase Auth)
 5. Separate client and server Supabase instances for Client Components and Server Components
 6. Use `getUserId()` helper function for authentication checks in Server Components
-7. **Implement "Remember Me" checkbox in login form** - required by PRD (see `prd.md` section 3.1.2 and US-001)
 
 ## Installation
 
@@ -88,7 +87,7 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, options),
             );
           } catch {
             // The `setAll` method was called from a Server Component.
@@ -97,7 +96,7 @@ export async function createClient() {
           }
         },
       },
-    }
+    },
   );
 }
 ```
@@ -128,7 +127,7 @@ import type { Database } from "./database.types";
  */
 export const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 ```
 
@@ -197,17 +196,17 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, value),
           );
           supabaseResponse = NextResponse.next({
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           );
         },
       },
-    }
+    },
   );
 
   // IMPORTANT: Always get user session first before any other operations
@@ -351,7 +350,6 @@ export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -368,11 +366,6 @@ export function LoginForm() {
     }
 
     if (data.user) {
-      // Remember Me: If checked, configure session persistence
-      // Note: Supabase Auth handles session management through cookies
-      // The "Remember Me" checkbox can influence cookie maxAge or session storage
-      // For implementation details, see auth-spec.md
-
       router.push("/");
       router.refresh();
     }
@@ -394,31 +387,11 @@ export function LoginForm() {
         required
       />
 
-      {/* Remember Me checkbox - REQUIRED by PRD */}
-      <label>
-        <input
-          type="checkbox"
-          checked={rememberMe}
-          onChange={(e) => setRememberMe(e.target.checked)}
-        />
-        Zapamiętaj mnie
-      </label>
-
       <button type="submit">Zaloguj</button>
     </form>
   );
 }
 ```
-
-**Remember Me Implementation:**
-
-- The "Remember Me" checkbox is **required** by PRD (see `prd.md` and `auth-spec.md`)
-- When checked, the session should persist longer (extended session duration)
-- Implementation details:
-  - The `rememberMe` value is passed to Supabase Auth during login
-  - Session duration is controlled by Supabase configuration (`jwt_expiry` in `config.toml`)
-  - Cookies may have longer `maxAge` when "Remember Me" is checked
-  - For detailed implementation, see `auth-spec.md` section 4.1.2 and 4.1.3
 
 ## Project Structure
 
@@ -431,7 +404,6 @@ This project uses the following structure for authentication:
 - **Auth Pages**: `src/app/login/`, `src/app/register/`, `src/app/reset-password/`
 - **Protected Routes**: All routes in `src/app/(app)/` require authentication
 - **No API Routes for Auth**: Authentication is handled directly in Client Components using `supabase.auth` methods
-- **Remember Me**: Login form includes "Zapamiętaj mnie" checkbox (required by PRD) - see `auth-spec.md` for implementation details
 
 ## Security Best Practices
 
@@ -442,7 +414,6 @@ This project uses the following structure for authentication:
 - Use proper error handling and logging
 - Always use Server Actions or Route Handlers for sensitive operations
 - Use `getUserId()` in Server Components to ensure user is authenticated before accessing data
-- **Remember Me**: Implement "Remember Me" checkbox in login form as required by PRD - this allows users to extend session duration
 
 ## Common Pitfalls
 

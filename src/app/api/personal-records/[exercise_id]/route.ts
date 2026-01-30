@@ -1,29 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { respondWithServiceError } from "@/lib/http/errors";
+import { handleRouteError } from "@/lib/api-route-utils";
+import { getUserIdFromSession } from "@/lib/auth-api";
 import {
   deletePersonalRecordsByExerciseService,
   getPersonalRecordsByExerciseService,
-  ServiceError,
 } from "@/services/personal-records";
-import { createClient } from "@/db/supabase.server";
-
-/**
- * Pobiera ID użytkownika z sesji Supabase dla API routes.
- * Zwraca błąd 401 jeśli użytkownik nie jest zalogowany.
- */
-async function getUserIdFromSession(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.id) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return user.id;
-}
 
 type RouteContext = {
   params: Promise<{
@@ -42,33 +24,18 @@ export async function GET(request: Request, { params }: RouteContext) {
     if (!exerciseId) {
       return NextResponse.json(
         { message: "Brak identyfikatora ćwiczenia w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const result = await getPersonalRecordsByExerciseService(userId, exerciseId);
+    const result = await getPersonalRecordsByExerciseService(
+      userId,
+      exerciseId,
+    );
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error(
-      "GET /api/personal-records/[exercise_id] unexpected error",
-      error
-    );
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 }
-    );
+    return handleRouteError(error, "GET /api/personal-records/[exercise_id]");
   }
 }
 
@@ -83,7 +50,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     if (!exerciseId) {
       return NextResponse.json(
         { message: "Brak identyfikatora ćwiczenia w ścieżce." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -91,24 +58,9 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        { message: "Brak autoryzacji. Zaloguj się ponownie.", code: "UNAUTHORIZED" },
-        { status: 401 }
-      );
-    }
-
-    if (error instanceof ServiceError) {
-      return respondWithServiceError(error);
-    }
-
-    console.error(
-      "DELETE /api/personal-records/[exercise_id] unexpected error",
-      error
-    );
-    return NextResponse.json(
-      { message: "Wystąpił błąd serwera." },
-      { status: 500 }
+    return handleRouteError(
+      error,
+      "DELETE /api/personal-records/[exercise_id]",
     );
   }
 }

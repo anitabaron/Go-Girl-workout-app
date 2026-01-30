@@ -9,15 +9,12 @@
 Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływy:
 
 1. **Logowanie (Login)**
-
    - Użytkownik wprowadza email i hasło
-   - Opcjonalnie zaznacza checkbox "Zapamiętaj mnie" (Remember Me)
    - Walidacja po stronie klienta (Zod)
    - Wywołanie Supabase Auth API
    - Przekierowanie do strony głównej po sukcesie
 
 2. **Rejestracja (Register)**
-
    - Użytkownik wprowadza email, hasło i potwierdzenie hasła
    - Walidacja po stronie klienta
    - Wywołanie Supabase Auth API
@@ -25,7 +22,6 @@ Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływ
    - Przekierowanie do strony głównej lub logowania
 
 3. **Reset hasła (Reset Password)**
-
    - Część 1: Użytkownik wprowadza email
    - Wysłanie linku resetującego przez Supabase
    - Część 2: Użytkownik klika link w emailu
@@ -34,20 +30,17 @@ Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływ
    - Przekierowanie do logowania
 
 4. **Potwierdzenie emaila (Email Confirmation)**
-
    - Użytkownik klika link w emailu
    - Callback weryfikuje token
    - Przekierowanie do logowania
 
 5. **Wylogowanie (Sign Out)**
-
    - Użytkownik klika przycisk wylogowania
    - Wywołanie Supabase Auth API
    - Usunięcie sesji
    - Przekierowanie do logowania
 
 6. **Odświeżenie sesji (Session Refresh)**
-
    - Middleware odświeża sesję przy każdym żądaniu
    - Automatyczne odświeżenie tokenu jeśli wygasł
    - Weryfikacja autoryzacji w Server Components
@@ -94,7 +87,6 @@ Na podstawie analizy PRD i auth-spec.md, zidentyfikowano następujące przepływ
 - Middleware automatycznie odświeża sesję przez `getUser()`
 - `@supabase/ssr` zarządza refresh_token automatycznie
 - Cookies synchronizowane między server a client
-- Remember Me: dłuższy czas ważności refresh_token
 
 ### 4. Opis kroków autentykacji
 
@@ -157,7 +149,6 @@ sequenceDiagram
     Note over Browser,SupabaseAuth: Przepływ logowania
 
     Browser->>Browser: Użytkownik wprowadza email i hasło
-    Browser->>Browser: Opcjonalnie zaznacza "Zapamiętaj mnie"
     Browser->>Browser: Walidacja formularza (Zod)
 
     alt Błędy walidacji
@@ -295,7 +286,7 @@ sequenceDiagram
     activate SupabaseAuth
     SupabaseAuth-->>ServerComp: user (lub null)
     deactivate SupabaseAuth
-    
+
     ServerComp->>AuthProvider: Renderowanie z user prop
     activate AuthProvider
     AuthProvider->>AuthStore: setUser(user) - inicjalizacja
@@ -308,7 +299,7 @@ sequenceDiagram
     deactivate SupabaseAuth
     AuthProvider-->>ServerComp: AuthProvider gotowy
     deactivate AuthProvider
-    
+
     ServerComp->>ServerComp: Renderowanie chronionej strony
     ServerComp->>SupabaseAuth: requireAuth() - weryfikacja
     activate SupabaseAuth
@@ -325,17 +316,4 @@ sequenceDiagram
     deactivate SupabaseAuth
     deactivate ServerComp
 
-    Note over Browser,SupabaseAuth: Remember Me - przedłużenie sesji
-
-    Browser->>Browser: Logowanie z zaznaczonym "Zapamiętaj mnie"
-    Browser->>SupabaseAuth: signInWithPassword() z rememberMe=true
-    activate SupabaseAuth
-    SupabaseAuth->>SupabaseAuth: Konfiguracja dłuższego czasu ważności
-    SupabaseAuth->>Browser: Sesja z dłuższym czasem wygaśnięcia
-    SupabaseAuth->>Browser: Cookies z dłuższym maxAge (próba ustawienia 30 dni)
-    Browser->>Browser: Uwaga: Cookies Supabase mogą być httpOnly
-    Browser->>Browser: Długość sesji kontrolowana przez konfigurację Supabase
-    deactivate SupabaseAuth
-
-    Note over Browser: Sesja pozostaje aktywna dłużej, nawet po zamknięciu przeglądarki
 ```
