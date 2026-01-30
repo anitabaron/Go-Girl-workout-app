@@ -54,7 +54,7 @@ export default async function WorkoutSessionActivePage({
   }
 
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="min-h-dvh flex flex-col" data-page="workout-active">
       <header className="flex items-center gap-4 px-4 py-4 sm:px-6">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link

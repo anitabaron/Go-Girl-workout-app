@@ -98,7 +98,7 @@ export function WorkoutSessionAssistantM3({
         </div>
       </div>
 
-      <div className="fixed left-0 right-0 bottom-above-mobile-nav z-40 border-t border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-4 shadow-[0_-2px_10px_rgb(0_0_0/0.08)] md:static md:bottom-auto md:z-auto md:shadow-none">
+      <div className="fixed left-0 right-0 bottom-above-mobile-nav z-40 border-t border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-4 shadow-[0_-2px_10px_rgb(0_0_0/0.08)] md:bottom-0 md:left-[80px] md:shadow-[0_-2px_10px_rgb(0_0_0/0.08)]">
         <div className="mx-auto w-full max-w-4xl">
           <NavigationButtonsM3
             onPrevious={handlePrevious}

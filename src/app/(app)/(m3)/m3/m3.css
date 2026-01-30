@@ -603,6 +603,13 @@ html:has(.ui-m3) {
   bottom: var(--m3-mobile-nav-height);
 }
 
+/* Workout active page: no main bottom padding on desktop – fixed bar sits at viewport bottom */
+@media (min-width: 768px) {
+  .ui-m3 main:has([data-page="workout-active"]) {
+    padding-bottom: 0;
+  }
+}
+
 /* ============================================
    DARK MODE
    ============================================ */
