@@ -195,4 +195,12 @@
 - [x] `/m3/workout-plans/[id]/edit` – edycja (WorkoutPlanFormM3)
 - [x] proxy.ts – rewrite `/workout-plans`, `/workout-plans/*` → M3
 
+## Workout sessions (M3) – DONE
+
+- [x] `/m3/workout-sessions` – lista (real data, load more)
+- [x] `/m3/workout-sessions/[id]` – szczegóły (WorkoutSessionDetailContent)
+- [x] `/m3/workout-sessions/start` – start (ResumeSessionCardM3 lub WorkoutPlansStartListM3)
+- [x] proxy.ts – rewrite `/workout-sessions`, `/workout-sessions/*` (bez `/active`) → M3
+- [ ] `/m3/workout-sessions/[id]/active` – aktywna sesja (legacy – złożony asystent)
+
 **Pre-PR (Enforceability)**: Add m3-migration.mdc, grep scripts, Dialog portal rules in m3.css, shadcn purity audit.

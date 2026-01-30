@@ -45,12 +45,17 @@ export async function proxy(request: NextRequest) {
   // Design mode rewrite (po odświeżeniu sesji)
   if (shouldUseM3(request)) {
     const { pathname } = request.nextUrl;
+    const isWorkoutSessions =
+      pathname === "/workout-sessions" ||
+      pathname.startsWith("/workout-sessions/");
+    const isActivePage = /^\/workout-sessions\/[^/]+\/active$/.test(pathname);
     const shouldRewrite =
       pathname === "/" ||
       pathname === "/exercises" ||
       pathname.startsWith("/exercises/") ||
       pathname === "/workout-plans" ||
-      pathname.startsWith("/workout-plans/");
+      pathname.startsWith("/workout-plans/") ||
+      (isWorkoutSessions && !isActivePage);
 
     if (shouldRewrite) {
       const url = request.nextUrl.clone();

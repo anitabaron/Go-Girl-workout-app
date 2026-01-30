@@ -11,6 +11,8 @@ export { WorkoutPlanDetailContent } from "./WorkoutPlanDetailContent";
 export { AddSnapshotExerciseButtonM3 } from "./AddSnapshotExerciseButtonM3";
 export { ExerciseLibraryBadgeM3 } from "./ExerciseLibraryBadgeM3";
 export { WorkoutPlanFormM3 } from "./WorkoutPlanFormM3";
+export { WorkoutSessionsListM3 } from "./WorkoutSessionsListM3";
+export { WorkoutSessionDetailContent } from "./WorkoutSessionDetailContent";
 export { ExerciseDetailContent } from "./ExerciseDetailContent";
 export { ExerciseFormM3 } from "./ExerciseFormM3";
 export { NavigationRail } from "./NavigationRail";
