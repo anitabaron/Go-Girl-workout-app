@@ -1,11 +1,11 @@
 /**
- * Material 3 inspired UI foundation - SCOPED to .ui-m3 only.
+ * Material 3 Expressive UI foundation - SCOPED to .ui-m3 only.
  * All styles and tokens are scoped under .ui-m3.
- * NO legacy variables, NO brand colors, NO global overrides.
+ * Bold typography, soft surfaces, confident spacing.
  */
 
 /* ============================================
-   M3 SCOPED TOKENS - Neutral only
+   M3 EXPRESSIVE TOKENS
    ============================================ */
 .ui-m3 {
   /* Surfaces - neutral grays */
@@ -17,26 +17,45 @@
   --m3-outline: #e5e5e5;
   --m3-outline-variant: #d4d4d4;
 
-  /* Override shadcn variables - neutral only, no brand */
+  /* Expressive accent - purple-like */
+  --m3-accent: #7c3aed;
+  --m3-accent-hover: #6d28d9;
+  --m3-on-accent: #ffffff;
+
+  /* Expressive radius - large surfaces */
+  --m3-radius-sm: 0.75rem;
+  --m3-radius-md: 1rem;
+  --m3-radius-lg: 1.25rem;
+  --m3-radius-xl: 1.5rem;
+  --m3-radius-hero: 1.75rem;
+
+  /* Expressive elevation - soft shadows */
+  --m3-shadow-1: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  --m3-shadow-2:
+    0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --m3-shadow-hero:
+    0 10px 25px -5px rgb(0 0 0 / 0.08), 0 4px 10px -4px rgb(0 0 0 / 0.06);
+
+  /* Override shadcn - primary uses accent for CTAs */
   --background: var(--m3-surface);
   --foreground: var(--m3-on-surface);
   --card: var(--m3-surface-container);
   --card-foreground: var(--m3-on-surface);
   --popover: var(--m3-surface-container);
   --popover-foreground: var(--m3-on-surface);
-  --primary: var(--m3-on-surface);
-  --primary-foreground: var(--m3-surface);
+  --primary: var(--m3-accent);
+  --primary-foreground: var(--m3-on-accent);
   --secondary: var(--m3-surface-container-high);
   --secondary-foreground: var(--m3-on-surface);
   --muted: var(--m3-surface-container);
   --muted-foreground: var(--m3-on-surface-variant);
-  --accent: var(--m3-surface-container-high);
-  --accent-foreground: var(--m3-on-surface);
+  --accent: var(--m3-accent);
+  --accent-foreground: var(--m3-on-accent);
   --destructive: #991b1b;
   --destructive-foreground: #fafafa;
   --border: var(--m3-outline);
   --input: var(--m3-outline);
-  --ring: var(--m3-on-surface-variant);
+  --ring: var(--m3-accent);
   --chart-1: #525252;
   --chart-2: #737373;
   --chart-3: #404040;
@@ -44,23 +63,25 @@
   --chart-5: #a3a3a3;
   --sidebar: var(--m3-surface-container);
   --sidebar-foreground: var(--m3-on-surface);
-  --sidebar-primary: var(--m3-on-surface);
-  --sidebar-primary-foreground: var(--m3-surface);
+  --sidebar-primary: var(--m3-accent);
+  --sidebar-primary-foreground: var(--m3-on-accent);
   --sidebar-accent: var(--m3-surface-container-high);
   --sidebar-accent-foreground: var(--m3-on-surface);
   --sidebar-border: var(--m3-outline);
   --sidebar-ring: var(--m3-on-surface-variant);
 
-  /* Typography scale - calm, readable */
-  --m3-font-headline: 1.5rem;
+  /* Typography - Expressive scale (44–64px hero on desktop) */
+  --m3-font-hero: clamp(2.5rem, 5vw + 2rem, 4rem);
+  --m3-font-hero-sm: clamp(2rem, 4vw + 1.5rem, 3rem);
+  --m3-font-headline: 1.75rem;
   --m3-font-title: 1.25rem;
   --m3-font-body: 1rem;
   --m3-font-label: 0.875rem;
-  --m3-line-height-tight: 1.25;
+  --m3-line-height-tight: 1.2;
   --m3-line-height-normal: 1.5;
   --m3-line-height-relaxed: 1.625;
 
-  /* Spacing rhythm - 8px base */
+  /* Spacing - confident rhythm */
   --m3-spacing-1: 0.25rem;
   --m3-spacing-2: 0.5rem;
   --m3-spacing-3: 0.75rem;
@@ -70,11 +91,7 @@
   --m3-spacing-8: 2rem;
   --m3-spacing-10: 2.5rem;
   --m3-spacing-12: 3rem;
-
-  /* Elevation - minimal shadows */
-  --m3-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --m3-shadow-2:
-    0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+  --m3-spacing-16: 4rem;
 
   color-scheme: light;
 
@@ -91,6 +108,20 @@
 .ui-m3 {
   overflow-wrap: normal;
   word-break: normal;
+}
+
+.ui-m3 .m3-hero {
+  font-size: var(--m3-font-hero);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.ui-m3 .m3-hero-sm {
+  font-size: var(--m3-font-hero-sm);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .ui-m3 .m3-headline {
@@ -123,17 +154,45 @@
   color: var(--m3-on-surface-variant);
 }
 
-/* Surface utilities */
+/* Text block max-width for readability */
+.ui-m3 .m3-prose {
+  max-width: 65ch;
+}
+
+/* Surface utilities - expressive radius & elevation */
 .ui-m3 .m3-surface-container {
   background: var(--m3-surface-container);
-  border-radius: 0.75rem;
+  border-radius: var(--m3-radius-hero);
   box-shadow: var(--m3-shadow-1);
 }
 
 .ui-m3 .m3-surface-container-high {
   background: var(--m3-surface-container-high);
-  border-radius: 0.75rem;
+  border-radius: var(--m3-radius-hero);
   box-shadow: var(--m3-shadow-2);
+}
+
+.ui-m3 .m3-surface-hero {
+  background: var(--m3-surface-container);
+  border-radius: var(--m3-radius-hero);
+  box-shadow: var(--m3-shadow-hero);
+}
+
+/* CTA button - expressive styling */
+.ui-m3 .m3-cta {
+  background: var(--m3-accent) !important;
+  color: var(--m3-on-accent) !important;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: var(--m3-radius-lg);
+  transition:
+    background 0.2s,
+    transform 0.15s;
+}
+
+.ui-m3 .m3-cta:hover {
+  background: var(--m3-accent-hover) !important;
+  transform: translateY(-1px);
 }
 
 /* Dark mode - system preference, scoped to .ui-m3 */
@@ -147,6 +206,9 @@
     --m3-on-surface-variant: #a3a3a3;
     --m3-outline: #262626;
     --m3-outline-variant: #404040;
+    --m3-accent: #a78bfa;
+    --m3-accent-hover: #c4b5fd;
+    --m3-on-accent: #1e1b4b;
 
     --background: var(--m3-surface);
     --foreground: var(--m3-on-surface);
@@ -192,6 +254,9 @@
   --m3-on-surface-variant: #a3a3a3;
   --m3-outline: #262626;
   --m3-outline-variant: #404040;
+  --m3-accent: #a78bfa;
+  --m3-accent-hover: #c4b5fd;
+  --m3-on-accent: #1e1b4b;
 
   --background: var(--m3-surface);
   --foreground: var(--m3-on-surface);

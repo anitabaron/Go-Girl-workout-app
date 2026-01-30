@@ -8,8 +8,8 @@ type PageHeaderProps = {
 };
 
 /**
- * M3 page header - title, optional description, optional actions slot.
- * Dumb presentational component. Uses shadcn + Tailwind only.
+ * M3 Expressive page header - bold headline, supporting text, actions aligned.
+ * Clear hierarchy for section pages.
  */
 export function PageHeader({
   title,
@@ -20,14 +20,16 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
+        "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6",
         className,
       )}
     >
-      <div className="min-w-0 flex-1">
-        <h1 className="m3-headline">{title}</h1>
+      <div className="min-w-0 flex-1 space-y-2">
+        <h1 className="m3-hero-sm">{title}</h1>
         {description && (
-          <p className="m3-body mt-2 text-muted-foreground">{description}</p>
+          <p className="m3-body m3-prose text-muted-foreground">
+            {description}
+          </p>
         )}
       </div>
       {actions && <div className="shrink-0 sm:mt-0">{actions}</div>}

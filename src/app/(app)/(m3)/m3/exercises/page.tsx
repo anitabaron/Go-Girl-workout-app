@@ -8,9 +8,9 @@ import {
   EmptyState,
   ExercisesToolbar,
 } from "../_components";
+import { cn } from "@/lib/utils";
 
 // TODO: Replace with real data from listExercisesService when M3 backend is wired.
-// For now, placeholder mock data to demonstrate layout.
 const MOCK_EXERCISES = [
   { id: "1", title: "Bench Press", type: "strength", part: "Chest" },
   { id: "2", title: "Squat", type: "strength", part: "Legs" },
@@ -24,12 +24,12 @@ export default function ExercisesPage() {
   const isEmpty = exercises.length === 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Exercises"
         description="Browse and manage your exercise library."
         actions={
-          <Button asChild>
+          <Button asChild className="m3-cta">
             <Link href="/exercises/new">
               <Plus className="mr-2 size-4" />
               Add exercise
@@ -38,10 +38,10 @@ export default function ExercisesPage() {
         }
       />
 
-      <Surface>
+      <Surface variant="high">
         <ExercisesToolbar />
 
-        <div className="mt-6">
+        <div className="mt-8">
           {isEmpty ? (
             <EmptyState
               title="No exercises yet"
@@ -49,11 +49,17 @@ export default function ExercisesPage() {
               icon={<Plus className="text-muted-foreground" />}
             />
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {exercises.map((ex) => (
-                <Card key={ex.id} className="transition-shadow hover:shadow-md">
+                <Card
+                  key={ex.id}
+                  className={cn(
+                    "transition-shadow hover:shadow-[var(--m3-shadow-hero)]",
+                    "rounded-[var(--m3-radius-xl)] overflow-hidden",
+                  )}
+                >
                   <CardHeader className="pb-2">
-                    <h3 className="m3-title line-clamp-1">{ex.title}</h3>
+                    <h3 className="m3-headline line-clamp-1">{ex.title}</h3>
                     <p className="m3-label text-muted-foreground">
                       {ex.type} · {ex.part}
                     </p>
@@ -62,7 +68,7 @@ export default function ExercisesPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full"
+                      className="w-full rounded-[var(--m3-radius-md)]"
                       asChild
                     >
                       <Link href={`/exercises/${ex.id}`}>View</Link>
