@@ -6,22 +6,22 @@
  */
 
 /* ============================================
-   M3 COLOR TOKENS (light + dark, purple family)
+   M3 COLOR TOKENS (light + dark, peach/pink family)
    ============================================ */
 .ui-m3 {
-  /* Primary - purple family (fixed palette) */
-  --m3-primary: #6750a4;
+  /* Primary - peach/pink family rgb(241 157 164), saturated (no alpha wash) */
+  --m3-primary: #e07d8a;
   --m3-on-primary: #ffffff;
-  --m3-primary-container: #eaddff;
-  --m3-on-primary-container: #21005d;
+  --m3-primary-container: #fcdce0;
+  --m3-on-primary-container: #5c282c;
 
-  /* Surfaces - tonal hierarchy */
+  /* Surfaces - tonal hierarchy (slightly warmed) */
   --m3-surface: #fafafa;
   --m3-on-surface: #1c1b1f;
   --m3-on-surface-variant: #49454f;
-  --m3-surface-container: #f3eff6;
-  --m3-surface-container-high: #ede7f6;
-  --m3-surface-container-highest: #e6e0e9;
+  --m3-surface-container: #f5f0ef;
+  --m3-surface-container-high: #f0e9e7;
+  --m3-surface-container-highest: #ebe3e0;
 
   /* Outline */
   --m3-outline: #79747e;
@@ -65,7 +65,7 @@
   --border: var(--m3-outline-variant);
   --input: var(--m3-outline-variant);
   --ring: var(--m3-primary);
-  --chart-1: #6750a4;
+  --chart-1: var(--m3-primary);
   --chart-2: #7d5260;
   --chart-3: #79747e;
   --chart-4: #49454f;
@@ -487,17 +487,17 @@ body:has(.ui-m3) [data-slot="select-item"][data-highlighted] {
 @media (prefers-color-scheme: dark) {
   .ui-m3 {
     color-scheme: dark;
-    --m3-primary: #d0bcff;
-    --m3-on-primary: #381e72;
-    --m3-primary-container: #4f378b;
-    --m3-on-primary-container: #eaddff;
+    --m3-primary: #f19da4;
+    --m3-on-primary: #5c282c;
+    --m3-primary-container: #8b4a52;
+    --m3-on-primary-container: #fcdce0;
 
     --m3-surface: #1c1b1f;
     --m3-on-surface: #e6e1e5;
     --m3-on-surface-variant: #cac4d0;
-    --m3-surface-container: #211f26;
-    --m3-surface-container-high: #2b2930;
-    --m3-surface-container-highest: #36343b;
+    --m3-surface-container: #221f1e;
+    --m3-surface-container-high: #2c2827;
+    --m3-surface-container-highest: #373230;
 
     --m3-outline: #938f99;
     --m3-outline-variant: #49454f;
@@ -607,17 +607,17 @@ body:has(.ui-m3) [data-slot="select-item"][data-highlighted] {
 /* Dark mode - manual toggle via .ui-m3.dark */
 .ui-m3.dark {
   color-scheme: dark;
-  --m3-primary: #d0bcff;
-  --m3-on-primary: #381e72;
-  --m3-primary-container: #4f378b;
-  --m3-on-primary-container: #eaddff;
+  --m3-primary: #f19da4;
+  --m3-on-primary: #5c282c;
+  --m3-primary-container: #8b4a52;
+  --m3-on-primary-container: #fcdce0;
 
   --m3-surface: #1c1b1f;
   --m3-on-surface: #e6e1e5;
   --m3-on-surface-variant: #cac4d0;
-  --m3-surface-container: #211f26;
-  --m3-surface-container-high: #2b2930;
-  --m3-surface-container-highest: #36343b;
+  --m3-surface-container: #221f1e;
+  --m3-surface-container-high: #2c2827;
+  --m3-surface-container-highest: #373230;
 
   --m3-outline: #938f99;
   --m3-outline-variant: #49454f;
