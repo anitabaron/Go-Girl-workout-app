@@ -20,6 +20,7 @@ import {
   findByNormalizedTitle,
   findExerciseByNormalizedTitle,
   insertExercise,
+  listExerciseTitles,
   listExercises,
   mapToDTO,
   updateExercise,
@@ -84,6 +85,23 @@ export async function createExerciseService(
 
   if (!data) {
     throw new ServiceError("INTERNAL", "Nie udało się utworzyć ćwiczenia.");
+  }
+
+  return data;
+}
+
+export type ExerciseTitleDTO = { id: string; title: string };
+
+export async function listExerciseTitlesService(
+  userId: string,
+  limit = 50,
+): Promise<ExerciseTitleDTO[]> {
+  assertUser(userId);
+  const supabase = await createClient();
+  const { data, error } = await listExerciseTitles(supabase, userId, limit);
+
+  if (error) {
+    throw mapDbError(error);
   }
 
   return data;

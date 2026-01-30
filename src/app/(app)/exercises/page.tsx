@@ -1,6 +1,9 @@
 import { exerciseQuerySchema } from "@/lib/validation/exercises";
 import { requireAuth } from "@/lib/auth";
-import { listExercisesService } from "@/services/exercises";
+import {
+  listExerciseTitlesService,
+  listExercisesService,
+} from "@/services/exercises";
 import type { ExerciseQueryParams } from "@/types";
 import { ExercisesList } from "@/components/exercises/exercises-list";
 import { ExerciseFilters } from "@/components/exercises/exercise-filters";
@@ -46,21 +49,21 @@ export default async function ExercisesPage({
     !parsedQuery.exercise_id &&
     (parsedQuery.limit ?? 50) >= 50;
 
-  let exercises: Awaited<ReturnType<typeof listExercisesService>>["items"] = [];
+  let exercisesForFilters: { id: string; title: string }[] = [];
   let result: Awaited<ReturnType<typeof listExercisesService>>;
 
   if (canReuseForFilters) {
     result = await listExercisesService(userId, parsedQuery);
-    exercises = result.items;
+    exercisesForFilters = result.items.map(({ id, title }) => ({ id, title }));
   } else {
-    const [exercisesResult, listResult] = await Promise.all([
-      listExercisesService(userId, filterParams).catch((error) => {
+    const [filterExercises, listResult] = await Promise.all([
+      listExerciseTitlesService(userId, 50).catch((error) => {
         console.error("Error loading exercises for filters:", error);
-        return { items: [], nextCursor: null };
+        return [] as { id: string; title: string }[];
       }),
       listExercisesService(userId, parsedQuery),
     ]);
-    exercises = exercisesResult.items;
+    exercisesForFilters = filterExercises;
     result = listResult;
   }
 
@@ -83,7 +86,7 @@ export default async function ExercisesPage({
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         <section className="mb-6 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <ExerciseFilters exercises={exercises} />
+            <ExerciseFilters exercises={exercisesForFilters} />
             <ExerciseSort />
           </div>
         </section>

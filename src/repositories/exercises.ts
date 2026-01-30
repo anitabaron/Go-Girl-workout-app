@@ -128,6 +128,27 @@ export async function deleteExercise(
   return { error };
 }
 
+export type ExerciseTitleRow = { id: string; title: string };
+
+export async function listExerciseTitles(
+  client: DbClient,
+  userId: string,
+  limit = 50,
+): Promise<{ data: ExerciseTitleRow[]; error: PostgrestError | null }> {
+  const { data, error } = await client
+    .from("exercises")
+    .select("id,title")
+    .eq("user_id", userId)
+    .order("title", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(limit);
+
+  return {
+    data: data ?? [],
+    error: error ?? null,
+  };
+}
+
 export async function listExercises(
   client: DbClient,
   userId: string,

@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ExerciseDTO, PRMetricType } from "@/types";
+import type { PRMetricType } from "@/types";
 import { prMetricTypeValues } from "@/lib/validation/personal-records";
 
 const metricTypeLabels: Record<PRMetricType, string> = {
@@ -18,8 +18,10 @@ const metricTypeLabels: Record<PRMetricType, string> = {
   max_weight: "Maks. ciężar",
 };
 
+type ExerciseTitle = { id: string; title: string };
+
 type PersonalRecordFiltersProps = {
-  exercises: ExerciseDTO[];
+  exercises: ExerciseTitle[];
 };
 
 export function PersonalRecordFilters({

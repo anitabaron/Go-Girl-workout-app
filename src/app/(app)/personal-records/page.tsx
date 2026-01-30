@@ -1,8 +1,8 @@
 import { personalRecordQuerySchema } from "@/lib/validation/personal-records";
 import { requireAuth } from "@/lib/auth";
 import { listPersonalRecordsService } from "@/services/personal-records";
-import { listExercisesService } from "@/services/exercises";
-import type { PersonalRecordQueryParams, ExerciseQueryParams } from "@/types";
+import { listExerciseTitlesService } from "@/services/exercises";
+import type { PersonalRecordQueryParams } from "@/types";
 import { mapPersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
 import { PersonalRecordsHeader } from "@/components/personal-records/personal-records-header";
 import { PersonalRecordFilters } from "@/components/personal-records/personal-record-filters";
@@ -32,19 +32,12 @@ export default async function PersonalRecordsPage({
   // Pobranie user ID (wymaga autoryzacji)
   const userId = await requireAuth();
 
-  // Pobranie listy ćwiczeń dla filtrów (opcjonalnie, z obsługą błędów)
-  let exercises: Awaited<ReturnType<typeof listExercisesService>>["items"] = [];
+  // Pobranie listy tytułów ćwiczeń dla filtrów (id, title – lżejszy payload)
+  let exercisesForFilters: { id: string; title: string }[] = [];
   try {
-    const exercisesQuery: ExerciseQueryParams = {
-      sort: "title",
-      order: "asc",
-      limit: 50, // Maksymalny limit zgodny z EXERCISE_MAX_LIMIT
-    };
-    const exercisesResult = await listExercisesService(userId, exercisesQuery);
-    exercises = exercisesResult.items;
+    exercisesForFilters = await listExerciseTitlesService(userId, 50);
   } catch (error) {
     console.error("Error loading exercises for filters:", error);
-    // Kontynuujemy bez listy ćwiczeń w filtrze
   }
 
   // Pobranie rekordów osobistych
@@ -77,7 +70,7 @@ export default async function PersonalRecordsPage({
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         <section className="mb-6 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <PersonalRecordFilters exercises={exercises} />
+            <PersonalRecordFilters exercises={exercisesForFilters} />
             <PersonalRecordSort />
           </div>
         </section>
