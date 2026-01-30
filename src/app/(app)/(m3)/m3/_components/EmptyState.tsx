@@ -1,10 +1,14 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type EmptyStateProps = {
   title: string;
   description?: string;
   icon?: React.ReactNode;
   className?: string;
+  actionHref?: string;
+  actionLabel?: string;
 };
 
 /**
@@ -16,6 +20,8 @@ export function EmptyState({
   description,
   icon,
   className,
+  actionHref,
+  actionLabel,
 }: Readonly<EmptyStateProps>) {
   return (
     <div
@@ -33,6 +39,11 @@ export function EmptyState({
           <p className="m3-body text-muted-foreground">{description}</p>
         )}
       </div>
+      {actionHref && actionLabel && (
+        <Button asChild className="m3-cta">
+          <Link href={actionHref}>{actionLabel}</Link>
+        </Button>
+      )}
     </div>
   );
 }

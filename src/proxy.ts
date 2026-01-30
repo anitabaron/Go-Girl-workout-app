@@ -49,13 +49,20 @@ export async function proxy(request: NextRequest) {
       pathname === "/workout-sessions" ||
       pathname.startsWith("/workout-sessions/");
     const isActivePage = /^\/workout-sessions\/[^/]+\/active$/.test(pathname);
+    const isPersonalRecords =
+      pathname === "/personal-records" ||
+      pathname.startsWith("/personal-records/");
+    const isImportInstruction = pathname === "/import-instruction";
+
     const shouldRewrite =
       pathname === "/" ||
       pathname === "/exercises" ||
       pathname.startsWith("/exercises/") ||
       pathname === "/workout-plans" ||
       pathname.startsWith("/workout-plans/") ||
-      (isWorkoutSessions && !isActivePage);
+      (isWorkoutSessions && !isActivePage) ||
+      isPersonalRecords ||
+      isImportInstruction;
 
     if (shouldRewrite) {
       const url = request.nextUrl.clone();

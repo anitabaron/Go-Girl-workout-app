@@ -90,7 +90,7 @@ export function ImportPlanButtonM3() {
           {isImporting ? "Importing..." : "Import JSON"}
         </Button>
         <Link
-          href="/import-instruction"
+          href="/m3/import-instruction"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <Info className="size-4" />

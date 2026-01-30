@@ -203,4 +203,17 @@
 - [x] proxy.ts – rewrite `/workout-sessions`, `/workout-sessions/*` (bez `/active`) → M3
 - [ ] `/m3/workout-sessions/[id]/active` – aktywna sesja (legacy – złożony asystent)
 
+## Personal records (M3) – DONE
+
+- [x] `/m3/personal-records` – lista (real data, filter, sort, load more)
+- [x] `/m3/personal-records/[exercise_id]` – szczegóły (ExerciseInfoM3, PersonalRecordDetailContentM3)
+- [x] proxy.ts – rewrite `/personal-records`, `/personal-records/*` → M3
+- [x] NavigationRail – dodany link Records
+
+## Import instruction (M3) – DONE
+
+- [x] `/m3/import-instruction` – instrukcja importu (Surface, M3 typography)
+- [x] proxy.ts – rewrite `/import-instruction` → M3
+- [x] ImportPlanButtonM3 – link do `/m3/import-instruction`
+
 **Pre-PR (Enforceability)**: Add m3-migration.mdc, grep scripts, Dialog portal rules in m3.css, shadcn purity audit.
