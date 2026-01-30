@@ -5,9 +5,6 @@
  * Aligned with m3.material.io color system.
  */
 
-/* Lenis smooth scroll - required for Lenis to work (html.lenis only when m3 route) */
-@import "lenis/dist/lenis.css";
-
 /* ============================================
    M3 COLOR TOKENS (light + dark, peach/pink family)
    ============================================ */

@@ -4,3 +4,5 @@ export { Toolbar } from "./Toolbar";
 export { EmptyState } from "./EmptyState";
 export { ExercisesToolbar } from "./ExercisesToolbar";
 export { NavigationRail } from "./NavigationRail";
+export { HeroReveal } from "./HeroReveal";
+export { ScrollReveal } from "./ScrollReveal";
