@@ -97,12 +97,7 @@ export function WorkoutPlanForm({
 
       {/* Przyciski akcji */}
       <div className="flex flex-col-reverse gap-4 pt-6 sm:flex-row sm:justify-end">
-        <CancelButton
-          hasUnsavedChanges={hasUnsavedChanges}
-          onCancel={() => {
-            // Przekierowanie obsługiwane przez CancelButton
-          }}
-        />
+        <CancelButton hasUnsavedChanges={hasUnsavedChanges} />
         <SaveButton isLoading={isLoading} disabled={isLoading} />
       </div>
     </form>
