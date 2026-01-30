@@ -18,7 +18,7 @@ export default function ExercisesLoading() {
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
+            <Skeleton key={i} className="m3-skeleton-card h-32" />
           ))}
         </div>
       </Surface>

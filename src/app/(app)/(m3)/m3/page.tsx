@@ -5,7 +5,7 @@ import { Surface } from "./_components";
 export default function M3Page() {
   return (
     <div className="space-y-10 md:space-y-16">
-      {/* Hero section - large rounded surface */}
+      {/* Hero section - tonal primaryContainer, large radius */}
       <Surface variant="hero" className="overflow-hidden">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 md:items-center">
           {/* Left: headline + description + CTA */}
@@ -15,19 +15,20 @@ export default function M3Page() {
               Your personal workout companion. Track exercises, build plans, and
               stay consistent with Material 3–inspired design.
             </p>
-            <div>
+            <div className="flex items-center gap-3">
               <Button asChild className="m3-cta">
                 <Link href="/m3/exercises">Get started</Link>
               </Button>
+              <span className="m3-chip">Material 3</span>
             </div>
           </div>
 
           {/* Right: illustration/media placeholder */}
           <div
-            className="min-h-[200px] md:min-h-[280px] rounded-[var(--m3-radius-hero)] bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center"
+            className="min-h-[200px] md:min-h-[280px] rounded-[var(--m3-radius-hero)] bg-[var(--m3-surface-container)]/80 flex items-center justify-center border border-[var(--m3-outline-variant)]"
             aria-hidden
           >
-            <div className="text-muted-foreground/50 text-sm font-medium">
+            <div className="text-[var(--m3-on-surface-variant)]/60 text-sm font-medium">
               Illustration placeholder
             </div>
           </div>
@@ -53,7 +54,7 @@ export default function M3Page() {
             Create and follow workout plans. Build routines that fit your goals
             and schedule.
           </p>
-          <Button asChild variant="outline" className="mt-6">
+          <Button asChild variant="secondary" className="mt-6">
             <Link href="/m3">Coming soon</Link>
           </Button>
         </Surface>

@@ -12,11 +12,11 @@ import {
 import { Toolbar } from "./Toolbar";
 
 /**
- * Exercises toolbar - search + sort. UI only (no backend wiring yet).
+ * Exercises toolbar - search + sort. M3 surfaceContainerHigh container.
  */
 export function ExercisesToolbar() {
   return (
-    <Toolbar>
+    <Toolbar className="rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-highest)] p-4">
       <div className="relative w-full sm:max-w-xs">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
