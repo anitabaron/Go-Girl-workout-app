@@ -8,6 +8,12 @@ import type {
   ExerciseUpdateCommand,
 } from "@/types";
 import {
+  applyCursorFilter,
+  decodeCursor,
+  encodeCursor,
+  type CursorPayload,
+} from "@/lib/cursor-utils";
+import {
   EXERCISE_DEFAULT_LIMIT,
   EXERCISE_MAX_LIMIT,
   exerciseOrderValues,
@@ -22,13 +28,6 @@ type SortOrder = (typeof exerciseOrderValues)[number];
 
 const exerciseSelectColumns =
   "id,title,type,part,level,details,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds,created_at,updated_at,title_normalized,user_id";
-
-type CursorPayload = {
-  sort: SortField;
-  order: SortOrder;
-  value: string | number;
-  id: string;
-};
 
 export async function findById(client: DbClient, userId: string, id: string) {
   const { data, error } = await client
@@ -169,7 +168,10 @@ export async function listExercises(
   }
 
   if (params.cursor) {
-    const cursor = decodeCursor(params.cursor);
+    const cursor = decodeCursor(params.cursor, {
+      sortFields: exerciseSortFields,
+      orderValues: exerciseOrderValues,
+    });
 
     if (cursor.sort !== sort || cursor.order !== order) {
       return {
@@ -217,33 +219,6 @@ export async function listExercises(
   };
 }
 
-export function encodeCursor(cursor: CursorPayload) {
-  return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
-}
-
-export function decodeCursor(cursor: string): CursorPayload {
-  try {
-    const parsed = JSON.parse(
-      Buffer.from(cursor, "base64url").toString("utf8"),
-    ) as CursorPayload;
-
-    if (
-      !exerciseSortFields.includes(parsed.sort) ||
-      !exerciseOrderValues.includes(parsed.order)
-    ) {
-      throw new Error("Unsupported cursor fields");
-    }
-
-    if (!parsed.id || parsed.value === undefined || parsed.value === null) {
-      throw new Error("Cursor missing fields");
-    }
-
-    return parsed;
-  } catch (error) {
-    throw new Error("INVALID_CURSOR", { cause: error });
-  }
-}
-
 export function mapToDTO(row: ExerciseRow): ExerciseDTO {
   // Destrukturyzacja w celu usunięcia pól wewnętrznych.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -289,20 +264,4 @@ export async function getExerciseRelations(
     sessionsCount: sessionsCount ?? 0,
     hasRelations: (plansCount ?? 0) > 0 || (sessionsCount ?? 0) > 0,
   };
-}
-
-function applyCursorFilter(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  query: any,
-  sort: SortField,
-  order: SortOrder,
-  cursor: CursorPayload,
-) {
-  const direction = order === "asc" ? "gt" : "lt";
-  const encodedValue = encodeURIComponent(String(cursor.value));
-  const encodedId = encodeURIComponent(cursor.id);
-
-  return query.or(
-    `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`,
-  );
 }
