@@ -6,8 +6,8 @@ import type { WorkoutPlanDTO } from "@/types";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Calendar } from "lucide-react";
 import { WorkoutPlanCard } from "./workout-plan-card";
-import { LoadMoreButton } from "./load-more-button";
-import { SkeletonLoader } from "./skeleton-loader";
+import { LoadMoreButton } from "@/components/shared/load-more-button";
+import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 
 type WorkoutPlansListProps = {
   initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & {
@@ -122,7 +122,12 @@ export function WorkoutPlansList({
 
       {hasMore && nextCursor && !isLoadingMore && (
         <div className="flex justify-center pt-4">
-          <LoadMoreButton nextCursor={nextCursor} onLoadMore={handleLoadMore} />
+          <LoadMoreButton
+            nextCursor={nextCursor}
+            onLoadMore={handleLoadMore}
+            ariaLabel="Załaduj więcej planów treningowych"
+            errorMessage="Nie udało się załadować więcej planów. Spróbuj ponownie."
+          />
         </div>
       )}
     </div>

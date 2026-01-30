@@ -1,4 +1,4 @@
-import { SkeletonLoader } from "@/components/exercises/skeleton-loader";
+import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 import { PageHeader } from "@/components/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";

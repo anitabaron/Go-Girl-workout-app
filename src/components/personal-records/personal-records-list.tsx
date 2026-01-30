@@ -7,8 +7,8 @@ import type { PersonalRecordsPageResponse } from "@/lib/personal-records/view-mo
 import { EmptyState } from "@/components/shared/empty-state";
 import { Trophy } from "lucide-react";
 import { PersonalRecordCard } from "./personal-record-card";
-import { LoadMoreButton } from "./load-more-button";
-import { SkeletonLoader } from "./skeleton-loader";
+import { LoadMoreButton } from "@/components/shared/load-more-button";
+import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 import { mapPersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
 
 type PersonalRecordsListProps = {
@@ -106,11 +106,16 @@ export function PersonalRecordsList({
         />
       ))}
 
-      {isLoadingMore && <SkeletonLoader count={2} />}
+      {isLoadingMore && <SkeletonLoader count={2} variant="compact" />}
 
       {nextCursor && !isLoadingMore && (
         <div className="flex justify-center pt-4">
-          <LoadMoreButton nextCursor={nextCursor} onLoadMore={handleLoadMore} />
+          <LoadMoreButton
+            nextCursor={nextCursor}
+            onLoadMore={handleLoadMore}
+            ariaLabel="Załaduj więcej rekordów"
+            errorMessage="Nie udało się załadować więcej rekordów. Spróbuj ponownie."
+          />
         </div>
       )}
     </div>

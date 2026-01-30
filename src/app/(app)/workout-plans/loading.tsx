@@ -1,4 +1,4 @@
-import { SkeletonLoader } from "@/components/workout-plans/skeleton-loader";
+import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 
 export default function WorkoutPlansLoading() {

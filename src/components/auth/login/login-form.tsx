@@ -3,22 +3,21 @@
 import { useLoginForm } from "@/hooks/use-login-form";
 import { LoginFormFields } from "./login-form-fields";
 import { RememberMeCheckbox } from "./remember-me-checkbox";
-import { ValidationErrors } from "./validation-errors";
+import { ValidationErrors } from "@/components/shared/validation-errors";
 import { LoginButton } from "./login-button";
 import { LoginLinks } from "./login-links";
 
 export function LoginForm() {
-  const {
-    fields,
-    errors,
-    isLoading,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-  } = useLoginForm();
+  const { fields, errors, isLoading, handleChange, handleBlur, handleSubmit } =
+    useLoginForm();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-test-id="login-form">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      noValidate
+      data-test-id="login-form"
+    >
       <LoginFormFields
         fields={fields}
         errors={errors}

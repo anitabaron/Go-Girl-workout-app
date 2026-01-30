@@ -96,7 +96,7 @@ export type WorkoutPlanExercisesListProps = {
   onRemoveExercise: (index: number) => void;
   onUpdateExercise: (
     index: number,
-    exercise: Partial<WorkoutPlanExerciseItemState>
+    exercise: Partial<WorkoutPlanExerciseItemState>,
   ) => void;
   onMoveExercise: (index: number, direction: "up" | "down") => void;
   errors: Record<string, string>;
@@ -149,13 +149,6 @@ export type ExerciseSelectorProps = {
 };
 
 /**
- * Props dla ValidationErrors
- */
-export type ValidationErrorsProps = {
-  errors: string[];
-};
-
-/**
  * Props dla SaveButton
  */
 export type SaveButtonProps = {
@@ -174,9 +167,7 @@ export type CancelButtonProps = {
 /**
  * Funkcja pomocnicza do konwersji WorkoutPlanDTO na WorkoutPlanFormState
  */
-export function dtoToFormState(
-  dto?: WorkoutPlanDTO
-): WorkoutPlanFormState {
+export function dtoToFormState(dto?: WorkoutPlanDTO): WorkoutPlanFormState {
   if (!dto) {
     return {
       name: "",
@@ -202,8 +193,12 @@ export function dtoToFormState(
       planned_reps: exercise.planned_reps,
       planned_duration_seconds: exercise.planned_duration_seconds,
       planned_rest_seconds: exercise.planned_rest_seconds,
-      planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? exercise.exercise_rest_after_series_seconds ?? null,
-      estimated_set_time_seconds: exercise.exercise_estimated_set_time_seconds ?? null,
+      planned_rest_after_series_seconds:
+        exercise.planned_rest_after_series_seconds ??
+        exercise.exercise_rest_after_series_seconds ??
+        null,
+      estimated_set_time_seconds:
+        exercise.exercise_estimated_set_time_seconds ?? null,
     })),
   };
 }
@@ -214,7 +209,7 @@ export function dtoToFormState(
  */
 export function exerciseDtoToItemState(
   exerciseDto: WorkoutPlanExerciseDTO,
-  exerciseMetadata?: ExerciseDTO
+  exerciseMetadata?: ExerciseDTO,
 ): WorkoutPlanExerciseItemState {
   return {
     id: exerciseDto.id,
@@ -228,7 +223,9 @@ export function exerciseDtoToItemState(
     planned_reps: exerciseDto.planned_reps,
     planned_duration_seconds: exerciseDto.planned_duration_seconds,
     planned_rest_seconds: exerciseDto.planned_rest_seconds,
-    planned_rest_after_series_seconds: exerciseDto.planned_rest_after_series_seconds ?? null,
-    estimated_set_time_seconds: exerciseMetadata?.estimated_set_time_seconds ?? null,
+    planned_rest_after_series_seconds:
+      exerciseDto.planned_rest_after_series_seconds ?? null,
+    estimated_set_time_seconds:
+      exerciseMetadata?.estimated_set_time_seconds ?? null,
   };
 }

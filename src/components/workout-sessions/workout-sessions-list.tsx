@@ -6,8 +6,8 @@ import type { SessionSummaryDTO } from "@/types";
 import { EmptyState } from "@/components/shared/empty-state";
 import { History } from "lucide-react";
 import { WorkoutSessionCard } from "./workout-session-card";
-import { LoadMoreButton } from "../workout-plans/load-more-button";
-import { SkeletonLoader } from "../workout-plans/skeleton-loader";
+import { LoadMoreButton } from "@/components/shared/load-more-button";
+import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 
 type WorkoutSessionsListProps = {
   initialSessions: SessionSummaryDTO[];
@@ -100,7 +100,12 @@ export function WorkoutSessionsList({
 
       {hasMore && nextCursor && !isLoadingMore && (
         <div className="flex justify-center pt-4">
-          <LoadMoreButton nextCursor={nextCursor} onLoadMore={handleLoadMore} />
+          <LoadMoreButton
+            nextCursor={nextCursor}
+            onLoadMore={handleLoadMore}
+            ariaLabel="Załaduj więcej sesji treningowych"
+            errorMessage="Nie udało się załadować więcej sesji. Spróbuj ponownie."
+          />
         </div>
       )}
     </div>

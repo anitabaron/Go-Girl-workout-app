@@ -4,15 +4,21 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-type LoadMoreButtonProps = {
+export type LoadMoreButtonProps = {
   nextCursor: string;
   onLoadMore: (cursor: string) => Promise<void>;
+  /** Aria-label for accessibility (e.g. "Załaduj więcej planów treningowych") */
+  ariaLabel: string;
+  /** Toast error message on load failure (e.g. "Nie udało się załadować więcej planów. Spróbuj ponownie.") */
+  errorMessage: string;
 };
 
 export function LoadMoreButton({
   nextCursor,
   onLoadMore,
-}: LoadMoreButtonProps) {
+  ariaLabel,
+  errorMessage,
+}: Readonly<LoadMoreButtonProps>) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLoadMore = async () => {
@@ -25,10 +31,8 @@ export function LoadMoreButton({
     try {
       await onLoadMore(nextCursor);
     } catch (error) {
-      console.error("Error loading more records:", error);
-      toast.error(
-        "Nie udało się załadować więcej rekordów. Spróbuj ponownie."
-      );
+      console.error("Error loading more:", error);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -39,7 +43,7 @@ export function LoadMoreButton({
       onClick={handleLoadMore}
       disabled={isLoading}
       variant="outline"
-      aria-label="Załaduj więcej rekordów"
+      aria-label={ariaLabel}
     >
       {isLoading ? "Ładowanie..." : "Załaduj więcej"}
     </Button>

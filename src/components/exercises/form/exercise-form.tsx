@@ -6,7 +6,7 @@ import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
 import { useExerciseForm } from "@/hooks/use-exercise-form";
 import { useBeforeUnload } from "@/hooks/use-before-unload";
 import { ExerciseFormFields } from "./exercise-form-fields";
-import { ValidationErrors } from "./validation-errors";
+import { ValidationErrors } from "@/components/shared/validation-errors";
 import { SaveButton } from "./save-button";
 import { CancelButton } from "./cancel-button";
 import type { ExerciseDTO } from "@/types";
