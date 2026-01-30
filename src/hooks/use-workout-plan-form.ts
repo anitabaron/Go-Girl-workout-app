@@ -29,6 +29,10 @@ type UseWorkoutPlanFormProps = {
   initialData?: Parameters<typeof dtoToFormState>[0];
   mode: "create" | "edit";
   onSuccess?: () => void;
+  /** Redirect when plan not found (default: /workout-plans) */
+  notFoundRedirect?: string;
+  /** Redirect after successful submit when onSuccess not provided (default: /workout-plans) */
+  successRedirect?: string;
 };
 
 function formStateToFormValues(
@@ -100,6 +104,8 @@ export function useWorkoutPlanForm({
   initialData,
   mode,
   onSuccess,
+  notFoundRedirect = "/workout-plans",
+  successRedirect = "/workout-plans",
 }: UseWorkoutPlanFormProps) {
   const router = useRouter();
   const defaultValues = formStateToFormValues(dtoToFormState(initialData));
@@ -131,7 +137,7 @@ export function useWorkoutPlanForm({
       setError,
       fieldMapping: { name: "name", description: "description", part: "part" },
       conflictMessage: "Duplikat pozycji w sekcji planu treningowego.",
-      notFoundRedirect: "/workout-plans",
+      notFoundRedirect,
       authRedirect: "/",
     });
 
@@ -355,11 +361,11 @@ export function useWorkoutPlanForm({
       onSuccess();
     } else {
       try {
-        await (router.push("/workout-plans") as unknown as Promise<void>);
+        await (router.push(successRedirect) as unknown as Promise<void>);
       } catch (error) {
         console.error("Navigation error:", error);
         if (typeof globalThis !== "undefined" && globalThis.location) {
-          globalThis.location.href = "/workout-plans";
+          globalThis.location.href = successRedirect;
         }
       }
     }

@@ -1,0 +1,231 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { memo, useMemo, useState } from "react";
+import { Clock10, Dumbbell, AlertCircle, Pencil, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import type { WorkoutPlanDTO } from "@/types";
+import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import { formatTotalDuration } from "@/lib/utils/time-format";
+import { formatDateTime } from "@/lib/utils/date-format";
+import { toast } from "sonner";
+
+type M3WorkoutPlanCardProps = {
+  readonly plan: Omit<WorkoutPlanDTO, "exercises"> & {
+    exercise_count?: number;
+    exercise_names?: string[];
+    has_missing_exercises?: boolean;
+  };
+  readonly exerciseCount?: number;
+  readonly onDelete?: (planId: string) => Promise<void>;
+};
+
+function M3WorkoutPlanCardComponent({
+  plan,
+  exerciseCount,
+  onDelete,
+}: Readonly<M3WorkoutPlanCardProps>) {
+  const router = useRouter();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const formattedDate = useMemo(
+    () => formatDateTime(plan.created_at),
+    [plan.created_at],
+  );
+  const formattedUpdatedDate = useMemo(
+    () => formatDateTime(plan.updated_at),
+    [plan.updated_at],
+  );
+  const exerciseCountText = useMemo(() => {
+    const count = exerciseCount ?? plan.exercise_count ?? 0;
+    if (count === 0) return "";
+    if (count === 1) return "exercise";
+    return "exercises";
+  }, [exerciseCount, plan.exercise_count]);
+  const finalExerciseCount = exerciseCount ?? plan.exercise_count ?? 0;
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/m3/workout-plans/${plan.id}/edit`);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      if (onDelete) {
+        await onDelete(plan.id);
+      } else {
+        const response = await fetch(`/api/workout-plans/${plan.id}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          if (response.status === 404) {
+            toast.error("Workout plan not found");
+          } else if (response.status === 401 || response.status === 403) {
+            toast.error("Unauthorized. Please log in again.");
+            router.push("/login");
+          } else {
+            toast.error("Failed to delete workout plan");
+          }
+          return;
+        }
+      }
+      toast.success("Workout plan deleted");
+      setIsDeleteDialogOpen(false);
+      router.refresh();
+    } catch (error) {
+      toast.error("An error occurred while deleting the workout plan");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <Card className="group relative h-full overflow-hidden transition-shadow hover:shadow-md">
+        <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleEdit}
+            aria-label={`Edit plan: ${plan.name}`}
+          >
+            <Pencil className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:text-destructive"
+            onClick={handleDeleteClick}
+            aria-label={`Delete plan: ${plan.name}`}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+
+        <Link
+          href={`/m3/workout-plans/${plan.id}`}
+          className="block h-full"
+          aria-label={`View plan details: ${plan.name}`}
+        >
+          <CardHeader>
+            <h3 className="m3-headline line-clamp-2 pr-16">{plan.name}</h3>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {plan.part && (
+                  <Badge
+                    variant="outline"
+                    className="border-primary text-primary"
+                  >
+                    {EXERCISE_PART_LABELS[plan.part]}
+                  </Badge>
+                )}
+                {plan.has_missing_exercises && (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-500 text-amber-600"
+                  >
+                    <AlertCircle className="mr-1 size-3" />
+                    Contains exercises outside library
+                  </Badge>
+                )}
+              </div>
+              {plan.estimated_total_time_seconds != null && (
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Clock10 className="size-4" />
+                  <span>
+                    Duration:{" "}
+                    {formatTotalDuration(plan.estimated_total_time_seconds)}
+                  </span>
+                </div>
+              )}
+              {finalExerciseCount > 0 && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Dumbbell className="size-4" />
+                    <span className="font-medium">
+                      {finalExerciseCount} {exerciseCountText}
+                    </span>
+                  </div>
+                  {plan.exercise_names && plan.exercise_names.length > 0 && (
+                    <div className="ml-6 text-xs text-muted-foreground">
+                      {plan.exercise_names.join(", ")}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  Created: {formattedDate}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Updated: {formattedUpdatedDate}
+                </p>
+              </div>
+              {plan.description && (
+                <p className="line-clamp-2 text-sm text-muted-foreground">
+                  {plan.description}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Link>
+      </Card>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent aria-describedby="delete-plan-description">
+          <DialogHeader>
+            <DialogTitle>Delete workout plan</DialogTitle>
+            <DialogDescription id="delete-plan-description">
+              Are you sure you want to delete &quot;{plan.name}&quot;? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+              aria-label="Cancel deletion"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              aria-label={`Confirm delete: ${plan.name}`}
+              aria-busy={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+export const M3WorkoutPlanCard = memo(M3WorkoutPlanCardComponent);

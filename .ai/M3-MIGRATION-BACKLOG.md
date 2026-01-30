@@ -187,4 +187,12 @@
 | PR2 | Exercise detail | `exercises/[id]/page.tsx`, `ExerciseDetailContent.tsx`               | None                                   |
 | PR3 | Exercise form   | `exercises/new/page.tsx`, `[id]/edit/page.tsx`, `ExerciseFormM3.tsx` | None                                   |
 
+## Workout plans (M3) – DONE
+
+- [x] `/m3/workout-plans` – lista (real data, filter, sort, load more)
+- [x] `/m3/workout-plans/[id]` – szczegóły (WorkoutPlanDetailContent)
+- [x] `/m3/workout-plans/new` – nowy plan (WorkoutPlanFormM3)
+- [x] `/m3/workout-plans/[id]/edit` – edycja (WorkoutPlanFormM3)
+- [x] proxy.ts – rewrite `/workout-plans`, `/workout-plans/*` → M3
+
 **Pre-PR (Enforceability)**: Add m3-migration.mdc, grep scripts, Dialog portal rules in m3.css, shadcn purity audit.

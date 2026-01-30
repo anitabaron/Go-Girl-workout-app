@@ -1,0 +1,65 @@
+import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { requireAuth } from "@/lib/auth";
+import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
+import { Surface } from "../../../_components";
+import { WorkoutPlanFormM3 } from "../../../_components/WorkoutPlanFormM3";
+
+type EditWorkoutPlanPageProps = {
+  params: Promise<{ id: string }>;
+};
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function EditWorkoutPlanPage({
+  params,
+}: EditWorkoutPlanPageProps) {
+  const { id } = await params;
+
+  if (!id || !UUID_REGEX.test(id)) {
+    notFound();
+  }
+
+  let workoutPlan;
+  try {
+    const userId = await requireAuth();
+    workoutPlan = await getWorkoutPlanService(userId, id);
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      if (error.code === "NOT_FOUND") notFound();
+      if (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN") {
+        redirect("/m3/workout-plans");
+      }
+    }
+    redirect("/m3/workout-plans");
+  }
+
+  return (
+    <div className="space-y-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+        <div className="min-w-0 flex-1 space-y-2">
+          <Button variant="ghost" size="sm" asChild className="-ml-2">
+            <Link
+              href={`/m3/workout-plans/${id}`}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="size-4" />
+              Back to plan
+            </Link>
+          </Button>
+          <h1 className="m3-hero-sm">Edit workout plan</h1>
+          <p className="m3-body m3-prose text-muted-foreground">
+            {workoutPlan.name}
+          </p>
+        </div>
+      </header>
+
+      <Surface variant="high">
+        <WorkoutPlanFormM3 mode="edit" initialData={workoutPlan} />
+      </Surface>
+    </div>
+  );
+}

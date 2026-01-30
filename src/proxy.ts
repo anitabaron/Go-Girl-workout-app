@@ -48,7 +48,9 @@ export async function proxy(request: NextRequest) {
     const shouldRewrite =
       pathname === "/" ||
       pathname === "/exercises" ||
-      pathname.startsWith("/exercises/");
+      pathname.startsWith("/exercises/") ||
+      pathname === "/workout-plans" ||
+      pathname.startsWith("/workout-plans/");
 
     if (shouldRewrite) {
       const url = request.nextUrl.clone();

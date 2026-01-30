@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Dumbbell } from "lucide-react";
+import { Home, Dumbbell, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "./DarkModeToggle";
 
 const NAV_ITEMS = [
   { href: "/m3", label: "Home", icon: Home },
   { href: "/m3/exercises", label: "Exercises", icon: Dumbbell },
+  { href: "/m3/workout-plans", label: "Plans", icon: Calendar },
 ] as const;
 
 /**

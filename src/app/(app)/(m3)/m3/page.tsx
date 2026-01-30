@@ -62,8 +62,8 @@ export default function M3Page() {
               Create and follow workout plans. Build routines that fit your
               goals and schedule.
             </p>
-            <Button asChild variant="secondary" className="mt-6">
-              <Link href="/m3">Coming soon</Link>
+            <Button asChild className="mt-6 m3-cta">
+              <Link href="/m3/workout-plans">Go to Plans</Link>
             </Button>
           </Surface>
         </ScrollReveal>
