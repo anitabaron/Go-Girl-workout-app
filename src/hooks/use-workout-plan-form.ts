@@ -22,6 +22,7 @@ import {
   formValuesToUpdateCommand,
   type WorkoutPlanFormValues,
 } from "@/lib/validation/workout-plan-form";
+import { parseApiValidationErrors } from "@/lib/form/parse-api-validation-errors";
 import { useBeforeUnload } from "./use-before-unload";
 
 type UseWorkoutPlanFormProps = {
@@ -309,35 +310,23 @@ export function useWorkoutPlanForm({
     message?: string;
     details?: string;
   }) => {
-    const message = errorData.message ?? "";
-    const details = errorData.details ?? "";
-    const errorMessages = message.split("; ").filter((m) => m.trim());
-    if (details && !errorMessages.some((m) => details.includes(m))) {
-      errorMessages.push(details);
-    }
-
-    const fieldMapping: Record<string, keyof WorkoutPlanFormValues> = {
+    const fieldMapping: Record<string, string> = {
       name: "name",
       description: "description",
       part: "part",
     };
 
-    const formLevelErrors: string[] = [];
-    for (const errorMsg of errorMessages) {
-      let assigned = false;
-      for (const [apiField, formField] of Object.entries(fieldMapping)) {
-        if (errorMsg.toLowerCase().includes(apiField.toLowerCase())) {
-          setError(formField, { message: errorMsg });
-          assigned = true;
-          break;
-        }
-      }
-      if (!assigned) {
-        formLevelErrors.push(errorMsg);
-      }
+    const { fieldErrors, formErrors } = parseApiValidationErrors(
+      errorData.message,
+      errorData.details,
+      fieldMapping,
+    );
+
+    for (const [field, msg] of Object.entries(fieldErrors)) {
+      setError(field as keyof WorkoutPlanFormValues, { message: msg });
     }
-    if (formLevelErrors.length > 0) {
-      setError("root", { message: formLevelErrors.join("; ") });
+    if (formErrors.length > 0) {
+      setError("root", { message: formErrors.join("; ") });
     }
     toast.error("Popraw błędy w formularzu.");
   };

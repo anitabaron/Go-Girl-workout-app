@@ -12,16 +12,12 @@ import {
   formValuesToCommand,
   type ExerciseFormValues,
 } from "@/lib/validation/exercise-form";
+import { parseApiValidationErrors } from "@/lib/form/parse-api-validation-errors";
 
 type UseExerciseFormProps = {
   initialData?: ExerciseDTO;
   mode: "create" | "edit";
   onSuccess?: () => void | Promise<void>;
-};
-
-type ParsedErrors = {
-  fieldErrors: Record<string, string>;
-  formErrors: string[];
 };
 
 function dtoToFormValues(dto?: ExerciseDTO): ExerciseFormValues {
@@ -57,64 +53,19 @@ function dtoToFormValues(dto?: ExerciseDTO): ExerciseFormValues {
   };
 }
 
-function parseValidationErrors(errorData: {
-  message?: string;
-  code?: string;
-  details?: string;
-}): ParsedErrors {
-  const fieldErrors: Record<string, string> = {};
-  const formErrors: string[] = [];
-
-  if (!errorData.message) {
-    return { fieldErrors, formErrors };
-  }
-
-  const message = errorData.message;
-  const errorMessages = message.split("; ").filter((msg) => msg.trim());
-
-  const fieldMapping: Record<string, keyof ExerciseFormValues> = {
-    title: "title",
-    type: "type",
-    part: "part",
-    level: "level",
-    details: "details",
-    reps: "reps",
-    duration_seconds: "duration_seconds",
-    series: "series",
-    rest_in_between_seconds: "rest_in_between_seconds",
-    rest_after_series_seconds: "rest_after_series_seconds",
-    estimated_set_time_seconds: "estimated_set_time_seconds",
-  };
-
-  for (const errorMsg of errorMessages) {
-    let assigned = false;
-
-    for (const [apiField, formField] of Object.entries(fieldMapping)) {
-      const normalizedField = apiField.replaceAll("_", " ").toLowerCase();
-      if (
-        errorMsg.toLowerCase().includes(apiField.toLowerCase()) ||
-        errorMsg.toLowerCase().includes(normalizedField)
-      ) {
-        fieldErrors[formField] = errorMsg;
-        assigned = true;
-        break;
-      }
-    }
-
-    if (!assigned) {
-      formErrors.push(errorMsg);
-    }
-  }
-
-  if (
-    errorData.details &&
-    !errorMessages.some((msg) => errorData.details?.includes(msg))
-  ) {
-    formErrors.push(errorData.details);
-  }
-
-  return { fieldErrors, formErrors };
-}
+const EXERCISE_FIELD_MAPPING: Record<string, string> = {
+  title: "title",
+  type: "type",
+  part: "part",
+  level: "level",
+  details: "details",
+  reps: "reps",
+  duration_seconds: "duration_seconds",
+  series: "series",
+  rest_in_between_seconds: "rest_in_between_seconds",
+  rest_after_series_seconds: "rest_after_series_seconds",
+  estimated_set_time_seconds: "estimated_set_time_seconds",
+};
 
 export function useExerciseForm({
   initialData,
@@ -157,7 +108,11 @@ export function useExerciseForm({
       }));
 
       if (response.status === 400) {
-        const { fieldErrors, formErrors } = parseValidationErrors(errorData);
+        const { fieldErrors, formErrors } = parseApiValidationErrors(
+          errorData.message,
+          errorData.details,
+          EXERCISE_FIELD_MAPPING,
+        );
         setFormErrors(formErrors);
         for (const [field, message] of Object.entries(fieldErrors)) {
           setError(field as keyof ExerciseFormValues, { message });
