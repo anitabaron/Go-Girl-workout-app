@@ -4,6 +4,7 @@ export { Surface } from "./Surface";
 export { Toolbar } from "./Toolbar";
 export { EmptyState } from "./EmptyState";
 export { ExercisesToolbar } from "./ExercisesToolbar";
+export { ExerciseDetailContent } from "./ExerciseDetailContent";
 export { NavigationRail } from "./NavigationRail";
 export { HeroReveal } from "./HeroReveal";
 export { ScrollReveal } from "./ScrollReveal";
