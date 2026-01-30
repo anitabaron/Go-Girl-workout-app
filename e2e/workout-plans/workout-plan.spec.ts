@@ -299,6 +299,7 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
   test("should verify changes are visible in plan details after edit (TC-WP-002 requirement)", async ({
     page,
   }) => {
+    test.setTimeout(90000); // Long flow: login → add exercise → create plan → edit → reloads → polling
     // Step 1: Login
     await authenticateUser(page);
 

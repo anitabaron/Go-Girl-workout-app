@@ -200,6 +200,7 @@ export function ExerciseSelectorM3({
             return (
               <Card
                 key={exercise.id}
+                data-test-id="exercise-selector-card"
                 className={`cursor-pointer transition-all hover:shadow-md ${
                   selected ? "ring-2 ring-primary" : ""
                 }`}

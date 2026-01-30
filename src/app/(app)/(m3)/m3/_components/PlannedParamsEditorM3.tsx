@@ -9,6 +9,8 @@ type PlannedParamsEditorM3Props = {
   onChange: (field: string, value: number | null) => void;
   errors: Record<string, string>;
   disabled: boolean;
+  /** Prefix for data-test-id on each field (e.g. workout-plan-exercise-item-xxx) */
+  "data-test-id-prefix"?: string;
 };
 
 const PLANNED_PARAMS_CONFIG: Array<{
@@ -57,6 +59,7 @@ function PlannedParamField({
   disabled,
   min = 0,
   placeholder = "—",
+  "data-test-id": dataTestId,
 }: {
   id: string;
   label: string;
@@ -66,6 +69,7 @@ function PlannedParamField({
   disabled?: boolean;
   min?: number;
   placeholder?: string;
+  "data-test-id"?: string;
 }) {
   const errorId = useId();
 
@@ -99,6 +103,7 @@ function PlannedParamField({
         className="mt-1"
         aria-invalid={!!error}
         aria-describedby={error ? errorId : undefined}
+        data-test-id={dataTestId}
       />
       {error && (
         <p id={errorId} className="mt-1 text-xs text-destructive" role="alert">
@@ -114,6 +119,7 @@ export function PlannedParamsEditorM3({
   onChange,
   errors,
   disabled,
+  "data-test-id-prefix": testIdPrefix,
 }: Readonly<PlannedParamsEditorM3Props>) {
   const firstRowFields = PLANNED_PARAMS_CONFIG.slice(0, 4);
   const secondRowFields = PLANNED_PARAMS_CONFIG.slice(4);
@@ -123,6 +129,8 @@ export function PlannedParamsEditorM3({
 
     const value = params[config.key];
     const error = errors[config.key];
+    const keyKebab = config.key.replaceAll("_", "-");
+    const dataTestId = testIdPrefix ? `${testIdPrefix}-${keyKebab}` : undefined;
 
     return (
       <PlannedParamField
@@ -134,6 +142,7 @@ export function PlannedParamsEditorM3({
         error={error}
         disabled={disabled}
         min={config.min}
+        data-test-id={dataTestId}
       />
     );
   };

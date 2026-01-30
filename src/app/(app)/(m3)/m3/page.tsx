@@ -115,7 +115,9 @@ export default async function M3Page({
             </h1>
             <div className="hero-cta mt-3 flex items-center gap-3 md:mt-4">
               <Button asChild className="m3-cta">
-                <Link href="/m3/exercises">Get started</Link>
+                <Link href="/m3/exercises" prefetch={false}>
+                  Get started
+                </Link>
               </Button>
             </div>
           </div>
@@ -137,6 +139,7 @@ export default async function M3Page({
                 <Surface variant="high" className="h-full">
                   <Link
                     href={feature.href}
+                    prefetch={false}
                     className="block h-full group"
                     aria-label={`Przejdź do ${feature.title}`}
                   >

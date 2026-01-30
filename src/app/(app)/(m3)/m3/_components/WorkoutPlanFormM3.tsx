@@ -35,7 +35,11 @@ export function WorkoutPlanFormM3({
   });
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      data-test-id="workout-plan-form"
+    >
       {errors._form && errors._form.length > 0 && (
         <div
           className="rounded-lg border border-destructive/50 bg-destructive/10 p-4"
@@ -83,7 +87,10 @@ export function WorkoutPlanFormM3({
           />
         </div>
         {fields.exercises.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
+          <div
+            className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-8 text-center"
+            data-test-id="workout-plan-form-exercises-empty"
+          >
             <p className="text-muted-foreground">
               No exercises in plan. Add your first exercise to get started.
             </p>
@@ -110,6 +117,7 @@ export function WorkoutPlanFormM3({
           disabled={isLoading}
           className="m3-cta"
           aria-busy={isLoading}
+          data-test-id="workout-plan-form-save-button"
         >
           {isLoading ? "Saving..." : "Save"}
         </Button>

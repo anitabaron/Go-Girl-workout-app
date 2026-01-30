@@ -6,9 +6,9 @@ const DESIGN_COOKIE = "design_mode";
 
 function shouldUseM3(req: NextRequest): boolean {
   const cookieValue = req.cookies.get(DESIGN_COOKIE)?.value;
-  if (cookieValue === "m3") return true;
   if (cookieValue === "legacy") return false;
-  return process.env.NEXT_PUBLIC_UI_V2 === "true";
+  // M3 is default; cookie "m3" or no cookie → M3
+  return true;
 }
 
 export async function proxy(request: NextRequest) {

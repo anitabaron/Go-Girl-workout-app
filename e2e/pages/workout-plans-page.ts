@@ -1,8 +1,8 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 /**
  * Page Object Model for Workout Plans List Page
- * 
+ *
  * Encapsulates workout plans list page logic and selectors using data-test-id attributes
  */
 export class WorkoutPlansPage {
@@ -14,17 +14,21 @@ export class WorkoutPlansPage {
   constructor(page: Page) {
     this.page = page;
     this.plansList = page.locator('[data-test-id="workout-plans-list"]');
-    this.emptyState = page.locator('[data-test-id="workout-plans-empty-state"]');
+    this.emptyState = page.locator(
+      '[data-test-id="workout-plans-empty-state"]',
+    );
     // Create plan button can be FAB (mobile) or regular button (desktop)
     // Use .first() to get the visible one (only one is visible at a time)
-    this.createPlanButton = page.locator('[data-test-id="create-workout-plan-button"]').first();
+    this.createPlanButton = page
+      .locator('[data-test-id="create-workout-plan-button"]')
+      .first();
   }
 
   /**
    * Navigate to workout plans page
    */
   async goto() {
-    await this.page.goto('/workout-plans');
+    await this.page.goto("/workout-plans");
   }
 
   /**
@@ -35,14 +39,20 @@ export class WorkoutPlansPage {
   async waitForList(timeout: number = 30000) {
     // Wait for either list or empty state to be visible
     // Use Promise.race to wait for whichever appears first
-    const listPromise = this.plansList.waitFor({ state: 'visible', timeout }).catch(() => null);
-    const emptyStatePromise = this.emptyState.waitFor({ state: 'visible', timeout }).catch(() => null);
-    
+    const listPromise = this.plansList
+      .waitFor({ state: "visible", timeout })
+      .catch(() => null);
+    const emptyStatePromise = this.emptyState
+      .waitFor({ state: "visible", timeout })
+      .catch(() => null);
+
     const result = await Promise.race([listPromise, emptyStatePromise]);
-    
+
     // If neither appeared, throw an error
     if (result === null) {
-      throw new Error(`Neither plans list nor empty state appeared within ${timeout}ms timeout`);
+      throw new Error(
+        `Neither plans list nor empty state appeared within ${timeout}ms timeout`,
+      );
     }
   }
 
@@ -50,7 +60,7 @@ export class WorkoutPlansPage {
    * Wait for empty state to be visible
    */
   async waitForEmptyState() {
-    await this.emptyState.waitFor({ state: 'visible' });
+    await this.emptyState.waitFor({ state: "visible" });
   }
 
   /**
@@ -94,58 +104,48 @@ export class WorkoutPlansPage {
    * Handles both FAB (mobile) and regular button (desktop) variants
    */
   async clickCreatePlan() {
-    // Find all links to /workout-plans/new and find the visible one
-    const allLinks = this.page.locator('a[href="/workout-plans/new"]');
+    // Primary: data-test-id (works for both M3 and legacy)
+    const createButton = this.page.locator(
+      '[data-test-id="create-workout-plan-button"]',
+    );
+    if (await createButton.isVisible().catch(() => false)) {
+      await createButton.click();
+      await this.page.waitForURL("**/workout-plans/new", { timeout: 10000 });
+      return;
+    }
+
+    // Fallback: href (legacy uses /workout-plans/new, M3 uses /m3/workout-plans/new)
+    const allLinks = this.page.locator(
+      'a[href="/workout-plans/new"], a[href="/m3/workout-plans/new"]',
+    );
     const count = await allLinks.count();
-    
-    // Find the visible link
-    let visibleLink: Locator | null = null;
     for (let i = 0; i < count; i++) {
       const link = allLinks.nth(i);
-      try {
-        const isVisible = await link.isVisible();
-        if (isVisible) {
-          visibleLink = link;
-          break;
-        }
-      } catch {
-        // Continue to next link
-        continue;
+      if (await link.isVisible().catch(() => false)) {
+        await link.click();
+        await this.page.waitForURL("**/workout-plans/new", { timeout: 10000 });
+        return;
       }
     }
-    
-    // Fallback: use getByRole if no visible link found by href
-    if (!visibleLink) {
-      // Try to find by role and text (desktop button has text "Utwórz plan")
-      const linkByRole = this.page.getByRole('link', { name: /utwórz plan/i });
-      const isRoleLinkVisible = await linkByRole.isVisible().catch(() => false);
-      if (isRoleLinkVisible) {
-        visibleLink = linkByRole.first();
-      } else {
-        // Last resort: find by aria-label (FAB has aria-label="Utwórz nowy plan treningowy")
-        visibleLink = this.page.getByRole('link', { name: /utwórz nowy plan treningowy/i }).first();
-      }
+
+    // Last resort: role + text (legacy: "Utwórz plan", M3: "Create plan")
+    const linkByRole = this.page.getByRole("link", {
+      name: /utwórz plan|create plan/i,
+    });
+    if (await linkByRole.isVisible().catch(() => false)) {
+      await linkByRole.first().click();
+      await this.page.waitForURL("**/workout-plans/new", { timeout: 10000 });
+      return;
     }
-    
-    if (!visibleLink) {
-      throw new Error('Could not find visible "Create Plan" button');
-    }
-    
-    // Wait for link to be visible and clickable
-    await visibleLink.waitFor({ state: 'visible', timeout: 10000 });
-    
-    // Click the link
-    await visibleLink.click();
-    
-    // Wait for navigation to complete
-    await this.page.waitForURL('**/workout-plans/new', { timeout: 10000 });
+
+    throw new Error('Could not find visible "Create Plan" button');
   }
 
   /**
    * Wait for navigation to create plan page
    */
   async waitForCreatePlanNavigation() {
-    await this.page.waitForURL('**/workout-plans/new');
+    await this.page.waitForURL("**/workout-plans/new");
   }
 
   /**
@@ -154,17 +154,19 @@ export class WorkoutPlansPage {
   async hasPlanWithName(name: string): Promise<boolean> {
     const cards = this.getAllPlanCards();
     const count = await cards.count();
-    
+
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
       // Wait for card to be visible before getting text content
-      await card.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+      await card
+        .waitFor({ state: "visible", timeout: 10000 })
+        .catch(() => null);
       const cardText = await card.textContent({ timeout: 10000 });
       if (cardText?.includes(name)) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -174,17 +176,19 @@ export class WorkoutPlansPage {
   async getPlanCardByName(name: string): Promise<Locator | null> {
     const cards = this.getAllPlanCards();
     const count = await cards.count();
-    
+
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
       // Wait for card to be visible before getting text content
-      await card.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+      await card
+        .waitFor({ state: "visible", timeout: 10000 })
+        .catch(() => null);
       const cardText = await card.textContent({ timeout: 10000 });
       if (cardText?.includes(name)) {
         return card;
       }
     }
-    
+
     return null;
   }
 
@@ -197,12 +201,12 @@ export class WorkoutPlansPage {
     if (!card) {
       return null;
     }
-    
-    const testId = await card.getAttribute('data-test-id');
+
+    const testId = await card.getAttribute("data-test-id");
     if (!testId) {
       return null;
     }
-    
+
     // Extract ID from "workout-plan-card-{id}"
     const match = testId.match(/^workout-plan-card-(.+)$/);
     return match ? match[1] : null;
@@ -217,11 +221,21 @@ export class WorkoutPlansPage {
     // First check if we're on a details page (URL contains /workout-plans/{id})
     const currentUrl = this.page.url();
     const isDetailsPage = /\/workout-plans\/[^/]+$/.test(currentUrl);
-    
+    const escapedName = planName.replaceAll(
+      /[.*+?^${}()|[\]\\]/g,
+      String.raw`\$&`,
+    );
+    const editLabelPattern = new RegExp(
+      `(?:Edytuj plan|Edit plan): ${escapedName}`,
+    );
+
     if (isDetailsPage) {
       // On details page, use the edit button directly
-      const editButton = this.page.getByRole('button', { name: `Edytuj plan: ${planName}` });
-      await editButton.waitFor({ state: 'visible', timeout: 5000 });
+      // M3 uses "Edit plan:", legacy uses "Edytuj plan:"
+      const editButton = this.page.getByRole("button", {
+        name: editLabelPattern,
+      });
+      await editButton.waitFor({ state: "visible", timeout: 5000 });
       await editButton.click();
     } else {
       // On list page, find the card and click edit button
@@ -229,21 +243,23 @@ export class WorkoutPlansPage {
       if (!card) {
         throw new Error(`Plan with name "${planName}" not found`);
       }
-      
-      // Hover over the card first to make action buttons visible
+
+      // M3 cards hide action buttons until hover - scroll into view, then hover
+      await card.scrollIntoViewIfNeeded();
       await card.hover();
-      await this.page.waitForTimeout(300); // Small delay for hover effect
-      
-      // The edit button is inside the card, in the CardActionButtons component
-      // It has an aria-label: "Edytuj plan: {planName}"
-      const editButton = card.getByRole('button', { name: `Edytuj plan: ${planName}` });
-      
+      await this.page.waitForTimeout(500); // Wait for CSS transition (opacity 0→1)
+
+      // The edit button is inside the card
+      const editButton = card.getByRole("button", {
+        name: editLabelPattern,
+      });
+
       // Wait for button to be visible and clickable
-      await editButton.waitFor({ state: 'visible', timeout: 5000 });
+      await editButton.waitFor({ state: "visible", timeout: 5000 });
       await editButton.click();
     }
-    
+
     // Wait for navigation to edit page
-    await this.page.waitForURL('**/workout-plans/*/edit', { timeout: 10000 });
+    await this.page.waitForURL("**/workout-plans/*/edit", { timeout: 10000 });
   }
 }

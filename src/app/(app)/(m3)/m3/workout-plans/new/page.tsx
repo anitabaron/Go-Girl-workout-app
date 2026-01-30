@@ -9,7 +9,7 @@ export default async function NewWorkoutPlanPage() {
   await requireAuth();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-test-id="workout-plan-create-page">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div className="min-w-0 flex-1 space-y-2">
           <Button variant="ghost" size="sm" asChild className="-ml-2">

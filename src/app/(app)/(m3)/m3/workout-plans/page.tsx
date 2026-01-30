@@ -43,7 +43,11 @@ export default async function WorkoutPlansPage({
           <div className="flex flex-col gap-3 items-end">
             <div className="flex flex-wrap items-center justify-end gap-3">
               <span className="m3-chip">{plans.length} plans</span>
-              <Button asChild className="m3-cta">
+              <Button
+                asChild
+                className="m3-cta"
+                data-test-id="create-workout-plan-button"
+              >
                 <Link href="/m3/workout-plans/new">
                   <Plus className="mr-2 size-4" />
                   Create plan

@@ -85,7 +85,10 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
 
   return (
     <>
-      <Card className="group relative h-full overflow-hidden transition-shadow hover:shadow-md">
+      <Card
+        className="group relative h-full overflow-hidden transition-shadow hover:shadow-md"
+        data-test-id={`exercise-card-${exercise.id}`}
+      >
         <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           <Button
             variant="ghost"

@@ -71,16 +71,18 @@ export function WorkoutPlansListM3({
 
   if (plans.length === 0) {
     return (
-      <EmptyState
-        icon={<Calendar className="size-12 text-muted-foreground" />}
-        title="No workout plans yet"
-        description="Create your first plan to get started."
-      />
+      <div data-test-id="workout-plans-empty-state">
+        <EmptyState
+          icon={<Calendar className="size-12 text-muted-foreground" />}
+          title="No workout plans yet"
+          description="Create your first plan to get started."
+        />
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-test-id="workout-plans-list">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {plans.map((plan) => (
           <M3WorkoutPlanCard

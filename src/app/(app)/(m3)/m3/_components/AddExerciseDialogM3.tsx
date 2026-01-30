@@ -90,12 +90,16 @@ export function AddExerciseDialogM3({
           type="button"
           disabled={disabled}
           className="m3-cta gap-2"
+          data-test-id="workout-plan-form-add-exercise-button"
         >
           <Plus className="size-4" />
           Add exercise
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-[400px] md:max-w-[600px] lg:max-w-[1000px]">
+      <DialogContent
+        className="max-w-[400px] md:max-w-[600px] lg:max-w-[1000px]"
+        data-test-id="workout-plan-form-add-exercise-dialog"
+      >
         <DialogHeader>
           <DialogTitle>Select exercises</DialogTitle>
           <DialogDescription>
@@ -116,6 +120,7 @@ export function AddExerciseDialogM3({
             type="button"
             variant="outline"
             onClick={() => setOpen(false)}
+            data-test-id="workout-plan-form-add-exercise-dialog-cancel"
           >
             Cancel
           </Button>
@@ -123,6 +128,7 @@ export function AddExerciseDialogM3({
             type="button"
             onClick={handleAdd}
             disabled={selectedExercises.length === 0}
+            data-test-id="workout-plan-form-add-exercise-dialog-confirm"
           >
             {countLabel}
           </Button>

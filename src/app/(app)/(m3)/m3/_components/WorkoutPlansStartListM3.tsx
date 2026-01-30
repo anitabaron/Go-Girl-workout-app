@@ -50,7 +50,7 @@ export function WorkoutPlansStartListM3({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-test-id="workout-session-start-plans-list">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {plans.map((plan) => (
           <WorkoutPlanStartCardM3
