@@ -39,7 +39,12 @@ export function CancelButtonM3({
 
   return (
     <>
-      <Button type="button" variant="outline" onClick={handleClick}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleClick}
+        data-test-id="workout-plan-form-cancel-button"
+      >
         Cancel
       </Button>
       <AlertDialog open={showDialog} onOpenChange={setShowDialog}>

@@ -93,7 +93,10 @@ export function WorkoutPlanStartCardM3({
   };
 
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card
+      className="transition-shadow hover:shadow-md"
+      data-test-id={`workout-plan-start-card-${plan.id}`}
+    >
       <CardHeader>
         <CardTitle>{plan.name}</CardTitle>
         {plan.description && (

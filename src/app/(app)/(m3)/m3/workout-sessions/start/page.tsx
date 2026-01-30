@@ -116,7 +116,11 @@ export default async function StartWorkoutSessionPage() {
             description="Create your first workout plan to start training"
           />
           <div className="mt-6">
-            <Button asChild className="m3-cta">
+            <Button
+              asChild
+              className="m3-cta"
+              data-test-id="create-workout-plan-button"
+            >
               <Link href="/m3/workout-plans/new">
                 <Plus className="mr-2 size-4" />
                 Create plan

@@ -17,8 +17,9 @@ export class WorkoutSessionStartPage {
       '[data-test-id="workout-session-start-plans-list"]',
     );
     this.emptyState = page.locator("text=Brak planów treningowych");
+    // Legacy: "Anuluj sesję", M3: "Cancel"
     this.activeSessionCancelButton = page.getByRole("button", {
-      name: "Anuluj sesję",
+      name: /Anuluj sesję|Cancel/,
     });
   }
 
@@ -37,7 +38,10 @@ export class WorkoutSessionStartPage {
     if (!visible) return false;
 
     await this.activeSessionCancelButton.click();
-    const confirmBtn = this.page.getByRole("button", { name: "Potwierdź" });
+    // Legacy: "Potwierdź", M3: "Confirm"
+    const confirmBtn = this.page.getByRole("button", {
+      name: /Potwierdź|Confirm/,
+    });
     await confirmBtn.waitFor({ state: "visible", timeout });
     await confirmBtn.click();
     await this.page.waitForLoadState("networkidle", { timeout: 15000 });
@@ -65,9 +69,16 @@ export class WorkoutSessionStartPage {
     return false;
   }
 
+  /**
+   * Clicks Start button for the given plan.
+   * Works with both Legacy (Polish) and M3 (English) UI.
+   */
   async clickStartPlan(planName: string) {
-    const startButton = this.page.getByRole("button", {
-      name: `Rozpocznij trening z planem ${planName}`,
+    const card = this.page
+      .locator('[data-test-id^="workout-plan-start-card-"]')
+      .filter({ hasText: planName });
+    const startButton = card.getByRole("button", {
+      name: /Start|Rozpocznij/,
     });
     await startButton.waitFor({ state: "visible", timeout: 10000 });
     await startButton.click();

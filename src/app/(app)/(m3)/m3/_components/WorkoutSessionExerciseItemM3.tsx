@@ -74,7 +74,7 @@ export function WorkoutSessionExerciseItemM3({
     !showReps;
 
   return (
-    <Card>
+    <Card data-test-id="workout-session-exercise-item">
       <CardHeader>
         <div className="mb-3 flex items-start justify-between">
           <h3 className="m3-title">{title}</h3>

@@ -36,6 +36,7 @@ export function WorkoutPlanMetadataFieldsM3({
         </label>
         <Input
           id={nameId}
+          data-test-id="workout-plan-form-name"
           value={fields.name}
           onChange={(e) => onChange("name", e.target.value)}
           onBlur={() => onBlur("name")}
@@ -60,6 +61,7 @@ export function WorkoutPlanMetadataFieldsM3({
         </label>
         <Textarea
           id={descriptionId}
+          data-test-id="workout-plan-form-description"
           value={fields.description ?? ""}
           onChange={(e) => onChange("description", e.target.value || null)}
           onBlur={() => onBlur("description")}
@@ -89,7 +91,11 @@ export function WorkoutPlanMetadataFieldsM3({
           }
           disabled={disabled}
         >
-          <SelectTrigger id={partId} className="mt-2">
+          <SelectTrigger
+            id={partId}
+            className="mt-2"
+            data-test-id="workout-plan-form-part"
+          >
             <SelectValue placeholder="Select body part" />
           </SelectTrigger>
           <SelectContent>

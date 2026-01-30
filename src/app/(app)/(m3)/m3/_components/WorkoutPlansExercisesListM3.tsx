@@ -47,7 +47,7 @@ export function WorkoutPlansExercisesListM3({
   if (exercises.length === 0) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-test-id="workout-plan-form-exercises-list">
       {sortedExercises.map(({ exercise, originalIndex }) => {
         const stableKey = exercise.id
           ? `exercise-${exercise.id}`

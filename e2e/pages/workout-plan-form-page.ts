@@ -58,9 +58,19 @@ export class WorkoutPlanFormPage {
 
   /**
    * Wait for form to be visible
+   * Ensures navigation completed and client component hydrated
    */
-  async waitForForm() {
-    await this.form.waitFor({ state: "visible" });
+  async waitForForm(timeout = 15000) {
+    // Ensure we're on the create/edit plan page
+    await this.page.waitForURL(/\/workout-plans\/(new|[^/]+\/edit)/, {
+      timeout,
+    });
+    await this.page.waitForLoadState("domcontentloaded");
+    // Form or name input (both indicate form is ready)
+    await Promise.race([
+      this.form.waitFor({ state: "visible", timeout }),
+      this.nameInput.waitFor({ state: "visible", timeout }),
+    ]);
   }
 
   /**

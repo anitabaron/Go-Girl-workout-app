@@ -1,8 +1,8 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 /**
  * Page Object Model for Exercises List Page
- * 
+ *
  * Encapsulates exercises list page logic and selectors using data-test-id attributes
  */
 export class ExercisesPage {
@@ -19,28 +19,30 @@ export class ExercisesPage {
     this.noResults = page.locator('[data-test-id="exercises-no-results"]');
     // Add exercise button can be FAB (mobile) or regular button (desktop)
     // Use .first() to get the visible one (only one is visible at a time)
-    this.addExerciseButton = page.locator('[data-test-id="add-exercise-button"]').first();
+    this.addExerciseButton = page
+      .locator('[data-test-id="add-exercise-button"]')
+      .first();
   }
 
   /**
    * Navigate to exercises page
    */
   async goto() {
-    await this.page.goto('/exercises');
+    await this.page.goto("/exercises");
   }
 
   /**
    * Wait for exercises list to be visible
    */
   async waitForList(timeout: number = 30000) {
-    await this.exercisesList.waitFor({ state: 'visible', timeout });
+    await this.exercisesList.waitFor({ state: "visible", timeout });
   }
 
   /**
    * Wait for empty state to be visible
    */
   async waitForEmptyState() {
-    await this.emptyState.waitFor({ state: 'visible' });
+    await this.emptyState.waitFor({ state: "visible" });
   }
 
   /**
@@ -84,60 +86,46 @@ export class ExercisesPage {
    * Handles both FAB (mobile) and regular button (desktop) variants
    */
   async clickAddExercise() {
-    // Find all links to /exercises/new and find the visible one
-    // On desktop: button in div with "hidden md:block" (visible on desktop)
-    // On mobile: FAB with "md:hidden" (visible on mobile)
-    const allLinks = this.page.locator('a[href="/exercises/new"]');
+    // Primary: data-test-id (works for both M3 and legacy)
+    const addButton = this.page.locator('[data-test-id="add-exercise-button"]');
+    if (await addButton.isVisible().catch(() => false)) {
+      await addButton.click();
+      await this.page.waitForURL("**/exercises/new", { timeout: 10000 });
+      return;
+    }
+
+    // Fallback: href (legacy uses /exercises/new, M3 uses /m3/exercises/new)
+    const allLinks = this.page.locator(
+      'a[href="/exercises/new"], a[href="/m3/exercises/new"]',
+    );
     const count = await allLinks.count();
-    
-    // Find the visible link
-    let visibleLink: Locator | null = null;
     for (let i = 0; i < count; i++) {
       const link = allLinks.nth(i);
-      try {
-        const isVisible = await link.isVisible();
-        if (isVisible) {
-          visibleLink = link;
-          break;
-        }
-      } catch {
-        // Continue to next link
-        continue;
+      if (await link.isVisible().catch(() => false)) {
+        await link.click();
+        await this.page.waitForURL("**/exercises/new", { timeout: 10000 });
+        return;
       }
     }
-    
-    // Fallback: use getByRole if no visible link found by href
-    if (!visibleLink) {
-      // Try to find by role and text (desktop button has text "Dodaj ćwiczenie")
-      const linkByRole = this.page.getByRole('link', { name: /dodaj/i });
-      const isRoleLinkVisible = await linkByRole.isVisible().catch(() => false);
-      if (isRoleLinkVisible) {
-        visibleLink = linkByRole.first();
-      } else {
-        // Last resort: find by aria-label (FAB has aria-label="Dodaj nowe ćwiczenie")
-        visibleLink = this.page.getByRole('link', { name: /dodaj nowe ćwiczenie/i }).first();
-      }
+
+    // Last resort: role + text (legacy: "Dodaj ćwiczenie", M3: "Add exercise")
+    const linkByRole = this.page.getByRole("link", {
+      name: /dodaj|add exercise/i,
+    });
+    if (await linkByRole.isVisible().catch(() => false)) {
+      await linkByRole.first().click();
+      await this.page.waitForURL("**/exercises/new", { timeout: 10000 });
+      return;
     }
-    
-    if (!visibleLink) {
-      throw new Error('Could not find visible "Add Exercise" button');
-    }
-    
-    // Wait for link to be visible and clickable
-    await visibleLink.waitFor({ state: 'visible', timeout: 10000 });
-    
-    // Click the link
-    await visibleLink.click();
-    
-    // Wait for navigation to complete
-    await this.page.waitForURL('**/exercises/new', { timeout: 10000 });
+
+    throw new Error('Could not find visible "Add Exercise" button');
   }
 
   /**
    * Wait for navigation to add exercise page
    */
   async waitForAddExerciseNavigation() {
-    await this.page.waitForURL('**/exercises/new');
+    await this.page.waitForURL("**/exercises/new");
   }
 
   /**
@@ -146,7 +134,7 @@ export class ExercisesPage {
   async hasExerciseWithTitle(title: string): Promise<boolean> {
     const cards = this.getAllExerciseCards();
     const count = await cards.count();
-    
+
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
       const cardText = await card.textContent();
@@ -154,7 +142,7 @@ export class ExercisesPage {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -164,7 +152,7 @@ export class ExercisesPage {
   async getExerciseCardByTitle(title: string): Promise<Locator | null> {
     const cards = this.getAllExerciseCards();
     const count = await cards.count();
-    
+
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
       const cardText = await card.textContent();
@@ -172,7 +160,7 @@ export class ExercisesPage {
         return card;
       }
     }
-    
+
     return null;
   }
 
@@ -185,12 +173,12 @@ export class ExercisesPage {
     if (!card) {
       return null;
     }
-    
-    const testId = await card.getAttribute('data-test-id');
+
+    const testId = await card.getAttribute("data-test-id");
     if (!testId) {
       return null;
     }
-    
+
     // Extract ID from "exercise-card-{id}"
     const match = testId.match(/^exercise-card-(.+)$/);
     return match ? match[1] : null;
@@ -205,38 +193,42 @@ export class ExercisesPage {
     if (!card) {
       throw new Error(`Exercise with title "${title}" not found`);
     }
-    
+
     // Hover over the card to make action buttons visible
     await card.hover();
-    
+
     // Wait a bit for the hover state to apply
     await this.page.waitForTimeout(100);
-    
-    // Find the edit button by aria-label (format: "Edytuj ćwiczenie: {title}")
-    // Get all buttons and filter by aria-label containing the title
-    const allButtons = this.page.getByRole('button');
+
+    // Find the edit button by aria-label
+    // Legacy: "Edytuj ćwiczenie: {title}", M3: "Edit exercise: {title}"
+    const allButtons = this.page.getByRole("button");
     const count = await allButtons.count();
-    
+
     let editButton: Locator | null = null;
     for (let i = 0; i < count; i++) {
       const button = allButtons.nth(i);
-      const ariaLabel = await button.getAttribute('aria-label');
-      if (ariaLabel?.includes('Edytuj ćwiczenie:') && ariaLabel.includes(title)) {
+      const ariaLabel = await button.getAttribute("aria-label");
+      const isEditButton =
+        ariaLabel?.includes(title) &&
+        (ariaLabel.includes("Edytuj ćwiczenie:") ||
+          ariaLabel.includes("Edit exercise:"));
+      if (isEditButton) {
         editButton = button;
         break;
       }
     }
-    
+
     if (!editButton) {
       throw new Error(`Edit button for exercise "${title}" not found`);
     }
-    
+
     // Wait for button to be visible (it should be visible after hover)
-    await editButton.waitFor({ state: 'visible', timeout: 5000 });
-    
+    await editButton.waitFor({ state: "visible", timeout: 5000 });
+
     // Click the edit button
     await editButton.click();
-    
+
     // Wait for navigation to edit page
     await this.page.waitForURL(/\/exercises\/[^/]+\/edit/, { timeout: 10000 });
   }

@@ -76,8 +76,13 @@ export function WorkoutPlanExerciseItemM3({
     if (err) plannedParamsErrors[key] = err;
   }
 
+  const exerciseTestId =
+    exercise.id != null
+      ? `workout-plan-exercise-item-${exercise.id}`
+      : `workout-plan-exercise-item-${exercise.exercise_id ?? "new"}-${index}`;
+
   return (
-    <Card>
+    <Card data-test-id={exerciseTestId}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -105,6 +110,7 @@ export function WorkoutPlanExerciseItemM3({
             disabled={disabled}
             className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
             aria-label="Remove exercise from plan"
+            data-test-id={`${exerciseTestId}-remove-button`}
           >
             <Trash2 className="size-4" />
           </Button>
@@ -204,6 +210,7 @@ export function WorkoutPlanExerciseItemM3({
             onChange={(field, value) => onChange({ [field]: value })}
             errors={plannedParamsErrors}
             disabled={disabled}
+            data-test-id-prefix={exerciseTestId}
           />
         </div>
       </CardContent>

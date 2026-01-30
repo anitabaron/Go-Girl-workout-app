@@ -41,6 +41,7 @@ const MobileNavContent = ({ pathname }: { pathname: string }) => (
           <Link
             key={href}
             href={href}
+            prefetch={false}
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
@@ -77,6 +78,7 @@ export function NavigationRail() {
               <Link
                 key={href}
                 href={href}
+                prefetch={false}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 w-full min-w-[56px] h-14 rounded-[var(--m3-radius-lg)] transition-colors",

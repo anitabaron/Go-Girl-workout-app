@@ -61,7 +61,7 @@ export function WorkoutSessionDetailContent({
 
   return (
     <div className="space-y-8">
-      <Card>
+      <Card data-test-id="workout-session-details-metadata">
         <CardHeader>
           <div className="flex items-center justify-between">
             <h2 className="m3-title">Session info</h2>
@@ -73,7 +73,12 @@ export function WorkoutSessionDetailContent({
                 In progress
               </Badge>
             ) : (
-              <Badge variant="secondary">Completed</Badge>
+              <Badge
+                variant="secondary"
+                data-test-id="workout-session-status-completed"
+              >
+                Completed
+              </Badge>
             )}
           </div>
         </CardHeader>
@@ -83,7 +88,12 @@ export function WorkoutSessionDetailContent({
               <p className="text-sm font-medium text-muted-foreground">
                 Workout plan
               </p>
-              <p className="mt-1 font-semibold">{planName}</p>
+              <p
+                className="mt-1 font-semibold"
+                data-test-id="workout-session-details-plan-name"
+              >
+                {planName}
+              </p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
@@ -139,7 +149,7 @@ export function WorkoutSessionDetailContent({
         </CardContent>
       </Card>
 
-      <div>
+      <div data-test-id="workout-session-details-exercises-list">
         <h2 className="m3-headline mb-6">Exercises in session</h2>
         <WorkoutSessionExercisesListM3
           exercises={session.exercises}
