@@ -1,7 +1,7 @@
-import { SkeletonLoader } from "@/components/shared/skeleton-loader";
 import { PageHeaderSection } from "@/components/layout/page-header-section";
 import { PageHeader } from "@/components/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonCardGrid } from "@/components/shared/skeleton-card-grid";
 
 export default function ExercisesLoading() {
   return (
@@ -26,7 +26,7 @@ export default function ExercisesLoading() {
         </section>
 
         <section className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
-          <SkeletonLoader count={6} />
+          <SkeletonCardGrid count={6} />
         </section>
       </main>
     </div>

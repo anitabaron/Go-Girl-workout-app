@@ -30,21 +30,39 @@ export default async function ExercisesPage({
   // Pobranie user ID (wymaga autoryzacji)
   const userId = await requireAuth();
 
-  // Pobranie listy ćwiczeń dla filtrów (select)
-  let exercises: Awaited<ReturnType<typeof listExercisesService>>["items"] = [];
-  try {
-    const exercisesResult = await listExercisesService(userId, {
-      sort: "title",
-      order: "asc",
-      limit: 50,
-    });
-    exercises = exercisesResult.items;
-  } catch (error) {
-    console.error("Error loading exercises for filters:", error);
-  }
+  const filterParams = {
+    sort: "title" as const,
+    order: "asc" as const,
+    limit: 50,
+  };
 
-  // Wywołanie service do pobrania danych
-  const result = await listExercisesService(userId, parsedQuery);
+  const canReuseForFilters =
+    parsedQuery.sort === "title" &&
+    parsedQuery.order === "asc" &&
+    !parsedQuery.cursor &&
+    !parsedQuery.search &&
+    !parsedQuery.part &&
+    !parsedQuery.type &&
+    !parsedQuery.exercise_id &&
+    (parsedQuery.limit ?? 50) >= 50;
+
+  let exercises: Awaited<ReturnType<typeof listExercisesService>>["items"] = [];
+  let result: Awaited<ReturnType<typeof listExercisesService>>;
+
+  if (canReuseForFilters) {
+    result = await listExercisesService(userId, parsedQuery);
+    exercises = result.items;
+  } else {
+    const [exercisesResult, listResult] = await Promise.all([
+      listExercisesService(userId, filterParams).catch((error) => {
+        console.error("Error loading exercises for filters:", error);
+        return { items: [], nextCursor: null };
+      }),
+      listExercisesService(userId, parsedQuery),
+    ]);
+    exercises = exercisesResult.items;
+    result = listResult;
+  }
 
   // Sprawdź czy są aktywne filtry/wyszukiwanie
   const hasActiveFilters =
