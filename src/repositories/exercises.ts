@@ -45,7 +45,7 @@ export async function findByNormalizedTitle(
   client: DbClient,
   userId: string,
   titleNormalized: string,
-  excludeId?: string
+  excludeId?: string,
 ) {
   let query = client
     .from("exercises")
@@ -65,7 +65,7 @@ export async function findByNormalizedTitle(
 export async function findExerciseByNormalizedTitle(
   client: DbClient,
   userId: string,
-  titleNormalized: string
+  titleNormalized: string,
 ) {
   const { data, error } = await client
     .from("exercises")
@@ -81,7 +81,7 @@ export async function findExerciseByNormalizedTitle(
 export async function insertExercise(
   client: DbClient,
   userId: string,
-  input: ExerciseCreateCommand
+  input: ExerciseCreateCommand,
 ) {
   const { data, error } = await client
     .from("exercises")
@@ -99,7 +99,7 @@ export async function updateExercise(
   client: DbClient,
   userId: string,
   id: string,
-  input: ExerciseUpdateCommand
+  input: ExerciseUpdateCommand,
 ) {
   const { data, error } = await client
     .from("exercises")
@@ -118,7 +118,7 @@ export async function updateExercise(
 export async function deleteExercise(
   client: DbClient,
   userId: string,
-  id: string
+  id: string,
 ) {
   const { error } = await client
     .from("exercises")
@@ -133,7 +133,7 @@ export async function listExercises(
   client: DbClient,
   userId: string,
   params: Required<Pick<ExerciseQueryParams, "sort" | "order" | "limit">> &
-    ExerciseQueryParams
+    ExerciseQueryParams,
 ): Promise<{
   data?: ExerciseDTO[];
   nextCursor?: string | null;
@@ -141,7 +141,7 @@ export async function listExercises(
 }> {
   const limit = Math.min(
     params.limit ?? EXERCISE_DEFAULT_LIMIT,
-    EXERCISE_MAX_LIMIT
+    EXERCISE_MAX_LIMIT,
   );
   const sort = params.sort ?? "created_at";
   const order = params.order ?? "desc";
@@ -157,6 +157,10 @@ export async function listExercises(
 
   if (params.type) {
     query = query.eq("type", params.type);
+  }
+
+  if (params.exercise_id) {
+    query = query.eq("id", params.exercise_id);
   }
 
   if (params.search) {
@@ -220,7 +224,7 @@ export function encodeCursor(cursor: CursorPayload) {
 export function decodeCursor(cursor: string): CursorPayload {
   try {
     const parsed = JSON.parse(
-      Buffer.from(cursor, "base64url").toString("utf8")
+      Buffer.from(cursor, "base64url").toString("utf8"),
     ) as CursorPayload;
 
     if (
@@ -252,7 +256,7 @@ export function mapToDTO(row: ExerciseRow): ExerciseDTO {
  */
 export async function getExerciseRelations(
   client: DbClient,
-  exerciseId: string
+  exerciseId: string,
 ): Promise<{
   plansCount: number;
   sessionsCount: number;
@@ -275,7 +279,9 @@ export async function getExerciseRelations(
     .eq("exercise_id", exerciseId);
 
   if (sessionsError) {
-    throw new Error(`Failed to count workout sessions: ${sessionsError.message}`);
+    throw new Error(
+      `Failed to count workout sessions: ${sessionsError.message}`,
+    );
   }
 
   return {
@@ -290,13 +296,13 @@ function applyCursorFilter(
   query: any,
   sort: SortField,
   order: SortOrder,
-  cursor: CursorPayload
+  cursor: CursorPayload,
 ) {
   const direction = order === "asc" ? "gt" : "lt";
   const encodedValue = encodeURIComponent(String(cursor.value));
   const encodedId = encodeURIComponent(cursor.id);
 
   return query.or(
-    `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`
+    `${sort}.${direction}.${encodedValue},and(${sort}.eq.${encodedValue},id.${direction}.${encodedId})`,
   );
 }

@@ -30,9 +30,30 @@ export function ExerciseSelector({
   const [search, setSearch] = useState("");
   const [part, setPart] = useState<ExercisePart | "all">("all");
   const [type, setType] = useState<ExerciseType | "all">("all");
+  const [currentExerciseId, setCurrentExerciseId] = useState<string>("all");
   const [exercises, setExercises] = useState<ExerciseDTO[]>([]);
+  const [allExercises, setAllExercises] = useState<ExerciseDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchAllExercises = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({
+        sort: "title",
+        order: "asc",
+        limit: "50",
+      });
+      const response = await fetch(`/api/exercises?${params.toString()}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      const filtered = data.items.filter(
+        (ex: ExerciseDTO) => !excludedExerciseIds.includes(ex.id),
+      );
+      setAllExercises(filtered);
+    } catch {
+      // Nie blokuj UI przy błędzie pobierania listy do selecta
+    }
+  }, [excludedExerciseIds]);
 
   const fetchExercises = useCallback(async () => {
     setIsLoading(true);
@@ -48,6 +69,9 @@ export function ExerciseSelector({
       }
       if (type !== "all") {
         params.set("type", type);
+      }
+      if (currentExerciseId && currentExerciseId !== "all") {
+        params.set("exercise_id", currentExerciseId);
       }
       params.set("limit", "50"); // Większy limit dla dialogu
 
@@ -71,11 +95,19 @@ export function ExerciseSelector({
     } finally {
       setIsLoading(false);
     }
-  }, [search, part, type, excludedExerciseIds]);
+  }, [search, part, type, currentExerciseId, excludedExerciseIds]);
+
+  useEffect(() => {
+    fetchAllExercises();
+  }, [fetchAllExercises]);
 
   useEffect(() => {
     fetchExercises();
   }, [fetchExercises]);
+
+  const handleExerciseChange = (exerciseId: string) => {
+    setCurrentExerciseId(exerciseId === "all" ? "all" : exerciseId);
+  };
 
   const handleExerciseClick = (exercise: ExerciseDTO) => {
     onToggleExercise(exercise);
@@ -88,49 +120,61 @@ export function ExerciseSelector({
   return (
     <div className="space-y-4">
       {/* Wyszukiwanie i filtry */}
-      <div className="space-y-4">
+
+      <div className="flex flex-wrap gap-4">
         <Input
           placeholder="Wyszukaj ćwiczenie..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full"
+          className="w-[200px]"
         />
 
-        <div className="flex flex-wrap gap-4">
-          <Select
-            value={part}
-            onValueChange={(value) => setPart(value as ExercisePart | "all")}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Część ciała" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Wszystkie części</SelectItem>
-              {exercisePartValues.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {EXERCISE_PART_LABELS[p]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Select value={currentExerciseId} onValueChange={handleExerciseChange}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Ćwiczenie" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie ćwiczenia</SelectItem>
+            {allExercises.map((exercise) => (
+              <SelectItem key={exercise.id} value={exercise.id}>
+                {exercise.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={part}
+          onValueChange={(value) => setPart(value as ExercisePart | "all")}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Część ciała" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie części</SelectItem>
+            {exercisePartValues.map((p) => (
+              <SelectItem key={p} value={p}>
+                {EXERCISE_PART_LABELS[p]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          <Select
-            value={type}
-            onValueChange={(value) => setType(value as ExerciseType | "all")}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Typ ćwiczenia" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Wszystkie typy</SelectItem>
-              {exerciseTypeValues.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {EXERCISE_TYPE_LABELS[t]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          value={type}
+          onValueChange={(value) => setType(value as ExerciseType | "all")}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Typ ćwiczenia" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie typy</SelectItem>
+            {exerciseTypeValues.map((t) => (
+              <SelectItem key={t} value={t}>
+                {EXERCISE_TYPE_LABELS[t]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Lista ćwiczeń */}
@@ -152,7 +196,11 @@ export function ExerciseSelector({
         }
 
         if (exercises.length === 0) {
-          const hasFilters = search || part !== "all" || type !== "all";
+          const hasFilters =
+            search ||
+            part !== "all" ||
+            type !== "all" ||
+            currentExerciseId !== "all";
           const emptyMessage = hasFilters
             ? "Nie znaleziono ćwiczeń pasujących do filtrów."
             : "Brak dostępnych ćwiczeń. Dodaj pierwsze ćwiczenie do biblioteki.";

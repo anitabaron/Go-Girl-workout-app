@@ -24,15 +24,15 @@ type PersonalRecordFiltersProps = {
 
 export function PersonalRecordFilters({
   exercises,
-}: PersonalRecordFiltersProps) {
+}: Readonly<PersonalRecordFiltersProps>) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
   const currentExerciseId = searchParams.get("exercise_id");
-  const currentMetricType = searchParams.get("metric_type") as
-    | PRMetricType
-    | null;
+  const currentMetricType = searchParams.get(
+    "metric_type",
+  ) as PRMetricType | null;
 
   const handleExerciseChange = (exerciseId: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -79,7 +79,8 @@ export function PersonalRecordFilters({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const hasActiveFilters = currentExerciseId !== null || currentMetricType !== null;
+  const hasActiveFilters =
+    currentExerciseId !== null || currentMetricType !== null;
 
   return (
     <div className="flex flex-wrap items-center gap-4">

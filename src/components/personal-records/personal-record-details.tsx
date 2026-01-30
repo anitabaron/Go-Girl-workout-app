@@ -21,12 +21,13 @@ export function PersonalRecordDetails({
     return <EmptyRecordsState />;
   }
 
-  console.log("records", records);
-
   return (
     <div className="space-y-4">
       {records.map((record, index) => (
-        <PersonalRecordMetricCard key={`${record.metricType}-${index}`} record={record} />
+        <PersonalRecordMetricCard
+          key={`${record.metricType}-${index}`}
+          record={record}
+        />
       ))}
     </div>
   );

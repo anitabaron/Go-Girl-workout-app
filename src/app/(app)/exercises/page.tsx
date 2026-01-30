@@ -30,6 +30,19 @@ export default async function ExercisesPage({
   // Pobranie user ID (wymaga autoryzacji)
   const userId = await requireAuth();
 
+  // Pobranie listy ćwiczeń dla filtrów (select)
+  let exercises: Awaited<ReturnType<typeof listExercisesService>>["items"] = [];
+  try {
+    const exercisesResult = await listExercisesService(userId, {
+      sort: "title",
+      order: "asc",
+      limit: 50,
+    });
+    exercises = exercisesResult.items;
+  } catch (error) {
+    console.error("Error loading exercises for filters:", error);
+  }
+
   // Wywołanie service do pobrania danych
   const result = await listExercisesService(userId, parsedQuery);
 
@@ -37,7 +50,8 @@ export default async function ExercisesPage({
   const hasActiveFilters =
     Boolean(parsedQuery.search) ||
     Boolean(parsedQuery.part) ||
-    Boolean(parsedQuery.type);
+    Boolean(parsedQuery.type) ||
+    Boolean(parsedQuery.exercise_id);
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
@@ -51,7 +65,7 @@ export default async function ExercisesPage({
       <main className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10">
         <section className="mb-6 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <ExerciseFilters />
+            <ExerciseFilters exercises={exercises} />
             <ExerciseSort />
           </div>
         </section>

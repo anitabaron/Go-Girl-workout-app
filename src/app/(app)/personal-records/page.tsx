@@ -33,8 +33,7 @@ export default async function PersonalRecordsPage({
   const userId = await requireAuth();
 
   // Pobranie listy ćwiczeń dla filtrów (opcjonalnie, z obsługą błędów)
-  let exercises: Awaited<ReturnType<typeof listExercisesService>>["items"] =
-    [];
+  let exercises: Awaited<ReturnType<typeof listExercisesService>>["items"] = [];
   try {
     const exercisesQuery: ExerciseQueryParams = {
       sort: "title",
@@ -58,19 +57,15 @@ export default async function PersonalRecordsPage({
   } catch (error) {
     console.error("Error loading personal records:", error);
     errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Nie udało się pobrać rekordów.";
+      error instanceof Error ? error.message : "Nie udało się pobrać rekordów.";
     personalRecords = { items: [], nextCursor: null };
   }
 
   // Mapowanie danych do ViewModel
   const viewModel = mapPersonalRecordsToViewModel(
     personalRecords.items,
-    personalRecords.nextCursor
+    personalRecords.nextCursor,
   );
-
-  console.log("personal records page", personalRecords.items);
 
   return (
     <div className="min-h-screen bg-secondary font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
