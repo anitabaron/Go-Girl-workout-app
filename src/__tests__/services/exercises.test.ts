@@ -112,7 +112,7 @@ describe("createExerciseService", () => {
       expect(exercisesRepo.insertExercise).toHaveBeenCalledWith(
         mockSupabase,
         mockUserId,
-        validPayload,
+        { ...validPayload, is_unilateral: false },
       );
     });
 
@@ -374,7 +374,7 @@ describe("createExerciseService", () => {
       expect(exercisesRepo.insertExercise).toHaveBeenCalledWith(
         mockSupabase,
         mockUserId,
-        fullPayload,
+        { ...fullPayload, is_unilateral: false },
       );
     });
 
