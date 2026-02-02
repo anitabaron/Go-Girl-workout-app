@@ -164,6 +164,14 @@ export type WorkoutPlanDTO = Omit<WorkoutPlanEntity, "user_id"> & {
   exercises: WorkoutPlanExerciseDTO[];
 };
 
+export type PlanExerciseSummary = {
+  title: string;
+  planned_sets: number | null;
+  planned_reps: number | null;
+  planned_duration_seconds: number | null;
+  planned_rest_seconds: number | null;
+};
+
 export type PlanQueryParams = {
   part?: ExercisePart;
   sort?: "created_at" | "name";

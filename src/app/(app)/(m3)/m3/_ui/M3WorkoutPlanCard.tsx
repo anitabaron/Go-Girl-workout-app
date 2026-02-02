@@ -16,9 +16,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteWorkoutPlanDialogM3 } from "../_components/DeleteWorkoutPlanDialogM3";
-import type { WorkoutPlanDTO } from "@/types";
+import type { PlanExerciseSummary, WorkoutPlanDTO } from "@/types";
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
-import { formatTotalDuration } from "@/lib/utils/time-format";
+import {
+  formatTotalDuration,
+  formatRepsOrDuration,
+} from "@/lib/utils/time-format";
 import { formatDateTime } from "@/lib/utils/date-format";
 import { toast } from "sonner";
 
@@ -26,6 +29,7 @@ type M3WorkoutPlanCardProps = {
   readonly plan: Omit<WorkoutPlanDTO, "exercises"> & {
     exercise_count?: number;
     exercise_names?: string[];
+    exercise_summaries?: PlanExerciseSummary[];
     has_missing_exercises?: boolean;
   };
   readonly exerciseCount?: number;
@@ -43,11 +47,11 @@ function M3WorkoutPlanCardComponent({
 
   const formattedDate = useMemo(
     () => formatDateTime(plan.created_at),
-    [plan.created_at],
+    [plan.created_at]
   );
   const formattedUpdatedDate = useMemo(
     () => formatDateTime(plan.updated_at),
-    [plan.updated_at],
+    [plan.updated_at]
   );
   const exerciseCountText = useMemo(() => {
     const count = exerciseCount ?? plan.exercise_count ?? 0;
@@ -219,10 +223,64 @@ function M3WorkoutPlanCardComponent({
                       {finalExerciseCount} {exerciseCountText}
                     </span>
                   </div>
-                  {plan.exercise_names && plan.exercise_names.length > 0 && (
-                    <div className="ml-6 text-xs text-muted-foreground">
-                      {plan.exercise_names.join(", ")}
+                  {plan.exercise_summaries &&
+                  plan.exercise_summaries.length > 0 ? (
+                    <div className="ml-6 overflow-x-auto">
+                      <table className="w-full min-w-[280px] text-xs text-muted-foreground">
+                        <thead>
+                          <tr className="border-b border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] text-foreground">
+                            <th className="py-1 pr-3 text-left font-medium">
+                              Exercise
+                            </th>
+                            <th className="py-1 pr-3 text-left font-medium">
+                              Reps/time
+                            </th>
+                            <th className="py-1 pr-3 text-left font-medium">
+                              Sets
+                            </th>
+                            <th className="py-1 text-left font-medium">
+                              Rest
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {plan.exercise_summaries.map((ex, i) => (
+                            <tr
+                              key={`${ex.title}-${i}`}
+                              className="border-b border-[var(--m3-outline-variant)] last:border-0"
+                            >
+                              <td className="py-1 pr-3 font-medium">
+                                {ex.title}
+                              </td>
+                              <td className="py-1 pr-3">
+                                {formatRepsOrDuration(
+                                  ex.planned_reps,
+                                  ex.planned_duration_seconds
+                                )}
+                              </td>
+                              <td className="py-1 pr-3">
+                                {ex.planned_sets != null && ex.planned_sets > 0
+                                  ? `${ex.planned_sets}`
+                                  : "-"}
+                              </td>
+                              <td className="py-1">
+                                {ex.planned_rest_seconds != null &&
+                                ex.planned_rest_seconds > 0
+                                  ? `${ex.planned_rest_seconds}s`
+                                  : "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
+                  ) : (
+                    plan.exercise_names &&
+                    plan.exercise_names.length > 0 && (
+                      <div className="ml-6 text-xs text-muted-foreground">
+                        {plan.exercise_names.join(", ")}
+                      </div>
+                    )
                   )}
                 </div>
               )}

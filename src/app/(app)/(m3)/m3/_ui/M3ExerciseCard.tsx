@@ -128,7 +128,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
         <Link
           href={`/m3/exercises/${exercise.id}`}
           className="block h-full"
-          aria-label={`Zobacz szczegóły ćwiczenia: ${exercise.title}`}
+          aria-label={`View exercise details: ${exercise.title}`}
         >
           <CardHeader className="pb-1.5 pt-3 px-4">
             <h3 className="m3-card-title line-clamp-2 pr-16">
@@ -158,14 +158,14 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
           <CardContent className="pt-0 px-4 pb-3 space-y-2.5">
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
               <span>
-                <span className="text-muted-foreground">Serie </span>
+                <span className="text-muted-foreground">Sets </span>
                 <span className="font-semibold text-foreground">
                   {exercise.series}
                 </span>
               </span>
               {exercise.reps != null && (
                 <span>
-                  <span className="text-muted-foreground">Powtórzenia </span>
+                  <span className="text-muted-foreground">Reps </span>
                   <span className="font-semibold text-foreground">
                     {exercise.reps}
                   </span>
@@ -173,7 +173,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               )}
               {exercise.duration_seconds != null && (
                 <span>
-                  <span className="text-muted-foreground">Czas </span>
+                  <span className="text-muted-foreground">Duration </span>
                   <span className="font-semibold text-foreground">
                     {exercise.duration_seconds}s
                   </span>
@@ -181,7 +181,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               )}
               {exercise.rest_in_between_seconds != null && (
                 <span>
-                  <span className="text-muted-foreground">Przerwa między </span>
+                  <span className="text-muted-foreground">Rest between </span>
                   <span className="font-medium text-foreground">
                     {formatDuration(exercise.rest_in_between_seconds)}
                   </span>
@@ -189,7 +189,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               )}
               {exercise.rest_after_series_seconds != null && (
                 <span>
-                  <span className="text-muted-foreground">Przerwa po </span>
+                  <span className="text-muted-foreground">Rest after </span>
                   <span className="font-medium text-foreground">
                     {formatDuration(exercise.rest_after_series_seconds)}
                   </span>

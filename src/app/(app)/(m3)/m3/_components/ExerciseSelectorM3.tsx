@@ -104,35 +104,11 @@ export function ExerciseSelectorM3({
   const isSelected = (exerciseId: string) =>
     selectedExerciseIds.includes(exerciseId);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-center text-sm text-destructive">
-        {error}
-      </div>
-    );
-  }
-
-  if (exercises.length === 0) {
-    const hasFilters =
-      search || part !== "all" || type !== "all" || currentExerciseId !== "all";
-    const emptyMessage = hasFilters
-      ? "No exercises match the filters."
-      : "No exercises available. Add your first exercise to the library.";
-
-    return (
-      <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
-        <p className="text-muted-foreground">{emptyMessage}</p>
-      </div>
-    );
-  }
+  const hasFilters =
+    search || part !== "all" || type !== "all" || currentExerciseId !== "all";
+  const emptyMessage = hasFilters
+    ? "No exercises match the filters."
+    : "No exercises available. Add your first exercise to the library.";
 
   return (
     <div className="space-y-4">
@@ -193,7 +169,23 @@ export function ExerciseSelectorM3({
         </Select>
       </div>
 
-      <div className="max-h-[400px] overflow-y-auto">
+      <div className="min-h-[400px] max-h-[400px] overflow-y-auto">
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {!isLoading && error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-center text-sm text-destructive">
+            {error}
+          </div>
+        )}
+        {!isLoading && !error && exercises.length === 0 && (
+          <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
+            <p className="text-muted-foreground">{emptyMessage}</p>
+          </div>
+        )}
+        {!isLoading && !error && exercises.length > 0 && (
         <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
           {exercises.map((exercise) => {
             const selected = isSelected(exercise.id);
@@ -289,6 +281,7 @@ export function ExerciseSelectorM3({
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );

@@ -60,7 +60,7 @@ function mapDbError(error: Parameters<typeof mapDbErrorBase>[0]) {
  * Sumuje exercise_estimated_set_time_seconds ze wszystkich ćwiczeń.
  */
 function calculateEstimatedTotalTime(
-  exercises: WorkoutPlanExerciseDTO[],
+  exercises: WorkoutPlanExerciseDTO[]
 ): number | null {
   const total = exercises.reduce((sum, exercise) => {
     const estimatedSetTime = exercise.exercise_estimated_set_time_seconds;
@@ -81,7 +81,7 @@ async function applyExerciseUpdates(
   supabase: Awaited<ReturnType<typeof createClient>>,
   planId: string,
   exercises: WorkoutPlanExerciseUpdateOrCreate[],
-  userId: string,
+  userId: string
 ): Promise<void> {
   const { data: existingExercises, error: fetchExercisesError } =
     await listWorkoutPlanExercises(supabase, planId);
@@ -91,14 +91,14 @@ async function applyExerciseUpdates(
   }
 
   const existingExerciseIds = new Set(
-    (existingExercises ?? []).map((e) => e.id),
+    (existingExercises ?? []).map((e) => e.id)
   );
 
   const exercisesToUpdate = exercises.filter((e) => e.id !== undefined);
   const exercisesToCreate = exercises.filter((e) => e.id === undefined);
 
   const payloadIds = new Set(
-    exercisesToUpdate.map((e) => e.id).filter((id): id is string => !!id),
+    exercisesToUpdate.map((e) => e.id).filter((id): id is string => !!id)
   );
   const exercisesToDelete = (existingExercises ?? [])
     .map((e) => e.id)
@@ -108,7 +108,7 @@ async function applyExerciseUpdates(
     const { error: deleteError } = await deleteWorkoutPlanExercisesByIds(
       supabase,
       planId,
-      exercisesToDelete,
+      exercisesToDelete
     );
     if (deleteError) {
       throw mapDbError(deleteError);
@@ -116,7 +116,7 @@ async function applyExerciseUpdates(
   }
 
   const hasSectionOrderChanges = exercisesToUpdate.some(
-    (e) => e.section_order !== undefined && e.id !== undefined,
+    (e) => e.section_order !== undefined && e.id !== undefined
   );
 
   // Mapa id -> docelowy section_order (obliczona z kolejności w payloadzie).
@@ -160,7 +160,7 @@ async function applyExerciseUpdates(
         supabase,
         planId,
         update.id,
-        { section_order: tempOrder },
+        { section_order: tempOrder }
       );
 
       if (tempUpdateError) {
@@ -179,7 +179,7 @@ async function applyExerciseUpdates(
     if (!existingExerciseIds.has(exerciseUpdate.id)) {
       throw new ServiceError(
         "NOT_FOUND",
-        `Ćwiczenie o id ${exerciseUpdate.id} nie istnieje w tym planie treningowym.`,
+        `Ćwiczenie o id ${exerciseUpdate.id} nie istnieje w tym planie treningowym.`
       );
     }
 
@@ -196,18 +196,21 @@ async function applyExerciseUpdates(
       if (!ownedExercise || ownedExercise.length === 0) {
         throw new ServiceError(
           "NOT_FOUND",
-          `Ćwiczenie o exercise_id ${exerciseUpdate.exercise_id} nie istnieje lub nie należy do użytkownika.`,
+          `Ćwiczenie o exercise_id ${exerciseUpdate.exercise_id} nie istnieje lub nie należy do użytkownika.`
         );
       }
     }
 
     const updateData = mapExerciseUpdateToDb(
-      exerciseUpdate as WorkoutPlanExerciseUpdateOrCreate & { id: string },
+      exerciseUpdate as WorkoutPlanExerciseUpdateOrCreate & { id: string }
     );
 
     // Po temp update MUSIMY nadpisać section_order docelową wartością (1, 2, 3...).
     // Gdy section_order zniknie w payloadzie (np. serializacja), używamy intendedSectionOrderById.
-    if (hasSectionOrderChanges && intendedSectionOrderById.has(exerciseUpdate.id)) {
+    if (
+      hasSectionOrderChanges &&
+      intendedSectionOrderById.has(exerciseUpdate.id)
+    ) {
       const intendedOrder = intendedSectionOrderById.get(exerciseUpdate.id);
       if (intendedOrder !== undefined) {
         updateData.section_order =
@@ -223,7 +226,7 @@ async function applyExerciseUpdates(
       supabase,
       planId,
       exerciseUpdate.id,
-      updateData,
+      updateData
     );
 
     if (updateError) {
@@ -253,7 +256,7 @@ async function applyExerciseUpdates(
         ) {
           throw new ServiceError(
             "NOT_FOUND",
-            `Ćwiczenie o exercise_id ${newExercise.exercise_id} nie istnieje lub nie należy do użytkownika.`,
+            `Ćwiczenie o exercise_id ${newExercise.exercise_id} nie istnieje lub nie należy do użytkownika.`
           );
         }
       }
@@ -275,7 +278,7 @@ async function applyExerciseUpdates(
           ? getSnapshotId(
               exercise.exercise_title,
               exercise.exercise_type ?? null,
-              exercise.exercise_part ?? null,
+              exercise.exercise_part ?? null
             )
           : null;
 
@@ -307,7 +310,7 @@ async function applyExerciseUpdates(
     const { error: insertError } = await insertWorkoutPlanExercises(
       supabase,
       planId,
-      exercisesToInsert,
+      exercisesToInsert
     );
 
     if (insertError) {
@@ -321,7 +324,7 @@ async function applyExerciseUpdates(
  */
 export async function createWorkoutPlanService(
   userId: string,
-  payload: unknown,
+  payload: unknown
 ): Promise<WorkoutPlanDTO> {
   assertUser(userId);
   const parsed = parseOrThrow(workoutPlanCreateSchema, payload);
@@ -348,7 +351,7 @@ export async function createWorkoutPlanService(
   if (!ownedExercises || ownedExercises.length !== exerciseIds.length) {
     throw new ServiceError(
       "NOT_FOUND",
-      "Niektóre ćwiczenia nie istnieją lub nie należą do użytkownika.",
+      "Niektóre ćwiczenia nie istnieją lub nie należą do użytkownika."
     );
   }
 
@@ -363,7 +366,7 @@ export async function createWorkoutPlanService(
       name: parsed.name,
       description: parsed.description,
       part: parsed.part,
-    },
+    }
   );
 
   if (planError) {
@@ -373,14 +376,14 @@ export async function createWorkoutPlanService(
   if (!plan) {
     throw new ServiceError(
       "INTERNAL",
-      "Nie udało się utworzyć planu treningowego.",
+      "Nie udało się utworzyć planu treningowego."
     );
   }
 
   const { error: exercisesInsertError } = await insertWorkoutPlanExercises(
     supabase,
     plan.id,
-    parsed.exercises,
+    parsed.exercises
   );
 
   if (exercisesInsertError) {
@@ -400,20 +403,20 @@ export async function createWorkoutPlanService(
 
   // Oblicz i zaktualizuj szacunkowy całkowity czas treningu
   const estimatedTotalTime = calculateEstimatedTotalTime(
-    planWithExercises ?? [],
+    planWithExercises ?? []
   );
   const { error: updateTimeError } = await updateWorkoutPlan(
     supabase,
     userId,
     plan.id,
-    { estimated_total_time_seconds: estimatedTotalTime },
+    { estimated_total_time_seconds: estimatedTotalTime }
   );
 
   if (updateTimeError) {
     // Logujemy błąd, ale nie przerywamy - plan został już utworzony
     console.error(
       "[createWorkoutPlanService] Failed to update estimated_total_time_seconds:",
-      updateTimeError,
+      updateTimeError
     );
   }
 
@@ -436,11 +439,12 @@ export async function createWorkoutPlanService(
  */
 export async function listWorkoutPlansService(
   userId: string,
-  query: PlanQueryParams,
+  query: PlanQueryParams
 ): Promise<{
   items: (Omit<WorkoutPlanDTO, "exercises"> & {
     exercise_count?: number;
     exercise_names?: string[];
+    exercise_summaries?: import("@/types").PlanExerciseSummary[];
     has_missing_exercises?: boolean;
   })[];
   nextCursor: string | null;
@@ -454,7 +458,7 @@ export async function listWorkoutPlansService(
     const { data, nextCursor, error } = await findWorkoutPlansByUserId(
       supabase,
       userId,
-      parsed,
+      parsed
     );
 
     if (error) {
@@ -479,7 +483,7 @@ export async function listWorkoutPlansService(
  */
 export async function getWorkoutPlanService(
   userId: string,
-  id: string,
+  id: string
 ): Promise<WorkoutPlanDTO> {
   assertUser(userId);
   const supabase = await createClient();
@@ -487,7 +491,7 @@ export async function getWorkoutPlanService(
   const { data: plan, error: planError } = await findWorkoutPlanById(
     supabase,
     userId,
-    id,
+    id
   );
 
   if (planError) {
@@ -497,7 +501,7 @@ export async function getWorkoutPlanService(
   if (!plan) {
     throw new ServiceError(
       "NOT_FOUND",
-      "Plan treningowy nie został znaleziony.",
+      "Plan treningowy nie został znaleziony."
     );
   }
 
@@ -520,7 +524,7 @@ export async function getWorkoutPlanService(
 export async function updateWorkoutPlanService(
   userId: string,
   id: string,
-  payload: unknown,
+  payload: unknown
 ): Promise<WorkoutPlanDTO> {
   assertUser(userId);
   const patch = parseOrThrow(workoutPlanUpdateSchema, payload);
@@ -530,7 +534,7 @@ export async function updateWorkoutPlanService(
   const { data: existing, error: fetchError } = await findWorkoutPlanById(
     supabase,
     userId,
-    id,
+    id
   );
 
   if (fetchError) {
@@ -540,7 +544,7 @@ export async function updateWorkoutPlanService(
   if (!existing) {
     throw new ServiceError(
       "NOT_FOUND",
-      "Plan treningowy nie został znaleziony.",
+      "Plan treningowy nie został znaleziony."
     );
   }
 
@@ -549,7 +553,7 @@ export async function updateWorkoutPlanService(
       supabase,
       id,
       patch.exercises as WorkoutPlanExerciseUpdateOrCreate[],
-      userId,
+      userId
     );
   }
 
@@ -567,7 +571,7 @@ export async function updateWorkoutPlanService(
         name: patch.name,
         description: patch.description,
         part: patch.part,
-      },
+      }
     );
 
     if (updateError) {
@@ -586,20 +590,20 @@ export async function updateWorkoutPlanService(
   // Oblicz i zaktualizuj szacunkowy całkowity czas treningu (tylko jeśli ćwiczenia zostały zaktualizowane)
   if (patch.exercises !== undefined) {
     const estimatedTotalTime = calculateEstimatedTotalTime(
-      planWithExercises ?? [],
+      planWithExercises ?? []
     );
     const { error: updateTimeError } = await updateWorkoutPlan(
       supabase,
       userId,
       id,
-      { estimated_total_time_seconds: estimatedTotalTime },
+      { estimated_total_time_seconds: estimatedTotalTime }
     );
 
     if (updateTimeError) {
       // Logujemy błąd, ale nie przerywamy - ćwiczenia zostały już zaktualizowane
       console.error(
         "[updateWorkoutPlanService] Failed to update estimated_total_time_seconds:",
-        updateTimeError,
+        updateTimeError
       );
     }
   }
@@ -615,7 +619,7 @@ export async function updateWorkoutPlanService(
   if (!currentPlan) {
     throw new ServiceError(
       "INTERNAL",
-      "Nie udało się pobrać zaktualizowanego planu treningowego.",
+      "Nie udało się pobrać zaktualizowanego planu treningowego."
     );
   }
 
@@ -635,7 +639,7 @@ export async function deleteWorkoutPlanService(userId: string, id: string) {
   const { data: existing, error: fetchError } = await findWorkoutPlanById(
     supabase,
     userId,
-    id,
+    id
   );
 
   if (fetchError) {
@@ -645,7 +649,7 @@ export async function deleteWorkoutPlanService(userId: string, id: string) {
   if (!existing) {
     throw new ServiceError(
       "NOT_FOUND",
-      "Plan treningowy nie został znaleziony.",
+      "Plan treningowy nie został znaleziony."
     );
   }
 
@@ -667,7 +671,7 @@ export async function deleteWorkoutPlanService(userId: string, id: string) {
  */
 export async function importWorkoutPlanService(
   userId: string,
-  payload: unknown,
+  payload: unknown
 ): Promise<WorkoutPlanDTO & { warnings?: { missing_exercises?: string[] } }> {
   assertUser(userId);
 
@@ -689,8 +693,8 @@ export async function importWorkoutPlanService(
             planned_rest_after_series_seconds:
               e.planned_rest_after_series_seconds,
             estimated_set_time_seconds: e.estimated_set_time_seconds,
-          }) as WorkoutPlanExerciseInput,
-      ),
+          } as WorkoutPlanExerciseInput)
+      )
     );
 
     if (domainErrors.length) {
@@ -703,7 +707,7 @@ export async function importWorkoutPlanService(
     for (const exercise of parsed.exercises) {
       if (exercise.match_by_name && !exercise.exercise_id) {
         const normalizedName = normalizeTitleForDbLookup(
-          exercise.match_by_name,
+          exercise.match_by_name
         );
         const { data: foundExercise, error: findError } =
           await findByNormalizedTitle(supabase, userId, normalizedName);
@@ -717,7 +721,7 @@ export async function importWorkoutPlanService(
           exercise.exercise_id = foundExercise.id;
           exercise.match_by_name = undefined; // Usuń match_by_name, bo już mamy exercise_id
           console.log(
-            `[importWorkoutPlanService] Znaleziono ćwiczenie: "${exercise.match_by_name}" -> exercise_id: ${foundExercise.id}`,
+            `[importWorkoutPlanService] Znaleziono ćwiczenie: "${exercise.match_by_name}" -> exercise_id: ${foundExercise.id}`
           );
         } else {
           // Nie znaleziono - użyj match_by_name jako exercise_title (snapshot)
@@ -732,7 +736,7 @@ export async function importWorkoutPlanService(
           // exercise_details pozostaje bez zmian (jeśli było podane)
           exercise.match_by_name = undefined; // Usuń match_by_name, bo używamy snapshot
           console.log(
-            `[importWorkoutPlanService] Nie znaleziono ćwiczenia: "${exercise.exercise_title}" (znormalizowane: "${normalizedName}") - używam snapshot`,
+            `[importWorkoutPlanService] Nie znaleziono ćwiczenia: "${exercise.exercise_title}" (znormalizowane: "${normalizedName}") - używam snapshot`
           );
         }
       }
@@ -843,7 +847,7 @@ export async function importWorkoutPlanService(
         name: parsed.name,
         description: parsed.description,
         part: parsed.part,
-      },
+      }
     );
 
     if (planError) {
@@ -853,7 +857,7 @@ export async function importWorkoutPlanService(
     if (!plan) {
       throw new ServiceError(
         "INTERNAL",
-        "Nie udało się utworzyć planu treningowego.",
+        "Nie udało się utworzyć planu treningowego."
       );
     }
 
@@ -871,7 +875,7 @@ export async function importWorkoutPlanService(
             ? getSnapshotId(
                 e.exercise_title,
                 e.exercise_type ?? null,
-                e.exercise_part ?? null,
+                e.exercise_part ?? null
               )
             : null;
 
@@ -892,7 +896,7 @@ export async function importWorkoutPlanService(
             e.planned_rest_after_series_seconds,
           estimated_set_time_seconds: e.estimated_set_time_seconds,
         };
-      }),
+      })
     );
 
     if (exercisesInsertError) {
@@ -913,19 +917,19 @@ export async function importWorkoutPlanService(
 
     // Oblicz i zaktualizuj szacunkowy całkowity czas treningu
     const estimatedTotalTime = calculateEstimatedTotalTime(
-      exercisesWithDescription,
+      exercisesWithDescription
     );
     const { error: updateTimeError } = await updateWorkoutPlan(
       supabase,
       userId,
       plan.id,
-      { estimated_total_time_seconds: estimatedTotalTime },
+      { estimated_total_time_seconds: estimatedTotalTime }
     );
 
     if (updateTimeError) {
       console.error(
         "[importWorkoutPlanService] Failed to update estimated_total_time_seconds:",
-        updateTimeError,
+        updateTimeError
       );
     }
 
@@ -958,7 +962,7 @@ export async function importWorkoutPlanService(
 export async function linkSnapshotToExerciseService(
   userId: string,
   snapshotId: string,
-  exerciseId: string,
+  exerciseId: string
 ) {
   assertUser(userId);
   const supabase = await createClient();
@@ -974,7 +978,7 @@ export async function linkSnapshotToExerciseService(
   if (!ownedExercise || ownedExercise.length === 0) {
     throw new ServiceError(
       "NOT_FOUND",
-      "Ćwiczenie nie istnieje lub nie należy do użytkownika.",
+      "Ćwiczenie nie istnieje lub nie należy do użytkownika."
     );
   }
 
@@ -982,7 +986,7 @@ export async function linkSnapshotToExerciseService(
   const { error } = await updateWorkoutPlanExercisesBySnapshotId(
     supabase,
     snapshotId,
-    exerciseId,
+    exerciseId
   );
 
   if (error) {

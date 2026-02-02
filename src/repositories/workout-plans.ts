@@ -2,6 +2,7 @@ import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/db/database.types";
 import type {
+  PlanExerciseSummary,
   PlanQueryParams,
   WorkoutPlanCreateCommand,
   WorkoutPlanDTO,
@@ -30,7 +31,7 @@ const planSelectColumns =
 export async function findWorkoutPlanById(
   client: DbClient,
   userId: string,
-  id: string,
+  id: string
 ) {
   const { data, error } = await client
     .from("workout_plans")
@@ -45,6 +46,7 @@ export async function findWorkoutPlanById(
 type PlanExerciseMetadata = {
   exerciseCounts: Record<string, number>;
   exercisesByPlanId: Map<string, string[]>;
+  exerciseSummariesByPlanId: Map<string, PlanExerciseSummary[]>;
   hasMissingExercisesByPlanId: Map<string, boolean>;
 };
 
@@ -61,7 +63,7 @@ function buildNextCursor(
   items: WorkoutPlanRow[],
   limit: number,
   sort: "created_at" | "name",
-  order: "asc" | "desc",
+  order: "asc" | "desc"
 ): string | null {
   if (items.length <= limit) return null;
   const tail = items.pop()!;
@@ -72,26 +74,39 @@ function buildNextCursor(
 async function loadPlanExerciseMetadata(
   client: DbClient,
   userId: string,
-  planIds: string[],
+  planIds: string[]
 ): Promise<PlanExerciseMetadata> {
   const exerciseCounts: Record<string, number> = {};
   const exercisesByPlanId = new Map<string, string[]>();
+  const exerciseSummariesByPlanId = new Map<string, PlanExerciseSummary[]>();
   const hasMissingExercisesByPlanId = new Map<string, boolean>();
   const unlinkedTitlesByPlanId = new Map<string, Set<string>>();
 
   if (planIds.length === 0) {
-    return { exerciseCounts, exercisesByPlanId, hasMissingExercisesByPlanId };
+    return {
+      exerciseCounts,
+      exercisesByPlanId,
+      exerciseSummariesByPlanId,
+      hasMissingExercisesByPlanId,
+    };
   }
 
   const { data: exercisesData, error: exercisesError } = await client
     .from("workout_plan_exercises")
-    .select("plan_id, exercise_id, exercise_title, exercises(title)")
+    .select(
+      "plan_id, exercise_id, exercise_title, planned_sets, planned_reps, planned_duration_seconds, planned_rest_seconds, exercises(title)"
+    )
     .in("plan_id", planIds)
     .order("section_type", { ascending: true })
     .order("section_order", { ascending: true });
 
   if (exercisesError || !exercisesData) {
-    return { exerciseCounts, exercisesByPlanId, hasMissingExercisesByPlanId };
+    return {
+      exerciseCounts,
+      exercisesByPlanId,
+      exerciseSummariesByPlanId,
+      hasMissingExercisesByPlanId,
+    };
   }
 
   for (const row of exercisesData) {
@@ -112,29 +127,44 @@ async function loadPlanExerciseMetadata(
       const names = exercisesByPlanId.get(planId) ?? [];
       names.push(exerciseTitle);
       exercisesByPlanId.set(planId, names);
+
+      const summaries = exerciseSummariesByPlanId.get(planId) ?? [];
+      summaries.push({
+        title: exerciseTitle,
+        planned_sets: row.planned_sets ?? null,
+        planned_reps: row.planned_reps ?? null,
+        planned_duration_seconds: row.planned_duration_seconds ?? null,
+        planned_rest_seconds: row.planned_rest_seconds ?? null,
+      });
+      exerciseSummariesByPlanId.set(planId, summaries);
     }
   }
 
   const libraryTitlesNormalized = await fetchLibraryTitlesNormalized(
     client,
     userId,
-    unlinkedTitlesByPlanId,
+    unlinkedTitlesByPlanId
   );
 
   for (const [planId, normalizedTitles] of unlinkedTitlesByPlanId) {
     const hasUnlinkedNotInLibrary = [...normalizedTitles].some(
-      (t) => !libraryTitlesNormalized.has(t),
+      (t) => !libraryTitlesNormalized.has(t)
     );
     hasMissingExercisesByPlanId.set(planId, hasUnlinkedNotInLibrary);
   }
 
-  return { exerciseCounts, exercisesByPlanId, hasMissingExercisesByPlanId };
+  return {
+    exerciseCounts,
+    exercisesByPlanId,
+    exerciseSummariesByPlanId,
+    hasMissingExercisesByPlanId,
+  };
 }
 
 async function fetchLibraryTitlesNormalized(
   client: DbClient,
   userId: string,
-  unlinkedTitlesByPlanId: Map<string, Set<string>>,
+  unlinkedTitlesByPlanId: Map<string, Set<string>>
 ): Promise<Set<string>> {
   if (unlinkedTitlesByPlanId.size === 0) return new Set();
   const { data: libraryExercises } = await client
@@ -143,8 +173,8 @@ async function fetchLibraryTitlesNormalized(
     .eq("user_id", userId);
   return new Set(
     (libraryExercises ?? []).map((e) =>
-      (e.title_normalized ?? "").toLowerCase(),
-    ),
+      (e.title_normalized ?? "").toLowerCase()
+    )
   );
 }
 
@@ -155,11 +185,12 @@ export async function findWorkoutPlansByUserId(
   client: DbClient,
   userId: string,
   params: Required<Pick<PlanQueryParams, "sort" | "order" | "limit">> &
-    PlanQueryParams,
+    PlanQueryParams
 ): Promise<{
   data?: (Omit<WorkoutPlanDTO, "exercises"> & {
     exercise_count?: number;
     exercise_names?: string[];
+    exercise_summaries?: PlanExerciseSummary[];
     has_missing_exercises?: boolean;
   })[];
   nextCursor?: string | null;
@@ -167,7 +198,7 @@ export async function findWorkoutPlansByUserId(
 }> {
   const limit = Math.min(
     params.limit ?? WORKOUT_PLAN_DEFAULT_LIMIT,
-    WORKOUT_PLAN_MAX_LIMIT,
+    WORKOUT_PLAN_MAX_LIMIT
   );
   const sort: "created_at" | "name" = params.sort ?? "created_at";
   const order: "asc" | "desc" = params.order ?? "desc";
@@ -200,14 +231,19 @@ export async function findWorkoutPlansByUserId(
   if (items.length > limit) items.pop();
 
   const planIds = items.map((item) => item.id);
-  const { exerciseCounts, exercisesByPlanId, hasMissingExercisesByPlanId } =
-    await loadPlanExerciseMetadata(client, userId, planIds);
+  const {
+    exerciseCounts,
+    exercisesByPlanId,
+    exerciseSummariesByPlanId,
+    hasMissingExercisesByPlanId,
+  } = await loadPlanExerciseMetadata(client, userId, planIds);
 
   return {
     data: items.map((item) => ({
       ...mapToDTO(item),
       exercise_count: exerciseCounts[item.id] ?? 0,
       exercise_names: exercisesByPlanId.get(item.id) ?? [],
+      exercise_summaries: exerciseSummariesByPlanId.get(item.id) ?? [],
       has_missing_exercises: hasMissingExercisesByPlanId.get(item.id) ?? false,
     })),
     nextCursor,
@@ -223,7 +259,7 @@ export async function insertWorkoutPlan(
   userId: string,
   input: Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
     estimated_total_time_seconds?: number | null;
-  },
+  }
 ) {
   const { data, error } = await client
     .from("workout_plans")
@@ -254,7 +290,7 @@ export async function insertWorkoutPlanExercises(
       exercise_details?: string | null;
       snapshot_id?: string | null;
     }
-  >,
+  >
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
     plan_id: planId,
@@ -300,7 +336,7 @@ export async function updateWorkoutPlan(
     Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
       estimated_total_time_seconds?: number | null;
     }
-  >,
+  >
 ) {
   const updateData: {
     name?: string;
@@ -363,7 +399,7 @@ export async function updateWorkoutPlanExercise(
     planned_rest_seconds?: number | null;
     planned_rest_after_series_seconds?: number | null;
     estimated_set_time_seconds?: number | null;
-  },
+  }
 ) {
   const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] & {
     planned_rest_after_series_seconds?: number | null;
@@ -432,7 +468,7 @@ export async function updateWorkoutPlanExercise(
  */
 export async function deleteWorkoutPlanExercises(
   client: DbClient,
-  planId: string,
+  planId: string
 ) {
   const { error } = await client
     .from("workout_plan_exercises")
@@ -448,7 +484,7 @@ export async function deleteWorkoutPlanExercises(
 export async function deleteWorkoutPlanExercisesByIds(
   client: DbClient,
   planId: string,
-  ids: string[],
+  ids: string[]
 ) {
   if (ids.length === 0) return { error: null };
   const { error } = await client
@@ -466,7 +502,7 @@ export async function deleteWorkoutPlanExercisesByIds(
 export async function updateWorkoutPlanExercisesBySnapshotId(
   client: DbClient,
   snapshotId: string,
-  exerciseId: string,
+  exerciseId: string
 ) {
   const { data, error } = await client
     .from("workout_plan_exercises")
@@ -489,7 +525,7 @@ export async function updateWorkoutPlanExercisesBySnapshotId(
  */
 export async function listWorkoutPlanExercises(
   client: DbClient,
-  planId: string,
+  planId: string
 ): Promise<{
   data?: WorkoutPlanExerciseDTO[];
   error?: PostgrestError | null;
@@ -509,7 +545,7 @@ export async function listWorkoutPlanExercises(
         estimated_set_time_seconds,
         rest_after_series_seconds
       )
-    `,
+    `
     )
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
@@ -589,7 +625,9 @@ export async function listWorkoutPlanExercises(
       exercise_title: exerciseTitle,
       exercise_type: exerciseType,
       exercise_part: exercisePart,
-      exercise_is_unilateral: row.exercise_id ? (exercise?.is_unilateral ?? false) : null,
+      exercise_is_unilateral: row.exercise_id
+        ? exercise?.is_unilateral ?? false
+        : null,
       exercise_estimated_set_time_seconds: finalEstimatedSetTime,
       exercise_rest_after_series_seconds:
         exercise?.rest_after_series_seconds ?? null,
@@ -607,7 +645,7 @@ export async function listWorkoutPlanExercises(
 export async function findExercisesByIds(
   client: DbClient,
   userId: string,
-  exerciseIds: string[],
+  exerciseIds: string[]
 ) {
   if (exerciseIds.length === 0) {
     return { data: [], error: null };
@@ -628,7 +666,7 @@ export async function findExercisesByIds(
 export async function findExercisesByIdsWithFullData(
   client: DbClient,
   userId: string,
-  exerciseIds: string[],
+  exerciseIds: string[]
 ) {
   if (exerciseIds.length === 0) {
     return { data: [], error: null };
@@ -637,7 +675,7 @@ export async function findExercisesByIdsWithFullData(
   const { data, error } = await client
     .from("exercises")
     .select(
-      "id,series,reps,duration_seconds,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds",
+      "id,series,reps,duration_seconds,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds"
     )
     .eq("user_id", userId)
     .in("id", exerciseIds);
@@ -651,7 +689,7 @@ export async function findExercisesByIdsWithFullData(
 type WorkoutPlanSelectResult = Omit<WorkoutPlanRow, "user_id">;
 
 export function mapToDTO(
-  row: WorkoutPlanRow | WorkoutPlanSelectResult,
+  row: WorkoutPlanRow | WorkoutPlanSelectResult
 ): Omit<WorkoutPlanDTO, "exercises"> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user_id, ...rest } = row as WorkoutPlanRow;
@@ -673,7 +711,7 @@ export function mapExerciseToDTO(
     } | null;
     estimated_set_time_seconds?: number | null; // Override value from workout_plan_exercises
     planned_rest_after_series_seconds?: number | null; // Override value from workout_plan_exercises
-  },
+  }
 ): WorkoutPlanExerciseDTO {
   /* eslint-disable @typescript-eslint/no-unused-vars -- destructuring to omit from rest */
   const {

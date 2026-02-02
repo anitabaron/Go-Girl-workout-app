@@ -11,20 +11,20 @@ type CurrentExerciseInfoProps = {
 };
 
 /**
- * Komponent wyświetlający informacje o bieżącym ćwiczeniu:
- * tytuł, typ, partię oraz parametry planowane (planned_*).
+ * Component displaying information about the current exercise:
+ * title, type, body part, and planned parameters (planned_*).
  */
 export function CurrentExerciseInfo({
   exercise,
 }: Readonly<CurrentExerciseInfoProps>) {
   return (
     <div className="space-y-4 rounded-lg border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-zinc-950">
-      {/* Tytuł ćwiczenia */}
+      {/* Exercise title */}
       <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        {exercise.exercise_title_at_time || "Brak nazwy"}
+        {exercise.exercise_title_at_time || "No name"}
       </h2>
 
-      {/* Badge z typem i partią */}
+      {/* Badge with type and body part */}
       <div className="flex flex-wrap gap-2">
         {exercise.exercise_type_at_time && (
           <ExerciseTypeBadge type={exercise.exercise_type_at_time} />
@@ -40,13 +40,13 @@ export function CurrentExerciseInfo({
         )}
       </div>
 
-      {/* Parametry planowane */}
+      {/* Planned parameters */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
         {exercise.planned_sets !== null &&
           exercise.planned_sets !== undefined && (
             <div>
               <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                Serii planowanych
+                Planned sets
               </p>
               <p className="text-lg font-semibold">{exercise.planned_sets}</p>
             </div>
@@ -56,7 +56,7 @@ export function CurrentExerciseInfo({
           exercise.planned_reps !== undefined && (
             <div>
               <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                Powtórzeń planowanych
+                Planned reps
               </p>
               <p className="text-lg font-semibold">{exercise.planned_reps}</p>
             </div>
@@ -66,7 +66,7 @@ export function CurrentExerciseInfo({
           exercise.planned_duration_seconds !== undefined && (
             <div>
               <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                Czas trwania planowany
+                Planned duration
               </p>
               <p className="text-lg font-semibold">
                 {formatDuration(exercise.planned_duration_seconds)}
@@ -78,7 +78,7 @@ export function CurrentExerciseInfo({
           exercise.rest_in_between_seconds !== undefined && (
             <div>
               <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                Przerwa między seriami
+                Rest between sets
               </p>
               <p className="text-lg font-semibold">
                 {formatDuration(exercise.rest_in_between_seconds)}
@@ -90,7 +90,7 @@ export function CurrentExerciseInfo({
           exercise.rest_after_series_seconds !== undefined && (
             <div>
               <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                Przerwa po zakończonych seriach
+                Rest after completed sets
               </p>
               <p className="text-lg font-semibold">
                 {formatDuration(exercise.rest_after_series_seconds)}
