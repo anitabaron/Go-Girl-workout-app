@@ -49,8 +49,11 @@ describe("createExerciseService", () => {
   const mockExerciseDTO: ExerciseDTO = {
     id: "exercise-1",
     title: "Przysiady",
+    types: ["Main Workout"],
+    parts: ["Legs"],
     type: "Main Workout",
     part: "Legs",
+    is_unilateral: false,
     series: 3,
     reps: 10,
     rest_in_between_seconds: 60,
@@ -65,8 +68,8 @@ describe("createExerciseService", () => {
 
   const validPayload = {
     title: "Przysiady",
-    type: "Main Workout" as const,
-    part: "Legs" as const,
+    types: ["Main Workout"] as const,
+    parts: ["Legs"] as const,
     series: 3,
     reps: 10,
     rest_in_between_seconds: 60,

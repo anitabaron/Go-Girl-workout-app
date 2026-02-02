@@ -11,6 +11,7 @@ import {
   Dumbbell,
   Clock10,
   X,
+  Pencil,
   Trash2,
 } from "lucide-react";
 import {
@@ -21,29 +22,11 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteWorkoutSessionDialogM3 } from "../_components/DeleteWorkoutSessionDialogM3";
+import { CancelWorkoutSessionDialogM3 } from "../_components/CancelWorkoutSessionDialogM3";
 import type { SessionSummaryDTO } from "@/types";
 import { formatDateTime } from "@/lib/utils/date-format";
 import { formatSessionDuration } from "@/lib/utils/session-format";
-import { toast } from "sonner";
-import { useCancelSession } from "@/hooks/use-cancel-session";
 
 type M3WorkoutSessionCardProps = {
   readonly session: SessionSummaryDTO;
@@ -52,9 +35,7 @@ type M3WorkoutSessionCardProps = {
 function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const { cancel, isCancelling } = useCancelSession(session.id);
 
   const isInProgress = session.status === "in_progress";
 
@@ -87,40 +68,33 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/workout-sessions/${session.id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        if (response.status === 404) toast.error("Session not found");
-        else if (response.status === 401 || response.status === 403) {
-          toast.error("Unauthorized. Please log in again.");
-          router.push("/login");
-        } else toast.error("Failed to delete session");
-        return;
-      }
-      toast.success("Session deleted");
-      setIsDeleteDialogOpen(false);
-      router.refresh();
-    } catch {
-      toast.error("An error occurred while deleting the session");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCancelSession = async () => {
-    await cancel();
-    setIsCancelDialogOpen(false);
-    router.refresh();
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(
+      isInProgress
+        ? `/m3/workout-sessions/${session.id}/active`
+        : `/m3/workout-sessions/${session.id}?edit=1`,
+    );
   };
 
   return (
     <>
       <Card className="group relative h-full overflow-hidden transition-shadow hover:shadow-md">
-        <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleEdit}
+            aria-label={
+              isInProgress
+                ? `Resume session: ${planName}`
+                : `Edit session: ${planName}`
+            }
+          >
+            <Pencil className="size-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -225,62 +199,18 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
         )}
       </Card>
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent aria-describedby="delete-session-description">
-          <DialogHeader>
-            <DialogTitle>Delete workout session</DialogTitle>
-            <DialogDescription id="delete-session-description">
-              Are you sure you want to delete &quot;{planName}&quot;? This
-              action cannot be undone. All exercises and sets from this session
-              will also be deleted.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              aria-busy={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteWorkoutSessionDialogM3
+        session={session}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      />
 
-      <AlertDialog
+      <CancelWorkoutSessionDialogM3
+        sessionId={session.id}
         open={isCancelDialogOpen}
         onOpenChange={setIsCancelDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancel workout session?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to cancel this session? Progress will be
-              saved, but the session will be marked as completed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isCancelling}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCancelSession}
-              disabled={isCancelling}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isCancelling ? "Cancelling..." : "Confirm"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onSuccess={() => router.refresh()}
+      />
     </>
   );
 }

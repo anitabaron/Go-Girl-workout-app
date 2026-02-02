@@ -30,8 +30,11 @@ describe("ExercisesList", () => {
   const mockExercise: ExerciseDTO = {
     id: "exercise-1",
     title: "Przysiady",
+    types: ["Main Workout"],
+    parts: ["Legs"],
     type: "Main Workout",
     part: "Legs",
+    is_unilateral: false,
     series: 3,
     reps: 10,
     rest_in_between_seconds: 60,
@@ -47,8 +50,11 @@ describe("ExercisesList", () => {
   const mockExercise2: ExerciseDTO = {
     id: "exercise-2",
     title: "Pompki",
+    types: ["Main Workout"],
+    parts: ["Chest"],
     type: "Main Workout",
     part: "Chest",
+    is_unilateral: false,
     series: 3,
     reps: 15,
     rest_in_between_seconds: 45,

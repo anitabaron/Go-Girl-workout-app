@@ -45,7 +45,7 @@ export function ExercisesList({
 
   return (
     <div className="space-y-4" data-test-id="exercises-list">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
         {exercises.map((exercise) => (
           <ExerciseCard key={exercise.id} exercise={exercise} />
         ))}

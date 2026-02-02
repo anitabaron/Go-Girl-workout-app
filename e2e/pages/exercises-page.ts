@@ -26,9 +26,11 @@ export class ExercisesPage {
 
   /**
    * Navigate to exercises page
+   * Uses /m3/exercises directly - proxy rewrites /exercises to M3 by default,
+   * so explicit M3 path avoids cookie/proxy confusion.
    */
   async goto() {
-    await this.page.goto("/exercises");
+    await this.page.goto("/m3/exercises");
   }
 
   /**

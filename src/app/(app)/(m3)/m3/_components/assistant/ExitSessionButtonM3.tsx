@@ -34,7 +34,7 @@ export function ExitSessionButtonM3({ onExit }: ExitSessionButtonM3Props) {
         size="icon"
         onClick={() => setIsDialogOpen(true)}
         className="fixed left-4 top-4 z-50 h-10 w-10 rounded-full bg-[var(--m3-surface-container-high)] shadow-sm hover:bg-[var(--m3-surface-container-highest)] md:top-20"
-        aria-label="Wyjdź z sesji treningowej"
+        aria-label="Exit workout session"
       >
         <X className="size-5" />
       </Button>
@@ -42,20 +42,20 @@ export function ExitSessionButtonM3({ onExit }: ExitSessionButtonM3Props) {
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Wyjdź z sesji treningowej?</AlertDialogTitle>
+            <AlertDialogTitle>Exit workout session?</AlertDialogTitle>
             <AlertDialogDescription>
-              Czy na pewno chcesz opuścić sesję treningową? Twoje postępy
-              zostaną zapisane, ale sesja pozostanie aktywna i będziesz mógł ją
-              wznowić później.
+              Are you sure you want to leave the workout session? Your progress
+              will be saved, but the session will remain active and you can
+              resume it later.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Wyjdź
+              Exit
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

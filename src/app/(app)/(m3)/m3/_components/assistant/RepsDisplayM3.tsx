@@ -3,9 +3,18 @@
 import { Button } from "@/components/ui/button";
 import type { RepsDisplayProps } from "@/types/workout-session-assistant";
 
+const SIDE_LABELS: Record<
+  NonNullable<RepsDisplayProps["sideLabel"]>,
+  string
+> = {
+  one_side: "first side",
+  other_side: "second side",
+};
+
 export function RepsDisplayM3({
   reps,
   setNumber: _setNumber,
+  sideLabel,
   onComplete,
 }: Readonly<RepsDisplayProps>) {
   if (!reps || reps <= 0) return null;
@@ -23,7 +32,7 @@ export function RepsDisplayM3({
             {reps}
           </span>
           <span className="text-sm font-medium text-muted-foreground">
-            powtórzeń
+            reps{sideLabel ? ` (${SIDE_LABELS[sideLabel]})` : ""}
           </span>
         </div>
       </div>

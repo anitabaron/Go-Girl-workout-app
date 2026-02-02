@@ -48,6 +48,7 @@ function formStateToFormValues(
       exercise_title: ex.exercise_title,
       exercise_type: ex.exercise_type,
       exercise_part: ex.exercise_part,
+      exercise_is_unilateral: ex.exercise_is_unilateral,
       section_type: ex.section_type,
       section_order: ex.section_order,
       planned_sets: ex.planned_sets,
@@ -201,6 +202,7 @@ export function useWorkoutPlanForm({
           exercise_title: exercise.title,
           exercise_type: exercise.type,
           exercise_part: exercise.part,
+          exercise_is_unilateral: exercise.is_unilateral,
           section_type: sectionType,
           section_order: nextOrder,
           planned_sets: exercise.series ?? null,
@@ -321,6 +323,54 @@ export function useWorkoutPlanForm({
     });
   };
 
+  const handleSubmitError = (
+    result: { success: false; error: string; code?: string; details?: string },
+  ) => {
+    if (result.code === "BAD_REQUEST") {
+      handleBadRequest({
+        message: result.error,
+        details: result.details,
+      });
+      return;
+    }
+    if (result.code === "CONFLICT") {
+      handleConflict({ message: result.error });
+      return;
+    }
+    if (result.error.includes("nie został znaleziony")) {
+      handleNotFound();
+      return;
+    }
+    if (
+      result.error.includes("autoryzacji") ||
+      result.error.includes("Zaloguj")
+    ) {
+      handleAuth();
+      return;
+    }
+    toast.error(result.error);
+  };
+
+  const handleSubmitSuccess = async () => {
+    toast.success(
+      mode === "create"
+        ? "Plan treningowy został utworzony."
+        : "Plan treningowy został zaktualizowany.",
+    );
+    if (onSuccess) {
+      onSuccess();
+      return;
+    }
+    try {
+      await (router.push(successRedirect) as unknown as Promise<void>);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      if (typeof globalThis !== "undefined" && globalThis.location) {
+        globalThis.location.href = successRedirect;
+      }
+    }
+  };
+
   const onSubmit = async (data: WorkoutPlanFormValues) => {
     const result =
       mode === "create"
@@ -331,44 +381,11 @@ export function useWorkoutPlanForm({
           );
 
     if (!result.success) {
-      if (result.code === "BAD_REQUEST") {
-        handleBadRequest({
-          message: result.error,
-          details: result.details,
-        });
-      } else if (result.code === "CONFLICT") {
-        handleConflict({ message: result.error });
-      } else if (result.error.includes("nie został znaleziony")) {
-        handleNotFound();
-      } else if (
-        result.error.includes("autoryzacji") ||
-        result.error.includes("Zaloguj")
-      ) {
-        handleAuth();
-      } else {
-        toast.error(result.error);
-      }
+      handleSubmitError(result);
       return;
     }
 
-    toast.success(
-      mode === "create"
-        ? "Plan treningowy został utworzony."
-        : "Plan treningowy został zaktualizowany.",
-    );
-
-    if (onSuccess) {
-      onSuccess();
-    } else {
-      try {
-        await (router.push(successRedirect) as unknown as Promise<void>);
-      } catch (error) {
-        console.error("Navigation error:", error);
-        if (typeof globalThis !== "undefined" && globalThis.location) {
-          globalThis.location.href = successRedirect;
-        }
-      }
-    }
+    await handleSubmitSuccess();
   };
 
   const handleSubmit = rhfHandleSubmit(onSubmit, () => scrollToFirstError());

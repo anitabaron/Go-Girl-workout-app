@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/ui/form-field";
 import { FormNumberInput } from "@/components/ui/form-number-input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -18,6 +19,21 @@ import {
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
 import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
+
+function createCheckboxGroupChangeHandler(
+  currentValue: readonly string[] | undefined,
+  opt: string,
+  onChange: (value: string[]) => void,
+) {
+  return (checked: boolean | "indeterminate") => {
+    const current = (currentValue ?? []) as string[];
+    if (checked) {
+      onChange([...current, opt]);
+    } else {
+      onChange(current.filter((v) => v !== opt));
+    }
+  };
+}
 
 const LEVEL_OPTIONS = [
   { value: "none", label: "Brak" },
@@ -63,6 +79,19 @@ type FieldConfig =
       min?: number;
       required?: boolean;
       "data-test-id"?: string;
+    }
+  | {
+      key: "types" | "parts";
+      label: string;
+      type: "checkboxes";
+      options: readonly string[];
+      "data-test-id"?: string;
+    }
+  | {
+      key: keyof ExerciseFormValues;
+      label: string;
+      type: "checkbox";
+      "data-test-id"?: string;
     };
 
 const METADATA_FIELDS: FieldConfig[] = [
@@ -74,19 +103,17 @@ const METADATA_FIELDS: FieldConfig[] = [
     "data-test-id": "exercise-form-title",
   },
   {
-    key: "type",
+    key: "types",
     label: "Typ",
-    type: "select",
+    type: "checkboxes",
     options: exerciseTypeValues,
-    placeholder: "Wybierz typ",
     "data-test-id": "exercise-form-type",
   },
   {
-    key: "part",
+    key: "parts",
     label: "Partia",
-    type: "select",
+    type: "checkboxes",
     options: exercisePartValues,
-    placeholder: "Wybierz partię",
     "data-test-id": "exercise-form-part",
   },
   {
@@ -102,6 +129,12 @@ const METADATA_FIELDS: FieldConfig[] = [
     type: "textarea",
     rows: 4,
     "data-test-id": "exercise-form-details",
+  },
+  {
+    key: "is_unilateral",
+    label: "Unilateral",
+    type: "checkbox",
+    "data-test-id": "exercise-form-is-unilateral",
   },
 ];
 
@@ -175,7 +208,7 @@ export function ExerciseFormFields({
   }, []);
 
   const renderField = (config: FieldConfig) => {
-    const error = errors[config.key]?.message as string | undefined;
+    const error = errors[config.key]?.message;
 
     if (config.type === "text") {
       return (
@@ -195,7 +228,7 @@ export function ExerciseFormFields({
                 id={config.key}
                 type="text"
                 data-test-id={config["data-test-id"]}
-                value={field.value ?? ""}
+                value={typeof field.value === "string" ? field.value : ""}
                 onChange={(e) => field.onChange(e.target.value)}
                 onBlur={field.onBlur}
                 disabled={disabled}
@@ -218,7 +251,7 @@ export function ExerciseFormFields({
             <FormField label={config.label} htmlFor={config.key} error={error}>
               <Textarea
                 id={config.key}
-                value={field.value ?? ""}
+                value={typeof field.value === "string" ? field.value : ""}
                 onChange={(e) => field.onChange(e.target.value)}
                 onBlur={field.onBlur}
                 disabled={disabled}
@@ -227,6 +260,52 @@ export function ExerciseFormFields({
                 aria-describedby={error ? `${config.key}-error` : undefined}
                 data-test-id={config["data-test-id"]}
               />
+            </FormField>
+          )}
+        />
+      );
+    }
+
+    if (config.type === "checkboxes" && "options" in config) {
+      return (
+        <Controller
+          key={config.key}
+          name={config.key}
+          control={control}
+          render={({ field }) => (
+            <FormField
+              label={config.label}
+              htmlFor={config.key}
+              error={error}
+              className="w-full"
+            >
+              <fieldset
+                className="flex flex-wrap gap-3 border-0 p-0"
+                data-test-id={config["data-test-id"]}
+              >
+                <legend className="sr-only">{config.label}</legend>
+                {config.options.map((opt) => (
+                  <label
+                    key={opt}
+                    className="flex cursor-pointer items-center gap-2 text-sm"
+                  >
+                    <Checkbox
+                      checked={
+                        (field.value as readonly string[])?.includes(opt) ??
+                        false
+                      }
+                      onCheckedChange={createCheckboxGroupChangeHandler(
+                        field.value,
+                        opt,
+                        field.onChange,
+                      )}
+                      disabled={disabled}
+                      aria-invalid={error ? "true" : "false"}
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </fieldset>
             </FormField>
           )}
         />
@@ -313,6 +392,45 @@ export function ExerciseFormFields({
       );
     }
 
+    if (config.type === "checkbox") {
+      return (
+        <Controller
+          key={config.key}
+          name={config.key}
+          control={control}
+          render={({ field }) => (
+            <FormField
+              label={config.label}
+              htmlFor={config.key}
+              error={error}
+              className="w-full"
+            >
+              <div
+                className="flex items-center gap-2"
+                data-test-id={config["data-test-id"]}
+              >
+                <Checkbox
+                  id={config.key}
+                  checked={field.value === true}
+                  onCheckedChange={(checked) =>
+                    field.onChange(checked === true)
+                  }
+                  disabled={disabled}
+                  aria-invalid={error ? "true" : "false"}
+                />
+                <label
+                  htmlFor={config.key}
+                  className="cursor-pointer text-sm font-medium"
+                >
+                  left and right
+                </label>
+              </div>
+            </FormField>
+          )}
+        />
+      );
+    }
+
     if (config.type === "number") {
       return (
         <Controller
@@ -368,12 +486,12 @@ export function ExerciseFormFields({
 
 function ExerciseMetadataFields({
   renderField,
-}: {
+}: Readonly<{
   control: Control<ExerciseFormValues>;
   errors: FieldErrors<ExerciseFormValues>;
   disabled: boolean;
   renderField: (config: FieldConfig) => React.ReactNode;
-}) {
+}>) {
   return (
     <>
       {renderField(METADATA_FIELDS[0])}
@@ -381,18 +499,19 @@ function ExerciseMetadataFields({
         {METADATA_FIELDS.slice(1, 4).map((config) => renderField(config))}
       </div>
       {renderField(METADATA_FIELDS[4])}
+      {renderField(METADATA_FIELDS[5])}
     </>
   );
 }
 
 function ExerciseMetricsFields({
   renderField,
-}: {
+}: Readonly<{
   control: Control<ExerciseFormValues>;
   errors: FieldErrors<ExerciseFormValues>;
   disabled: boolean;
   renderField: (config: FieldConfig) => React.ReactNode;
-}) {
+}>) {
   return (
     <div className="flex gap-2 justify-between items-center">
       {renderField(METRICS_FIELDS[0])}
@@ -405,12 +524,12 @@ function ExerciseMetricsFields({
 
 function ExerciseRestFields({
   renderField,
-}: {
+}: Readonly<{
   control: Control<ExerciseFormValues>;
   errors: FieldErrors<ExerciseFormValues>;
   disabled: boolean;
   renderField: (config: FieldConfig) => React.ReactNode;
-}) {
+}>) {
   return (
     <div className="sm:flex gap-2 justify-between items-center">
       {REST_FIELDS.map((config) => renderField(config))}

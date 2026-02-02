@@ -9,8 +9,8 @@ export class ExerciseFormPage {
   readonly page: Page;
   readonly form: Locator;
   readonly titleInput: Locator;
-  readonly typeSelect: Locator;
-  readonly partSelect: Locator;
+  readonly typesContainer: Locator;
+  readonly partsContainer: Locator;
   readonly levelSelect: Locator;
   readonly detailsTextarea: Locator;
   readonly repsInput: Locator;
@@ -26,8 +26,8 @@ export class ExerciseFormPage {
     this.page = page;
     this.form = page.locator('[data-test-id="exercise-form"]');
     this.titleInput = page.locator('[data-test-id="exercise-form-title"]');
-    this.typeSelect = page.locator('[data-test-id="exercise-form-type"]');
-    this.partSelect = page.locator('[data-test-id="exercise-form-part"]');
+    this.typesContainer = page.locator('[data-test-id="exercise-form-types"]');
+    this.partsContainer = page.locator('[data-test-id="exercise-form-parts"]');
     this.levelSelect = page.locator('[data-test-id="exercise-form-level"]');
     this.detailsTextarea = page.locator('[data-test-id="exercise-form-details"]');
     this.repsInput = page.locator('[data-test-id="exercise-form-reps"]');
@@ -69,23 +69,31 @@ export class ExerciseFormPage {
   }
 
   /**
-   * Select type from dropdown
+   * Select type(s) via checkbox. Pass single value or array.
    */
-  async selectType(type: string) {
-    await this.typeSelect.click();
-    // Wait for dropdown to open and use getByRole for better reliability
-    await this.page.getByRole('option', { name: type, exact: true }).waitFor({ state: 'visible', timeout: 5000 });
-    await this.page.getByRole('option', { name: type, exact: true }).click();
+  async selectType(type: string | string[]) {
+    const types = Array.isArray(type) ? type : [type];
+    for (const t of types) {
+      const checkbox = this.page.getByRole('checkbox', { name: t, exact: true });
+      await checkbox.waitFor({ state: 'visible', timeout: 5000 });
+      if (!(await checkbox.isChecked())) {
+        await checkbox.click();
+      }
+    }
   }
 
   /**
-   * Select part from dropdown
+   * Select part(s) via checkbox. Pass single value or array.
    */
-  async selectPart(part: string) {
-    await this.partSelect.click();
-    // Wait for dropdown to open and use getByRole for better reliability
-    await this.page.getByRole('option', { name: part, exact: true }).waitFor({ state: 'visible', timeout: 5000 });
-    await this.page.getByRole('option', { name: part, exact: true }).click();
+  async selectPart(part: string | string[]) {
+    const parts = Array.isArray(part) ? part : [part];
+    for (const p of parts) {
+      const checkbox = this.page.getByRole('checkbox', { name: p, exact: true });
+      await checkbox.waitFor({ state: 'visible', timeout: 5000 });
+      if (!(await checkbox.isChecked())) {
+        await checkbox.click();
+      }
+    }
   }
 
   /**

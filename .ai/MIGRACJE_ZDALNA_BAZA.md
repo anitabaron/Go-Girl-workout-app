@@ -43,6 +43,8 @@ pnpm exec supabase db push
 
 **Uwaga:** Jeśli chcesz mieć te same migracje w obu bazach, musisz wykonać `db push` osobno dla każdego projektu (po każdym `link`).
 
+**⚠️ Testy E2E:** Migracje **muszą** być zastosowane do bazy E2E (`rqhqncdnkmsgskptrkyn`), inaczej testy E2E (np. `e2e/exercises/add-exercise.spec.ts`) będą się nie powiodły – aplikacja oczekuje nowego schematu (np. `types`, `parts` zamiast `type`, `part`).
+
 ---
 
 ## ⚠️ WAŻNE: Backup przed migracjami!

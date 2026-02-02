@@ -488,8 +488,9 @@ function createSessionSnapshots(
     {
       id: string;
       title: string;
-      type: Database["public"]["Enums"]["exercise_type"];
-      part: Database["public"]["Enums"]["exercise_part"];
+      types: Database["public"]["Enums"]["exercise_type"][];
+      parts: Database["public"]["Enums"]["exercise_part"][];
+      is_unilateral?: boolean;
       reps: number | null;
       duration_seconds: number | null;
       series: number;
@@ -502,6 +503,7 @@ function createSessionSnapshots(
   exercise_title_at_time: string;
   exercise_type_at_time: Database["public"]["Enums"]["exercise_type"];
   exercise_part_at_time: Database["public"]["Enums"]["exercise_part"];
+  exercise_is_unilateral_at_time: boolean;
   planned_sets: number | null;
   planned_reps: number | null;
   planned_duration_seconds: number | null;
@@ -537,12 +539,14 @@ function createSessionSnapshots(
     let exercisePart: Database["public"]["Enums"]["exercise_part"];
     let exerciseId: string | null = planExercise.exercise_id;
 
+    let exerciseIsUnilateral = false;
     if (planExercise.exercise_id) {
       const exercise = exercisesMap.get(planExercise.exercise_id);
       if (exercise) {
         exerciseTitle = exercise.title;
-        exerciseType = exercise.type;
-        exercisePart = exercise.part;
+        exerciseType = exercise.types?.[0] ?? ("Main Workout" as const);
+        exercisePart = exercise.parts?.[0] ?? ("Legs" as const);
+        exerciseIsUnilateral = exercise.is_unilateral ?? false;
       } else {
         // Fallback do snapshot z planu
         exerciseTitle = planExercise.exercise_title ?? "Nieznane ćwiczenie";
@@ -571,6 +575,7 @@ function createSessionSnapshots(
       exercise_title_at_time: exerciseTitle,
       exercise_type_at_time: exerciseType,
       exercise_part_at_time: exercisePart,
+      exercise_is_unilateral_at_time: exerciseIsUnilateral,
       planned_sets: plannedSets,
       planned_reps: plannedReps,
       planned_duration_seconds: plannedDuration,
@@ -598,7 +603,7 @@ function validateAutosavePathParams(sessionId: string, order: number): void {
 }
 
 /**
- * Sprawdza istnienie sesji i waliduje jej status.
+ * Sprawdza istnienie sesji. Edycja dozwolona dla sesji in_progress i completed.
  */
 async function validateSessionForAutosave(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -619,13 +624,6 @@ async function validateSessionForAutosave(
     throw new ServiceError(
       "NOT_FOUND",
       "Sesja treningowa nie została znaleziona.",
-    );
-  }
-
-  if (session.status !== "in_progress") {
-    throw new ServiceError(
-      "CONFLICT",
-      "Sesja treningowa nie jest w statusie 'in_progress'.",
     );
   }
 
@@ -798,7 +796,7 @@ export async function autosaveWorkoutSessionExerciseService(
 
   const supabase = await createClient();
 
-  await validateSessionForAutosave(supabase, userId, sessionId);
+  const session = await validateSessionForAutosave(supabase, userId, sessionId);
 
   const exercise = await validateExerciseForAutosave(
     supabase,
@@ -875,12 +873,15 @@ export async function autosaveWorkoutSessionExerciseService(
     }
   }
 
-  await updateCursorIfNeeded(
-    supabase,
-    sessionId,
-    order,
-    parsed.advance_cursor_to_next === true,
-  );
+  // Aktualizuj kursor tylko dla sesji in_progress (nie dla edycji completed)
+  if (session.status === "in_progress") {
+    await updateCursorIfNeeded(
+      supabase,
+      sessionId,
+      order,
+      parsed.advance_cursor_to_next === true,
+    );
+  }
 
   const result = await fetchUpdatedExerciseWithCursor(
     supabase,

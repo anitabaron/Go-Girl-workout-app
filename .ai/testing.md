@@ -39,9 +39,6 @@ pnpm test:e2e:ui
 pnpm test:e2e:codegen
 
 # Run specific test file
-pnpm test:e2e e2e/example.spec.ts
-
-# Run workout plans tests
 pnpm test:e2e e2e/workout-plans/workout-plan.spec.ts
 
 # Run all tests from a directory
@@ -156,5 +153,3 @@ await teardownAllData(true); // verbose = true
 See example test files:
 - `src/__tests__/example.test.ts` - Unit test example
 - `src/components/__tests__/example.test.tsx` - Component test example
-- `e2e/example.spec.ts` - E2E test example
-- `e2e/pages/example-page.ts` - Page Object Model example

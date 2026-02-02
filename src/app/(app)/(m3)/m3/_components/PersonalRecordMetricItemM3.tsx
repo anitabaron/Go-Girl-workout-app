@@ -18,11 +18,8 @@ function formatSeriesValue(
   switch (metricType) {
     case "total_reps":
       return value.toString();
-    case "max_duration": {
-      const minutes = Math.floor(value / 60);
-      const seconds = value % 60;
-      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-    }
+    case "max_duration":
+      return `${value}s`;
     case "max_weight":
       return `${value} kg`;
     default:
@@ -93,7 +90,7 @@ export function PersonalRecordMetricItemM3({
                       >
                         {formatted}
                       </span>
-                      {index < sortedKeys.length - 1 && ", "}
+                      {index < sortedKeys.length - 1 ? ", " : ""}
                     </span>
                   );
                 })}
@@ -115,7 +112,7 @@ export function PersonalRecordMetricItemM3({
         <Link
           href={`/m3/workout-sessions/${metric.sessionId}`}
           className="ml-4 shrink-0 m3-label text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
-          aria-label={`Zobacz szczegóły sesji treningowej, w której osiągnięto ten rekord`}
+          aria-label="Zobacz szczegóły sesji treningowej, w której osiągnięto ten rekord"
           onClick={(e) => e.stopPropagation()}
         >
           Zobacz sesję

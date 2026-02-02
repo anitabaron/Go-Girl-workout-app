@@ -16,7 +16,7 @@ export function CurrentExerciseInfoM3({
   return (
     <div className="space-y-4 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-4 shadow-sm">
       <h2 className="m3-headline">
-        {exercise.exercise_title_at_time || "Brak nazwy"}
+        {exercise.exercise_title_at_time || "No name"}
       </h2>
 
       <div className="flex flex-wrap gap-2">
@@ -32,6 +32,14 @@ export function CurrentExerciseInfoM3({
               exercise.exercise_part_at_time}
           </Badge>
         )}
+        {exercise.exercise_is_unilateral_at_time && (
+          <Badge
+            variant="outline"
+            className="border-[var(--m3-outline)] text-[var(--m3-on-surface-variant)]"
+          >
+            Unilateral (first / second side)
+          </Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
@@ -39,7 +47,7 @@ export function CurrentExerciseInfoM3({
           exercise.planned_sets !== undefined && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Serii planowanych
+                Planned sets
               </p>
               <p className="m3-title">{exercise.planned_sets}</p>
             </div>
@@ -49,7 +57,7 @@ export function CurrentExerciseInfoM3({
           exercise.planned_reps !== undefined && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Powtórzeń planowanych
+                Planned reps
               </p>
               <p className="m3-title">{exercise.planned_reps}</p>
             </div>
@@ -59,7 +67,7 @@ export function CurrentExerciseInfoM3({
           exercise.planned_duration_seconds !== undefined && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Czas trwania planowany
+                Planned duration
               </p>
               <p className="m3-title">
                 {formatDuration(exercise.planned_duration_seconds)}
@@ -71,7 +79,7 @@ export function CurrentExerciseInfoM3({
           exercise.rest_in_between_seconds !== undefined && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Przerwa między seriami
+                Rest between sets
               </p>
               <p className="m3-title">
                 {formatDuration(exercise.rest_in_between_seconds)}
@@ -83,7 +91,7 @@ export function CurrentExerciseInfoM3({
           exercise.rest_after_series_seconds !== undefined && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Przerwa po zakończonych seriach
+                Rest after completed sets
               </p>
               <p className="m3-title">
                 {formatDuration(exercise.rest_after_series_seconds)}

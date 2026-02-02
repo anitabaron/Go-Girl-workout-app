@@ -20,14 +20,24 @@ type UseExerciseFormProps = {
   onSuccess?: () => void | Promise<void>;
 };
 
+function toFormArray(
+  arr: string[] | undefined,
+  fallback: string | undefined,
+): string[] {
+  if (arr?.length) return [...arr];
+  if (fallback) return [fallback];
+  return [];
+}
+
 function dtoToFormValues(dto?: ExerciseDTO): ExerciseFormValues {
   if (!dto) {
     return {
       title: "",
-      type: "" as ExerciseFormValues["type"],
-      part: "" as ExerciseFormValues["part"],
+      types: [] as ExerciseFormValues["types"],
+      parts: [] as ExerciseFormValues["parts"],
       level: "",
       details: "",
+      is_unilateral: false,
       reps: "",
       duration_seconds: "",
       series: "",
@@ -39,10 +49,11 @@ function dtoToFormValues(dto?: ExerciseDTO): ExerciseFormValues {
 
   return {
     title: dto.title ?? "",
-    type: dto.type ?? ("" as ExerciseFormValues["type"]),
-    part: dto.part ?? ("" as ExerciseFormValues["part"]),
+    types: toFormArray(dto.types, dto.type) as ExerciseFormValues["types"],
+    parts: toFormArray(dto.parts, dto.part) as ExerciseFormValues["parts"],
     level: dto.level ?? "",
     details: dto.details ?? "",
+    is_unilateral: dto.is_unilateral ?? false,
     reps: dto.reps?.toString() ?? "",
     duration_seconds: dto.duration_seconds?.toString() ?? "",
     series: dto.series.toString(),
@@ -55,10 +66,11 @@ function dtoToFormValues(dto?: ExerciseDTO): ExerciseFormValues {
 
 const EXERCISE_FIELD_MAPPING: Record<string, string> = {
   title: "title",
-  type: "type",
-  part: "part",
+  types: "types",
+  parts: "parts",
   level: "level",
   details: "details",
+  is_unilateral: "is_unilateral",
   reps: "reps",
   duration_seconds: "duration_seconds",
   series: "series",

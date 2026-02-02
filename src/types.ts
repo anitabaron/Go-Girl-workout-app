@@ -60,8 +60,6 @@ export type CursorPage<TItem> = {
 export type ExerciseCreateCommand = Pick<
   TablesInsert<"exercises">,
   | "title"
-  | "type"
-  | "part"
   | "level"
   | "details"
   | "reps"
@@ -70,7 +68,11 @@ export type ExerciseCreateCommand = Pick<
   | "rest_in_between_seconds"
   | "rest_after_series_seconds"
   | "estimated_set_time_seconds"
->;
+> & {
+  types: ExerciseType[];
+  parts: ExercisePart[];
+  is_unilateral?: boolean;
+};
 
 export type ExerciseUpdateCommand = Partial<ExerciseCreateCommand>;
 
@@ -85,7 +87,17 @@ export type ExerciseQueryParams = {
   cursor?: string | null;
 };
 
-export type ExerciseDTO = Omit<ExerciseEntity, "user_id" | "title_normalized">;
+export type ExerciseDTO = Omit<
+  ExerciseEntity,
+  "user_id" | "title_normalized"
+> & {
+  types: ExerciseType[];
+  parts: ExercisePart[];
+  /** First type (for backward compat in display) */
+  type: ExerciseType;
+  /** First part (for backward compat in display) */
+  part: ExercisePart;
+};
 
 /**
  * Workout Plans
@@ -144,6 +156,8 @@ export type WorkoutPlanExerciseDTO = Omit<
   planned_rest_after_series_seconds?: number | null;
   // Flaga wskazująca czy ćwiczenie istnieje w bazie
   is_exercise_in_library?: boolean;
+  // Czy ćwiczenie jest unilateralne (z exercises gdy exercise_id nie null)
+  exercise_is_unilateral?: boolean | null;
 };
 
 export type WorkoutPlanDTO = Omit<WorkoutPlanEntity, "user_id"> & {

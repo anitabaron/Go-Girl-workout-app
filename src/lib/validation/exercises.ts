@@ -54,10 +54,11 @@ const REST_ERROR =
 const exerciseBaseSchema = z
   .object({
     title: titleSchema,
-    type: z.enum(exerciseTypeValues),
-    part: z.enum(exercisePartValues),
+    types: z.array(z.enum(exerciseTypeValues)).min(1),
+    parts: z.array(z.enum(exercisePartValues)).min(1),
     level: levelSchema,
     details: detailsSchema,
+    is_unilateral: z.boolean().optional().default(false),
     reps: repsSchema,
     duration_seconds: durationSchema,
     series: seriesSchema,
@@ -109,7 +110,7 @@ export const exerciseQuerySchema = z
     search: z.string().trim().max(100).optional(),
     part: z.enum(exercisePartValues).optional(),
     type: z.enum(exerciseTypeValues).optional(),
-    exercise_id: z.string().uuid().optional(),
+    exercise_id: z.uuid().optional(),
     sort: z.enum(exerciseSortFields).default("created_at"),
     order: z.enum(exerciseOrderValues).default("desc"),
     limit: z

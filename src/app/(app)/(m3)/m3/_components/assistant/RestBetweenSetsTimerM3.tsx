@@ -32,7 +32,7 @@ export function RestBetweenSetsTimerM3({
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
               {remainingTime}
             </div>
-            <div className="text-sm text-muted-foreground">sekund przerwy</div>
+            <div className="text-sm text-muted-foreground">seconds rest</div>
           </div>
         )}
       </CountdownCircleTimer>
@@ -42,7 +42,7 @@ export function RestBetweenSetsTimerM3({
         className="m3-cta min-w-[120px] text-md font-light"
         data-test-id="timer-skip-break-button"
       >
-        Pomiń przerwę
+        Skip break
       </Button>
     </div>
   );

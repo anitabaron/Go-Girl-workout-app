@@ -28,13 +28,14 @@ export function SetLogsListM3({
 }: Readonly<SetLogsListM3Props>) {
   return (
     <div
-      className={`space-y-4 ${isSkipped ? "pointer-events-none opacity-50 grayscale" : ""}`}
+      className={`space-y-4 ${
+        isSkipped ? "pointer-events-none opacity-50 grayscale" : ""
+      }`}
     >
       {sets.length === 0 ? (
         <div className="rounded-[var(--m3-radius-lg)] border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Brak serii. Kliknij &quot;Dodaj serię&quot;, aby dodać pierwszą
-            serię.
+            No sets. Click &quot;Add set&quot; to add the first set.
           </p>
         </div>
       ) : (
@@ -60,10 +61,10 @@ export function SetLogsListM3({
           size="sm"
           onClick={onAdd}
           disabled={isSkipped}
-          aria-label="Dodaj nową serię"
+          aria-label="Add new set"
         >
           <Plus className="size-4" />
-          <span className="ml-2">Dodaj serię</span>
+          <span className="ml-2">Add set</span>
         </Button>
       </div>
     </div>

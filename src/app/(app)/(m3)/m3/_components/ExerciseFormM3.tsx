@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { FormNumberInput } from "@/components/ui/form-number-input";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,20 @@ const LEVEL_OPTIONS = [
   { value: "Intermediate", label: "Intermediate" },
   { value: "Advanced", label: "Advanced" },
 ] as const;
+
+function createArrayCheckboxChangeHandler(
+  field: { value: unknown; onChange: (value: string[]) => void },
+  opt: string,
+) {
+  return (checked: boolean) => {
+    const current = Array.isArray(field.value) ? field.value : [];
+    if (checked) {
+      field.onChange([...current, opt]);
+    } else {
+      field.onChange(current.filter((v) => v !== opt));
+    }
+  };
+}
 
 type ExerciseFormM3Props = {
   initialData?: ExerciseDTO;
@@ -181,98 +196,29 @@ function ExerciseFormM3Fields({
 
   return (
     <div className="space-y-4">
-      <Controller
-        name="title"
-        control={control}
-        render={({ field }) => (
-          <FormField
-            label="Title"
-            htmlFor="title"
-            error={errors.title?.message as string | undefined}
-            required
-          >
-            <Input
-              ref={titleInputRef}
-              id="title"
-              type="text"
-              data-test-id="exercise-form-title"
-              value={field.value ?? ""}
-              onChange={(e) => field.onChange(e.target.value)}
-              onBlur={field.onBlur}
-              disabled={disabled}
-              aria-invalid={!!errors.title}
-              className="w-full"
-            />
-          </FormField>
-        )}
-      />
-
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]">
         <Controller
-          name="type"
+          name="title"
           control={control}
           render={({ field }) => (
             <FormField
-              label="Type"
-              htmlFor="type"
-              error={errors.type?.message as string | undefined}
-              className="w-full"
+              label="Title"
+              htmlFor="title"
+              error={errors.title?.message as string | undefined}
+              required
             >
-              <Select
-                value={String(field.value ?? "")}
-                onValueChange={field.onChange}
+              <Input
+                ref={titleInputRef}
+                id="title"
+                type="text"
+                data-test-id="exercise-form-title"
+                value={field.value ?? ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
                 disabled={disabled}
-              >
-                <SelectTrigger
-                  id="type"
-                  aria-invalid={!!errors.type}
-                  data-test-id="exercise-form-type"
-                  className="w-full"
-                >
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {exerciseTypeValues.map((opt) => (
-                    <SelectItem key={opt} value={opt}>
-                      {opt}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormField>
-          )}
-        />
-        <Controller
-          name="part"
-          control={control}
-          render={({ field }) => (
-            <FormField
-              label="Part"
-              htmlFor="part"
-              error={errors.part?.message as string | undefined}
-              className="w-full"
-            >
-              <Select
-                value={String(field.value ?? "")}
-                onValueChange={field.onChange}
-                disabled={disabled}
-              >
-                <SelectTrigger
-                  id="part"
-                  aria-invalid={!!errors.part}
-                  data-test-id="exercise-form-part"
-                  className="w-full"
-                >
-                  <SelectValue placeholder="Select part" />
-                </SelectTrigger>
-                <SelectContent>
-                  {exercisePartValues.map((opt) => (
-                    <SelectItem key={opt} value={opt}>
-                      {opt}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                aria-invalid={!!errors.title}
+                className="w-full"
+              />
             </FormField>
           )}
         />
@@ -284,7 +230,7 @@ function ExerciseFormM3Fields({
               label="Level"
               htmlFor="level"
               error={errors.level?.message as string | undefined}
-              className="w-full"
+              className="w-full md:min-w-[140px]"
             >
               <Select
                 value={field.value || ""}
@@ -307,6 +253,123 @@ function ExerciseFormM3Fields({
                   ))}
                 </SelectContent>
               </Select>
+            </FormField>
+          )}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Controller
+          name="types"
+          control={control}
+          render={({ field }) => (
+            <FormField
+              label="Type"
+              htmlFor="exercise-form-types"
+              error={errors.types?.message as string | undefined}
+              required
+              className="w-full"
+            >
+              <fieldset
+                className="flex flex-wrap gap-3 border-0 p-0"
+                data-test-id="exercise-form-types"
+              >
+                <legend id="types-label" className="sr-only">
+                  Select types (at least one)
+                </legend>
+                {exerciseTypeValues.map((opt) => (
+                  <label
+                    key={opt}
+                    className="flex cursor-pointer items-center gap-2 text-sm"
+                  >
+                    <Checkbox
+                      checked={
+                        Array.isArray(field.value) && field.value.includes(opt)
+                      }
+                      onCheckedChange={createArrayCheckboxChangeHandler(
+                        field,
+                        opt,
+                      )}
+                      disabled={disabled}
+                      aria-invalid={!!errors.types}
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </fieldset>
+            </FormField>
+          )}
+        />
+        <Controller
+          name="parts"
+          control={control}
+          render={({ field }) => (
+            <FormField
+              label="Part"
+              htmlFor="exercise-form-parts"
+              error={errors.parts?.message as string | undefined}
+              required
+              className="w-full"
+            >
+              <fieldset
+                className="flex flex-wrap gap-3 border-0 p-0"
+                data-test-id="exercise-form-parts"
+              >
+                <legend id="parts-label" className="sr-only">
+                  Select parts (at least one)
+                </legend>
+                {exercisePartValues.map((opt) => (
+                  <label
+                    key={opt}
+                    className="flex cursor-pointer items-center gap-2 text-sm"
+                  >
+                    <Checkbox
+                      checked={
+                        Array.isArray(field.value) && field.value.includes(opt)
+                      }
+                      onCheckedChange={createArrayCheckboxChangeHandler(
+                        field,
+                        opt,
+                      )}
+                      disabled={disabled}
+                      aria-invalid={!!errors.parts}
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </fieldset>
+            </FormField>
+          )}
+        />
+        <Controller
+          name="is_unilateral"
+          control={control}
+          render={({ field }) => (
+            <FormField
+              label="Unilateral"
+              htmlFor="is_unilateral"
+              error={errors.is_unilateral?.message as string | undefined}
+            >
+              <div
+                className="flex items-center gap-2"
+                data-test-id="exercise-form-is-unilateral"
+              >
+                <Checkbox
+                  id="is_unilateral"
+                  checked={field.value ?? false}
+                  onCheckedChange={(checked) =>
+                    field.onChange(checked === true)
+                  }
+                  disabled={disabled}
+                  aria-invalid={!!errors.is_unilateral}
+                />
+                <label
+                  htmlFor="is_unilateral"
+                  className="cursor-pointer text-sm font-medium"
+                >
+                  Left and right
+                </label>
+              </div>
             </FormField>
           )}
         />
@@ -343,7 +406,11 @@ function ExerciseFormM3Fields({
           render={({ field }) => (
             <FormNumberInput
               id="reps"
-              label="Reps"
+              label={
+                <>
+                  Reps <span className="text-destructive">**</span>
+                </>
+              }
               value={String(field.value ?? "")}
               onChange={field.onChange}
               onBlur={field.onBlur}
@@ -361,7 +428,11 @@ function ExerciseFormM3Fields({
           render={({ field }) => (
             <FormNumberInput
               id="duration_seconds"
-              label="Duration (sec)"
+              label={
+                <>
+                  Duration (sec) <span className="text-destructive">**</span>
+                </>
+              }
               value={String(field.value ?? "")}
               onChange={field.onChange}
               onBlur={field.onBlur}
@@ -394,7 +465,8 @@ function ExerciseFormM3Fields({
         />
       </div>
       <p className="m3-label text-muted-foreground">
-        Provide exactly one: reps or duration
+        Provide exactly one: reps or duration{" "}
+        <span className="text-destructive">**</span>
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -404,7 +476,12 @@ function ExerciseFormM3Fields({
           render={({ field }) => (
             <FormNumberInput
               id="rest_in_between_seconds"
-              label="Rest between sets (sec)"
+              label={
+                <>
+                  Rest between sets (sec){" "}
+                  <span className="text-destructive">***</span>
+                </>
+              }
               value={String(field.value ?? "")}
               onChange={field.onChange}
               onBlur={field.onBlur}
@@ -424,7 +501,12 @@ function ExerciseFormM3Fields({
           render={({ field }) => (
             <FormNumberInput
               id="rest_after_series_seconds"
-              label="Rest after series (sec)"
+              label={
+                <>
+                  Rest after series (sec){" "}
+                  <span className="text-destructive">***</span>
+                </>
+              }
               value={String(field.value ?? "")}
               onChange={field.onChange}
               onBlur={field.onBlur}
@@ -460,7 +542,8 @@ function ExerciseFormM3Fields({
         />
       </div>
       <p className="m3-label text-muted-foreground">
-        Provide at least one rest field
+        Provide at least one rest field{" "}
+        <span className="text-destructive">***</span>
       </p>
     </div>
   );

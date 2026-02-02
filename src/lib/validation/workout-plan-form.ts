@@ -153,6 +153,7 @@ export const workoutPlanExerciseItemFormSchema = z
     exercise_title: workoutPlanExerciseTitleSchema,
     exercise_type: z.enum(exerciseTypeValues).optional(),
     exercise_part: z.enum(exercisePartValues).optional(),
+    exercise_is_unilateral: z.boolean().optional(),
     section_type: workoutPlanSectionTypeSchema,
     section_order: workoutPlanSectionOrderSchema,
     planned_sets: workoutPlanPlannedSetsSchema,
@@ -290,23 +291,10 @@ export function formValuesToUpdateCommand(
   };
 }
 
-/**
- * Walidacja reguł biznesowych dla formularza planu treningowego.
- * Sprawdza:
- * - Co najmniej jedno ćwiczenie (już sprawdzone w schema)
- * - Unikalność section_order w ramach każdej sekcji
- */
-export function validateWorkoutPlanFormBusinessRules(
+function validateSectionOrderDuplicates(
   exercises: WorkoutPlanExerciseItemState[],
 ): string[] {
   const errors: string[] = [];
-
-  if (exercises.length === 0) {
-    errors.push("Plan treningowy musi zawierać co najmniej jedno ćwiczenie.");
-    return errors;
-  }
-
-  // Sprawdzenie unikalności pozycji w ramach każdej sekcji
   const positionMap = new Map<string, Set<number>>();
 
   for (const exercise of exercises) {
@@ -318,7 +306,6 @@ export function validateWorkoutPlanFormBusinessRules(
     }
 
     const orders = positionMap.get(sectionKey)!;
-
     if (orders.has(order)) {
       errors.push(
         `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`,
@@ -326,47 +313,61 @@ export function validateWorkoutPlanFormBusinessRules(
     } else {
       orders.add(order);
     }
+  }
 
-    // Walidacja wartości planned_*
-    if (
-      exercise.planned_sets !== undefined &&
-      exercise.planned_sets !== null &&
-      exercise.planned_sets <= 0
-    ) {
-      errors.push(
-        `planned_sets musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
-      );
-    }
+  return errors;
+}
 
-    if (
-      exercise.planned_reps !== undefined &&
-      exercise.planned_reps !== null &&
-      exercise.planned_reps <= 0
-    ) {
-      errors.push(
-        `planned_reps musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
-      );
-    }
+function validateExercisePlannedParams(
+  exercise: WorkoutPlanExerciseItemState,
+): string[] {
+  const errors: string[] = [];
+  const { order, section } = {
+    order: exercise.section_order,
+    section: exercise.section_type,
+  };
+  const ctx = `dla ćwiczenia na kolejności ${order} w sekcji ${section}.`;
 
-    if (
-      exercise.planned_duration_seconds !== undefined &&
-      exercise.planned_duration_seconds !== null &&
-      exercise.planned_duration_seconds <= 0
-    ) {
-      errors.push(
-        `planned_duration_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
-      );
-    }
+  const val = exercise.planned_sets;
+  if (val !== undefined && val !== null && val <= 0) {
+    errors.push(`planned_sets musi być większe od zera ${ctx}`);
+  }
 
-    if (
-      exercise.planned_rest_seconds !== undefined &&
-      exercise.planned_rest_seconds !== null &&
-      exercise.planned_rest_seconds < 0
-    ) {
-      errors.push(
-        `planned_rest_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`,
-      );
-    }
+  const reps = exercise.planned_reps;
+  if (reps !== undefined && reps !== null && reps <= 0) {
+    errors.push(`planned_reps musi być większe od zera ${ctx}`);
+  }
+
+  const dur = exercise.planned_duration_seconds;
+  if (dur !== undefined && dur !== null && dur <= 0) {
+    errors.push(`planned_duration_seconds musi być większe od zera ${ctx}`);
+  }
+
+  const rest = exercise.planned_rest_seconds;
+  if (rest !== undefined && rest !== null && rest < 0) {
+    errors.push(`planned_rest_seconds nie może być ujemne ${ctx}`);
+  }
+
+  return errors;
+}
+
+/**
+ * Walidacja reguł biznesowych dla formularza planu treningowego.
+ * Sprawdza:
+ * - Co najmniej jedno ćwiczenie (już sprawdzone w schema)
+ * - Unikalność section_order w ramach każdej sekcji
+ */
+export function validateWorkoutPlanFormBusinessRules(
+  exercises: WorkoutPlanExerciseItemState[],
+): string[] {
+  if (exercises.length === 0) {
+    return ["Plan treningowy musi zawierać co najmniej jedno ćwiczenie."];
+  }
+
+  const errors = [...validateSectionOrderDuplicates(exercises)];
+
+  for (const exercise of exercises) {
+    errors.push(...validateExercisePlannedParams(exercise));
   }
 
   return errors;

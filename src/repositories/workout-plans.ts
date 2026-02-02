@@ -2,8 +2,6 @@ import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/db/database.types";
 import type {
-  ExercisePart,
-  ExerciseType,
   PlanQueryParams,
   WorkoutPlanCreateCommand,
   WorkoutPlanDTO,
@@ -16,17 +14,13 @@ import {
   WORKOUT_PLAN_MAX_LIMIT,
   decodeCursor,
   encodeCursor,
-  workoutPlanOrderValues,
-  workoutPlanSortFields,
 } from "@/lib/validation/workout-plans";
+import { normalizeTitleForDbLookup } from "@/lib/validation/exercises";
 
 type DbClient = SupabaseClient<Database>;
 type WorkoutPlanRow = Database["public"]["Tables"]["workout_plans"]["Row"];
 type WorkoutPlanExerciseRow =
   Database["public"]["Tables"]["workout_plan_exercises"]["Row"];
-type SortField = (typeof workoutPlanSortFields)[number];
-type SortOrder = (typeof workoutPlanOrderValues)[number];
-
 const planSelectColumns =
   "id,name,description,part,estimated_total_time_seconds,created_at,updated_at";
 
@@ -46,6 +40,112 @@ export async function findWorkoutPlanById(
     .maybeSingle();
 
   return { data, error };
+}
+
+type PlanExerciseMetadata = {
+  exerciseCounts: Record<string, number>;
+  exercisesByPlanId: Map<string, string[]>;
+  hasMissingExercisesByPlanId: Map<string, boolean>;
+};
+
+function getCursorMismatchError(): PostgrestError {
+  return {
+    message: "Cursor nie pasuje do aktualnych parametrów sortowania.",
+    details: "sort/order mismatch",
+    code: "BAD_REQUEST",
+    hint: "Użyj kursora z tymi samymi parametrami sort/order.",
+  } as unknown as PostgrestError;
+}
+
+function buildNextCursor(
+  items: WorkoutPlanRow[],
+  limit: number,
+  sort: "created_at" | "name",
+  order: "asc" | "desc",
+): string | null {
+  if (items.length <= limit) return null;
+  const tail = items.pop()!;
+  const sortValue = sort === "name" ? tail.name : tail.created_at;
+  return encodeCursor({ sort, order, value: sortValue, id: tail.id });
+}
+
+async function loadPlanExerciseMetadata(
+  client: DbClient,
+  userId: string,
+  planIds: string[],
+): Promise<PlanExerciseMetadata> {
+  const exerciseCounts: Record<string, number> = {};
+  const exercisesByPlanId = new Map<string, string[]>();
+  const hasMissingExercisesByPlanId = new Map<string, boolean>();
+  const unlinkedTitlesByPlanId = new Map<string, Set<string>>();
+
+  if (planIds.length === 0) {
+    return { exerciseCounts, exercisesByPlanId, hasMissingExercisesByPlanId };
+  }
+
+  const { data: exercisesData, error: exercisesError } = await client
+    .from("workout_plan_exercises")
+    .select("plan_id, exercise_id, exercise_title, exercises(title)")
+    .in("plan_id", planIds)
+    .order("section_type", { ascending: true })
+    .order("section_order", { ascending: true });
+
+  if (exercisesError || !exercisesData) {
+    return { exerciseCounts, exercisesByPlanId, hasMissingExercisesByPlanId };
+  }
+
+  for (const row of exercisesData) {
+    const planId = row.plan_id;
+    const exerciseTitle =
+      (row.exercises as { title: string } | null)?.title ??
+      (row as { exercise_title?: string | null }).exercise_title;
+
+    exerciseCounts[planId] = (exerciseCounts[planId] ?? 0) + 1;
+
+    if (row.exercise_id === null) {
+      const titles = unlinkedTitlesByPlanId.get(planId) ?? new Set();
+      titles.add(exerciseTitle ? normalizeTitleForDbLookup(exerciseTitle) : "");
+      unlinkedTitlesByPlanId.set(planId, titles);
+    }
+
+    if (exerciseTitle) {
+      const names = exercisesByPlanId.get(planId) ?? [];
+      names.push(exerciseTitle);
+      exercisesByPlanId.set(planId, names);
+    }
+  }
+
+  const libraryTitlesNormalized = await fetchLibraryTitlesNormalized(
+    client,
+    userId,
+    unlinkedTitlesByPlanId,
+  );
+
+  for (const [planId, normalizedTitles] of unlinkedTitlesByPlanId) {
+    const hasUnlinkedNotInLibrary = [...normalizedTitles].some(
+      (t) => !libraryTitlesNormalized.has(t),
+    );
+    hasMissingExercisesByPlanId.set(planId, hasUnlinkedNotInLibrary);
+  }
+
+  return { exerciseCounts, exercisesByPlanId, hasMissingExercisesByPlanId };
+}
+
+async function fetchLibraryTitlesNormalized(
+  client: DbClient,
+  userId: string,
+  unlinkedTitlesByPlanId: Map<string, Set<string>>,
+): Promise<Set<string>> {
+  if (unlinkedTitlesByPlanId.size === 0) return new Set();
+  const { data: libraryExercises } = await client
+    .from("exercises")
+    .select("title_normalized")
+    .eq("user_id", userId);
+  return new Set(
+    (libraryExercises ?? []).map((e) =>
+      (e.title_normalized ?? "").toLowerCase(),
+    ),
+  );
 }
 
 /**
@@ -69,32 +169,21 @@ export async function findWorkoutPlansByUserId(
     params.limit ?? WORKOUT_PLAN_DEFAULT_LIMIT,
     WORKOUT_PLAN_MAX_LIMIT,
   );
-  const sort = params.sort ?? "created_at";
-  const order = params.order ?? "desc";
+  const sort: "created_at" | "name" = params.sort ?? "created_at";
+  const order: "asc" | "desc" = params.order ?? "desc";
 
   let query = client
     .from("workout_plans")
     .select(planSelectColumns)
     .eq("user_id", userId);
 
-  if (params.part) {
-    query = query.eq("part", params.part);
-  }
+  if (params.part) query = query.eq("part", params.part);
 
   if (params.cursor) {
     const cursor = decodeCursor(params.cursor);
-
     if (cursor.sort !== sort || cursor.order !== order) {
-      return {
-        error: {
-          message: "Cursor nie pasuje do aktualnych parametrów sortowania.",
-          details: "sort/order mismatch",
-          code: "BAD_REQUEST",
-          hint: "Użyj kursora z tymi samymi parametrami sort/order.",
-        } as unknown as PostgrestError,
-      };
+      return { error: getCursorMismatchError() };
     }
-
     query = applyCursorFilter(query, sort, order, cursor);
   }
 
@@ -104,71 +193,15 @@ export async function findWorkoutPlansByUserId(
     .limit(limit + 1);
 
   const { data, error } = await query;
+  if (error) return { error };
 
-  if (error) {
-    return { error };
-  }
+  const items = (data ?? []) as WorkoutPlanRow[];
+  const nextCursor = buildNextCursor([...items], limit, sort, order);
+  if (items.length > limit) items.pop();
 
-  const items = data ?? [];
-  let nextCursor: string | null = null;
-
-  if (items.length > limit) {
-    const tail = items.pop()!;
-
-    // sort może być tylko "created_at" lub "name" (z workoutPlanSortFields)
-    const sortValue =
-      sort === "created_at"
-        ? tail.created_at
-        : sort === "name"
-          ? tail.name
-          : tail.created_at; // fallback
-    nextCursor = encodeCursor({
-      sort,
-      order,
-      value: sortValue,
-      id: tail.id,
-    });
-  }
-
-  // Pobierz liczbę ćwiczeń i nazwy ćwiczeń dla wszystkich planów
   const planIds = items.map((item) => item.id);
-  const exerciseCounts: Record<string, number> = {};
-  const exercisesByPlanId = new Map<string, string[]>();
-  const hasMissingExercisesByPlanId = new Map<string, boolean>();
-
-  if (planIds.length > 0) {
-    const { data: exercisesData, error: exercisesError } = await client
-      .from("workout_plan_exercises")
-      .select("plan_id, exercise_id, exercise_title, exercises(title)")
-      .in("plan_id", planIds)
-      .order("section_type", { ascending: true })
-      .order("section_order", { ascending: true });
-
-    if (!exercisesError && exercisesData) {
-      for (const row of exercisesData) {
-        const planId = row.plan_id;
-        const exerciseTitle =
-          (row.exercises as { title: string } | null)?.title ??
-          (row as { exercise_title?: string | null }).exercise_title;
-
-        // Policz ćwiczenia
-        exerciseCounts[planId] = (exerciseCounts[planId] ?? 0) + 1;
-
-        // Sprawdź czy ćwiczenie ma exercise_id (czy jest w bibliotece)
-        if (row.exercise_id === null) {
-          hasMissingExercisesByPlanId.set(planId, true);
-        }
-
-        // Zbierz nazwy ćwiczeń
-        if (exerciseTitle) {
-          if (!exercisesByPlanId.has(planId)) {
-            exercisesByPlanId.set(planId, []);
-          }
-          exercisesByPlanId.get(planId)!.push(exerciseTitle);
-        }
-      }
-    }
-  }
+  const { exerciseCounts, exercisesByPlanId, hasMissingExercisesByPlanId } =
+    await loadPlanExerciseMetadata(client, userId, planIds);
 
   return {
     data: items.map((item) => ({
@@ -452,8 +485,9 @@ export async function listWorkoutPlanExercises(
       exercises (
         id,
         title,
-        type,
-        part,
+        types,
+        parts,
+        is_unilateral,
         details,
         estimated_set_time_seconds,
         rest_after_series_seconds
@@ -472,8 +506,9 @@ export async function listWorkoutPlanExercises(
     const exercise = row.exercises as {
       id: string;
       title: string;
-      type: Database["public"]["Enums"]["exercise_type"];
-      part: Database["public"]["Enums"]["exercise_part"];
+      types: Database["public"]["Enums"]["exercise_type"][];
+      parts: Database["public"]["Enums"]["exercise_part"][];
+      is_unilateral?: boolean;
       details: string | null;
       estimated_set_time_seconds: number | null;
       rest_after_series_seconds: number | null;
@@ -491,36 +526,36 @@ export async function listWorkoutPlanExercises(
     };
 
     // Użyj snapshot jeśli exercise_id jest NULL, w przeciwnym razie użyj danych z exercises
+    // exercises ma types/parts (tablice) - używamy pierwszego elementu
     const exerciseTitle = row.exercise_id
-      ? (exercise?.title ?? null)
-      : (rowWithSnapshot.exercise_title ?? null);
+      ? exercise?.title ?? null
+      : rowWithSnapshot.exercise_title ?? null;
     const exerciseType = row.exercise_id
-      ? (exercise?.type ?? null)
-      : (rowWithSnapshot.exercise_type ?? null);
+      ? exercise?.types?.[0] ?? null
+      : rowWithSnapshot.exercise_type ?? null;
     const exercisePart = row.exercise_id
-      ? (exercise?.part ?? null)
-      : (rowWithSnapshot.exercise_part ?? null);
+      ? exercise?.parts?.[0] ?? null
+      : rowWithSnapshot.exercise_part ?? null;
 
     // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
     // For estimated_set_time_seconds, prioritize workout_plan_exercises value if it's not null/undefined
     const finalEstimatedSetTime =
-      rowWithSnapshot.estimated_set_time_seconds !== null &&
-      rowWithSnapshot.estimated_set_time_seconds !== undefined
-        ? rowWithSnapshot.estimated_set_time_seconds
-        : (exercise?.estimated_set_time_seconds ?? null);
+      rowWithSnapshot.estimated_set_time_seconds ??
+      exercise?.estimated_set_time_seconds ??
+      null;
 
     // For planned_rest_after_series_seconds, always use value from workout_plan_exercises if it's defined (even if null)
     // This ensures that imported plans with explicit null values are preserved
     // Only fall back to exercise default if the value is truly undefined (not present in DB result)
     const finalRestAfterSeries =
-      rowWithSnapshot.planned_rest_after_series_seconds !== undefined
-        ? rowWithSnapshot.planned_rest_after_series_seconds
-        : (exercise?.rest_after_series_seconds ?? null);
+      rowWithSnapshot.planned_rest_after_series_seconds === undefined
+        ? exercise?.rest_after_series_seconds ?? null
+        : rowWithSnapshot.planned_rest_after_series_seconds;
 
     // Pobierz exercise_details z snapshot (jeśli dostępne) lub z exercises.details
     const exerciseDetails = row.exercise_id
-      ? (exercise?.details ?? null)
-      : (rowWithSnapshot.exercise_details ?? null);
+      ? exercise?.details ?? null
+      : rowWithSnapshot.exercise_details ?? null;
 
     return {
       id: row.id,
@@ -537,6 +572,7 @@ export async function listWorkoutPlanExercises(
       exercise_title: exerciseTitle,
       exercise_type: exerciseType,
       exercise_part: exercisePart,
+      exercise_is_unilateral: row.exercise_id ? (exercise?.is_unilateral ?? false) : null,
       exercise_estimated_set_time_seconds: finalEstimatedSetTime,
       exercise_rest_after_series_seconds:
         exercise?.rest_after_series_seconds ?? null,
@@ -613,8 +649,8 @@ export function mapExerciseToDTO(
   row: WorkoutPlanExerciseRow & {
     exercises?: {
       title: string;
-      type?: string;
-      part?: string;
+      types?: Database["public"]["Enums"]["exercise_type"][];
+      parts?: Database["public"]["Enums"]["exercise_part"][];
       estimated_set_time_seconds?: number | null;
       rest_after_series_seconds?: number | null;
     } | null;
@@ -622,7 +658,7 @@ export function mapExerciseToDTO(
     planned_rest_after_series_seconds?: number | null; // Override value from workout_plan_exercises
   },
 ): WorkoutPlanExerciseDTO {
-   
+  /* eslint-disable @typescript-eslint/no-unused-vars -- destructuring to omit from rest */
   const {
     plan_id,
     created_at,
@@ -631,6 +667,7 @@ export function mapExerciseToDTO(
     planned_rest_after_series_seconds,
     ...rest
   } = row;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   // Type assertion dla pól snapshot (dodanych w migracji, ale jeszcze nie w typach)
   const rowWithSnapshot = row as WorkoutPlanExerciseRow & {
@@ -643,25 +680,26 @@ export function mapExerciseToDTO(
 
   // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
   const finalEstimatedSetTime =
-    estimated_set_time_seconds !== undefined
-      ? estimated_set_time_seconds
-      : (exercises?.estimated_set_time_seconds ?? null);
+    estimated_set_time_seconds === undefined
+      ? exercises?.estimated_set_time_seconds ?? null
+      : estimated_set_time_seconds;
 
   const finalRestAfterSeries =
-    planned_rest_after_series_seconds !== undefined
-      ? planned_rest_after_series_seconds
-      : (exercises?.rest_after_series_seconds ?? null);
+    planned_rest_after_series_seconds === undefined
+      ? exercises?.rest_after_series_seconds ?? null
+      : planned_rest_after_series_seconds;
 
   // Użyj snapshot jeśli exercise_id jest NULL, w przeciwnym razie użyj danych z exercises
+  // exercises ma types/parts (tablice) - używamy pierwszego elementu
   const exerciseTitle = rest.exercise_id
-    ? (exercises?.title ?? null)
-    : (rowWithSnapshot.exercise_title ?? null);
+    ? exercises?.title ?? null
+    : rowWithSnapshot.exercise_title ?? null;
   const exerciseType = rest.exercise_id
-    ? ((exercises?.type as ExerciseType | undefined) ?? null)
-    : (rowWithSnapshot.exercise_type ?? null);
+    ? exercises?.types?.[0] ?? null
+    : rowWithSnapshot.exercise_type ?? null;
   const exercisePart = rest.exercise_id
-    ? ((exercises?.part as ExercisePart | undefined) ?? null)
-    : (rowWithSnapshot.exercise_part ?? null);
+    ? exercises?.parts?.[0] ?? null
+    : rowWithSnapshot.exercise_part ?? null;
 
   return {
     ...rest,

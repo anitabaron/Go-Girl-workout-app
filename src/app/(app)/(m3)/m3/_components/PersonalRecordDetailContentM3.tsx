@@ -24,11 +24,8 @@ export function PersonalRecordDetailContentM3({
 
   return (
     <div className="space-y-4">
-      {records.map((record, index) => (
-        <PersonalRecordMetricCardM3
-          key={`${record.metricType}-${index}`}
-          record={record}
-        />
+      {records.map((record) => (
+        <PersonalRecordMetricCardM3 key={record.id} record={record} />
       ))}
     </div>
   );

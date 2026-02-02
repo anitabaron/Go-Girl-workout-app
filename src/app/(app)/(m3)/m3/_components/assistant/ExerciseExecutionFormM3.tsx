@@ -39,7 +39,7 @@ export function ExerciseExecutionFormM3({
 
   return (
     <div className="space-y-2 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-4 shadow-sm">
-      <h3 className="m3-title">Wykonanie ćwiczenia</h3>
+      <h3 className="m3-title">Exercise execution</h3>
 
       <SetLogsListM3
         sets={formData.sets}
@@ -62,24 +62,22 @@ export function ExerciseExecutionFormM3({
           id="is_skipped"
           checked={formData.is_skipped}
           onCheckedChange={(checked) => handleSkipToggle(checked === true)}
-          aria-label="Pomiń ćwiczenie"
+          aria-label="Skip exercise"
         />
         <Label
           htmlFor="is_skipped"
           className="cursor-pointer text-sm font-medium text-foreground"
         >
-          Pomiń ćwiczenie
+          Skip exercise
         </Label>
       </div>
 
       {errors?._form && errors._form.length > 0 && (
         <div className="rounded-[var(--m3-radius-lg)] border border-destructive bg-destructive/10 p-3">
-          <p className="text-sm font-medium text-destructive">
-            Błędy formularza:
-          </p>
+          <p className="text-sm font-medium text-destructive">Form errors:</p>
           <ul className="mt-1 list-disc list-inside text-sm text-destructive">
-            {errors._form.map((error, index) => (
-              <li key={index}>{error}</li>
+            {errors._form.map((error) => (
+              <li key={error}>{error}</li>
             ))}
           </ul>
         </div>

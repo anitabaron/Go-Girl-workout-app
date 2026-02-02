@@ -1,14 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Play, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { SessionDetailDTO, SessionSummaryDTO } from "@/types";
 import { formatDateTime } from "@/lib/utils/date-format";
 import {
-  formatSessionDuration,
   getExerciseCount,
   getExerciseCountText,
   getExerciseNames,
@@ -49,6 +50,13 @@ function SessionDurationDisplay({
 export function WorkoutSessionDetailContent({
   session,
 }: WorkoutSessionDetailContentProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditFromUrl =
+    searchParams.get("edit") === "1" && session.status === "completed";
+  const [userToggledEdit, setUserToggledEdit] = useState(false);
+  const isEditMode = isEditFromUrl || userToggledEdit;
+
   const planName = session.plan_name_at_time ?? "Plan deleted";
   const formattedStartedAt = formatDateTime(session.started_at);
   const formattedCompletedAt = session.completed_at
@@ -58,28 +66,58 @@ export function WorkoutSessionDetailContent({
   const exerciseNames = getExerciseNames(session);
   const exerciseCountText = getExerciseCountText(exerciseCount);
   const isInProgress = session.status === "in_progress";
+  const isCompleted = session.status === "completed";
+
+  const handleCancelEdit = () => {
+    setUserToggledEdit(false);
+    router.replace(`/m3/workout-sessions/${session.id}`, { scroll: false });
+  };
 
   return (
     <div className="space-y-8">
       <Card data-test-id="workout-session-details-metadata">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="m3-title">Session info</h2>
-            {isInProgress ? (
-              <Badge
-                variant="default"
-                className="bg-primary text-primary-foreground"
-              >
-                In progress
-              </Badge>
-            ) : (
-              <Badge
-                variant="secondary"
-                data-test-id="workout-session-status-completed"
-              >
-                Completed
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {isEditMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  aria-label="Cancel edit"
+                >
+                  <X className="mr-2 size-4" />
+                  Cancel edit
+                </Button>
+              )}
+              {isCompleted && !isEditMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setUserToggledEdit(true)}
+                  aria-label="Edit session"
+                >
+                  <Pencil className="mr-2 size-4" />
+                  Edit session
+                </Button>
+              )}
+              {isInProgress ? (
+                <Badge
+                  variant="default"
+                  className="bg-primary text-primary-foreground"
+                >
+                  In progress
+                </Badge>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  data-test-id="workout-session-status-completed"
+                >
+                  Completed
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -154,6 +192,8 @@ export function WorkoutSessionDetailContent({
         <WorkoutSessionExercisesListM3
           exercises={session.exercises}
           sessionId={session.id}
+          isEditMode={isEditMode}
+          onExerciseSaved={() => router.refresh()}
         />
       </div>
     </div>

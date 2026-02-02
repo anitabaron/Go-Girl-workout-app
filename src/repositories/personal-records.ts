@@ -71,11 +71,12 @@ export async function listPersonalRecords(
       achieved_in_set_number,
       created_at,
       updated_at,
+      user_id,
       exercises!inner (
         id,
         title,
-        type,
-        part
+        types,
+        parts
       )
     `,
     )
@@ -163,11 +164,12 @@ export async function listPersonalRecordsByExercise(
       achieved_in_set_number,
       created_at,
       updated_at,
+      user_id,
       exercises!inner (
         id,
         title,
-        type,
-        part
+        types,
+        parts
       )
     `,
     )
@@ -183,6 +185,94 @@ export async function listPersonalRecordsByExercise(
 
   return {
     data: items.map(mapToDTO),
+    error: null,
+  };
+}
+
+/**
+ * Aktualizuje pojedynczy rekord osobisty.
+ * Dozwolone tylko dla rekordów bez przypisanej sesji (achieved_in_session_id === null).
+ */
+export async function updatePersonalRecord(
+  client: DbClient,
+  userId: string,
+  recordId: string,
+  updates: {
+    value: number;
+    series_values?: Record<string, number> | null;
+    achieved_at: string;
+  },
+): Promise<{
+  data?: PersonalRecordWithExerciseDTO;
+  error?: PostgrestError | null;
+}> {
+  const { data: existing, error: fetchError } = await client
+    .from("personal_records")
+    .select("id, achieved_in_session_id")
+    .eq("id", recordId)
+    .eq("user_id", userId)
+    .single();
+
+  if (fetchError || !existing) {
+    return {
+      error: fetchError ?? ({ message: "Not found" } as PostgrestError),
+    };
+  }
+
+  if (existing.achieved_in_session_id !== null) {
+    return {
+      error: {
+        message:
+          "Nie można edytować rekordu przypisanego do sesji treningowej.",
+        details: "achieved_in_session_id is set",
+        code: "FORBIDDEN",
+      } as unknown as PostgrestError,
+    };
+  }
+
+  const updatePayload: Record<string, unknown> = {
+    value: updates.value,
+    achieved_at: updates.achieved_at,
+    updated_at: new Date().toISOString(),
+  };
+  if (updates.series_values !== undefined) {
+    updatePayload.series_values = updates.series_values;
+  }
+
+  const { data, error } = await client
+    .from("personal_records")
+    .update(updatePayload)
+    .eq("id", recordId)
+    .eq("user_id", userId)
+    .select(
+      `
+      id,
+      exercise_id,
+      metric_type,
+      value,
+      series_values,
+      achieved_at,
+      achieved_in_session_id,
+      achieved_in_set_number,
+      created_at,
+      updated_at,
+      user_id,
+      exercises!inner (
+        id,
+        title,
+        types,
+        parts
+      )
+    `,
+    )
+    .single();
+
+  if (error) {
+    return { error };
+  }
+
+  return {
+    data: mapToDTO(data as PersonalRecordWithExerciseRow),
     error: null,
   };
 }
@@ -220,8 +310,8 @@ export function mapToDTO(
     exercise: {
       id: exercises.id,
       title: exercises.title,
-      type: exercises.type,
-      part: exercises.part,
+      type: exercises.types?.[0] ?? ("Main Workout" as const),
+      part: exercises.parts?.[0] ?? ("Legs" as const),
     },
   };
 }

@@ -275,8 +275,8 @@ function mergeExercise(
 ) {
   return {
     title: pickValue(patch, "title", existing.title),
-    type: pickValue(patch, "type", existing.type),
-    part: pickValue(patch, "part", existing.part),
+    types: pickValue(patch, "types", existing.types ?? []),
+    parts: pickValue(patch, "parts", existing.parts ?? []),
     level: pickValue(patch, "level", existing.level),
     details: pickValue(patch, "details", existing.details),
     reps: pickValue(patch, "reps", existing.reps),

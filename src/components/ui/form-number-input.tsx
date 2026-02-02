@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 
 type FormNumberInputProps = {
   id: string;
-  label: string;
+  label: React.ReactNode;
   value: string;
   onChange: (value: string) => void;
   onBlur: () => void;
