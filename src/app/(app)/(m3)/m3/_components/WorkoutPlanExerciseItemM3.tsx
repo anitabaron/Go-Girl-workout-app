@@ -77,9 +77,9 @@ export function WorkoutPlanExerciseItemM3({
   }
 
   const exerciseTestId =
-    exercise.id != null
-      ? `workout-plan-exercise-item-${exercise.id}`
-      : `workout-plan-exercise-item-${exercise.exercise_id ?? "new"}-${index}`;
+    exercise.id == null
+      ? `workout-plan-exercise-item-${exercise.exercise_id ?? "new"}-${index}`
+      : `workout-plan-exercise-item-${exercise.id}`;
 
   return (
     <Card data-test-id={exerciseTestId}>
@@ -98,6 +98,11 @@ export function WorkoutPlanExerciseItemM3({
                 <Badge variant="outline" className="text-xs">
                   {EXERCISE_PART_LABELS[exercise.exercise_part] ??
                     exercise.exercise_part}
+                </Badge>
+              )}
+              {exercise.exercise_is_unilateral && (
+                <Badge variant="secondary" className="text-xs">
+                  Unilateral
                 </Badge>
               )}
             </div>
@@ -119,7 +124,10 @@ export function WorkoutPlanExerciseItemM3({
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">
+            <label
+              htmlFor={`${exerciseTestId}-section-type`}
+              className="block text-xs font-medium text-muted-foreground"
+            >
               Section type
             </label>
             <Select
@@ -131,7 +139,7 @@ export function WorkoutPlanExerciseItemM3({
               }
               disabled={disabled}
             >
-              <SelectTrigger className="mt-1">
+              <SelectTrigger id={`${exerciseTestId}-section-type`} className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -150,9 +158,9 @@ export function WorkoutPlanExerciseItemM3({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">
+            <span className="block text-xs font-medium text-muted-foreground">
               Order
-            </label>
+            </span>
             <div className="mt-1 flex items-center gap-1.5">
               <div
                 className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium"
@@ -194,9 +202,9 @@ export function WorkoutPlanExerciseItemM3({
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-medium text-muted-foreground">
+          <span className="mb-2 block text-xs font-medium text-muted-foreground">
             Planned parameters (optional)
-          </label>
+          </span>
           <PlannedParamsEditorM3
             params={{
               planned_sets: exercise.planned_sets,

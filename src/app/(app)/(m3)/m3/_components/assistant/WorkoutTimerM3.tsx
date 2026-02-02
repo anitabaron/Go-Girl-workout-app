@@ -2,6 +2,12 @@
 
 import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
+import { useUnilateralDisplay } from "./UnilateralDisplayContext";
+
+const SIDE_LABELS: Record<string, string> = {
+  one_side: "first side",
+  other_side: "second side",
+};
 
 type WorkoutTimerM3Props = {
   activeDurationSeconds: number;
@@ -28,6 +34,14 @@ export function WorkoutTimerM3({
   exerciseTimerContent,
   onTimerStop,
 }: Readonly<WorkoutTimerM3Props>) {
+  const unilateralDisplay = useUnilateralDisplay();
+  const setLabel = useMemo(() => {
+    if (!unilateralDisplay?.displayInfo?.side) return null;
+    return SIDE_LABELS[unilateralDisplay.displayInfo.side] ?? null;
+  }, [unilateralDisplay?.displayInfo?.side]);
+  const displaySetNumber =
+    unilateralDisplay?.displayInfo?.displaySetNumber ?? currentSetNumber;
+
   const baseSeconds = useMemo(
     () => activeDurationSeconds || 0,
     [activeDurationSeconds],
@@ -83,9 +97,13 @@ export function WorkoutTimerM3({
     const seconds = totalSeconds % 60;
 
     if (hours > 0) {
-      return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      return `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
     }
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   if (restSeconds !== undefined && restSeconds > 0) {
@@ -105,21 +123,22 @@ export function WorkoutTimerM3({
               <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
                 {remainingTime}
               </div>
-              <div className="text-sm text-muted-foreground">
-                sekund przerwy
-              </div>
+              <div className="text-sm text-muted-foreground">seconds rest</div>
             </div>
           )}
         </CountdownCircleTimer>
         <div className="text-center">
-          <h3 className="m3-title">Seria {currentSetNumber}</h3>
+          <h3 className="m3-title">
+            Set {displaySetNumber}
+            {setLabel ? ` (${setLabel})` : ""}
+          </h3>
         </div>
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            Status: {isPaused ? "Pauza" : "W trakcie"}
+            Status: {isPaused ? "Paused" : "In progress"}
           </p>
           <p className="text-sm text-muted-foreground">
-            Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
+            Exercise {currentExerciseIndex + 1} of {totalExercises}
           </p>
         </div>
       </div>
@@ -129,7 +148,10 @@ export function WorkoutTimerM3({
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       <div className="text-center">
-        <h3 className="m3-title">Seria {currentSetNumber}</h3>
+        <h3 className="m3-title">
+          Set {displaySetNumber}
+          {setLabel ? ` (${setLabel})` : ""}
+        </h3>
       </div>
       {exerciseTimerContent}
       <div
@@ -137,15 +159,13 @@ export function WorkoutTimerM3({
           isPaused ? "" : "animate-pulse"
         }`}
       >
-        <div className="text-sm text-muted-foreground">
-          Łączny czas treningu
-        </div>
+        <div className="text-sm text-muted-foreground">Total workout time</div>
         <div className="text-xl font-semibold text-foreground">
           {formatTime(elapsedSeconds)}
         </div>
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
+            Exercise {currentExerciseIndex + 1} of {totalExercises}
           </p>
         </div>
       </div>

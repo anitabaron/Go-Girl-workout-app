@@ -92,6 +92,9 @@ export function WorkoutSessionExerciseItemM3({
                 exercise.exercise_part_at_time}
             </Badge>
           )}
+          {exercise.exercise_is_unilateral_at_time && (
+            <Badge variant="secondary">Unilateral</Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -107,12 +110,23 @@ export function WorkoutSessionExerciseItemM3({
                   {exercise.planned_sets ?? "-"}
                 </dd>
               </div>
-              {exercise.planned_reps != null && (
-                <div>
-                  <dt className="text-xs text-muted-foreground">Reps</dt>
-                  <dd className="font-semibold">{exercise.planned_reps}</dd>
-                </div>
-              )}
+              {exercise.planned_reps != null &&
+                exercise.planned_sets != null && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Reps</dt>
+                      <dd className="font-semibold">{exercise.planned_reps}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">
+                        Total reps
+                      </dt>
+                      <dd className="font-semibold">
+                        {exercise.planned_reps * exercise.planned_sets}
+                      </dd>
+                    </div>
+                  </div>
+                )}
               {exercise.planned_duration_seconds != null &&
                 exercise.planned_reps == null && (
                   <div>
@@ -131,7 +145,9 @@ export function WorkoutSessionExerciseItemM3({
             </dl>
           </div>
           <div
-            className={`rounded-lg border border-[var(--m3-outline-variant)] p-4 ${exercise.is_skipped ? "bg-muted/50 opacity-60" : ""}`}
+            className={`rounded-lg border border-[var(--m3-outline-variant)] p-4 ${
+              exercise.is_skipped ? "bg-muted/50 opacity-60" : ""
+            }`}
           >
             <h4 className="mb-3 text-sm font-medium text-muted-foreground">
               Actual
@@ -143,7 +159,9 @@ export function WorkoutSessionExerciseItemM3({
                 <div>
                   <dt className="text-xs text-muted-foreground">Sets</dt>
                   <dd
-                    className={`flex items-center font-semibold ${getComparisonClass(setsComparison)}`}
+                    className={`flex items-center font-semibold ${getComparisonClass(
+                      setsComparison,
+                    )}`}
                   >
                     {exercise.actual_count_sets ?? "-"}
                     {getArrowIcon(setsComparison)}
@@ -151,9 +169,13 @@ export function WorkoutSessionExerciseItemM3({
                 </div>
                 {exercise.planned_reps != null && (
                   <div>
-                    <dt className="text-xs text-muted-foreground">Reps</dt>
+                    <dt className="text-xs text-muted-foreground">
+                      Total reps
+                    </dt>
                     <dd
-                      className={`flex items-center font-semibold ${getComparisonClass(repsComparison)}`}
+                      className={`flex items-center font-semibold ${getComparisonClass(
+                        repsComparison,
+                      )}`}
                     >
                       {exercise.actual_sum_reps ?? "-"}
                       {getArrowIcon(repsComparison)}
@@ -167,7 +189,9 @@ export function WorkoutSessionExerciseItemM3({
                         Duration
                       </dt>
                       <dd
-                        className={`flex items-center font-semibold ${getComparisonClass(durationComparison)}`}
+                        className={`flex items-center font-semibold ${getComparisonClass(
+                          durationComparison,
+                        )}`}
                       >
                         {formatDuration(exercise.actual_duration_seconds)}
                         {getArrowIcon(durationComparison)}
@@ -234,27 +258,35 @@ export function WorkoutSessionExerciseItemM3({
                     return (
                       <tr
                         key={set.set_number}
-                        className={`border-b border-[var(--m3-outline-variant)] last:border-b-0 ${hasHighlight ? recordRowClass : ""}`}
+                        className={`border-b border-[var(--m3-outline-variant)] last:border-b-0 ${
+                          hasHighlight ? recordRowClass : ""
+                        }`}
                       >
                         <td className="px-3 py-2">{set.set_number}</td>
                         {showReps && (
                           <td
-                            className={`px-3 py-2 text-center ${bestReps ? recordCellClass : ""}`}
+                            className={`px-3 py-2 text-center ${
+                              bestReps ? recordCellClass : ""
+                            }`}
                           >
                             {set.reps ?? "-"}
                           </td>
                         )}
                         {showDuration && (
                           <td
-                            className={`px-3 py-2 text-center ${bestDuration ? recordCellClass : ""}`}
+                            className={`px-3 py-2 text-center ${
+                              bestDuration ? recordCellClass : ""
+                            }`}
                           >
                             {formatDuration(set.duration_seconds)}
                           </td>
                         )}
                         <td
-                          className={`px-3 py-2 text-center ${bestWeight ? recordCellClass : ""}`}
+                          className={`px-3 py-2 text-center ${
+                            bestWeight ? recordCellClass : ""
+                          }`}
                         >
-                          {set.weight_kg != null ? `${set.weight_kg} kg` : "-"}
+                          {set.weight_kg == null ? "-" : `${set.weight_kg} kg`}
                         </td>
                       </tr>
                     );

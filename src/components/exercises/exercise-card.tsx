@@ -58,13 +58,18 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
           <CardContent>
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                <ExerciseTypeBadge type={exercise.type} />
-                <Badge
-                  variant="outline"
-                  className="border-destructive text-destructive"
-                >
-                  {EXERCISE_PART_LABELS[exercise.part]}
-                </Badge>
+                {exercise.types.map((t) => (
+                  <ExerciseTypeBadge key={t} type={t} />
+                ))}
+                {exercise.parts.map((p) => (
+                  <Badge
+                    key={p}
+                    variant="outline"
+                    className="border-destructive text-destructive"
+                  >
+                    {EXERCISE_PART_LABELS[p]}
+                  </Badge>
+                ))}
                 {exercise.level && (
                   <Badge
                     variant="outline"
@@ -72,6 +77,9 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
                   >
                     {exercise.level}
                   </Badge>
+                )}
+                {exercise.is_unilateral && (
+                  <Badge variant="secondary">Unilateral</Badge>
                 )}
               </div>
               <div className="text-sm text-zinc-600 dark:text-zinc-400">

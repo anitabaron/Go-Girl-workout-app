@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
 import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
-import { formatTotalDuration } from "@/lib/utils/time-format";
+import { formatDuration } from "@/lib/utils/time-format";
 
 type ExerciseSelectorM3Props = {
   selectedExerciseIds: string[];
@@ -264,9 +264,7 @@ export function ExerciseSelectorM3({
                           Przerwa między{" "}
                         </span>
                         <span className="font-medium text-foreground">
-                          {formatTotalDuration(
-                            exercise.rest_in_between_seconds,
-                          )}
+                          {formatDuration(exercise.rest_in_between_seconds)}
                         </span>
                       </span>
                     )}
@@ -276,9 +274,7 @@ export function ExerciseSelectorM3({
                           Przerwa po{" "}
                         </span>
                         <span className="font-medium text-foreground">
-                          {formatTotalDuration(
-                            exercise.rest_after_series_seconds,
-                          )}
+                          {formatDuration(exercise.rest_after_series_seconds)}
                         </span>
                       </span>
                     )}

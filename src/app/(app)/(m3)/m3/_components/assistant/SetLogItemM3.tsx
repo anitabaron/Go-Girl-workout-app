@@ -38,7 +38,7 @@ export function SetLogItemM3({
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground">
-              Seria:
+              Set:
             </span>
             <span className="rounded-full bg-[var(--m3-primary-container)] px-3 py-1 text-sm font-semibold text-destructive">
               {set.set_number}
@@ -52,7 +52,7 @@ export function SetLogItemM3({
                   htmlFor={`reps-${set.set_number}`}
                   className="mb-1 block text-sm font-medium text-foreground"
                 >
-                  Powtórzenia
+                  Reps
                 </label>
                 <Input
                   id={`reps-${set.set_number}`}
@@ -63,7 +63,7 @@ export function SetLogItemM3({
                   onChange={(e) => handleChange("reps", e.target.value)}
                   placeholder="0"
                   disabled={isSkipped}
-                  aria-label={`Powtórzenia dla serii ${set.set_number}`}
+                  aria-label={`Reps for set ${set.set_number}`}
                   aria-invalid={error ? "true" : "false"}
                   aria-describedby={
                     error ? `error-${set.set_number}` : undefined
@@ -78,7 +78,7 @@ export function SetLogItemM3({
                   htmlFor={`duration-${set.set_number}`}
                   className="mb-1 block text-sm font-medium text-foreground"
                 >
-                  Czas (sekundy)
+                  Time (seconds)
                 </label>
                 <Input
                   id={`duration-${set.set_number}`}
@@ -91,7 +91,7 @@ export function SetLogItemM3({
                   }
                   placeholder="0"
                   disabled={isSkipped}
-                  aria-label={`Czas trwania dla serii ${set.set_number}`}
+                  aria-label={`Duration for set ${set.set_number}`}
                   aria-invalid={error ? "true" : "false"}
                   aria-describedby={
                     error ? `error-${set.set_number}` : undefined
@@ -105,7 +105,7 @@ export function SetLogItemM3({
                 htmlFor={`weight-${set.set_number}`}
                 className="mb-1 block text-sm font-medium text-foreground"
               >
-                Waga (kg)
+                Weight (kg)
               </label>
               <Input
                 id={`weight-${set.set_number}`}
@@ -116,7 +116,7 @@ export function SetLogItemM3({
                 onChange={(e) => handleChange("weight_kg", e.target.value)}
                 placeholder="0"
                 disabled={isSkipped}
-                aria-label={`Waga dla serii ${set.set_number}`}
+                aria-label={`Weight for set ${set.set_number}`}
                 aria-invalid={error ? "true" : "false"}
                 aria-describedby={error ? `error-${set.set_number}` : undefined}
               />
@@ -141,7 +141,7 @@ export function SetLogItemM3({
           onClick={onRemove}
           disabled={isSkipped}
           className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-          aria-label={`Usuń serię ${set.set_number}`}
+          aria-label={`Remove set ${set.set_number}`}
         >
           <X className="size-4" />
         </Button>

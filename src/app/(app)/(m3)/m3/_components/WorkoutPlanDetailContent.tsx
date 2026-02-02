@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Edit, Trash2, Play } from "lucide-react";
+import { Edit, Loader2, Play, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -129,75 +129,89 @@ export function WorkoutPlanDetailContent({
   };
 
   return (
-    <div className="space-y-8">
-      {/* Metadata */}
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {plan.part && (
-            <Badge variant="outline" className="border-primary text-primary">
-              {EXERCISE_PART_LABELS[plan.part]}
-            </Badge>
-          )}
-          <Badge variant="secondary">
-            {plan.exercises.length}{" "}
-            {plan.exercises.length === 1 ? "exercise" : "exercises"}
-          </Badge>
-          {estimatedTotalTime > 0 && (
-            <Badge variant="secondary">
-              Estimated duration: {formatTotalDuration(estimatedTotalTime)}
-            </Badge>
-          )}
-        </div>
-
-        {plan.description && (
-          <div>
-            <h2 className="m3-title mb-2">Description</h2>
-            <p className="m3-body m3-prose text-muted-foreground">
-              {plan.description}
-            </p>
+    <div className="space-y-6">
+      {/* Plan info - compact like edit form */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="m3-title">Plan info</h2>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleStartWorkout}
+              disabled={isStarting}
+              className="h-8 w-8 rounded-full !bg-[var(--m3-primary)] !text-[var(--m3-on-primary)] hover:!bg-[var(--m3-primary)] hover:!opacity-90"
+              aria-label="Start workout with this plan"
+              aria-busy={isStarting}
+            >
+              {isStarting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Play className="size-4" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleEdit}
+              aria-label={`Edit plan: ${plan.name}`}
+            >
+              <Edit className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              aria-label={`Delete plan: ${plan.name}`}
+            >
+              <Trash2 className="size-4" />
+            </Button>
           </div>
-        )}
-
-        <div className="flex flex-col gap-3 pt-4 sm:flex-row">
-          <Button
-            onClick={handleStartWorkout}
-            disabled={isStarting}
-            className="m3-cta"
-            aria-label="Start workout with this plan"
-          >
-            <Play className="mr-2 size-4" />
-            {isStarting ? "Starting..." : "Start workout"}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleEdit}
-            aria-label={`Edit plan: ${plan.name}`}
-          >
-            <Edit className="mr-2 size-4" />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-destructive hover:text-destructive"
-            aria-label={`Delete plan: ${plan.name}`}
-          >
-            <Trash2 className="mr-2 size-4" />
-            Delete
-          </Button>
         </div>
-      </div>
+        <div className="space-y-4">
+          <div>
+            <p className="m3-label text-muted-foreground mb-1">Plan name</p>
+            <p className="m3-body">{plan.name}</p>
+          </div>
+          {plan.description && (
+            <div>
+              <p className="m3-label text-muted-foreground mb-1">
+                Description (optional)
+              </p>
+              <p className="m3-body m3-prose whitespace-pre-wrap text-muted-foreground">
+                {plan.description}
+              </p>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {plan.part && (
+              <Badge variant="outline">{EXERCISE_PART_LABELS[plan.part]}</Badge>
+            )}
+            <Badge variant="secondary">
+              {plan.exercises.length}{" "}
+              {plan.exercises.length === 1 ? "exercise" : "exercises"}
+            </Badge>
+            {estimatedTotalTime > 0 && (
+              <Badge variant="secondary">
+                {formatTotalDuration(estimatedTotalTime)}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </section>
 
-      {/* Exercises list */}
-      <div>
-        <h2 className="m3-headline mb-6">Exercises in plan</h2>
+      {/* Exercises list - compact like edit form */}
+      <section className="space-y-4">
+        <h2 className="m3-title">Exercises in plan</h2>
 
         {sortedExercises.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
+          <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-6 text-center">
             <p className="text-muted-foreground">No exercises in plan.</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {sortedExercises.map((exercise, index) => (
               <ExerciseCard
                 key={exercise.id}
@@ -208,7 +222,7 @@ export function WorkoutPlanDetailContent({
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       <AlertDialog
         open={isDeleteDialogOpen}
@@ -248,89 +262,97 @@ function ExerciseCard({
   planId: string;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--m3-outline-variant)] p-4">
-      <div className="mb-3 flex items-start justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <ExerciseTypeBadge type={exercise.section_type} />
-            <span className="text-sm text-muted-foreground">
-              Position: {exercise.section_order}
-            </span>
-            <ExerciseLibraryBadgeM3 exercise={exercise} />
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="m3-title">
+              {exercise.exercise_title ?? `Exercise #${index + 1}`}
+            </h3>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <ExerciseTypeBadge type={exercise.section_type} />
+              <span className="text-xs text-muted-foreground">
+                Order: {exercise.section_order}
+              </span>
+              <ExerciseLibraryBadgeM3 exercise={exercise} />
+              {exercise.exercise_is_unilateral && (
+                <Badge variant="secondary" className="text-xs">
+                  Unilateral
+                </Badge>
+              )}
+            </div>
           </div>
-          <h3 className="m3-title">
-            {exercise.exercise_title ?? `Exercise #${index + 1}`}
-          </h3>
         </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {exercise.planned_sets != null && (
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {exercise.planned_sets != null && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Sets</p>
+              <p className="m3-body mt-1">{exercise.planned_sets}</p>
+            </div>
+          )}
+          {exercise.planned_reps != null && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Reps</p>
+              <p className="m3-body mt-1">{exercise.planned_reps}</p>
+            </div>
+          )}
+          {exercise.planned_duration_seconds != null && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">
+                Duration (s)
+              </p>
+              <p className="m3-body mt-1">
+                {formatDuration(exercise.planned_duration_seconds)}
+              </p>
+            </div>
+          )}
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Sets</p>
-            <p className="m3-title">{exercise.planned_sets}</p>
-          </div>
-        )}
-        {exercise.planned_reps != null && (
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Reps</p>
-            <p className="m3-title">{exercise.planned_reps}</p>
-          </div>
-        )}
-        {exercise.planned_duration_seconds != null && (
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Duration
+            <p className="text-xs font-medium text-muted-foreground">
+              Rest between sets (s)
             </p>
-            <p className="m3-title">
-              {formatDuration(exercise.planned_duration_seconds)}
+            <p className="m3-body mt-1">
+              {exercise.planned_rest_seconds == null
+                ? "—"
+                : formatDuration(exercise.planned_rest_seconds)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Rest after sets (s)
+            </p>
+            <p className="m3-body mt-1">
+              {exercise.planned_rest_after_series_seconds == null
+                ? "—"
+                : formatDuration(exercise.planned_rest_after_series_seconds)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Estimated set time (s)
+            </p>
+            <p className="m3-body mt-1">
+              {exercise.exercise_estimated_set_time_seconds == null
+                ? "—"
+                : formatDuration(exercise.exercise_estimated_set_time_seconds)}
+            </p>
+          </div>
+        </div>
+
+        {exercise.exercise_details && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1">
+              Details
+            </p>
+            <p className="m3-body whitespace-pre-wrap text-sm">
+              {exercise.exercise_details}
             </p>
           </div>
         )}
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            Rest between sets
-          </p>
-          <p className="m3-title">
-            {exercise.planned_rest_seconds != null
-              ? formatDuration(exercise.planned_rest_seconds)
-              : "-"}
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            Rest after sets
-          </p>
-          <p className="m3-title">
-            {exercise.planned_rest_after_series_seconds != null
-              ? formatDuration(exercise.planned_rest_after_series_seconds)
-              : "-"}
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            Estimated set time
-          </p>
-          <p className="m3-title">
-            {exercise.exercise_estimated_set_time_seconds != null
-              ? formatDuration(exercise.exercise_estimated_set_time_seconds)
-              : "-"}
-          </p>
-        </div>
-      </div>
 
-      {exercise.exercise_details && (
-        <div className="mt-4">
-          <p className="mb-2 text-sm font-medium text-muted-foreground">
-            Details
-          </p>
-          <p className="m3-body whitespace-pre-wrap">
-            {exercise.exercise_details}
-          </p>
-        </div>
-      )}
-
-      <AddSnapshotExerciseButtonM3 exercise={exercise} planId={planId} />
-    </div>
+        <AddSnapshotExerciseButtonM3 exercise={exercise} planId={planId} />
+      </CardContent>
+    </Card>
   );
 }

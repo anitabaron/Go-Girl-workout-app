@@ -21,17 +21,6 @@ const optionalPositiveIntString = z
   .nullable()
   .optional();
 
-const optionalNonNegativeIntString = z
-  .string()
-  .transform((val) => {
-    if (!val || val.trim() === "") return null;
-    const num = Number(val);
-    if (Number.isNaN(num) || !Number.isInteger(num) || num < 0) return null;
-    return num;
-  })
-  .nullable()
-  .optional();
-
 const requiredPositiveIntString = z.string().transform((val) => {
   if (!val || val.trim() === "") {
     throw new z.ZodError([
@@ -75,13 +64,13 @@ const levelStringSchema = z
 
 export type ExerciseFormValues = z.input<typeof exerciseFormSchema>;
 
-const typeSchema = z
-  .union([z.enum(exerciseTypeValues), z.literal("")])
-  .refine((val) => val !== "", { message: "Typ jest wymagany" });
+const typesSchema = z
+  .array(z.enum(exerciseTypeValues))
+  .min(1, "Wybierz co najmniej jeden typ");
 
-const partSchema = z
-  .union([z.enum(exercisePartValues), z.literal("")])
-  .refine((val) => val !== "", { message: "Partia jest wymagana" });
+const partsSchema = z
+  .array(z.enum(exercisePartValues))
+  .min(1, "Wybierz co najmniej jedną partię");
 
 export const exerciseFormSchema = z
   .object({
@@ -90,8 +79,8 @@ export const exerciseFormSchema = z
       .trim()
       .min(1, "Tytuł jest wymagany")
       .max(120, "Tytuł może mieć maksymalnie 120 znaków"),
-    type: typeSchema,
-    part: partSchema,
+    types: typesSchema,
+    parts: partsSchema,
     level: levelStringSchema,
     details: z
       .string()
@@ -99,6 +88,7 @@ export const exerciseFormSchema = z
       .max(1000, "Szczegóły mogą mieć maksymalnie 1000 znaków")
       .optional()
       .nullable(),
+    is_unilateral: z.boolean().optional().default(false),
     reps: optionalPositiveIntString,
     duration_seconds: optionalPositiveIntString,
     series: requiredPositiveIntString,
@@ -202,11 +192,12 @@ export function formValuesToCommand(
 ): ExerciseCreateCommand {
   return {
     title: data.title.trim(),
-    type: data.type as ExerciseCreateCommand["type"],
-    part: data.part as ExerciseCreateCommand["part"],
+    types: data.types,
+    parts: data.parts,
     series: data.series,
     level: data.level ?? null,
     details: data.details?.trim() || null,
+    is_unilateral: data.is_unilateral ?? false,
     reps: data.reps ?? undefined,
     duration_seconds: data.duration_seconds ?? undefined,
     rest_in_between_seconds: data.rest_in_between_seconds ?? undefined,

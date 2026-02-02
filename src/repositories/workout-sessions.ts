@@ -9,23 +9,77 @@ import {
   SESSION_MAX_LIMIT,
   decodeCursor,
   encodeCursor,
-  sessionOrderValues,
-  sessionSortFields,
 } from "@/lib/validation/workout-sessions";
 import { calculateTimerUpdates } from "@/lib/workout-sessions/timer";
 
 type DbClient = SupabaseClient<Database>;
 type WorkoutSessionRow =
   Database["public"]["Tables"]["workout_sessions"]["Row"];
-type WorkoutSessionExerciseRow =
-  Database["public"]["Tables"]["workout_session_exercises"]["Row"];
-type WorkoutSessionSetRow =
-  Database["public"]["Tables"]["workout_session_sets"]["Row"];
-type SortField = (typeof sessionSortFields)[number];
-type SortOrder = (typeof sessionOrderValues)[number];
 
 const sessionSelectColumns =
   "id,workout_plan_id,status,plan_name_at_time,started_at,completed_at,current_position,user_id,last_action_at,active_duration_seconds,last_timer_started_at,last_timer_stopped_at";
+
+type SessionWithPlan = WorkoutSessionRow & {
+  workout_plans?: { estimated_total_time_seconds: number | null } | null;
+};
+
+function validateCursorMismatch(
+  cursor: string | undefined | null,
+  sort: string,
+  order: string,
+): { error: PostgrestError } | null {
+  if (!cursor) return null;
+  const decoded = decodeCursor(cursor);
+  if (decoded.sort === sort && decoded.order === order) return null;
+  return {
+    error: {
+      message: "Cursor nie pasuje do aktualnych parametrów sortowania.",
+      details: "sort/order mismatch",
+      code: "BAD_REQUEST",
+      hint: "Użyj kursora z tymi samymi parametrami sort/order.",
+    } as unknown as PostgrestError,
+  };
+}
+
+async function fetchExercisesBySessionIds(
+  client: DbClient,
+  sessionIds: string[],
+): Promise<Map<string, string[]>> {
+  const map = new Map<string, string[]>();
+  if (sessionIds.length === 0) return map;
+
+  const { data, error } = await client
+    .from("workout_session_exercises")
+    .select("session_id, exercise_title_at_time")
+    .in("session_id", sessionIds)
+    .order("exercise_order", { ascending: true });
+
+  if (error || !data) return map;
+  for (const row of data) {
+    const arr = map.get(row.session_id) ?? [];
+    arr.push(row.exercise_title_at_time);
+    map.set(row.session_id, arr);
+  }
+  return map;
+}
+
+function mapSessionsToSummaries(
+  items: SessionWithPlan[],
+  exercisesBySessionId: Map<string, string[]>,
+): SessionSummaryDTO[] {
+  return items.map((item) => {
+    const exerciseNames = exercisesBySessionId.get(item.id) ?? [];
+    const estimatedTotalTimeSeconds =
+      item.workout_plans?.estimated_total_time_seconds ?? null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { workout_plans, ...sessionRow } = item;
+    return mapToSummaryDTO(sessionRow, {
+      exercise_count: exerciseNames.length,
+      exercise_names: exerciseNames,
+      estimated_total_time_seconds: estimatedTotalTimeSeconds,
+    });
+  });
+}
 
 /**
  * Znajduje sesję treningową ze statusem 'in_progress' dla użytkownika.
@@ -97,6 +151,9 @@ export async function findWorkoutSessionsByUserId(
   const sort = params.sort ?? "started_at";
   const order = params.order ?? "desc";
 
+  const cursorError = validateCursorMismatch(params.cursor, sort, order);
+  if (cursorError) return cursorError;
+
   let query = client
     .from("workout_sessions")
     .select(
@@ -104,37 +161,13 @@ export async function findWorkoutSessionsByUserId(
     )
     .eq("user_id", userId);
 
-  if (params.status) {
-    query = query.eq("status", params.status);
-  }
-
-  if (params.plan_id) {
-    query = query.eq("workout_plan_id", params.plan_id);
-  }
-
-  if (params.from) {
-    query = query.gte("started_at", params.from);
-  }
-
-  if (params.to) {
-    query = query.lte("started_at", params.to);
-  }
+  if (params.status) query = query.eq("status", params.status);
+  if (params.plan_id) query = query.eq("workout_plan_id", params.plan_id);
+  if (params.from) query = query.gte("started_at", params.from);
+  if (params.to) query = query.lte("started_at", params.to);
 
   if (params.cursor) {
-    const cursor = decodeCursor(params.cursor);
-
-    if (cursor.sort !== sort || cursor.order !== order) {
-      return {
-        error: {
-          message: "Cursor nie pasuje do aktualnych parametrów sortowania.",
-          details: "sort/order mismatch",
-          code: "BAD_REQUEST",
-          hint: "Użyj kursora z tymi samymi parametrami sort/order.",
-        } as unknown as PostgrestError,
-      };
-    }
-
-    query = applyCursorFilter(query, sort, order, cursor);
+    query = applyCursorFilter(query, sort, order, decodeCursor(params.cursor));
   }
 
   query = query
@@ -143,71 +176,29 @@ export async function findWorkoutSessionsByUserId(
     .limit(limit + 1);
 
   const { data, error } = await query;
+  if (error) return { error };
 
-  if (error) {
-    return { error };
-  }
+  const items = (data ?? []) as SessionWithPlan[];
+  const nextCursor =
+    items.length > limit
+      ? encodeCursor({
+          sort,
+          order,
+          value: items[limit][sort as keyof WorkoutSessionRow] as
+            | string
+            | number,
+          id: items[limit].id,
+        })
+      : null;
 
-  const items = (data ?? []) as Array<
-    WorkoutSessionRow & {
-      workout_plans?: { estimated_total_time_seconds: number | null } | null;
-    }
-  >;
-  let nextCursor: string | null = null;
+  const trimmedItems = items.length > limit ? items.slice(0, limit) : items;
+  const exercisesBySessionId = await fetchExercisesBySessionIds(
+    client,
+    trimmedItems.map((i) => i.id),
+  );
+  const mappedData = mapSessionsToSummaries(trimmedItems, exercisesBySessionId);
 
-  if (items.length > limit) {
-    const tail = items.pop()!;
-
-    nextCursor = encodeCursor({
-      sort,
-      order,
-      value: tail[sort as keyof WorkoutSessionRow] as string | number,
-      id: tail.id,
-    });
-  }
-
-  // Fetch exercise names for all sessions
-  const sessionIds = items.map((item) => item.id);
-  const exercisesBySessionId = new Map<string, string[]>();
-
-  if (sessionIds.length > 0) {
-    const { data: exercisesData, error: exercisesError } = await client
-      .from("workout_session_exercises")
-      .select("session_id, exercise_title_at_time")
-      .in("session_id", sessionIds)
-      .order("exercise_order", { ascending: true });
-
-    if (!exercisesError && exercisesData) {
-      for (const exercise of exercisesData) {
-        const sessionId = exercise.session_id;
-        if (!exercisesBySessionId.has(sessionId)) {
-          exercisesBySessionId.set(sessionId, []);
-        }
-        exercisesBySessionId
-          .get(sessionId)!
-          .push(exercise.exercise_title_at_time);
-      }
-    }
-  }
-
-  const mappedData = items.map((item) => {
-    const exerciseNames = exercisesBySessionId.get(item.id) ?? [];
-    const estimatedTotalTimeSeconds =
-      item.workout_plans?.estimated_total_time_seconds ?? null;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { workout_plans, ...sessionRow } = item;
-    return mapToSummaryDTO(sessionRow, {
-      exercise_count: exerciseNames.length,
-      exercise_names: exerciseNames,
-      estimated_total_time_seconds: estimatedTotalTimeSeconds,
-    });
-  });
-
-  return {
-    data: mappedData,
-    nextCursor,
-    error: null,
-  };
+  return { data: mappedData, nextCursor, error: null };
 }
 
 /**
@@ -250,6 +241,7 @@ export async function insertWorkoutSessionExercises(
     exercise_title_at_time: string;
     exercise_type_at_time: Database["public"]["Enums"]["exercise_type"];
     exercise_part_at_time: Database["public"]["Enums"]["exercise_part"];
+    exercise_is_unilateral_at_time: boolean;
     planned_sets: number | null;
     planned_reps: number | null;
     planned_duration_seconds: number | null;
@@ -264,6 +256,8 @@ export async function insertWorkoutSessionExercises(
     exercise_title_at_time: exercise.exercise_title_at_time,
     exercise_type_at_time: exercise.exercise_type_at_time,
     exercise_part_at_time: exercise.exercise_part_at_time,
+    exercise_is_unilateral_at_time:
+      exercise.exercise_is_unilateral_at_time ?? false,
     planned_sets: exercise.planned_sets,
     planned_reps: exercise.planned_reps,
     planned_duration_seconds: exercise.planned_duration_seconds,
@@ -492,7 +486,7 @@ export async function findExercisesByIdsForSnapshots(
   const { data, error } = await client
     .from("exercises")
     .select(
-      "id,title,type,part,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds",
+      "id,title,types,parts,is_unilateral,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds",
     )
     .eq("user_id", userId)
     .in("id", exerciseIds);
@@ -630,17 +624,17 @@ export async function callSaveWorkoutSessionExercise(
     weight_kg: number | null;
   }> | null = null;
 
-  if (params.p_sets_data === null || params.p_sets_data === undefined) {
-    setsDataJson = null;
-  } else if (params.p_sets_data.length > 0) {
-    setsDataJson = params.p_sets_data.map((set) => ({
-      reps: set.reps ?? null,
-      duration_seconds: set.duration_seconds ?? null,
-      weight_kg: set.weight_kg ?? null,
-    }));
-  } else {
-    // Pusta tablica = wyczyść wszystkie serie
-    setsDataJson = [];
+  if (params.p_sets_data !== null && params.p_sets_data !== undefined) {
+    if (params.p_sets_data.length > 0) {
+      setsDataJson = params.p_sets_data.map((set) => ({
+        reps: set.reps ?? null,
+        duration_seconds: set.duration_seconds ?? null,
+        weight_kg: set.weight_kg ?? null,
+      }));
+    } else {
+      // Pusta tablica = wyczyść wszystkie serie
+      setsDataJson = [];
+    }
   }
 
   // Przygotuj parametry RPC - funkcja DB oczekuje wszystkich parametrów w określonej kolejności

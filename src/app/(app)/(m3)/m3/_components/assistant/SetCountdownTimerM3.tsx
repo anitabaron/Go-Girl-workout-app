@@ -4,9 +4,18 @@ import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { SetCountdownTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
 
+const SIDE_LABELS: Record<
+  NonNullable<SetCountdownTimerProps["sideLabel"]>,
+  string
+> = {
+  one_side: "first side",
+  other_side: "second side",
+};
+
 export function SetCountdownTimerM3({
   durationSeconds,
   isPaused,
+  sideLabel,
   onComplete,
 }: Readonly<SetCountdownTimerProps>) {
   if (!durationSeconds || durationSeconds <= 0) return null;
@@ -32,7 +41,9 @@ export function SetCountdownTimerM3({
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
               {remainingTime}
             </div>
-            <div className="text-sm text-muted-foreground">sekund</div>
+            <div className="text-sm text-muted-foreground">
+              seconds{sideLabel ? ` (${SIDE_LABELS[sideLabel]})` : ""}
+            </div>
           </div>
         )}
       </CountdownCircleTimer>

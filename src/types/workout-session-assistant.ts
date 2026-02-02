@@ -88,8 +88,14 @@ export type ExerciseTimerProps = {
 export type SetCountdownTimerProps = {
   durationSeconds: number;
   isPaused: boolean;
+  sideLabel?: UnilateralSide | null;
   onComplete: () => void;
 };
+
+/**
+ * Strona dla ćwiczeń unilateralnych.
+ */
+export type UnilateralSide = "one_side" | "other_side";
 
 /**
  * Props komponentu wyświetlania powtórzeń.
@@ -97,6 +103,7 @@ export type SetCountdownTimerProps = {
 export type RepsDisplayProps = {
   reps: number;
   setNumber: number;
+  sideLabel?: UnilateralSide | null;
   onComplete: () => void;
 };
 
@@ -122,6 +129,58 @@ export type RestAfterSeriesTimerProps = {
  * Funkcje pomocnicze do konwersji między DTO a ViewModel.
  */
 
+function mapSetsFromExercise(exercise: SessionExerciseDTO): SetLogFormData[] {
+  if (exercise.sets && exercise.sets.length > 0) {
+    return exercise.sets.map((set) => ({
+      set_number: set.set_number,
+      reps: set.reps,
+      duration_seconds: set.duration_seconds,
+      weight_kg: set.weight_kg,
+    }));
+  }
+  if (exercise.planned_sets != null && exercise.planned_sets > 0) {
+    return Array.from({ length: exercise.planned_sets }, (_, i) => ({
+      set_number: i + 1,
+      reps: exercise.planned_reps ?? null,
+      duration_seconds: exercise.planned_duration_seconds ?? null,
+      weight_kg: null,
+    }));
+  }
+  return [];
+}
+
+function computeActualsFromSets(
+  sets: SetLogFormData[],
+  exercise: SessionExerciseDTO,
+): {
+  actual_count_sets: number | null;
+  actual_sum_reps: number | null;
+  actual_duration_seconds: number | null;
+} {
+  let actual_count_sets = exercise.actual_count_sets;
+  let actual_sum_reps = exercise.actual_sum_reps;
+  let actual_duration_seconds = exercise.actual_duration_seconds;
+
+  if (sets.length === 0) {
+    return { actual_count_sets, actual_sum_reps, actual_duration_seconds };
+  }
+
+  actual_count_sets ??= sets.length;
+  if (actual_sum_reps == null) {
+    const sum = sets.reduce((acc, s) => acc + (s.reps ?? 0), 0);
+    actual_sum_reps = sum > 0 ? sum : null;
+  }
+  if (actual_duration_seconds == null) {
+    const durations = sets
+      .map((s) => s.duration_seconds)
+      .filter((d): d is number => d != null);
+    actual_duration_seconds =
+      durations.length > 0 ? Math.max(...durations) : null;
+  }
+
+  return { actual_count_sets, actual_sum_reps, actual_duration_seconds };
+}
+
 /**
  * Konwertuje SessionExerciseDTO do ExerciseFormData.
  * Gdy exercise.sets jest puste, ale są dane planowane (planned_sets > 0),
@@ -131,49 +190,9 @@ export type RestAfterSeriesTimerProps = {
 export function exerciseToFormData(
   exercise: SessionExerciseDTO,
 ): ExerciseFormData {
-  let sets: SetLogFormData[];
-
-  if (exercise.sets && exercise.sets.length > 0) {
-    sets = exercise.sets.map((set) => ({
-      set_number: set.set_number,
-      reps: set.reps,
-      duration_seconds: set.duration_seconds,
-      weight_kg: set.weight_kg,
-    }));
-  } else if (exercise.planned_sets != null && exercise.planned_sets > 0) {
-    // Na początku treningu - serie z planowanych wartości
-    sets = [];
-    for (let i = 1; i <= exercise.planned_sets; i++) {
-      sets.push({
-        set_number: i,
-        reps: exercise.planned_reps ?? null,
-        duration_seconds: exercise.planned_duration_seconds ?? null,
-        weight_kg: null,
-      });
-    }
-  } else {
-    sets = [];
-  }
-
-  // Gdy mamy serie z planu, oblicz actual_* jeśli brak (spójność z PlannedVsActualComparison)
-  let actual_count_sets = exercise.actual_count_sets;
-  let actual_sum_reps = exercise.actual_sum_reps;
-  let actual_duration_seconds = exercise.actual_duration_seconds;
-
-  if (sets.length > 0 && actual_count_sets == null) {
-    actual_count_sets = sets.length;
-  }
-  if (sets.length > 0 && actual_sum_reps == null) {
-    const sum = sets.reduce((acc, s) => acc + (s.reps ?? 0), 0);
-    actual_sum_reps = sum > 0 ? sum : null;
-  }
-  if (sets.length > 0 && actual_duration_seconds == null) {
-    const durations = sets
-      .map((s) => s.duration_seconds)
-      .filter((d): d is number => d != null);
-    actual_duration_seconds =
-      durations.length > 0 ? Math.max(...durations) : null;
-  }
+  const sets = mapSetsFromExercise(exercise);
+  const { actual_count_sets, actual_sum_reps, actual_duration_seconds } =
+    computeActualsFromSets(sets, exercise);
 
   return {
     actual_count_sets,

@@ -24,7 +24,7 @@ type DbClient = SupabaseClient<Database>;
 type ExerciseRow = Database["public"]["Tables"]["exercises"]["Row"];
 
 const exerciseSelectColumns =
-  "id,title,type,part,level,details,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds,created_at,updated_at,title_normalized,user_id";
+  "id,title,types,parts,is_unilateral,level,details,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds,created_at,updated_at,title_normalized,user_id";
 
 export async function findById(client: DbClient, userId: string, id: string) {
   const { data, error } = await client
@@ -74,15 +74,41 @@ export async function findExerciseByNormalizedTitle(
   return { data: data ? mapToDTO(data) : null, error };
 }
 
+function toDbInsert(input: ExerciseCreateCommand): Omit<
+  ExerciseCreateCommand,
+  "types" | "parts"
+> & {
+  types: Database["public"]["Enums"]["exercise_type"][];
+  parts: Database["public"]["Enums"]["exercise_part"][];
+} {
+  const { types, parts, is_unilateral, ...rest } = input;
+  return {
+    ...rest,
+    types,
+    parts,
+    is_unilateral: is_unilateral ?? false,
+  };
+}
+
+function toDbUpdate(input: ExerciseUpdateCommand): Record<string, unknown> {
+  const { types, parts, is_unilateral, ...rest } = input;
+  const result: Record<string, unknown> = { ...rest };
+  if (types !== undefined) result.types = types;
+  if (parts !== undefined) result.parts = parts;
+  if (is_unilateral !== undefined) result.is_unilateral = is_unilateral;
+  return result;
+}
+
 export async function insertExercise(
   client: DbClient,
   userId: string,
   input: ExerciseCreateCommand,
 ) {
+  const dbInput = toDbInsert(input);
   const { data, error } = await client
     .from("exercises")
     .insert({
-      ...input,
+      ...dbInput,
       user_id: userId,
     })
     .select(exerciseSelectColumns)
@@ -97,10 +123,11 @@ export async function updateExercise(
   id: string,
   input: ExerciseUpdateCommand,
 ) {
+  const dbInput = toDbUpdate(input);
   const { data, error } = await client
     .from("exercises")
     .update({
-      ...input,
+      ...dbInput,
       user_id: userId,
     })
     .eq("user_id", userId)
@@ -162,6 +189,12 @@ export async function listExercises(
   );
   const sort = params.sort ?? "created_at";
   const order = params.order ?? "desc";
+  // Map sort field for array columns (part->parts, type->types)
+  const sortColumnMap: Record<string, string> = {
+    part: "parts",
+    type: "types",
+  };
+  const sortColumn = sortColumnMap[sort] ?? sort;
 
   let query = client
     .from("exercises")
@@ -169,11 +202,11 @@ export async function listExercises(
     .eq("user_id", userId);
 
   if (params.part) {
-    query = query.eq("part", params.part);
+    query = query.contains("parts", [params.part]);
   }
 
   if (params.type) {
-    query = query.eq("type", params.type);
+    query = query.contains("types", [params.type]);
   }
 
   if (params.exercise_id) {
@@ -202,11 +235,11 @@ export async function listExercises(
       };
     }
 
-    query = applyCursorFilter(query, sort, order, cursor);
+    query = applyCursorFilter(query, sortColumn, order, cursor);
   }
 
   query = query
-    .order(sort, { ascending: order === "asc" })
+    .order(sortColumn, { ascending: order === "asc" })
     .order("id", { ascending: order === "asc" })
     .limit(limit + 1);
 
@@ -220,12 +253,21 @@ export async function listExercises(
   let nextCursor: string | null = null;
 
   if (items.length > limit) {
-    const tail = items.pop()!;
+    const tail = items.pop()! as ExerciseRow;
+    // For array columns, use first element as cursor value
+    let cursorValue: string | number | undefined;
+    if (sort === "part") {
+      cursorValue = tail.parts?.[0];
+    } else if (sort === "type") {
+      cursorValue = tail.types?.[0];
+    } else {
+      cursorValue = tail[sortColumn as keyof ExerciseRow] as string | number;
+    }
 
     nextCursor = encodeCursor({
       sort,
       order,
-      value: tail[sort as keyof ExerciseRow] as string | number,
+      value: cursorValue ?? "",
       id: tail.id,
     });
   }
@@ -238,10 +280,16 @@ export async function listExercises(
 }
 
 export function mapToDTO(row: ExerciseRow): ExerciseDTO {
-  // Destrukturyzacja w celu usunięcia pól wewnętrznych.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { user_id, title_normalized, ...rest } = row;
-  return rest;
+  /* eslint-disable @typescript-eslint/no-unused-vars -- destructuring to omit from rest */
+  const { user_id, title_normalized, types, parts, ...rest } = row;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  return {
+    ...rest,
+    types: types ?? [],
+    parts: parts ?? [],
+    type: types?.[0] ?? ("Main Workout" as const),
+    part: parts?.[0] ?? ("Legs" as const),
+  };
 }
 
 /**

@@ -75,3 +75,14 @@ export function decodeCursor(cursor: string): CursorPayload {
   });
   return parsed as CursorPayload;
 }
+
+/**
+ * Schema dla aktualizacji pojedynczego rekordu osobistego (PATCH /api/personal-records/record/[id]).
+ */
+export const personalRecordUpdateSchema = z
+  .object({
+    value: z.number().finite().min(0),
+    series_values: z.record(z.string(), z.number().finite()).nullable().optional(),
+    achieved_at: z.string().datetime(),
+  })
+  .strict();

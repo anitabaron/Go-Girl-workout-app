@@ -10,11 +10,14 @@ export type SeriesValues = Record<string, number>;
  * ViewModel dla pojedynczej metryki rekordu osobistego.
  */
 export type PersonalRecordMetricVM = {
+  id: string; // UUID rekordu (do edycji)
   metricType: PRMetricType;
   label: string; // Etykieta metryki (przetłumaczona: "Maks. powtórzenia", "Maks. czas", "Maks. ciężar")
+  value: number; // Wartość surowa (do edycji)
   valueDisplay: string; // Wartość sformatowana do wyświetlenia (np. "15", "02:30", "50 kg")
   seriesValues: SeriesValues | null; // Wartości per seria (S1, S2, S3...) lub null
   achievedAt: string; // Data osiągnięcia (sformatowana w formacie polskim)
+  achievedAtIso: string; // Data w ISO (do edycji)
   sessionId: string | null; // UUID sesji lub null
   isNew: boolean; // Czy rekord jest nowy (osiągnięty w ostatniej sesji)
 };
@@ -36,11 +39,14 @@ export type ExercisePersonalRecordsViewModel = {
  * ViewModel dla pojedynczej metryki rekordu w widoku szczegółów ćwiczenia.
  */
 export type PersonalRecordMetricViewModel = {
+  id: string; // UUID rekordu (do edycji)
   metricType: PRMetricType;
   label: string; // Etykieta metryki (przetłumaczona: "Maks. powtórzenia", "Maks. czas", "Maks. ciężar")
+  value: number; // Wartość surowa (do edycji)
   valueDisplay: string; // Wartość sformatowana do wyświetlenia (np. "15", "02:30", "50 kg")
   seriesValues: SeriesValues | null; // Wartości per seria (S1, S2, S3...) lub null
   achievedAt: string; // Data osiągnięcia (sformatowana w formacie polskim)
+  achievedAtIso: string; // Data w ISO (do edycji)
   sessionId: string | null; // UUID sesji lub null
   isNew: boolean; // Czy rekord jest nowy (osiągnięty w ostatniej sesji) - opcjonalnie
 };
@@ -77,11 +83,8 @@ function formatMetricValue(metricType: PRMetricType, value: number): string {
   switch (metricType) {
     case "total_reps":
       return value.toString();
-    case "max_duration": {
-      const minutes = Math.floor(value / 60);
-      const seconds = value % 60;
-      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-    }
+    case "max_duration":
+      return `${value}s`;
     case "max_weight":
       return `${value} kg`;
     default:
@@ -132,11 +135,14 @@ export function mapPersonalRecordsToViewModel(
 
     // Mapowanie metryk
     const metrics: PersonalRecordMetricVM[] = exerciseRecords.map((record) => ({
+      id: record.id,
       metricType: record.metric_type,
       label: metricTypeLabels[record.metric_type],
+      value: record.value,
       valueDisplay: formatMetricValue(record.metric_type, record.value),
       seriesValues: record.series_values ?? null,
       achievedAt: formatAchievedDate(record.achieved_at),
+      achievedAtIso: record.achieved_at,
       sessionId: record.achieved_in_session_id,
       isNew: false, // TODO: Implementacja logiki wykrywania nowych rekordów (osiągniętych w ostatniej sesji)
     }));
@@ -184,11 +190,14 @@ export function mapExercisePersonalRecordsToViewModel(
   // Mapuj wszystkie rekordy do PersonalRecordMetricViewModel[]
   const mappedRecords: PersonalRecordMetricViewModel[] = records.map(
     (record) => ({
+      id: record.id,
       metricType: record.metric_type,
       label: metricTypeLabels[record.metric_type],
+      value: record.value,
       valueDisplay: formatMetricValue(record.metric_type, record.value),
       seriesValues: record.series_values ?? null,
       achievedAt: formatAchievedDate(record.achieved_at),
+      achievedAtIso: record.achieved_at,
       sessionId: record.achieved_in_session_id,
       isNew: false, // TODO: Implementacja logiki wykrywania nowych rekordów (osiągniętych w ostatniej sesji)
     }),

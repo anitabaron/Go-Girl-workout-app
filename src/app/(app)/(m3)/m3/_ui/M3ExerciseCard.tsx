@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
-import { formatTotalDuration } from "@/lib/utils/time-format";
+import { formatDuration } from "@/lib/utils/time-format";
 import { toast } from "sonner";
 import type { ExerciseDTO } from "@/types";
 
@@ -120,12 +120,23 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               {exercise.title}
             </h3>
             <div className="flex flex-wrap gap-2 mt-1.5">
-              <ExerciseTypeBadge type={exercise.type} />
-              <Badge variant="outline" className="border-primary text-primary">
-                {EXERCISE_PART_LABELS[exercise.part]}
-              </Badge>
+              {exercise.types.map((t) => (
+                <ExerciseTypeBadge key={t} type={t} />
+              ))}
+              {exercise.parts.map((p) => (
+                <Badge
+                  key={p}
+                  variant="outline"
+                  className="border-primary text-primary"
+                >
+                  {EXERCISE_PART_LABELS[p]}
+                </Badge>
+              ))}
               {exercise.level && (
                 <Badge variant="outline">{exercise.level}</Badge>
+              )}
+              {exercise.is_unilateral && (
+                <Badge variant="secondary">Unilateral</Badge>
               )}
             </div>
           </CardHeader>
@@ -157,7 +168,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
                 <span>
                   <span className="text-muted-foreground">Przerwa między </span>
                   <span className="font-medium text-foreground">
-                    {formatTotalDuration(exercise.rest_in_between_seconds)}
+                    {formatDuration(exercise.rest_in_between_seconds)}
                   </span>
                 </span>
               )}
@@ -165,7 +176,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
                 <span>
                   <span className="text-muted-foreground">Przerwa po </span>
                   <span className="font-medium text-foreground">
-                    {formatTotalDuration(exercise.rest_after_series_seconds)}
+                    {formatDuration(exercise.rest_after_series_seconds)}
                   </span>
                 </span>
               )}

@@ -10,6 +10,8 @@ export { ImportPlanButtonM3 } from "./ImportPlanButtonM3";
 export { PersonalRecordsToolbar } from "./PersonalRecordsToolbar";
 export { PersonalRecordsListM3 } from "./PersonalRecordsListM3";
 export { DeletePersonalRecordsDialogM3 } from "./DeletePersonalRecordsDialogM3";
+export { EditPersonalRecordDialogM3 } from "./EditPersonalRecordDialogM3";
+export { EditPersonalRecordsModalM3 } from "./EditPersonalRecordsModalM3";
 export { ExerciseInfoM3 } from "./ExerciseInfoM3";
 export { PersonalRecordDetailContentM3 } from "./PersonalRecordDetailContentM3";
 export { WorkoutPlanDetailContent } from "./WorkoutPlanDetailContent";

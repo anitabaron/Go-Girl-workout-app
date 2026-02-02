@@ -4,12 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +34,25 @@ type ExerciseDetailContentProps = {
   readonly exercise: ExerciseDTO;
   readonly relationsData: RelationsData;
 };
+
+function ReadOnlyField({
+  label,
+  value,
+  id,
+}: {
+  label: string;
+  value: React.ReactNode;
+  id: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <p id={id} className="m3-label text-muted-foreground">
+        {label}
+      </p>
+      <p className="m3-body">{value}</p>
+    </div>
+  );
+}
 
 export function ExerciseDetailContent({
   exercise,
@@ -89,154 +102,131 @@ export function ExerciseDetailContent({
 
   return (
     <div className="space-y-6">
-      {/* Basic info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="m3-title">Basic information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <h2 className="m3-headline" id="exercise-title">
-            {exercise.title}
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            <ExerciseTypeBadge type={exercise.type} />
-            <Badge variant="outline">{EXERCISE_PART_LABELS[exercise.part]}</Badge>
-            {exercise.level && (
-              <Badge variant="outline">{exercise.level}</Badge>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Compact layout matching ExerciseFormM3 */}
+      <div className="space-y-4">
+        <ReadOnlyField
+          id="exercise-detail-title"
+          label="Title"
+          value={exercise.title}
+        />
 
-      {/* Metrics */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="m3-title">Metrics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {exercise.reps != null && (
-              <div>
-                <p className="m3-label text-muted-foreground mb-1">Reps</p>
-                <p className="m3-headline" aria-label={`${exercise.reps} reps`}>
-                  {exercise.reps}
-                </p>
-              </div>
-            )}
-            {exercise.duration_seconds != null && (
-              <div>
-                <p className="m3-label text-muted-foreground mb-1">
-                  Duration (seconds)
-                </p>
-                <p
-                  className="m3-headline"
-                  aria-label={`${exercise.duration_seconds} seconds`}
-                >
-                  {exercise.duration_seconds}
-                </p>
-              </div>
-            )}
-            <div>
-              <p className="m3-label text-muted-foreground mb-1">Series</p>
-              <p
-                className="m3-headline"
-                aria-label={`${exercise.series} series`}
-              >
-                {exercise.series}
-              </p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="space-y-2">
+            <p className="m3-label text-muted-foreground">Type</p>
+            <div className="flex flex-wrap gap-2">
+              {exercise.types.map((t) => (
+                <ExerciseTypeBadge key={t} type={t} />
+              ))}
             </div>
-            {exercise.rest_in_between_seconds != null && (
-              <div>
-                <p className="m3-label text-muted-foreground mb-1">
-                  Rest between sets (seconds)
-                </p>
-                <p
-                  className="m3-headline"
-                  aria-label={`${exercise.rest_in_between_seconds} seconds rest`}
-                >
-                  {exercise.rest_in_between_seconds}
-                </p>
-              </div>
-            )}
-            {exercise.rest_after_series_seconds != null && (
-              <div>
-                <p className="m3-label text-muted-foreground mb-1">
-                  Rest after series (seconds)
-                </p>
-                <p
-                  className="m3-headline"
-                  aria-label={`${exercise.rest_after_series_seconds} seconds rest`}
-                >
-                  {exercise.rest_after_series_seconds}
-                </p>
-              </div>
-            )}
-            {exercise.estimated_set_time_seconds != null && (
-              <div>
-                <p className="m3-label text-muted-foreground mb-1">
-                  Estimated set time (seconds)
-                </p>
-                <p
-                  className="m3-headline"
-                  aria-label={`${exercise.estimated_set_time_seconds} seconds`}
-                >
-                  {exercise.estimated_set_time_seconds}
-                </p>
-              </div>
-            )}
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-2">
+            <p className="m3-label text-muted-foreground">Part</p>
+            <div className="flex flex-wrap gap-2">
+              {exercise.parts.map((p) => (
+                <Badge key={p} variant="outline">
+                  {EXERCISE_PART_LABELS[p]}
+                </Badge>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="m3-label text-muted-foreground">Level</p>
+            <div className="flex flex-wrap gap-2">
+              {exercise.level && (
+                <Badge variant="outline">{exercise.level}</Badge>
+              )}
+            </div>
+          </div>
+        </div>
 
-      {/* Additional info */}
-      {(exercise.level || exercise.details) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="m3-title">Additional information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {exercise.level && (
-              <div>
-                <p className="m3-label text-muted-foreground mb-1">Level</p>
-                <p className="m3-body">{exercise.level}</p>
-              </div>
-            )}
-            {exercise.details && (
-              <div>
-                <p className="m3-label text-muted-foreground mb-1">Details</p>
-                <p className="m3-body whitespace-pre-wrap">{exercise.details}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+        {exercise.details && (
+          <ReadOnlyField
+            id="exercise-detail-details"
+            label="Details"
+            value={
+              <span className="whitespace-pre-wrap">{exercise.details}</span>
+            }
+          />
+        )}
 
-      {/* Relations info */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          {exercise.reps != null && (
+            <ReadOnlyField
+              id="exercise-detail-reps"
+              label="Reps"
+              value={exercise.reps}
+            />
+          )}
+          {exercise.duration_seconds != null && (
+            <ReadOnlyField
+              id="exercise-detail-duration"
+              label="Duration (sec)"
+              value={exercise.duration_seconds}
+            />
+          )}
+          <ReadOnlyField
+            id="exercise-detail-series"
+            label="Series"
+            value={exercise.series}
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {exercise.rest_in_between_seconds != null && (
+            <ReadOnlyField
+              id="exercise-detail-rest-between"
+              label="Rest between sets (sec)"
+              value={exercise.rest_in_between_seconds}
+            />
+          )}
+          {exercise.rest_after_series_seconds != null && (
+            <ReadOnlyField
+              id="exercise-detail-rest-after"
+              label="Rest after series (sec)"
+              value={exercise.rest_after_series_seconds}
+            />
+          )}
+          {exercise.estimated_set_time_seconds != null && (
+            <ReadOnlyField
+              id="exercise-detail-estimated-set-time"
+              label="Estimated set time (sec)"
+              value={exercise.estimated_set_time_seconds}
+            />
+          )}
+        </div>
+
+        {exercise.is_unilateral && (
+          <div className="space-y-2">
+            <p className="m3-label text-muted-foreground">Unilateral</p>
+            <Badge variant="secondary">Yes</Badge>
+          </div>
+        )}
+      </div>
+
+      {/* Relations info - at the end */}
       {relationsData.hasRelations && (
-        <Card role="region" aria-labelledby="exercise-relations-title">
-          <CardHeader>
-            <CardTitle className="m3-title" id="exercise-relations-title">
-              Relations
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <section
+          className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2"
+          aria-labelledby="exercise-relations-title"
+        >
+          <p id="exercise-relations-title" className="m3-label text-destructive" role="alert">
+            Exercise cannot be deleted because it is used in{" "}
             {relationsData.plansCount > 0 && (
-              <p className="m3-label text-muted-foreground">
-                Used in {relationsData.plansCount}{" "}
+              <>
+                {relationsData.plansCount}{" "}
                 {relationsData.plansCount === 1 ? "workout plan" : "workout plans"}
-              </p>
+                {relationsData.sessionsCount > 0 ? " and " : ""}
+              </>
             )}
             {relationsData.sessionsCount > 0 && (
-              <p className="m3-label text-muted-foreground">
-                Used in {relationsData.sessionsCount}{" "}
+              <>
+                {relationsData.sessionsCount}{" "}
                 {relationsData.sessionsCount === 1 ? "session" : "sessions"}
-              </p>
+              </>
             )}
-            <p className="m3-label text-destructive mt-2" role="alert">
-              Exercise cannot be deleted because it is used in workout history.
-            </p>
-          </CardContent>
-        </Card>
+            .
+          </p>
+        </section>
       )}
 
       {/* Actions */}

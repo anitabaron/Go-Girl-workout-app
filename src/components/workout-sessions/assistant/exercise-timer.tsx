@@ -35,21 +35,25 @@ export function ExerciseTimer({
   // Walidacja numeru serii
   const isValidSetNumber = useMemo(() => {
     if (currentSetNumber < 1) return false;
-    if (exercise.planned_sets !== null && currentSetNumber > exercise.planned_sets) {
+    if (
+      exercise.planned_sets !== null &&
+      currentSetNumber > exercise.planned_sets
+    ) {
       return false;
     }
     return true;
   }, [currentSetNumber, exercise.planned_sets]);
 
   // Hook do zarządzania logiką timera (zawsze wywoływany, zgodnie z zasadami React)
-  const { timerState, startRestBetweenTimer, startRestAfterSeriesTimer } = useExerciseTimer(
-    exercise,
-    currentSetNumber,
-    isPaused,
-    onSetComplete,
-    onRestBetweenComplete,
-    onRestAfterSeriesComplete
-  );
+  const { timerState, startRestBetweenTimer, startRestAfterSeriesTimer } =
+    useExerciseTimer(
+      exercise,
+      currentSetNumber,
+      isPaused,
+      onSetComplete,
+      onRestBetweenComplete,
+      onRestAfterSeriesComplete,
+    );
 
   // Callbacki do obsługi zakończenia serii - automatyczne przejście do przerwy
   const handleSetCompleteWithTransition = useCallback(() => {
@@ -67,7 +71,13 @@ export function ExerciseTimer({
       // Nie ostatnia seria - przejdź do przerwy między seriami
       startRestBetweenTimer();
     }
-  }, [currentSetNumber, exercise.planned_sets, onSetComplete, startRestBetweenTimer, startRestAfterSeriesTimer]);
+  }, [
+    currentSetNumber,
+    exercise.planned_sets,
+    onSetComplete,
+    startRestBetweenTimer,
+    startRestAfterSeriesTimer,
+  ]);
 
   // Callback do obsługi zakończenia powtórzeń - podobnie jak handleSetCompleteWithTransition
   const handleRepsCompleteWithTransition = useCallback(() => {
@@ -85,12 +95,21 @@ export function ExerciseTimer({
       // Nie ostatnia seria - przejdź do przerwy między seriami
       startRestBetweenTimer();
     }
-  }, [currentSetNumber, exercise.planned_sets, onRepsComplete, startRestBetweenTimer, startRestAfterSeriesTimer]);
+  }, [
+    currentSetNumber,
+    exercise.planned_sets,
+    onRepsComplete,
+    startRestBetweenTimer,
+    startRestAfterSeriesTimer,
+  ]);
 
   // Jeśli ćwiczenie nie ma planowanych wartości lub numer serii jest nieprawidłowy, nie wyświetlaj timera
   if (!hasPlannedValues || !isValidSetNumber) {
     return null;
   }
+
+  const isUnilateral = exercise.exercise_is_unilateral_at_time ?? false;
+  const displayMultiplier = isUnilateral ? 2 : 1;
 
   switch (timerState.type) {
     case "waiting":
@@ -99,7 +118,7 @@ export function ExerciseTimer({
     case "set_countdown":
       return (
         <SetCountdownTimer
-          durationSeconds={timerState.remainingSeconds}
+          durationSeconds={timerState.remainingSeconds * displayMultiplier}
           isPaused={isPaused}
           onComplete={handleSetCompleteWithTransition}
         />
@@ -108,7 +127,7 @@ export function ExerciseTimer({
     case "reps_display":
       return (
         <RepsDisplay
-          reps={timerState.reps}
+          reps={timerState.reps * displayMultiplier}
           setNumber={timerState.setNumber}
           onComplete={handleRepsCompleteWithTransition}
         />

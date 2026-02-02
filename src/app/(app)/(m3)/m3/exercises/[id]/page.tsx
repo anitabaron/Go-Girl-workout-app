@@ -40,8 +40,8 @@ export default async function ExerciseDetailPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title={exercise.title}
-        description="Exercise details"
+        title="Exercise details"
+        description={exercise.title}
         actions={
           <Button variant="ghost" size="sm" asChild>
             <Link href="/m3/exercises">

@@ -16,6 +16,7 @@ import {
   deletePersonalRecordsByExercise,
   listPersonalRecords,
   listPersonalRecordsByExercise,
+  updatePersonalRecord,
 } from "@/repositories/personal-records";
 
 export { ServiceError } from "@/lib/service-utils";
@@ -154,4 +155,45 @@ export async function deletePersonalRecordsByExerciseService(
   if (error) {
     throw mapDbError(error);
   }
+}
+
+/**
+ * Aktualizuje pojedynczy rekord osobisty.
+ * Dozwolone tylko dla rekordów bez przypisanej sesji (achieved_in_session_id === null).
+ */
+export async function updatePersonalRecordService(
+  userId: string,
+  recordId: string,
+  updates: {
+    value: number;
+    series_values?: Record<string, number> | null;
+    achieved_at: string;
+  },
+): Promise<PersonalRecordWithExerciseDTO> {
+  assertUser(userId);
+  validateUuid(recordId, "id rekordu");
+
+  const supabase = await createClient();
+  const { data, error } = await updatePersonalRecord(
+    supabase,
+    userId,
+    recordId,
+    updates,
+  );
+
+  if (error) {
+    if ((error as { code?: string }).code === "FORBIDDEN") {
+      throw new ServiceError(
+        "FORBIDDEN",
+        "Nie można edytować rekordu przypisanego do sesji treningowej. Przejdź do edycji szczegółów sesji.",
+      );
+    }
+    throw mapDbError(error);
+  }
+
+  if (!data) {
+    throw new ServiceError("NOT_FOUND", "Rekord nie został znaleziony.");
+  }
+
+  return data;
 }

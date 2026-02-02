@@ -18,8 +18,8 @@ export function convertSnapshotToExercise(
 
   const exerciseData: ExerciseCreateCommand = {
     title: snapshot.exercise_title,
-    type: exerciseType,
-    part: snapshot.exercise_part,
+    types: [exerciseType],
+    parts: [snapshot.exercise_part],
     series: snapshot.planned_sets ?? 1,
   };
 

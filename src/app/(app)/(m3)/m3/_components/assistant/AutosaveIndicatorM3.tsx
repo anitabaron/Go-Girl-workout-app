@@ -17,19 +17,19 @@ export function AutosaveIndicatorM3({
       case "saving":
         return {
           icon: Loader2,
-          text: "Zapisywanie...",
+          text: "Saving...",
           className: "text-muted-foreground",
         };
       case "saved":
         return {
           icon: CheckCircle2,
-          text: "Zapisano",
+          text: "Saved",
           className: "text-primary",
         };
       case "error":
         return {
           icon: AlertCircle,
-          text: errorMessage || "Błąd zapisu",
+          text: errorMessage || "Save error",
           className: "text-destructive",
         };
       default:
@@ -52,7 +52,9 @@ export function AutosaveIndicatorM3({
   return (
     <div className="fixed right-4 top-4 z-50 mt-24 flex items-center gap-2 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] px-3 py-2 shadow-sm transition-opacity duration-200">
       <Icon
-        className={`size-4 ${status === "saving" ? "animate-spin" : ""} ${config.className}`}
+        className={`size-4 ${status === "saving" ? "animate-spin" : ""} ${
+          config.className
+        }`}
       />
       <span className={`text-sm font-medium ${config.className}`}>
         {config.text}

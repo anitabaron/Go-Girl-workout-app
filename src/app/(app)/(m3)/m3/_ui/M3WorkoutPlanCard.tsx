@@ -14,14 +14,7 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteWorkoutPlanDialogM3 } from "../_components/DeleteWorkoutPlanDialogM3";
 import type { WorkoutPlanDTO } from "@/types";
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import { formatTotalDuration } from "@/lib/utils/time-format";
@@ -45,7 +38,6 @@ function M3WorkoutPlanCardComponent({
 }: Readonly<M3WorkoutPlanCardProps>) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
 
   const formattedDate = useMemo(
@@ -125,37 +117,6 @@ function M3WorkoutPlanCardComponent({
       toast.error("An error occurred while starting the workout");
     } finally {
       setIsStarting(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      if (onDelete) {
-        await onDelete(plan.id);
-      } else {
-        const response = await fetch(`/api/workout-plans/${plan.id}`, {
-          method: "DELETE",
-        });
-        if (!response.ok) {
-          if (response.status === 404) {
-            toast.error("Workout plan not found");
-          } else if (response.status === 401 || response.status === 403) {
-            toast.error("Unauthorized. Please log in again.");
-            router.push("/login");
-          } else {
-            toast.error("Failed to delete workout plan");
-          }
-          return;
-        }
-      }
-      toast.success("Workout plan deleted");
-      setIsDeleteDialogOpen(false);
-      router.refresh();
-    } catch {
-      toast.error("An error occurred while deleting the workout plan");
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -267,36 +228,13 @@ function M3WorkoutPlanCardComponent({
         </Link>
       </Card>
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent aria-describedby="delete-plan-description">
-          <DialogHeader>
-            <DialogTitle>Delete workout plan</DialogTitle>
-            <DialogDescription id="delete-plan-description">
-              Are you sure you want to delete &quot;{plan.name}&quot;? This
-              action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              disabled={isDeleting}
-              aria-label="Cancel deletion"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              aria-label={`Confirm delete: ${plan.name}`}
-              aria-busy={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteWorkoutPlanDialogM3
+        planId={plan.id}
+        planName={plan.name}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onDelete={onDelete}
+      />
     </>
   );
 }

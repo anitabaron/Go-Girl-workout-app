@@ -17,6 +17,7 @@ export type WorkoutPlanExerciseItemState = {
   exercise_title?: string; // Nazwa ćwiczenia (z ExerciseDTO)
   exercise_type?: ExerciseType; // Type ćwiczenia (z ExerciseDTO)
   exercise_part?: ExercisePart; // Part ćwiczenia (z ExerciseDTO)
+  exercise_is_unilateral?: boolean; // Czy ćwiczenie jest unilateralne
   // Parametry planu
   section_type: ExerciseType; // Warm-up | Main Workout | Cool-down
   section_order: number; // Kolejność w sekcji (> 0)
@@ -187,6 +188,7 @@ export function dtoToFormState(dto?: WorkoutPlanDTO): WorkoutPlanFormState {
       exercise_title: exercise.exercise_title ?? undefined,
       exercise_type: exercise.exercise_type ?? undefined,
       exercise_part: exercise.exercise_part ?? undefined,
+      exercise_is_unilateral: exercise.exercise_is_unilateral ?? undefined,
       section_type: exercise.section_type,
       section_order: exercise.section_order,
       planned_sets: exercise.planned_sets,
@@ -217,6 +219,7 @@ export function exerciseDtoToItemState(
     exercise_title: exerciseMetadata?.title,
     exercise_type: exerciseMetadata?.type,
     exercise_part: exerciseMetadata?.part,
+    exercise_is_unilateral: exerciseMetadata?.is_unilateral,
     section_type: exerciseDto.section_type,
     section_order: exerciseDto.section_order,
     planned_sets: exerciseDto.planned_sets,

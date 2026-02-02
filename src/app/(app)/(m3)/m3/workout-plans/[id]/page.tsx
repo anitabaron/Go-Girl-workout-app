@@ -47,9 +47,9 @@ export default async function WorkoutPlanDetailPage({
               Back to plans
             </Link>
           </Button>
-          <h1 className="m3-hero-sm">{workoutPlan.name}</h1>
+          <h1 className="m3-hero-sm">Workout plan details</h1>
           <p className="m3-body m3-prose text-muted-foreground">
-            Workout plan details
+            {workoutPlan.name}
           </p>
         </div>
       </header>

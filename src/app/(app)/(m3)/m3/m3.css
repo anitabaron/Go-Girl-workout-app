@@ -36,14 +36,11 @@
   --m3-radius-hero: 1.75rem; /* 28px - hero, major containers */
 
   /* Softer elevation - subtle, spread, not harsh */
-  --m3-shadow-1:
-    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
-  --m3-shadow-2:
-    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
-    0 8px 16px -4px rgb(0 0 0 / 0.04);
-  --m3-shadow-hero:
-    0 4px 6px -2px rgb(0 0 0 / 0.05), 0 10px 20px -5px rgb(0 0 0 / 0.06),
-    0 20px 40px -10px rgb(0 0 0 / 0.05);
+  --m3-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2: 0 2px 4px -1px rgb(0 0 0 / 0.05),
+    0 4px 8px -2px rgb(0 0 0 / 0.05), 0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-hero: 0 4px 6px -2px rgb(0 0 0 / 0.05),
+    0 10px 20px -5px rgb(0 0 0 / 0.06), 0 20px 40px -10px rgb(0 0 0 / 0.05);
 
   /* Shadcn mapping - primary = filled CTA, accent = tonal surfaces */
   --background: var(--m3-surface);
@@ -105,11 +102,8 @@
   color-scheme: light;
 
   /* Smooth theme transition (light ↔ dark) */
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease,
-    border-color 0.35s ease,
-    box-shadow 0.35s ease;
+  transition: background-color 0.35s ease, color 0.35s ease,
+    border-color 0.35s ease, box-shadow 0.35s ease;
 
   display: flex;
   flex-direction: column;
@@ -126,11 +120,8 @@
 
 /* Theme transition – smooth switch for all color-using elements */
 .ui-m3 * {
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease,
-    border-color 0.35s ease,
-    box-shadow 0.35s ease;
+  transition: background-color 0.35s ease, color 0.35s ease,
+    border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .ui-m3 .m3-hero {
@@ -266,10 +257,7 @@
   font-weight: 600;
   border-radius: var(--m3-radius-lg);
   border: none;
-  transition:
-    background 0.2s,
-    box-shadow 0.2s,
-    transform 0.15s;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 
 .ui-m3 .m3-cta:hover {
@@ -285,9 +273,7 @@
 
 .ui-m3 .m3-cta:focus-visible {
   outline: none;
-  box-shadow:
-    0 0 0 3px var(--m3-surface),
-    0 0 0 5px var(--m3-primary);
+  box-shadow: 0 0 0 3px var(--m3-surface), 0 0 0 5px var(--m3-primary);
 }
 
 /* Chip-like badge - M3 chip styling */
@@ -324,10 +310,7 @@
   transform: none !important;
   box-shadow: none !important;
   margin: 0 !important;
-  transition:
-    background 0.2s,
-    box-shadow 0.2s,
-    border-color 0.2s,
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s,
     transform 0.15s;
 }
 
@@ -416,12 +399,26 @@
   background: var(--m3-surface-container-high) !important;
 }
 
+/* Destructive - M3 error/delete styling */
+.ui-m3 [data-slot="button"][data-variant="destructive"] {
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
+  border: none !important;
+}
+
+.ui-m3 [data-slot="button"][data-variant="destructive"]:hover {
+  background: color-mix(in srgb, var(--destructive) 85%, black) !important;
+  box-shadow: var(--m3-shadow-1);
+}
+
+.ui-m3 [data-slot="button"][data-variant="destructive"]:active {
+  background: color-mix(in srgb, var(--destructive) 75%, black) !important;
+}
+
 /* Focus - M3 ring with offset (replaces legacy ring) */
 .ui-m3 [data-slot="button"]:focus-visible {
   outline: none !important;
-  box-shadow:
-    0 0 0 2px var(--m3-surface),
-    0 0 0 4px var(--m3-primary) !important;
+  box-shadow: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary) !important;
 }
 
 /* ============================================
@@ -433,10 +430,7 @@
   border: 1px solid var(--m3-outline-variant) !important;
   border-radius: var(--m3-radius-large) !important;
   box-shadow: var(--m3-shadow-1) !important;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s,
-    border-color 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
 }
 
 .ui-m3 [data-slot="card"]:hover {
@@ -446,9 +440,7 @@
 }
 
 .ui-m3 [data-slot="card"]:focus-within {
-  box-shadow:
-    0 0 0 2px var(--m3-surface),
-    0 0 0 4px var(--m3-primary) !important;
+  box-shadow: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary) !important;
 }
 
 .ui-m3 [data-slot="card-header"],
@@ -467,9 +459,7 @@
   border-radius: var(--m3-radius-md) !important;
   color: var(--m3-on-surface) !important;
   box-shadow: none !important;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .ui-m3 [data-slot="input"]::placeholder {
@@ -479,9 +469,7 @@
 .ui-m3 [data-slot="input"]:focus-visible {
   outline: none !important;
   border-color: var(--m3-primary) !important;
-  box-shadow:
-    0 0 0 2px var(--m3-surface),
-    0 0 0 4px var(--m3-primary) !important;
+  box-shadow: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary) !important;
 }
 
 /* ============================================
@@ -493,10 +481,7 @@
   border-radius: var(--m3-radius-md) !important;
   color: var(--m3-on-surface) !important;
   box-shadow: none !important;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s,
-    background 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
 .ui-m3 [data-slot="select-trigger"]:hover {
@@ -505,9 +490,7 @@
 
 .ui-m3 [data-slot="select-trigger"]:focus {
   outline: none !important;
-  box-shadow:
-    0 0 0 2px var(--m3-surface),
-    0 0 0 4px var(--m3-primary) !important;
+  box-shadow: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary) !important;
 }
 
 /* Portal content (Select, Dialog, Sheet) renders outside .ui-m3 - body needs M3 vars for inheritance */
@@ -519,9 +502,8 @@ body:has(.ui-m3) {
   --m3-on-primary-container: #5c282c;
   --m3-radius-md: 1rem;
   --m3-radius-sm: 0.75rem;
-  --m3-shadow-2:
-    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
-    0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-2: 0 2px 4px -1px rgb(0 0 0 / 0.05),
+    0 4px 8px -2px rgb(0 0 0 / 0.05), 0 8px 16px -4px rgb(0 0 0 / 0.04);
 }
 
 /* SelectContent renders in portal - target when body has .ui-m3 */
@@ -562,6 +544,79 @@ body:has(.ui-m3) [data-slot="alert-dialog-overlay"] {
   background: rgb(0 0 0 / 0.5) !important;
 }
 
+/* Portal buttons - M3 style (Dialog/AlertDialog render outside .ui-m3) */
+body:has(.ui-m3) [data-slot="dialog-content"] [data-slot="button"],
+body:has(.ui-m3) [data-slot="alert-dialog-content"] [data-slot="button"] {
+  appearance: none !important;
+  border-radius: var(--m3-radius-lg) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+body:has(.ui-m3)
+  [data-slot="dialog-content"]
+  [data-slot="button"][data-variant="default"],
+body:has(.ui-m3)
+  [data-slot="alert-dialog-content"]
+  [data-slot="button"][data-variant="default"] {
+  background: var(--m3-primary) !important;
+  color: var(--m3-on-primary) !important;
+  border: none !important;
+}
+
+body:has(.ui-m3)
+  [data-slot="dialog-content"]
+  [data-slot="button"][data-variant="default"]:hover,
+body:has(.ui-m3)
+  [data-slot="alert-dialog-content"]
+  [data-slot="button"][data-variant="default"]:hover {
+  background: color-mix(in srgb, var(--m3-primary) 85%, black) !important;
+  box-shadow: var(--m3-shadow-1);
+}
+
+body:has(.ui-m3)
+  [data-slot="dialog-content"]
+  [data-slot="button"][data-variant="outline"],
+body:has(.ui-m3)
+  [data-slot="alert-dialog-content"]
+  [data-slot="button"][data-variant="outline"] {
+  background: transparent !important;
+  color: var(--m3-on-surface) !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+}
+
+body:has(.ui-m3)
+  [data-slot="dialog-content"]
+  [data-slot="button"][data-variant="outline"]:hover,
+body:has(.ui-m3)
+  [data-slot="alert-dialog-content"]
+  [data-slot="button"][data-variant="outline"]:hover {
+  background: var(--m3-surface-container-high) !important;
+  border-color: var(--m3-outline) !important;
+}
+
+body:has(.ui-m3)
+  [data-slot="dialog-content"]
+  [data-slot="button"][data-variant="destructive"],
+body:has(.ui-m3)
+  [data-slot="alert-dialog-content"]
+  [data-slot="button"][data-variant="destructive"] {
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
+  border: none !important;
+}
+
+body:has(.ui-m3)
+  [data-slot="dialog-content"]
+  [data-slot="button"][data-variant="destructive"]:hover,
+body:has(.ui-m3)
+  [data-slot="alert-dialog-content"]
+  [data-slot="button"][data-variant="destructive"]:hover {
+  background: color-mix(in srgb, var(--destructive) 85%, black) !important;
+  box-shadow: var(--m3-shadow-1);
+}
+
 body:has(.ui-m3) [data-slot="sheet-content"] {
   background: var(--m3-surface-container-high) !important;
   border: 1px solid var(--m3-outline-variant) !important;
@@ -599,8 +654,11 @@ html:has(.ui-m3) {
 }
 
 /* Fixed bottom bar above mobile nav – for workout session controls etc. */
-.ui-m3 .bottom-above-mobile-nav {
-  bottom: var(--m3-mobile-nav-height);
+/* Only on mobile (below md); on md+ use md:bottom-0 to stick to viewport bottom */
+@media (max-width: 767px) {
+  .ui-m3 .bottom-above-mobile-nav {
+    bottom: var(--m3-mobile-nav-height);
+  }
 }
 
 /* Workout active page: no main bottom padding on desktop – fixed bar sits at viewport bottom */
@@ -631,12 +689,11 @@ html:has(.ui-m3) {
     --m3-outline: #938f99;
     --m3-outline-variant: #49454f;
 
-    --m3-shadow-1:
-      0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
-    --m3-shadow-2:
-      0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
-    --m3-shadow-hero:
-      0 4px 8px -2px rgb(0 0 0 / 0.35), 0 12px 24px -6px rgb(0 0 0 / 0.3);
+    --m3-shadow-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
+      0 4px 12px -2px rgb(0 0 0 / 0.25);
+    --m3-shadow-hero: 0 4px 8px -2px rgb(0 0 0 / 0.35),
+      0 12px 24px -6px rgb(0 0 0 / 0.3);
 
     --background: var(--m3-surface);
     --foreground: var(--m3-on-surface);
@@ -690,9 +747,7 @@ html:has(.ui-m3) {
   }
 
   .ui-m3 .m3-cta:focus-visible {
-    box-shadow:
-      0 0 0 3px var(--m3-surface),
-      0 0 0 5px var(--m3-primary);
+    box-shadow: 0 0 0 3px var(--m3-surface), 0 0 0 5px var(--m3-primary);
   }
 
   .ui-m3 .m3-chip {
@@ -714,8 +769,8 @@ html:has(.ui-m3) {
     --m3-outline-variant: #49454f;
     --m3-primary-container: #8b4a52;
     --m3-on-primary-container: #fcdce0;
-    --m3-shadow-2:
-      0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+    --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
+      0 4px 12px -2px rgb(0 0 0 / 0.25);
   }
 
   /* Dark mode button hover/active - lighten instead of darken */
@@ -762,14 +817,11 @@ html:has(.ui-m3) {
   --m3-outline: #79747e;
   --m3-outline-variant: #cac4d0;
 
-  --m3-shadow-1:
-    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
-  --m3-shadow-2:
-    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
-    0 8px 16px -4px rgb(0 0 0 / 0.04);
-  --m3-shadow-hero:
-    0 4px 6px -2px rgb(0 0 0 / 0.05), 0 10px 20px -5px rgb(0 0 0 / 0.06),
-    0 20px 40px -10px rgb(0 0 0 / 0.05);
+  --m3-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2: 0 2px 4px -1px rgb(0 0 0 / 0.05),
+    0 4px 8px -2px rgb(0 0 0 / 0.05), 0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-hero: 0 4px 6px -2px rgb(0 0 0 / 0.05),
+    0 10px 20px -5px rgb(0 0 0 / 0.06), 0 20px 40px -10px rgb(0 0 0 / 0.05);
 
   --background: var(--m3-surface);
   --foreground: var(--m3-on-surface);
@@ -819,10 +871,10 @@ html:has(.ui-m3) {
   --m3-outline-variant: #49454f;
 
   --m3-shadow-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
-  --m3-shadow-2:
-    0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
-  --m3-shadow-hero:
-    0 4px 8px -2px rgb(0 0 0 / 0.35), 0 12px 24px -6px rgb(0 0 0 / 0.3);
+  --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
+    0 4px 12px -2px rgb(0 0 0 / 0.25);
+  --m3-shadow-hero: 0 4px 8px -2px rgb(0 0 0 / 0.35),
+    0 12px 24px -6px rgb(0 0 0 / 0.3);
 
   --background: var(--m3-surface);
   --foreground: var(--m3-on-surface);
@@ -860,8 +912,8 @@ body:has(.ui-m3.dark) {
   --m3-outline-variant: #49454f;
   --m3-primary-container: #8b4a52;
   --m3-on-primary-container: #fcdce0;
-  --m3-shadow-2:
-    0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+  --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
+    0 4px 12px -2px rgb(0 0 0 / 0.25);
 }
 
 /* Dark mode button overrides for .ui-m3.dark (manual toggle) */

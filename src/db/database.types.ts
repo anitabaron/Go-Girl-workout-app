@@ -120,15 +120,16 @@ export type Database = {
           duration_seconds: number | null;
           estimated_set_time_seconds: number | null;
           id: string;
+          is_unilateral: boolean;
           level: string | null;
-          part: Database["public"]["Enums"]["exercise_part"];
+          parts: Database["public"]["Enums"]["exercise_part"][];
           reps: number | null;
           rest_after_series_seconds: number | null;
           rest_in_between_seconds: number | null;
           series: number;
           title: string;
           title_normalized: string;
-          type: Database["public"]["Enums"]["exercise_type"];
+          types: Database["public"]["Enums"]["exercise_type"][];
           updated_at: string;
           user_id: string;
         };
@@ -138,15 +139,16 @@ export type Database = {
           duration_seconds?: number | null;
           estimated_set_time_seconds?: number | null;
           id?: string;
+          is_unilateral?: boolean;
           level?: string | null;
-          part: Database["public"]["Enums"]["exercise_part"];
+          parts: Database["public"]["Enums"]["exercise_part"][];
           reps?: number | null;
           rest_after_series_seconds?: number | null;
           rest_in_between_seconds?: number | null;
           series: number;
           title: string;
           title_normalized?: string;
-          type: Database["public"]["Enums"]["exercise_type"];
+          types: Database["public"]["Enums"]["exercise_type"][];
           updated_at?: string;
           user_id: string;
         };
@@ -156,15 +158,16 @@ export type Database = {
           duration_seconds?: number | null;
           estimated_set_time_seconds?: number | null;
           id?: string;
+          is_unilateral?: boolean;
           level?: string | null;
-          part?: Database["public"]["Enums"]["exercise_part"];
+          parts?: Database["public"]["Enums"]["exercise_part"][];
           reps?: number | null;
           rest_after_series_seconds?: number | null;
           rest_in_between_seconds?: number | null;
           series?: number;
           title?: string;
           title_normalized?: string;
-          type?: Database["public"]["Enums"]["exercise_type"];
+          types?: Database["public"]["Enums"]["exercise_type"][];
           updated_at?: string;
           user_id?: string;
         };
@@ -364,6 +367,7 @@ export type Database = {
           actual_sets: number | null;
           created_at: string;
           exercise_id: string | null;
+          exercise_is_unilateral_at_time: boolean;
           exercise_order: number;
           exercise_part_at_time: Database["public"]["Enums"]["exercise_part"];
           exercise_title_at_time: string;
@@ -385,6 +389,7 @@ export type Database = {
           actual_sets?: number | null;
           created_at?: string;
           exercise_id?: string | null;
+          exercise_is_unilateral_at_time?: boolean;
           exercise_order: number;
           exercise_part_at_time: Database["public"]["Enums"]["exercise_part"];
           exercise_title_at_time: string;
@@ -406,6 +411,7 @@ export type Database = {
           actual_sets?: number | null;
           created_at?: string;
           exercise_id?: string | null;
+          exercise_is_unilateral_at_time?: boolean;
           exercise_order?: number;
           exercise_part_at_time?: Database["public"]["Enums"]["exercise_part"];
           exercise_title_at_time?: string;
@@ -445,6 +451,7 @@ export type Database = {
           reps: number | null;
           session_exercise_id: string;
           set_number: number;
+          side_number: number | null;
           updated_at: string;
           weight_kg: number | null;
         };
@@ -455,6 +462,7 @@ export type Database = {
           reps?: number | null;
           session_exercise_id: string;
           set_number: number;
+          side_number?: number | null;
           updated_at?: string;
           weight_kg?: number | null;
         };
@@ -465,6 +473,7 @@ export type Database = {
           reps?: number | null;
           session_exercise_id?: string;
           set_number?: number;
+          side_number?: number | null;
           updated_at?: string;
           weight_kg?: number | null;
         };
@@ -595,14 +604,14 @@ export type Tables<
     ? R
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R;
-      }
-      ? R
-      : never
-    : never;
+      DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -622,12 +631,12 @@ export type TablesInsert<
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I;
-      }
-      ? I
-      : never
-    : never;
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -647,12 +656,12 @@ export type TablesUpdate<
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U;
-      }
-      ? U
-      : never
-    : never;
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -668,13 +677,23 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never;
+
+// When CompositeTypes is empty, keyof is never. Conditional avoids union with never.
+type SchemaOption = { schema: keyof DatabaseWithoutInternals };
+type CompositeTypeNameOrOptions = [
+  keyof DefaultSchema["CompositeTypes"],
+] extends [never]
+  ? SchemaOption
+  : keyof DefaultSchema["CompositeTypes"] extends infer K
+    ? K extends never
+      ? SchemaOption
+      : K | SchemaOption
     : never;
 
 export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+  PublicCompositeTypeNameOrOptions extends CompositeTypeNameOrOptions,
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -685,8 +704,8 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never;
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never;
 
 export const Constants = {
   graphql_public: {
