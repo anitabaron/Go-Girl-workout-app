@@ -14,6 +14,7 @@ type FormNumberInputProps = {
   disabled?: boolean;
   min?: number;
   required?: boolean;
+  description?: React.ReactNode;
   "data-test-id"?: string;
   className?: string;
 };
@@ -32,6 +33,7 @@ export const FormNumberInput = forwardRef<
     disabled,
     min = 0,
     required,
+    description,
     "data-test-id": dataTestId,
     className,
   },
@@ -45,6 +47,7 @@ export const FormNumberInput = forwardRef<
       htmlFor={id}
       error={error}
       required={required}
+      description={description}
       className={className}
     >
       <Input

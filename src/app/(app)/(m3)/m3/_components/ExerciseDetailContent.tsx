@@ -110,7 +110,7 @@ export function ExerciseDetailContent({
           value={exercise.title}
         />
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="space-y-2">
             <p className="m3-label text-muted-foreground">Type</p>
             <div className="flex flex-wrap gap-2">
@@ -123,7 +123,11 @@ export function ExerciseDetailContent({
             <p className="m3-label text-muted-foreground">Part</p>
             <div className="flex flex-wrap gap-2">
               {exercise.parts.map((p) => (
-                <Badge key={p} variant="outline">
+                <Badge
+                  key={p}
+                  variant="outline"
+                  className="border-primary text-primary"
+                >
                   {EXERCISE_PART_LABELS[p]}
                 </Badge>
               ))}
@@ -134,6 +138,16 @@ export function ExerciseDetailContent({
             <div className="flex flex-wrap gap-2">
               {exercise.level && (
                 <Badge variant="outline">{exercise.level}</Badge>
+              )}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="m3-label text-muted-foreground">Unilateral</p>
+            <div className="flex flex-wrap gap-2">
+              {exercise.is_unilateral ? (
+                <Badge variant="secondary">Unilateral</Badge>
+              ) : (
+                <Badge variant="outline">No</Badge>
               )}
             </div>
           </div>
@@ -194,13 +208,6 @@ export function ExerciseDetailContent({
             />
           )}
         </div>
-
-        {exercise.is_unilateral && (
-          <div className="space-y-2">
-            <p className="m3-label text-muted-foreground">Unilateral</p>
-            <Badge variant="secondary">Yes</Badge>
-          </div>
-        )}
       </div>
 
       {/* Relations info - at the end */}

@@ -100,14 +100,27 @@ async function applyExerciseUpdates(
     (e) => e.section_order !== undefined && e.id !== undefined,
   );
 
+  // Mapa id -> docelowy section_order (obliczona z kolejności w payloadzie).
+  // Używana gdy hasSectionOrderChanges i section_order mogło zginąć w serializacji.
+  const intendedSectionOrderById = new Map<string, number>();
   if (hasSectionOrderChanges) {
-    const exercisesToTempUpdate: Array<{ id: string }> = [];
-
-    for (const exerciseUpdate of exercisesToUpdate) {
-      if (exerciseUpdate.section_order !== undefined && exerciseUpdate.id) {
-        exercisesToTempUpdate.push({ id: exerciseUpdate.id });
-      }
+    const sectionOrderCounters = new Map<string, number>();
+    for (const ex of exercisesToUpdate) {
+      if (!ex.id || !ex.section_type) continue;
+      const sectionType = ex.section_type;
+      const nextOrder = (sectionOrderCounters.get(sectionType) ?? 0) + 1;
+      sectionOrderCounters.set(sectionType, nextOrder);
+      intendedSectionOrderById.set(ex.id, nextOrder);
     }
+  }
+
+  if (hasSectionOrderChanges) {
+    // Temp-update WSZYSTKICH ćwiczeń do aktualizacji – nie tylko tych z section_order w payloadzie.
+    // Gdy section_order zniknie w serializacji, ćwiczenie nie byłoby temp-update'owane i zostawałoby
+    // na starej pozycji, co powoduje konflikt (23505) przy aktualizacji innych ćwiczeń.
+    const exercisesToTempUpdate = exercisesToUpdate.map((e) => ({
+      id: e.id as string,
+    }));
 
     let tempOrder = 100000;
     for (const update of exercisesToTempUpdate) {
@@ -159,6 +172,16 @@ async function applyExerciseUpdates(
     const updateData = mapExerciseUpdateToDb(
       exerciseUpdate as WorkoutPlanExerciseUpdateOrCreate & { id: string },
     );
+
+    // Po temp update MUSIMY nadpisać section_order docelową wartością (1, 2, 3...).
+    // Gdy section_order zniknie w payloadzie (np. serializacja), używamy intendedSectionOrderById.
+    if (hasSectionOrderChanges && intendedSectionOrderById.has(exerciseUpdate.id)) {
+      const intendedOrder = intendedSectionOrderById.get(exerciseUpdate.id);
+      if (intendedOrder !== undefined) {
+        updateData.section_order =
+          exerciseUpdate.section_order ?? intendedOrder;
+      }
+    }
 
     if (Object.keys(updateData).length === 0) {
       continue;

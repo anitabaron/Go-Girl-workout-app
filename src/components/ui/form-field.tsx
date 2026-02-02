@@ -6,6 +6,7 @@ type FormFieldProps = {
   htmlFor: string;
   error?: string;
   required?: boolean;
+  description?: React.ReactNode;
   children: React.ReactNode;
   "data-test-id"?: string;
   className?: string;
@@ -21,6 +22,7 @@ export function FormField({
   htmlFor,
   error,
   required,
+  description,
   children,
   "data-test-id": dataTestId,
   className,
@@ -34,6 +36,9 @@ export function FormField({
         {required && <span className="text-destructive"> *</span>}
       </label>
       {children}
+      {description && (
+        <p className="text-xs text-muted-foreground">{description}</p>
+      )}
       {error && (
         <p id={errorId} className="text-sm text-destructive" role="alert">
           {error}

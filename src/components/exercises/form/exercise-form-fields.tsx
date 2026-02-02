@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Controller, type Control, type FieldErrors } from "react-hook-form";
+import {
+  Controller,
+  useWatch,
+  type Control,
+  type FieldErrors,
+} from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/ui/form-field";
@@ -18,6 +23,7 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
+import { calculateEstimatedSetTimeSeconds } from "@/lib/exercises/estimated-set-time";
 import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
 
 function createCheckboxGroupChangeHandler(
@@ -78,6 +84,7 @@ type FieldConfig =
       type: "number";
       min?: number;
       required?: boolean;
+      description?: React.ReactNode;
       "data-test-id"?: string;
     }
   | {
@@ -200,6 +207,25 @@ export function ExerciseFormFields({
   disabled,
 }: Readonly<ExerciseFormFieldsProps>) {
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const watched = useWatch({
+    control,
+    name: [
+      "series",
+      "reps",
+      "duration_seconds",
+      "rest_in_between_seconds",
+      "rest_after_series_seconds",
+    ],
+  });
+  const [series, reps, duration_seconds, rest_in_between_seconds, rest_after_series_seconds] =
+    watched;
+  const estimatedResult = calculateEstimatedSetTimeSeconds({
+    series: series ?? "",
+    reps: reps ?? null,
+    duration_seconds: duration_seconds ?? null,
+    rest_in_between_seconds: rest_in_between_seconds ?? null,
+    rest_after_series_seconds: rest_after_series_seconds ?? null,
+  });
 
   useEffect(() => {
     if (titleInputRef.current) {
@@ -448,6 +474,7 @@ export function ExerciseFormFields({
               disabled={disabled}
               min={config.min ?? 0}
               required={config.required}
+              description={"description" in config ? config.description : undefined}
               data-test-id={config["data-test-id"]}
               className="w-full"
             />
@@ -479,7 +506,13 @@ export function ExerciseFormFields({
         disabled={disabled}
         renderField={renderField}
       />
-      {renderField(ESTIMATED_SET_FIELD)}
+      {renderField({
+        ...ESTIMATED_SET_FIELD,
+        label:
+          estimatedResult === null
+            ? ESTIMATED_SET_FIELD.label
+            : `${ESTIMATED_SET_FIELD.label} ≈ ${estimatedResult} s`,
+      })}
     </div>
   );
 }

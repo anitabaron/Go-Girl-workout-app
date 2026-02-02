@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Controller, type Control, type FieldErrors } from "react-hook-form";
+import {
+  Controller,
+  useWatch,
+  type Control,
+  type FieldErrors,
+} from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 import {
@@ -33,6 +38,7 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
+import { calculateEstimatedSetTimeSeconds } from "@/lib/exercises/estimated-set-time";
 import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
 import type { ExerciseDTO } from "@/types";
 
@@ -189,6 +195,25 @@ function ExerciseFormM3Fields({
   disabled,
 }: ExerciseFormM3FieldsProps) {
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const watched = useWatch({
+    control,
+    name: [
+      "series",
+      "reps",
+      "duration_seconds",
+      "rest_in_between_seconds",
+      "rest_after_series_seconds",
+    ],
+  });
+  const [series, reps, duration_seconds, rest_in_between_seconds, rest_after_series_seconds] =
+    watched;
+  const estimatedResult = calculateEstimatedSetTimeSeconds({
+    series: series ?? "",
+    reps: reps ?? null,
+    duration_seconds: duration_seconds ?? null,
+    rest_in_between_seconds: rest_in_between_seconds ?? null,
+    rest_after_series_seconds: rest_after_series_seconds ?? null,
+  });
 
   useEffect(() => {
     titleInputRef.current?.focus();
@@ -526,7 +551,11 @@ function ExerciseFormM3Fields({
           render={({ field }) => (
             <FormNumberInput
               id="estimated_set_time_seconds"
-              label="Estimated set time (sec)"
+              label={
+                estimatedResult === null
+                  ? "Estimated set time (sec)"
+                  : `Estimated set time (sec) ≈ ${estimatedResult} s`
+              }
               value={String(field.value ?? "")}
               onChange={field.onChange}
               onBlur={field.onBlur}
