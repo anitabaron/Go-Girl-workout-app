@@ -31,6 +31,7 @@ import {
   updateWorkoutPlan,
   updateWorkoutPlanExercise,
   updateWorkoutPlanExercisesBySnapshotId,
+  deleteWorkoutPlanExercisesByIds,
 } from "@/repositories/workout-plans";
 import { findByNormalizedTitle } from "@/repositories/exercises";
 import { normalizeTitleForDbLookup } from "@/lib/validation/exercises";
@@ -96,16 +97,47 @@ async function applyExerciseUpdates(
   const exercisesToUpdate = exercises.filter((e) => e.id !== undefined);
   const exercisesToCreate = exercises.filter((e) => e.id === undefined);
 
+  const payloadIds = new Set(
+    exercisesToUpdate.map((e) => e.id).filter((id): id is string => !!id),
+  );
+  const exercisesToDelete = (existingExercises ?? [])
+    .map((e) => e.id)
+    .filter((id) => !payloadIds.has(id));
+
+  if (exercisesToDelete.length > 0) {
+    const { error: deleteError } = await deleteWorkoutPlanExercisesByIds(
+      supabase,
+      planId,
+      exercisesToDelete,
+    );
+    if (deleteError) {
+      throw mapDbError(deleteError);
+    }
+  }
+
   const hasSectionOrderChanges = exercisesToUpdate.some(
     (e) => e.section_order !== undefined && e.id !== undefined,
   );
 
   // Mapa id -> docelowy section_order (obliczona z kolejności w payloadzie).
   // Używana gdy hasSectionOrderChanges i section_order mogło zginąć w serializacji.
+  // Sortujemy według section_type i section_order, aby zachować poprawną kolejność przy reorderze.
   const intendedSectionOrderById = new Map<string, number>();
   if (hasSectionOrderChanges) {
+    const SECTION_TYPE_ORDER: Record<string, number> = {
+      "Warm-up": 1,
+      "Main Workout": 2,
+      "Cool-down": 3,
+    };
+    const sorted = [...exercisesToUpdate].sort((a, b) => {
+      const typeDiff =
+        (SECTION_TYPE_ORDER[a.section_type ?? ""] ?? 999) -
+        (SECTION_TYPE_ORDER[b.section_type ?? ""] ?? 999);
+      if (typeDiff !== 0) return typeDiff;
+      return (a.section_order ?? 0) - (b.section_order ?? 0);
+    });
     const sectionOrderCounters = new Map<string, number>();
-    for (const ex of exercisesToUpdate) {
+    for (const ex of sorted) {
       if (!ex.id || !ex.section_type) continue;
       const sectionType = ex.section_type;
       const nextOrder = (sectionOrderCounters.get(sectionType) ?? 0) + 1;

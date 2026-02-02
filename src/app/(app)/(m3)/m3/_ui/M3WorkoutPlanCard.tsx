@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { memo, useMemo, useState } from "react";
 import {
   Clock10,
+  Copy,
   Dumbbell,
   AlertCircle,
   Pencil,
@@ -60,6 +61,12 @@ function M3WorkoutPlanCardComponent({
     e.preventDefault();
     e.stopPropagation();
     router.push(`/m3/workout-plans/${plan.id}/edit`);
+  };
+
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/m3/workout-plans/new?duplicate=${plan.id}`);
   };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -136,6 +143,15 @@ function M3WorkoutPlanCardComponent({
             aria-label={`Start workout: ${plan.name}`}
           >
             <Play className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleDuplicate}
+            aria-label={`Duplicate plan: ${plan.name}`}
+          >
+            <Copy className="size-4" />
           </Button>
           <Button
             variant="ghost"

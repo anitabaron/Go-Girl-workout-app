@@ -253,17 +253,50 @@ export function formValuesToCreateCommand(
   };
 }
 
+const SECTION_TYPE_ORDER: Record<string, number> = {
+  "Warm-up": 1,
+  "Main Workout": 2,
+  "Cool-down": 3,
+};
+
+/**
+ * Normalizuje section_order – sortuje ćwiczenia według sekcji i kolejności,
+ * przypisuje unikalne wartości 1, 2, 3… w ramach każdej sekcji.
+ * Zapobiega duplikatom przy zmianie kolejności (reorder).
+ */
+function normalizeSectionOrders<T extends { section_type: string; section_order: number }>(
+  exercises: T[],
+): T[] {
+  const sorted = [...exercises].sort((a, b) => {
+    const typeDiff =
+      (SECTION_TYPE_ORDER[a.section_type] ?? 999) -
+      (SECTION_TYPE_ORDER[b.section_type] ?? 999);
+    if (typeDiff !== 0) return typeDiff;
+    return a.section_order - b.section_order;
+  });
+
+  const sectionCounters = new Map<string, number>();
+  return sorted.map((ex) => {
+    const nextOrder = (sectionCounters.get(ex.section_type) ?? 0) + 1;
+    sectionCounters.set(ex.section_type, nextOrder);
+    return { ...ex, section_order: nextOrder };
+  });
+}
+
 /**
  * Konwertuje wartości formularza na WorkoutPlanUpdateCommand.
+ * Normalizuje section_order przed wysłaniem, aby uniknąć duplikatów przy reorderze.
  */
 export function formValuesToUpdateCommand(
   data: WorkoutPlanFormValues,
 ): WorkoutPlanUpdateCommand {
+  const normalized = normalizeSectionOrders(data.exercises);
+
   return {
     name: data.name.trim(),
     description: data.description?.trim() || null,
     part: data.part ?? null,
-    exercises: data.exercises.map((ex) => {
+    exercises: normalized.map((ex) => {
       const base = {
         exercise_id: ex.exercise_id,
         section_type: ex.section_type,

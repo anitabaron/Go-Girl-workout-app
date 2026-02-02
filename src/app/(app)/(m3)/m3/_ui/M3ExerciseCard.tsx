@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,12 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
     e.preventDefault();
     e.stopPropagation();
     router.push(`/m3/exercises/${exercise.id}/edit`);
+  };
+
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/m3/exercises/new?duplicate=${exercise.id}`);
   };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -90,6 +96,15 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
         data-test-id={`exercise-card-${exercise.id}`}
       >
         <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleDuplicate}
+            aria-label={`Duplicate exercise: ${exercise.title}`}
+          >
+            <Copy className="size-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

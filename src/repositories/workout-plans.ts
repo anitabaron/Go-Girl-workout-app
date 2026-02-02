@@ -443,6 +443,23 @@ export async function deleteWorkoutPlanExercises(
 }
 
 /**
+ * Usuwa ćwiczenia planu treningowego o podanych id (np. usunięte z formularza).
+ */
+export async function deleteWorkoutPlanExercisesByIds(
+  client: DbClient,
+  planId: string,
+  ids: string[],
+) {
+  if (ids.length === 0) return { error: null };
+  const { error } = await client
+    .from("workout_plan_exercises")
+    .delete()
+    .eq("plan_id", planId)
+    .in("id", ids);
+  return { error };
+}
+
+/**
  * Aktualizuje wszystkie wystąpienia snapshotu (po snapshot_id) - łączy je z ćwiczeniem z biblioteki.
  * Używane gdy użytkownik dodaje snapshot do bazy ćwiczeń.
  */
