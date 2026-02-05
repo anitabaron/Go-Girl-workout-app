@@ -10,6 +10,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/db/supabase.client";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "sonner";
+import { LogIn, LogOut } from "lucide-react";
 
 export interface TopNavigationProps {
   user?: User | null;
@@ -85,7 +86,7 @@ export function TopNavigation({
                     "px-4 py-2 text-sm font-medium transition-colors hover:text-primary",
                     isActive
                       ? "text-primary underline underline-offset-4"
-                      : "text-muted-foreground",
+                      : "text-muted-foreground"
                   )}
                   aria-current={isActive ? "page" : undefined}
                 >
@@ -102,15 +103,19 @@ export function TopNavigation({
           {user ? (
             <button
               onClick={handleSignOut}
-              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground cursor-pointer"
+              aria-label="Wyloguj"
             >
+              <LogOut className="h-4 w-4" aria-hidden />
               Wyloguj
             </button>
           ) : (
             <Link
               href="/login"
-              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+              aria-label="Zaloguj"
             >
+              <LogIn className="h-4 w-4" aria-hidden />
               Zaloguj
             </Link>
           )}

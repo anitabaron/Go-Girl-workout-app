@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ExerciseDTO } from "@/types";
+import { DEFAULT_EXERCISE_VALUE } from "@/lib/constants";
 import {
   exerciseFormSchema,
   formValuesToCommand,
@@ -22,45 +23,76 @@ type UseExerciseFormProps = {
 
 function toFormArray(
   arr: string[] | undefined,
-  fallback: string | undefined,
+  fallback: string | undefined
 ): string[] {
   if (arr?.length) return [...arr];
   if (fallback) return [fallback];
   return [];
 }
 
+function applyDefaultIfEmpty<T>(value: T, defaultVal: T): T {
+  if (value === "" || value === undefined || value === null) return defaultVal;
+  if (Array.isArray(value) && value.length === 0) return defaultVal;
+  return value;
+}
+
 function dtoToFormValues(dto?: ExerciseDTO): ExerciseFormValues {
-  if (!dto) {
-    return {
-      title: "",
-      types: [] as ExerciseFormValues["types"],
-      parts: [] as ExerciseFormValues["parts"],
-      level: "",
-      details: "",
-      is_unilateral: false,
-      reps: "",
-      duration_seconds: "",
-      series: "",
-      rest_in_between_seconds: "",
-      rest_after_series_seconds: "",
-      estimated_set_time_seconds: "",
-    };
-  }
+  const raw: ExerciseFormValues = dto
+    ? {
+        title: dto.title ?? "",
+        types: toFormArray(dto.types, dto.type) as ExerciseFormValues["types"],
+        parts: toFormArray(dto.parts, dto.part) as ExerciseFormValues["parts"],
+        level: dto.level ?? "",
+        details: dto.details ?? "",
+        is_unilateral: dto.is_unilateral ?? false,
+        reps: dto.reps?.toString() ?? "",
+        duration_seconds: dto.duration_seconds?.toString() ?? "",
+        series: dto.series?.toString() ?? "",
+        rest_in_between_seconds: dto.rest_in_between_seconds?.toString() ?? "",
+        rest_after_series_seconds:
+          dto.rest_after_series_seconds?.toString() ?? "",
+        estimated_set_time_seconds:
+          dto.estimated_set_time_seconds?.toString() ?? "",
+      }
+    : {
+        title: "",
+        types: [] as ExerciseFormValues["types"],
+        parts: [] as ExerciseFormValues["parts"],
+        level: "",
+        details: "",
+        is_unilateral: false,
+        reps: "",
+        duration_seconds: "",
+        series: "",
+        rest_in_between_seconds: "",
+        rest_after_series_seconds: "",
+        estimated_set_time_seconds: "",
+      };
+
+  const d = DEFAULT_EXERCISE_VALUE;
+  const typesDefault = [d.section_type] as ExerciseFormValues["types"];
+  const needsOneMetric =
+    (raw.reps === "" || raw.reps == null) &&
+    (raw.duration_seconds === "" || raw.duration_seconds == null);
 
   return {
-    title: dto.title ?? "",
-    types: toFormArray(dto.types, dto.type) as ExerciseFormValues["types"],
-    parts: toFormArray(dto.parts, dto.part) as ExerciseFormValues["parts"],
-    level: dto.level ?? "",
-    details: dto.details ?? "",
-    is_unilateral: dto.is_unilateral ?? false,
-    reps: dto.reps?.toString() ?? "",
-    duration_seconds: dto.duration_seconds?.toString() ?? "",
-    series: dto.series.toString(),
-    rest_in_between_seconds: dto.rest_in_between_seconds?.toString() ?? "",
-    rest_after_series_seconds: dto.rest_after_series_seconds?.toString() ?? "",
-    estimated_set_time_seconds:
-      dto.estimated_set_time_seconds?.toString() ?? "",
+    ...raw,
+    types: applyDefaultIfEmpty(raw.types, typesDefault),
+    series: applyDefaultIfEmpty(raw.series, String(d.planned_sets)),
+    reps: needsOneMetric ? String(d.planned_reps) : raw.reps,
+    duration_seconds: raw.duration_seconds,
+    rest_in_between_seconds: applyDefaultIfEmpty(
+      raw.rest_in_between_seconds,
+      String(d.planned_rest_seconds)
+    ),
+    rest_after_series_seconds: applyDefaultIfEmpty(
+      raw.rest_after_series_seconds,
+      String(d.planned_rest_after_series_seconds)
+    ),
+    estimated_set_time_seconds: applyDefaultIfEmpty(
+      raw.estimated_set_time_seconds,
+      String(d.estimated_set_time_seconds)
+    ),
   };
 }
 
@@ -89,7 +121,7 @@ export function useExerciseForm({
 
   const form = useForm<ExerciseFormValues>({
     resolver: zodResolver(
-      exerciseFormSchema,
+      exerciseFormSchema
     ) as unknown as Resolver<ExerciseFormValues>,
     defaultValues: dtoToFormValues(initialData),
   });
@@ -99,7 +131,7 @@ export function useExerciseForm({
 
   const onSubmit = async (data: unknown) => {
     const command = formValuesToCommand(
-      data as Parameters<typeof formValuesToCommand>[0],
+      data as Parameters<typeof formValuesToCommand>[0]
     );
     const url =
       mode === "create"
@@ -123,7 +155,7 @@ export function useExerciseForm({
         const { fieldErrors, formErrors } = parseApiValidationErrors(
           errorData.message,
           errorData.details,
-          EXERCISE_FIELD_MAPPING,
+          EXERCISE_FIELD_MAPPING
         );
         setFormErrors(formErrors);
         for (const [field, message] of Object.entries(fieldErrors)) {

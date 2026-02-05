@@ -1,4 +1,4 @@
-import workoutPlanImportExample from "@/ai/workout-plan-import-example.json";
+import workoutPlanImportExample from "@/lib/json/workout-plan-import-example.json";
 
 export default function ImportInstructionPage() {
   return (

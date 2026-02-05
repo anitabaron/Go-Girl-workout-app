@@ -106,6 +106,26 @@ describe("workoutPlanImportSchema", () => {
     expect(() => workoutPlanImportSchema.parse(invalid)).toThrow();
   });
 
+  it("powinien zaakceptować plan bez section_order (kolejność z JSON)", () => {
+    const valid = {
+      name: "Test Plan",
+      exercises: [
+        { exercise_title: "Rozgrzewka", section_type: "Warm-up" },
+        { exercise_title: "Przysiady", section_type: "Main Workout" },
+        { exercise_title: "Wykroki", section_type: "Main Workout" },
+      ],
+    };
+    expect(() => workoutPlanImportSchema.parse(valid)).not.toThrow();
+  });
+
+  it("powinien zaakceptować plan z match_by_name bez section_type i section_order (domyślne z constants)", () => {
+    const valid = {
+      name: "Test Plan",
+      exercises: [{ match_by_name: "Deska boczna" }],
+    };
+    expect(() => workoutPlanImportSchema.parse(valid)).not.toThrow();
+  });
+
   it("powinien odrzucić plan z duplikatami section_order w tej samej sekcji", () => {
     const invalid = {
       name: "Test Plan",
