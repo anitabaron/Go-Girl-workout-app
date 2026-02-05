@@ -216,4 +216,15 @@
 - [x] proxy.ts – rewrite `/import-instruction` → M3
 - [x] ImportPlanButtonM3 – link do `/m3/import-instruction`
 
+## Auth (M3) – DONE
+
+- [x] `/m3/login` – logowanie (Card, M3 typography, LoginForm)
+- [x] `/m3/register` – rejestracja (Card, M3 typography, RegisterForm)
+- [x] `/m3/reset-password` – reset hasła (Card, ResetPasswordForm)
+- [x] `/m3/reset-password/confirm` – potwierdzenie resetu (ResetPasswordConfirmForm)
+- [x] `(auth-m3)/m3/layout.tsx` – layout M3 auth: `.ui-m3`, m3.css, AuthRedirectProvider basePath="/m3", bez NavigationRail
+- [x] `AuthRedirectContext` + `useAuthRedirect()` – basePath dla przekierowań i linków ("" legacy, "/m3" M3)
+- [x] Hooki i linki używają basePath: useLoginForm, RegisterForm, useResetPasswordForm, useResetPasswordConfirmForm, LoginLinks, LoginLink, BackToLoginLink
+- [x] proxy.ts – rewrite `/login`, `/register`, `/reset-password`, `/reset-password/*` → `/m3/*` gdy design_mode=m3
+
 **Pre-PR (Enforceability)**: Add m3-migration.mdc, grep scripts, Dialog portal rules in m3.css, shadcn purity audit.

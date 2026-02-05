@@ -26,17 +26,17 @@ export async function proxy(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
+            request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
-    },
+    }
   );
 
   // Refresh session if expired - required for Server Components
@@ -53,7 +53,13 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith("/personal-records/");
     const isImportInstruction = pathname === "/import-instruction";
 
-    const shouldRewrite =
+    const isAuthPath =
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/reset-password" ||
+      pathname.startsWith("/reset-password/");
+
+    const shouldRewriteApp =
       pathname === "/" ||
       pathname === "/exercises" ||
       pathname.startsWith("/exercises/") ||
@@ -63,6 +69,8 @@ export async function proxy(request: NextRequest) {
       isPersonalRecords ||
       isImportInstruction;
 
+    const shouldRewrite = shouldRewriteApp || isAuthPath;
+
     if (shouldRewrite) {
       const url = request.nextUrl.clone();
       url.pathname = `${M3_PREFIX}${pathname === "/" ? "" : pathname}`;
@@ -71,7 +79,7 @@ export async function proxy(request: NextRequest) {
       supabaseResponse.cookies
         .getAll()
         .forEach((cookie) =>
-          rewriteResponse.cookies.set(cookie.name, cookie.value),
+          rewriteResponse.cookies.set(cookie.name, cookie.value)
         );
       return rewriteResponse;
     }
