@@ -8,13 +8,17 @@
 /* ============================================
    M3 COLOR TOKENS (light + dark, peach/pink family)
    ============================================ */
-.ui-m3 {
-  /* Primary - peach/pink family rgb(241 157 164), saturated (no alpha wash) */
-  --m3-primary: #e07d8a;
+/* Primary + primary-container – single source on :root (#fcdce0) */
+:root {
+  --m3-primary: #c3021c;
   --m3-on-primary: #ffffff;
   --m3-primary-container: #fcdce0;
+  /* alias so dark mode can use root value for on-primary-container */
+  --m3-on-primary-container-from-root: var(--m3-primary-container);
   --m3-on-primary-container: #5c282c;
+}
 
+.ui-m3 {
   /* Surfaces - tonal hierarchy (slightly warmed) */
   --m3-surface: #fafafa;
   --m3-on-surface: #1c1b1f;
@@ -42,7 +46,23 @@
   --m3-shadow-hero: 0 4px 6px -2px rgb(0 0 0 / 0.05),
     0 10px 20px -5px rgb(0 0 0 / 0.06), 0 20px 40px -10px rgb(0 0 0 / 0.05);
 
-  /* Shadcn mapping - primary = filled CTA, accent = tonal surfaces */
+  /* Focus ring - single source for button, card, input, select */
+  --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
+  /* Button hover/active (light: darken; dark: lighten) – overridden in dark mode */
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 85%, black);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 75%, black);
+  --m3-button-secondary-hover: color-mix(
+    in srgb,
+    var(--m3-primary-container) 80%,
+    black
+  );
+  --m3-button-secondary-active: color-mix(
+    in srgb,
+    var(--m3-primary-container) 70%,
+    black
+  );
+
+  /* Shadcn mapping – defined once; only --m3-* and --destructive overridden in dark/light */
   --background: var(--m3-surface);
   --foreground: var(--m3-on-surface);
   --card: var(--m3-surface-container);
@@ -209,25 +229,19 @@
   max-width: 65ch;
 }
 
-/* Surface utilities - tonal, layered, outline-variant border */
+/* Surface utilities – background + shadow only (border/radius above) */
 .ui-m3 .m3-surface-container {
   background: var(--m3-surface-container);
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: var(--m3-radius-hero);
   box-shadow: var(--m3-shadow-1);
 }
 
 .ui-m3 .m3-surface-container-high {
   background: var(--m3-surface-container-high);
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: var(--m3-radius-hero);
   box-shadow: var(--m3-shadow-2);
 }
 
 .ui-m3 .m3-surface-container-highest {
   background: var(--m3-surface-container-highest);
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: var(--m3-radius-hero);
   box-shadow: var(--m3-shadow-2);
 }
 
@@ -261,19 +275,27 @@
 }
 
 .ui-m3 .m3-cta:hover {
-  background: color-mix(in srgb, var(--m3-primary) 85%, black) !important;
+  background: var(--m3-button-default-hover) !important;
   box-shadow: var(--m3-shadow-1);
   transform: translateY(-1px);
 }
 
 .ui-m3 .m3-cta:active {
-  background: color-mix(in srgb, var(--m3-primary) 75%, black) !important;
+  background: var(--m3-button-default-active) !important;
   transform: translateY(0);
 }
 
 .ui-m3 .m3-cta:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px var(--m3-surface), 0 0 0 5px var(--m3-primary);
+}
+
+/* Shared surface container base – border, radius (DRY) */
+.ui-m3 .m3-surface-container,
+.ui-m3 .m3-surface-container-high,
+.ui-m3 .m3-surface-container-highest {
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-radius-hero);
 }
 
 /* Chip-like badge - M3 chip styling */
@@ -332,7 +354,7 @@
   border-radius: var(--m3-radius-md) !important;
 }
 
-/* Default (filled primary) - M3 base + hover/active */
+/* Default (filled primary) – hover/active use --m3-button-* (overridden in dark) */
 .ui-m3 [data-slot="button"][data-variant="default"] {
   background: var(--m3-primary) !important;
   color: var(--m3-on-primary) !important;
@@ -340,15 +362,15 @@
 }
 
 .ui-m3 [data-slot="button"][data-variant="default"]:hover {
-  background: color-mix(in srgb, var(--m3-primary) 85%, black) !important;
+  background: var(--m3-button-default-hover) !important;
   box-shadow: var(--m3-shadow-1);
 }
 
 .ui-m3 [data-slot="button"][data-variant="default"]:active {
-  background: color-mix(in srgb, var(--m3-primary) 75%, black) !important;
+  background: var(--m3-button-default-active) !important;
 }
 
-/* Secondary (tonal) - M3 primary-container */
+/* Secondary (tonal) */
 .ui-m3 [data-slot="button"][data-variant="secondary"] {
   background: var(--m3-primary-container) !important;
   color: var(--m3-on-primary-container) !important;
@@ -356,19 +378,11 @@
 }
 
 .ui-m3 [data-slot="button"][data-variant="secondary"]:hover {
-  background: color-mix(
-    in srgb,
-    var(--m3-primary-container) 80%,
-    black
-  ) !important;
+  background: var(--m3-button-secondary-hover) !important;
 }
 
 .ui-m3 [data-slot="button"][data-variant="secondary"]:active {
-  background: color-mix(
-    in srgb,
-    var(--m3-primary-container) 70%,
-    black
-  ) !important;
+  background: var(--m3-button-secondary-active) !important;
 }
 
 /* Outline - M3 surface, no legacy dark: classes */
@@ -415,10 +429,10 @@
   background: color-mix(in srgb, var(--destructive) 75%, black) !important;
 }
 
-/* Focus - M3 ring with offset (replaces legacy ring) */
+/* Focus – single token --m3-focus-ring */
 .ui-m3 [data-slot="button"]:focus-visible {
   outline: none !important;
-  box-shadow: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary) !important;
+  box-shadow: var(--m3-focus-ring) !important;
 }
 
 /* ============================================
@@ -440,7 +454,7 @@
 }
 
 .ui-m3 [data-slot="card"]:focus-within {
-  box-shadow: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary) !important;
+  box-shadow: var(--m3-focus-ring) !important;
 }
 
 .ui-m3 [data-slot="card-header"],
@@ -469,7 +483,7 @@
 .ui-m3 [data-slot="input"]:focus-visible {
   outline: none !important;
   border-color: var(--m3-primary) !important;
-  box-shadow: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary) !important;
+  box-shadow: var(--m3-focus-ring) !important;
 }
 
 /* ============================================
@@ -490,20 +504,26 @@
 
 .ui-m3 [data-slot="select-trigger"]:focus {
   outline: none !important;
-  box-shadow: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary) !important;
+  box-shadow: var(--m3-focus-ring) !important;
 }
 
-/* Portal content (Select, Dialog, Sheet) renders outside .ui-m3 - body needs M3 vars for inheritance */
+/* Portal (Select, Dialog, Sheet) renders outside .ui-m3 – body gets M3 vars for inheritance */
 body:has(.ui-m3) {
+  --m3-surface: #fafafa;
   --m3-surface-container-high: #f0e9e7;
   --m3-on-surface: #1c1b1f;
+  --m3-outline: #79747e;
   --m3-outline-variant: #cac4d0;
-  --m3-primary-container: #fcdce0;
+  --m3-primary: #e07d8a;
+  --m3-primary-container: var(--m3-primary-container);
   --m3-on-primary-container: #5c282c;
   --m3-radius-md: 1rem;
   --m3-radius-sm: 0.75rem;
+  --m3-radius-lg: 1.25rem;
+  --m3-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
   --m3-shadow-2: 0 2px 4px -1px rgb(0 0 0 / 0.05),
     0 4px 8px -2px rgb(0 0 0 / 0.05), 0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
 }
 
 /* SelectContent renders in portal - target when body has .ui-m3 */
@@ -671,13 +691,14 @@ html:has(.ui-m3) {
 /* ============================================
    DARK MODE
    ============================================ */
+/* Dark mode – only token overrides; shadcn mapping inherits from .ui-m3 */
 @media (prefers-color-scheme: dark) {
-  .ui-m3 {
+  .ui-m3:not(.light) {
     color-scheme: dark;
     --m3-primary: #f19da4;
     --m3-on-primary: #5c282c;
     --m3-primary-container: #8b4a52;
-    --m3-on-primary-container: #fcdce0;
+    --m3-on-primary-container: var(--m3-primary-container);
 
     --m3-surface: #1c1b1f;
     --m3-on-surface: #e6e1e5;
@@ -695,116 +716,81 @@ html:has(.ui-m3) {
     --m3-shadow-hero: 0 4px 8px -2px rgb(0 0 0 / 0.35),
       0 12px 24px -6px rgb(0 0 0 / 0.3);
 
-    --background: var(--m3-surface);
-    --foreground: var(--m3-on-surface);
-    --card: var(--m3-surface-container);
-    --card-foreground: var(--m3-on-surface);
-    --popover: var(--m3-surface-container-high);
-    --popover-foreground: var(--m3-on-surface);
-    --primary: var(--m3-primary);
-    --primary-foreground: var(--m3-on-primary);
-    --secondary: var(--m3-primary-container);
-    --secondary-foreground: var(--m3-on-primary-container);
-    --muted: var(--m3-surface-container);
-    --muted-foreground: var(--m3-on-surface-variant);
-    --accent: var(--m3-primary-container);
-    --accent-foreground: var(--m3-on-primary-container);
     --destructive: #f2b8b5;
     --destructive-foreground: #601410;
-    --border: var(--m3-outline-variant);
-    --input: var(--m3-outline-variant);
-    --ring: var(--m3-primary);
-    --sidebar: var(--m3-surface-container);
-    --sidebar-foreground: var(--m3-on-surface);
-    --sidebar-primary: var(--m3-primary);
-    --sidebar-primary-foreground: var(--m3-on-primary);
-    --sidebar-accent: var(--m3-primary-container);
-    --sidebar-accent-foreground: var(--m3-on-primary-container);
-    --sidebar-border: var(--m3-outline-variant);
-    --sidebar-ring: var(--m3-primary);
+
+    --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
+    --m3-button-default-active: color-mix(
+      in srgb,
+      var(--m3-primary) 80%,
+      white
+    );
+    --m3-button-secondary-hover: color-mix(
+      in srgb,
+      var(--m3-primary-container) 85%,
+      white
+    );
+    --m3-button-secondary-active: color-mix(
+      in srgb,
+      var(--m3-primary-container) 75%,
+      white
+    );
   }
 
-  .ui-m3 .m3-surface-hero {
+  .ui-m3:not(.light) .m3-surface-hero {
     background: var(--m3-primary-container);
     color: var(--m3-on-primary-container);
   }
 
-  .ui-m3 .m3-surface-hero .text-foreground {
+  .ui-m3:not(.light) .m3-surface-hero .text-foreground {
     color: var(--m3-on-primary-container);
   }
 
-  .ui-m3 .m3-surface-hero .text-muted-foreground {
+  .ui-m3:not(.light) .m3-surface-hero .text-muted-foreground {
     color: var(--m3-on-primary-container);
     opacity: 0.9;
   }
 
-  .ui-m3 .m3-cta:hover {
-    background: color-mix(in srgb, var(--m3-primary) 90%, white) !important;
+  .ui-m3:not(.light) .m3-cta:hover {
+    background: var(--m3-button-default-hover) !important;
   }
 
-  .ui-m3 .m3-cta:active {
-    background: color-mix(in srgb, var(--m3-primary) 80%, white) !important;
+  .ui-m3:not(.light) .m3-cta:active {
+    background: var(--m3-button-default-active) !important;
   }
 
-  .ui-m3 .m3-cta:focus-visible {
-    box-shadow: 0 0 0 3px var(--m3-surface), 0 0 0 5px var(--m3-primary);
-  }
-
-  .ui-m3 .m3-chip {
+  .ui-m3:not(.light) .m3-chip {
     background: var(--m3-surface-container-high);
     color: var(--m3-on-surface);
     border-color: var(--m3-outline-variant);
   }
 
-  .ui-m3 .m3-surface-hero .m3-chip {
+  .ui-m3:not(.light) .m3-surface-hero .m3-chip {
     background: transparent;
     color: var(--m3-on-primary-container);
     border-color: var(--m3-on-primary-container);
   }
 
-  /* Portal content - dark vars on body */
-  body:has(.ui-m3) {
+  body:has(.ui-m3):not(:has(.ui-m3.light)) {
+    --m3-surface: #1c1b1f;
+    --m3-primary: #f19da4;
     --m3-surface-container-high: #2c2827;
     --m3-on-surface: #e6e1e5;
     --m3-outline-variant: #49454f;
     --m3-primary-container: #8b4a52;
-    --m3-on-primary-container: #fcdce0;
+    --m3-on-primary-container: var(--m3-on-primary-container-from-root);
     --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
       0 4px 12px -2px rgb(0 0 0 / 0.25);
-  }
-
-  /* Dark mode button hover/active - lighten instead of darken */
-  .ui-m3 [data-slot="button"][data-variant="default"]:hover {
-    background: color-mix(in srgb, var(--m3-primary) 90%, white) !important;
-  }
-
-  .ui-m3 [data-slot="button"][data-variant="default"]:active {
-    background: color-mix(in srgb, var(--m3-primary) 80%, white) !important;
-  }
-
-  .ui-m3 [data-slot="button"][data-variant="secondary"]:hover {
-    background: color-mix(
-      in srgb,
-      var(--m3-primary-container) 85%,
-      white
-    ) !important;
-  }
-
-  .ui-m3 [data-slot="button"][data-variant="secondary"]:active {
-    background: color-mix(
-      in srgb,
-      var(--m3-primary-container) 75%,
-      white
-    ) !important;
+    --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
   }
 }
 
-/* Light mode - manual override when user chose light (overrides prefers-color-scheme) */
+/* Light mode – manual override (same tokens as .ui-m3 base; no shadcn mapping repeat) */
 .ui-m3.light {
   color-scheme: light;
   --m3-primary: #e07d8a;
   --m3-on-primary: #ffffff;
-  --m3-primary-container: #fcdce0;
+  --m3-primary-container: var(--m3-primary-container);
   --m3-on-primary-container: #5c282c;
 
   --m3-surface: #fafafa;
@@ -823,42 +809,17 @@ html:has(.ui-m3) {
   --m3-shadow-hero: 0 4px 6px -2px rgb(0 0 0 / 0.05),
     0 10px 20px -5px rgb(0 0 0 / 0.06), 0 20px 40px -10px rgb(0 0 0 / 0.05);
 
-  --background: var(--m3-surface);
-  --foreground: var(--m3-on-surface);
-  --card: var(--m3-surface-container);
-  --card-foreground: var(--m3-on-surface);
-  --popover: var(--m3-surface-container-high);
-  --popover-foreground: var(--m3-on-surface);
-  --primary: var(--m3-primary);
-  --primary-foreground: var(--m3-on-primary);
-  --secondary: var(--m3-primary-container);
-  --secondary-foreground: var(--m3-on-primary-container);
-  --muted: var(--m3-surface-container);
-  --muted-foreground: var(--m3-on-surface-variant);
-  --accent: var(--m3-primary-container);
-  --accent-foreground: var(--m3-on-primary-container);
   --destructive: #b3261e;
   --destructive-foreground: #ffffff;
-  --border: var(--m3-outline-variant);
-  --input: var(--m3-outline-variant);
-  --ring: var(--m3-primary);
-  --sidebar: var(--m3-surface-container);
-  --sidebar-foreground: var(--m3-on-surface);
-  --sidebar-primary: var(--m3-primary);
-  --sidebar-primary-foreground: var(--m3-on-primary);
-  --sidebar-accent: var(--m3-primary-container);
-  --sidebar-accent-foreground: var(--m3-on-primary-container);
-  --sidebar-border: var(--m3-outline-variant);
-  --sidebar-ring: var(--m3-primary);
 }
 
-/* Dark mode - manual toggle via .ui-m3.dark */
+/* Dark mode – manual toggle; only tokens + button vars (shadcn mapping inherited) */
 .ui-m3.dark {
   color-scheme: dark;
   --m3-primary: #f19da4;
   --m3-on-primary: #5c282c;
   --m3-primary-container: #8b4a52;
-  --m3-on-primary-container: #fcdce0;
+  --m3-on-primary-container: var(--m3-on-primary-container-from-root);
 
   --m3-surface: #1c1b1f;
   --m3-on-surface: #e6e1e5;
@@ -876,67 +837,33 @@ html:has(.ui-m3) {
   --m3-shadow-hero: 0 4px 8px -2px rgb(0 0 0 / 0.35),
     0 12px 24px -6px rgb(0 0 0 / 0.3);
 
-  --background: var(--m3-surface);
-  --foreground: var(--m3-on-surface);
-  --card: var(--m3-surface-container);
-  --card-foreground: var(--m3-on-surface);
-  --popover: var(--m3-surface-container-high);
-  --popover-foreground: var(--m3-on-surface);
-  --primary: var(--m3-primary);
-  --primary-foreground: var(--m3-on-primary);
-  --secondary: var(--m3-primary-container);
-  --secondary-foreground: var(--m3-on-primary-container);
-  --muted: var(--m3-surface-container);
-  --muted-foreground: var(--m3-on-surface-variant);
-  --accent: var(--m3-primary-container);
-  --accent-foreground: var(--m3-on-primary-container);
   --destructive: #f2b8b5;
   --destructive-foreground: #601410;
-  --border: var(--m3-outline-variant);
-  --input: var(--m3-outline-variant);
-  --ring: var(--m3-primary);
-  --sidebar: var(--m3-surface-container);
-  --sidebar-foreground: var(--m3-on-surface);
-  --sidebar-primary: var(--m3-primary);
-  --sidebar-primary-foreground: var(--m3-on-primary);
-  --sidebar-accent: var(--m3-primary-container);
-  --sidebar-accent-foreground: var(--m3-on-primary-container);
-  --sidebar-border: var(--m3-outline-variant);
-  --sidebar-ring: var(--m3-primary);
+
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 80%, white);
+  --m3-button-secondary-hover: color-mix(
+    in srgb,
+    var(--m3-primary-container) 85%,
+    white
+  );
+  --m3-button-secondary-active: color-mix(
+    in srgb,
+    var(--m3-primary-container) 75%,
+    white
+  );
 }
 
-/* Portal content - dark vars on body for manual dark toggle */
+/* Portal – dark vars on body for manual dark toggle */
 body:has(.ui-m3.dark) {
+  --m3-surface: #1c1b1f;
+  --m3-primary: #f19da4;
   --m3-surface-container-high: #2c2827;
   --m3-on-surface: #e6e1e5;
   --m3-outline-variant: #49454f;
   --m3-primary-container: #8b4a52;
-  --m3-on-primary-container: #fcdce0;
+  --m3-on-primary-container: var(--m3-on-primary-container-from-root);
   --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
     0 4px 12px -2px rgb(0 0 0 / 0.25);
-}
-
-/* Dark mode button overrides for .ui-m3.dark (manual toggle) */
-.ui-m3.dark [data-slot="button"][data-variant="default"]:hover {
-  background: color-mix(in srgb, var(--m3-primary) 90%, white) !important;
-}
-
-.ui-m3.dark [data-slot="button"][data-variant="default"]:active {
-  background: color-mix(in srgb, var(--m3-primary) 80%, white) !important;
-}
-
-.ui-m3.dark [data-slot="button"][data-variant="secondary"]:hover {
-  background: color-mix(
-    in srgb,
-    var(--m3-primary-container) 85%,
-    white
-  ) !important;
-}
-
-.ui-m3.dark [data-slot="button"][data-variant="secondary"]:active {
-  background: color-mix(
-    in srgb,
-    var(--m3-primary-container) 75%,
-    white
-  ) !important;
+  --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
 }
