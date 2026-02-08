@@ -134,45 +134,42 @@ export function WorkoutPlanDetailContent({
 
   return (
     <div className="space-y-6">
-      {/* Plan info - compact like edit form */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="m3-title">Plan info</h2>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleStartWorkout}
-              disabled={isStarting}
-              className="h-8 w-8 rounded-full !bg-[var(--m3-primary)] !text-[var(--m3-on-primary)] hover:!bg-[var(--m3-primary)] hover:!opacity-90"
-              aria-label="Start workout with this plan"
-              aria-busy={isStarting}
-            >
-              {isStarting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Play className="size-4" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleEdit}
-              aria-label={`Edit plan: ${plan.name}`}
-            >
-              <Edit className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive"
-              onClick={() => setIsDeleteDialogOpen(true)}
-              aria-label={`Delete plan: ${plan.name}`}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </div>
+      {/* Plan actions and details - compact like edit form */}
+      <section className="space-y-1">
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleStartWorkout}
+            disabled={isStarting}
+            className="h-8 w-8 rounded-full !bg-[var(--m3-primary)] !text-[var(--m3-on-primary)] hover:!bg-[var(--m3-primary)] hover:!opacity-90"
+            aria-label="Start workout with this plan"
+            aria-busy={isStarting}
+          >
+            {isStarting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Play className="size-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleEdit}
+            aria-label={`Edit plan: ${plan.name}`}
+          >
+            <Edit className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:text-destructive"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            aria-label={`Delete plan: ${plan.name}`}
+          >
+            <Trash2 className="size-4" />
+          </Button>
         </div>
         <div className="space-y-4">
           <div>
@@ -270,10 +267,14 @@ function ExerciseCard({
     reps: exercise.planned_reps ?? null,
     duration_seconds: exercise.planned_duration_seconds ?? null,
     rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
-    rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
+    rest_after_series_seconds:
+      exercise.planned_rest_after_series_seconds ?? null,
     exercise_is_unilateral: exercise.exercise_is_unilateral ?? undefined,
   });
-  const estimatedSetTimeLabel = getEstimatedSetTimeLabel(estimatedSetTimeHint, "s");
+  const estimatedSetTimeLabel = getEstimatedSetTimeLabel(
+    estimatedSetTimeHint,
+    "s",
+  );
 
   return (
     <Card>

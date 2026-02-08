@@ -378,6 +378,28 @@
   opacity: 0.9;
 }
 
+/* Badge variant=secondary – jak Hero: surowe tokeny + background + background-color !important,
+   żeby Tailwind/globals nie nadpisywały po hydracji. */
+.ui-m3 [data-slot="badge"][data-variant="secondary"] {
+  background: var(--m3-raw-primary-container) !important;
+  background-color: var(--m3-raw-primary-container) !important;
+  color: var(--m3-raw-on-primary-container) !important;
+  border-color: transparent !important;
+}
+
+.ui-m3 [data-slot="badge"][data-variant="secondary"]:hover {
+  background: color-mix(
+    in srgb,
+    var(--m3-raw-primary-container) 85%,
+    black
+  ) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--m3-raw-primary-container) 85%,
+    black
+  ) !important;
+}
+
 /* ============================================
      BUTTONS - full M3 override (no legacy styles)
      ============================================ */
@@ -863,6 +885,26 @@ html:has(.ui-m3) {
     border-color: var(--m3-on-primary-container);
   }
 
+  .ui-m3:not(.light) [data-slot="badge"][data-variant="secondary"] {
+    background: var(--m3-raw-primary-container-dark) !important;
+    background-color: var(--m3-raw-primary-container-dark) !important;
+    color: var(--m3-on-primary-container-from-root) !important;
+    border-color: transparent !important;
+  }
+
+  .ui-m3:not(.light) [data-slot="badge"][data-variant="secondary"]:hover {
+    background: color-mix(
+      in srgb,
+      var(--m3-raw-primary-container-dark) 85%,
+      white
+    ) !important;
+    background-color: color-mix(
+      in srgb,
+      var(--m3-raw-primary-container-dark) 85%,
+      white
+    ) !important;
+  }
+
   body:has(.ui-m3):not(:has(.ui-m3.light)) {
     --m3-surface: var(--m3-raw-surface-dark);
     --m3-primary: var(--m3-raw-primary-dark);
@@ -877,12 +919,14 @@ html:has(.ui-m3) {
   }
 }
 
-/* Light mode – manual override (same tokens as .ui-m3 base; no shadcn mapping repeat) */
+/* Light mode – manual override (same tokens as .ui-m3 base; no shadcn mapping repeat).
+   Używamy surowych tokenów dla primary-container, żeby uniknąć samoodniesienia
+   (var(--m3-primary-container)) które w light powodowało brak podświetlenia nawigacji/hover. */
 .ui-m3.light {
   color-scheme: light;
   --m3-primary: var(--m3-raw-primary-override);
   --m3-on-primary: var(--m3-raw-on-primary);
-  --m3-primary-container: var(--m3-primary-container);
+  --m3-primary-container: var(--m3-raw-primary-container);
   --m3-on-primary-container: var(--m3-raw-on-primary-container);
 
   --m3-surface: var(--m3-raw-surface);
