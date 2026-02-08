@@ -65,9 +65,9 @@ test.describe("Login E2E", () => {
     const currentUrl = page.url();
     expect(currentUrl).not.toContain("/login");
 
-    // Verify we're on a valid authenticated page (home or exercises)
+    // Verify we're on a valid authenticated page (home or exercises; m3 base path)
     const pathname = new URL(currentUrl).pathname;
-    expect(["/", "/exercises"]).toContain(pathname);
+    expect(["/m3", "/m3/exercises"]).toContain(pathname);
   });
 
   test("should show loading state when submitting login form", async ({
