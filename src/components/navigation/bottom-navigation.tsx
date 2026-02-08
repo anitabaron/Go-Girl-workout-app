@@ -9,7 +9,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/db/supabase.client";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "sonner";
-import { LogOut } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 
 export interface BottomNavigationProps {
   user?: User | null;
@@ -51,7 +51,7 @@ export function BottomNavigation({
 
   // Filtrujemy elementy nawigacji, aby wykluczyć "workout-sessions" z listy (bo jest w środku jako FAB)
   const navItemsForBottom = navigationItems.filter(
-    (item) => item.id !== "workout-sessions",
+    (item) => item.id !== "workout-sessions"
   );
 
   return (
@@ -126,7 +126,7 @@ export function BottomNavigation({
           >
             {(() => {
               const HistoryIcon = navigationItems.find(
-                (item) => item.id === "workout-sessions",
+                (item) => item.id === "workout-sessions"
               )?.icon;
               return HistoryIcon ? <HistoryIcon className="h-5 w-5" /> : null;
             })()}
@@ -164,7 +164,8 @@ export function BottomNavigation({
               className="flex flex-col items-center justify-center gap-0.5 px-1 py-2 transition-colors text-muted-foreground hover:text-primary"
               aria-label="Wyloguj"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-5 w-5" aria-hidden />
+              <span className="text-xs">Wyloguj</span>
             </button>
           ) : (
             <Link
@@ -172,6 +173,7 @@ export function BottomNavigation({
               className="flex flex-col items-center justify-center gap-0.5 px-1 py-2 transition-colors text-muted-foreground hover:text-primary"
               aria-label="Zaloguj"
             >
+              <LogIn className="h-5 w-5" aria-hidden />
               <span className="text-xs">Zaloguj</span>
             </Link>
           )}

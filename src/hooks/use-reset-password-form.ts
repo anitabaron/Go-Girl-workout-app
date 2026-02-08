@@ -8,6 +8,7 @@ import {
   resetPasswordFormSchema,
   type ResetPasswordFormInput,
 } from "@/lib/validation/reset-password";
+import { useAuthRedirect } from "@/contexts/auth-redirect-context";
 
 /**
  * Stan formularza resetu hasła.
@@ -28,6 +29,7 @@ export type ResetPasswordFormErrors = {
  * Custom hook zarządzający stanem i logiką formularza resetu hasła.
  */
 export function useResetPasswordForm() {
+  const { basePath } = useAuthRedirect();
   const [email, setEmail] = useState<string>("");
   const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -36,15 +38,16 @@ export function useResetPasswordForm() {
   /**
    * Walidacja pojedynczego pola.
    */
-  const validateField = (
-    field: "email",
-    value: string
-  ): string | undefined => {
+  const validateField = (field: "email", value: string): string | undefined => {
     try {
       resetPasswordFormSchema.shape[field].parse(value);
       return undefined;
     } catch (error) {
-      if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+      if (
+        error instanceof z.ZodError &&
+        error.issues &&
+        error.issues.length > 0
+      ) {
         return error.issues[0]?.message;
       }
       return "Nieprawidłowa wartość";
@@ -110,13 +113,19 @@ export function useResetPasswordForm() {
     setErrors({});
 
     try {
+      const confirmPath = basePath
+        ? `${basePath}/reset-password/confirm`
+        : "/reset-password/confirm";
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${globalThis.location.origin}/reset-password/confirm`,
+        redirectTo: `${globalThis.location.origin}${confirmPath}`,
       });
 
       if (error) {
         // Obsługa błędów Supabase Auth
-        if (error.message.includes("rate_limit") || error.message.includes("too many")) {
+        if (
+          error.message.includes("rate_limit") ||
+          error.message.includes("too many")
+        ) {
           toast.error(
             "Zbyt wiele prób wysłania linku resetującego. Spróbuj ponownie za chwilę."
           );
@@ -145,9 +154,7 @@ export function useResetPasswordForm() {
           "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."
         );
       } else {
-        toast.error(
-          "Wystąpił nieoczekiwany błąd. Spróbuj ponownie."
-        );
+        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
         console.error("Unexpected error during password reset:", error);
       }
       setIsLoading(false);

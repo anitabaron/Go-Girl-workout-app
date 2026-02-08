@@ -15,9 +15,7 @@
       "estimated_set_time_seconds": 300
     },
     {
-      "match_by_name": "Deska boczna",
-      "section_type": "Main Workout",
-      "section_order": 1
+      "match_by_name": "Deska boczna"
     },
     {
       "exercise_title": "Deska klasyczna",

@@ -180,10 +180,13 @@ export class ExerciseFormPage {
   }
 
   /**
-   * Wait for navigation after save (should redirect to /exercises)
+   * Wait for navigation after save (should redirect to /exercises).
+   * Uses explicit timeout so validation errors (e.g. duplicate name) fail fast.
    */
-  async waitForSaveNavigation() {
-    await this.page.waitForURL('**/exercises');
+  async waitForSaveNavigation(options?: { timeout?: number }) {
+    await this.page.waitForURL('**/exercises', {
+      timeout: options?.timeout ?? 15000,
+    });
   }
 
   /**

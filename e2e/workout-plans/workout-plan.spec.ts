@@ -463,13 +463,14 @@ test.describe("Workout Plan E2E - Create and Edit", () => {
 
     const formPage = new ExerciseFormPage(page);
     const exerciseTitles: string[] = [];
+    const runId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-    // Create 3 exercises
+    // Create 3 exercises (unique title per run to avoid "already exists" from retries/parallel)
     for (let i = 1; i <= 3; i++) {
       await exercisesPage.clickAddExercise();
       await formPage.waitForForm();
 
-      const exerciseTitle = `Test Exercise ${i} ${Date.now()}`;
+      const exerciseTitle = `Test Exercise ${i} ${runId}`;
       exerciseTitles.push(exerciseTitle);
 
       await formPage.fillRequiredFields({

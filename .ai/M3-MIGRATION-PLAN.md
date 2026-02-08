@@ -144,6 +144,7 @@
 8. **M3 Workout session detail/active** (`/m3/workout-sessions/[id]`, `.../active`) – complex; migrate after list/detail.
 9. **M3 Personal records** (`/m3/personal-records`, `.../[exercise_id]`) – reuse PR services.
 10. **M3 Import instruction** (`/m3/import-instruction`) – low priority.
+11. **M3 Auth** (`/m3/login`, `/m3/register`, `/m3/reset-password`, `/m3/reset-password/confirm`) – layout w `.ui-m3` + m3.css w `(auth-m3)/m3/`, AuthRedirectContext dla basePath, proxy rewrite `/login` itd. → M3.
 
 **Output artifacts**:
 

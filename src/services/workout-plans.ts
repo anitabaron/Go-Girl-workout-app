@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import { createClient } from "@/db/supabase.server";
 import type { Database } from "@/db/database.types";
 import type {
@@ -14,6 +15,7 @@ import {
   workoutPlanUpdateSchema,
   workoutPlanImportSchema,
 } from "@/lib/validation/workout-plans";
+import { DEFAULT_EXERCISE_VALUE } from "@/lib/constants";
 import {
   assertUser,
   mapDbError as mapDbErrorBase,
@@ -665,6 +667,321 @@ export async function deleteWorkoutPlanService(userId: string, id: string) {
   }
 }
 
+type WorkoutPlanImportPayload = z.infer<typeof workoutPlanImportSchema>;
+type ImportExercise = WorkoutPlanImportPayload["exercises"][number];
+
+type ExerciseDataMap = Map<
+  string,
+  {
+    series: number;
+    reps: number | null;
+    duration_seconds: number | null;
+    rest_in_between_seconds: number | null;
+    rest_after_series_seconds: number | null;
+    estimated_set_time_seconds: number | null;
+  }
+>;
+
+function normalizeImportSectionTypeAndOrder(
+  parsed: WorkoutPlanImportPayload
+): void {
+  for (const exercise of parsed.exercises) {
+    exercise.section_type ??=
+      DEFAULT_EXERCISE_VALUE.section_type as ImportExercise["section_type"];
+  }
+  const sectionOrderCounters = new Map<string, number>();
+  for (const exercise of parsed.exercises) {
+    if (
+      exercise.section_order === undefined ||
+      exercise.section_order === null
+    ) {
+      const next = (sectionOrderCounters.get(exercise.section_type!) ?? 0) + 1;
+      sectionOrderCounters.set(exercise.section_type!, next);
+      exercise.section_order = next;
+    }
+  }
+}
+
+function validateImportDomainRules(parsed: WorkoutPlanImportPayload): void {
+  const domainErrors = validateWorkoutPlanBusinessRules(
+    parsed.exercises.map(
+      (e) =>
+        ({
+          exercise_id: e.exercise_id ?? undefined,
+          section_type: e.section_type,
+          section_order: e.section_order,
+          planned_sets: e.planned_sets,
+          planned_reps: e.planned_reps,
+          planned_duration_seconds: e.planned_duration_seconds,
+          planned_rest_seconds: e.planned_rest_seconds,
+          planned_rest_after_series_seconds:
+            e.planned_rest_after_series_seconds,
+          estimated_set_time_seconds: e.estimated_set_time_seconds,
+        } as WorkoutPlanExerciseInput)
+    )
+  );
+  if (domainErrors.length) {
+    throw new ServiceError("BAD_REQUEST", domainErrors.join(" "));
+  }
+}
+
+function applyDefaultsForSnapshotExercise(ex: ImportExercise): void {
+  if (ex.exercise_id) return;
+  ex.section_type ??=
+    DEFAULT_EXERCISE_VALUE.section_type as ImportExercise["section_type"];
+  ex.planned_sets ??= DEFAULT_EXERCISE_VALUE.planned_sets;
+  ex.planned_reps ??= DEFAULT_EXERCISE_VALUE.planned_reps;
+  ex.planned_duration_seconds ??=
+    DEFAULT_EXERCISE_VALUE.planned_duration_seconds ?? null;
+  ex.planned_rest_seconds ??= DEFAULT_EXERCISE_VALUE.planned_rest_seconds;
+  ex.planned_rest_after_series_seconds ??=
+    DEFAULT_EXERCISE_VALUE.planned_rest_after_series_seconds;
+  ex.estimated_set_time_seconds ??=
+    DEFAULT_EXERCISE_VALUE.estimated_set_time_seconds;
+}
+
+function applyMatchedExercise(
+  exercise: ImportExercise,
+  foundId: string,
+  matchedName: string
+): void {
+  exercise.exercise_id = foundId;
+  exercise.match_by_name = undefined;
+  console.log(
+    `[importWorkoutPlanService] Znaleziono: "${matchedName}" -> exercise_id: ${foundId}`
+  );
+}
+
+function applySnapshotFromMatchByName(
+  parsed: WorkoutPlanImportPayload,
+  exercise: ImportExercise,
+  normalizedName: string
+): void {
+  exercise.exercise_title = exercise.match_by_name!;
+  if (!exercise.exercise_type) exercise.exercise_type = exercise.section_type;
+  if (!exercise.exercise_part)
+    exercise.exercise_part = parsed.part ?? undefined;
+  exercise.match_by_name = undefined;
+  applyDefaultsForSnapshotExercise(exercise);
+  console.log(
+    `[importWorkoutPlanService] Nie znaleziono ćwiczenia: "${exercise.exercise_title}" (znormalizowane: "${normalizedName}") - używam snapshot z domyślnymi parametrami`
+  );
+}
+
+async function resolveOneMatchByName(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  parsed: WorkoutPlanImportPayload,
+  exercise: ImportExercise
+): Promise<void> {
+  if (!exercise.match_by_name || exercise.exercise_id) return;
+  const normalizedName = normalizeTitleForDbLookup(exercise.match_by_name);
+  const { data: foundExercise, error: findError } = await findByNormalizedTitle(
+    supabase,
+    userId,
+    normalizedName
+  );
+  if (findError) throw mapDbError(findError);
+  if (foundExercise?.id) {
+    applyMatchedExercise(exercise, foundExercise.id, exercise.match_by_name);
+    return;
+  }
+  applySnapshotFromMatchByName(parsed, exercise, normalizedName);
+}
+
+async function resolveMatchByNameInExercises(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  parsed: WorkoutPlanImportPayload
+): Promise<void> {
+  for (const exercise of parsed.exercises) {
+    await resolveOneMatchByName(supabase, userId, parsed, exercise);
+  }
+}
+
+async function loadExerciseDataAndMissingIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  exerciseIds: string[]
+): Promise<{ exercisesDataMap: ExerciseDataMap; missingExercises: string[] }> {
+  const missingExercises: string[] = [];
+  const exercisesDataMap: ExerciseDataMap = new Map();
+  if (exerciseIds.length === 0) {
+    return { exercisesDataMap, missingExercises };
+  }
+  const { data: exercisesWithData, error: exercisesDataError } =
+    await findExercisesByIdsWithFullData(supabase, userId, exerciseIds);
+  if (exercisesDataError) throw mapDbError(exercisesDataError);
+  if (exercisesWithData) {
+    for (const exercise of exercisesWithData) {
+      exercisesDataMap.set(exercise.id, {
+        series: exercise.series,
+        reps: exercise.reps,
+        duration_seconds: exercise.duration_seconds,
+        rest_in_between_seconds: exercise.rest_in_between_seconds,
+        rest_after_series_seconds: exercise.rest_after_series_seconds,
+        estimated_set_time_seconds: exercise.estimated_set_time_seconds,
+      });
+    }
+  }
+  const foundIds = new Set((exercisesWithData ?? []).map((e) => e.id));
+  for (const exerciseId of exerciseIds) {
+    if (!foundIds.has(exerciseId)) missingExercises.push(exerciseId);
+  }
+  return { exercisesDataMap, missingExercises };
+}
+
+function enrichExercisesFromLibraryAndConvertMissing(
+  parsed: WorkoutPlanImportPayload,
+  exercisesDataMap: ExerciseDataMap,
+  missingExercises: string[]
+): void {
+  for (const exercise of parsed.exercises) {
+    if (
+      exercise.exercise_id &&
+      !missingExercises.includes(exercise.exercise_id)
+    ) {
+      const exerciseData = exercisesDataMap.get(exercise.exercise_id);
+      if (exerciseData) {
+        exercise.planned_sets ??= exerciseData.series;
+        exercise.planned_reps ??= exerciseData.reps;
+        exercise.planned_duration_seconds ??= exerciseData.duration_seconds;
+        exercise.planned_rest_seconds ??= exerciseData.rest_in_between_seconds;
+        exercise.planned_rest_after_series_seconds ??=
+          exerciseData.rest_after_series_seconds;
+        exercise.estimated_set_time_seconds ??=
+          exerciseData.estimated_set_time_seconds;
+      }
+    }
+  }
+  for (const exercise of parsed.exercises) {
+    if (
+      !exercise.exercise_id ||
+      !missingExercises.includes(exercise.exercise_id)
+    ) {
+      continue;
+    }
+    const missingExerciseId = exercise.exercise_id;
+    exercise.exercise_id = null;
+    if (!exercise.exercise_title) {
+      exercise.exercise_title = `Ćwiczenie (ID: ${missingExerciseId})`;
+      if (!exercise.exercise_type)
+        exercise.exercise_type = exercise.section_type;
+      if (!exercise.exercise_part)
+        exercise.exercise_part = parsed.part ?? undefined;
+    }
+    applyDefaultsForSnapshotExercise(exercise);
+  }
+}
+
+function applySnapshotDefaultsToAll(parsed: WorkoutPlanImportPayload): void {
+  for (const exercise of parsed.exercises) {
+    if (!exercise.exercise_id) applyDefaultsForSnapshotExercise(exercise);
+  }
+}
+
+function buildImportExerciseRows(
+  parsed: WorkoutPlanImportPayload,
+  getSnapshotId: ReturnType<typeof createSnapshotIdFactory>
+): Parameters<typeof insertWorkoutPlanExercises>[2] {
+  return parsed.exercises.map((e) => {
+    const snapshotId =
+      !e.exercise_id && e.exercise_title
+        ? getSnapshotId(
+            e.exercise_title,
+            e.exercise_type ?? null,
+            e.exercise_part ?? null
+          )
+        : null;
+    return {
+      exercise_id: e.exercise_id ?? null,
+      snapshot_id: snapshotId,
+      exercise_title: e.exercise_title ?? null,
+      exercise_type: e.exercise_type ?? null,
+      exercise_part: e.exercise_part ?? null,
+      exercise_details: e.exercise_details ?? null,
+      section_type: e.section_type!,
+      section_order: e.section_order!,
+      planned_sets: e.planned_sets,
+      planned_reps: e.planned_reps,
+      planned_duration_seconds: e.planned_duration_seconds,
+      planned_rest_seconds: e.planned_rest_seconds,
+      planned_rest_after_series_seconds: e.planned_rest_after_series_seconds,
+      estimated_set_time_seconds: e.estimated_set_time_seconds,
+    };
+  });
+}
+
+async function persistImportedPlan(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  parsed: WorkoutPlanImportPayload
+): Promise<Omit<WorkoutPlanDTO, "exercises">> {
+  const { data: plan, error: planError } = await insertWorkoutPlan(
+    supabase,
+    userId,
+    {
+      name: parsed.name,
+      description: parsed.description,
+      part: parsed.part,
+    }
+  );
+  if (planError) throw mapDbError(planError);
+  if (!plan) {
+    throw new ServiceError(
+      "INTERNAL",
+      "Nie udało się utworzyć planu treningowego."
+    );
+  }
+  const getSnapshotId = createSnapshotIdFactory();
+  const rows = buildImportExerciseRows(parsed, getSnapshotId);
+  const { error: exercisesInsertError } = await insertWorkoutPlanExercises(
+    supabase,
+    plan.id,
+    rows
+  );
+  if (exercisesInsertError) {
+    await supabase.from("workout_plans").delete().eq("id", plan.id);
+    throw mapDbError(exercisesInsertError);
+  }
+  return plan;
+}
+
+async function fetchPlanWithExercisesAndUpdateTime(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  planId: string,
+  insertedPlan: Omit<WorkoutPlanDTO, "exercises">
+): Promise<{ plan: WorkoutPlanDTO; exercises: WorkoutPlanExerciseDTO[] }> {
+  const { data: planWithExercises, error: fetchError } =
+    await listWorkoutPlanExercises(supabase, planId);
+  if (fetchError) throw mapDbError(fetchError);
+  const exercisesWithDescription = planWithExercises ?? [];
+  const estimatedTotalTime = calculateEstimatedTotalTime(
+    exercisesWithDescription
+  );
+  const { error: updateTimeError } = await updateWorkoutPlan(
+    supabase,
+    userId,
+    planId,
+    { estimated_total_time_seconds: estimatedTotalTime }
+  );
+  if (updateTimeError) {
+    console.error(
+      "[importWorkoutPlanService] Failed to update estimated_total_time_seconds:",
+      updateTimeError
+    );
+  }
+  const { data: updatedPlan, error: fetchUpdatedError } =
+    await findWorkoutPlanById(supabase, userId, planId);
+  if (fetchUpdatedError) throw mapDbError(fetchUpdatedError);
+  const planMeta = updatedPlan ?? insertedPlan;
+  return {
+    plan: { ...planMeta, exercises: exercisesWithDescription },
+    exercises: exercisesWithDescription,
+  };
+}
+
 /**
  * Importuje plan treningowy z JSON.
  * Obsługuje ćwiczenia istniejące w bazie (przez exercise_id) oraz nowe (przez snapshot).
@@ -677,273 +994,40 @@ export async function importWorkoutPlanService(
 
   try {
     const parsed = parseOrThrow(workoutPlanImportSchema, payload);
-
-    // Walidacja domenowa
-    const domainErrors = validateWorkoutPlanBusinessRules(
-      parsed.exercises.map(
-        (e) =>
-          ({
-            exercise_id: e.exercise_id ?? undefined,
-            section_type: e.section_type,
-            section_order: e.section_order,
-            planned_sets: e.planned_sets,
-            planned_reps: e.planned_reps,
-            planned_duration_seconds: e.planned_duration_seconds,
-            planned_rest_seconds: e.planned_rest_seconds,
-            planned_rest_after_series_seconds:
-              e.planned_rest_after_series_seconds,
-            estimated_set_time_seconds: e.estimated_set_time_seconds,
-          } as WorkoutPlanExerciseInput)
-      )
-    );
-
-    if (domainErrors.length) {
-      throw new ServiceError("BAD_REQUEST", domainErrors.join(" "));
-    }
+    normalizeImportSectionTypeAndOrder(parsed);
+    validateImportDomainRules(parsed);
 
     const supabase = await createClient();
+    await resolveMatchByNameInExercises(supabase, userId, parsed);
 
-    // Mapowanie match_by_name na exercise_id przez title_normalized (zgodna z DB: bez usuwania diakrytyków)
-    for (const exercise of parsed.exercises) {
-      if (exercise.match_by_name && !exercise.exercise_id) {
-        const normalizedName = normalizeTitleForDbLookup(
-          exercise.match_by_name
-        );
-        const { data: foundExercise, error: findError } =
-          await findByNormalizedTitle(supabase, userId, normalizedName);
-
-        if (findError) {
-          throw mapDbError(findError);
-        }
-
-        if (foundExercise?.id) {
-          // Znaleziono ćwiczenie - użyj exercise_id
-          exercise.exercise_id = foundExercise.id;
-          exercise.match_by_name = undefined; // Usuń match_by_name, bo już mamy exercise_id
-          console.log(
-            `[importWorkoutPlanService] Znaleziono ćwiczenie: "${exercise.match_by_name}" -> exercise_id: ${foundExercise.id}`
-          );
-        } else {
-          // Nie znaleziono - użyj match_by_name jako exercise_title (snapshot)
-          exercise.exercise_title = exercise.match_by_name;
-          // exercise_type i exercise_part są opcjonalne - ustaw tylko jeśli nie były podane i chcemy fallback
-          if (!exercise.exercise_type) {
-            exercise.exercise_type = exercise.section_type;
-          }
-          if (!exercise.exercise_part) {
-            exercise.exercise_part = parsed.part ?? undefined;
-          }
-          // exercise_details pozostaje bez zmian (jeśli było podane)
-          exercise.match_by_name = undefined; // Usuń match_by_name, bo używamy snapshot
-          console.log(
-            `[importWorkoutPlanService] Nie znaleziono ćwiczenia: "${exercise.exercise_title}" (znormalizowane: "${normalizedName}") - używam snapshot`
-          );
-        }
-      }
-    }
-
-    // Dla ćwiczeń z exercise_id - sprawdź czy istnieją i należą do użytkownika
-    // oraz pobierz pełne dane do uzupełnienia brakujących pól
     const exerciseIds = parsed.exercises
-      .filter((e) => e.exercise_id)
-      .map((e) => e.exercise_id!);
+      .filter((e): e is ImportExercise & { exercise_id: string } =>
+        Boolean(e.exercise_id)
+      )
+      .map((e) => e.exercise_id);
 
-    const missingExercises: string[] = [];
-    const exercisesDataMap = new Map<
-      string,
-      {
-        series: number;
-        reps: number | null;
-        duration_seconds: number | null;
-        rest_in_between_seconds: number | null;
-        rest_after_series_seconds: number | null;
-        estimated_set_time_seconds: number | null;
-      }
-    >();
+    const { exercisesDataMap, missingExercises } =
+      await loadExerciseDataAndMissingIds(supabase, userId, exerciseIds);
 
-    if (exerciseIds.length > 0) {
-      // Pobierz pełne dane ćwiczeń (dla uzupełnienia brakujących pól)
-      const { data: exercisesWithData, error: exercisesDataError } =
-        await findExercisesByIdsWithFullData(supabase, userId, exerciseIds);
-
-      if (exercisesDataError) {
-        throw mapDbError(exercisesDataError);
-      }
-
-      // Utwórz mapę danych ćwiczeń
-      if (exercisesWithData) {
-        for (const exercise of exercisesWithData) {
-          exercisesDataMap.set(exercise.id, {
-            series: exercise.series,
-            reps: exercise.reps,
-            duration_seconds: exercise.duration_seconds,
-            rest_in_between_seconds: exercise.rest_in_between_seconds,
-            rest_after_series_seconds: exercise.rest_after_series_seconds,
-            estimated_set_time_seconds: exercise.estimated_set_time_seconds,
-          });
-        }
-      }
-
-      // Znajdź brakujące ćwiczenia
-      const foundIds = new Set((exercisesWithData ?? []).map((e) => e.id));
-      for (const exerciseId of exerciseIds) {
-        if (!foundIds.has(exerciseId)) {
-          missingExercises.push(exerciseId);
-        }
-      }
-
-      // Uzupełnij brakujące pola z bazy danych dla istniejących ćwiczeń
-      for (const exercise of parsed.exercises) {
-        if (
-          exercise.exercise_id &&
-          !missingExercises.includes(exercise.exercise_id)
-        ) {
-          const exerciseData = exercisesDataMap.get(exercise.exercise_id);
-          if (exerciseData) {
-            // Uzupełnij tylko pola, które nie zostały podane w JSON
-            exercise.planned_sets ??= exerciseData.series;
-            exercise.planned_reps ??= exerciseData.reps;
-            exercise.planned_duration_seconds ??= exerciseData.duration_seconds;
-            exercise.planned_rest_seconds ??=
-              exerciseData.rest_in_between_seconds;
-            exercise.planned_rest_after_series_seconds ??=
-              exerciseData.rest_after_series_seconds;
-            exercise.estimated_set_time_seconds ??=
-              exerciseData.estimated_set_time_seconds;
-          }
-        }
-      }
-
-      // Jeśli wszystkie ćwiczenia z exercise_id są brakujące, użyj snapshot
-      // (to nie powinno się zdarzyć, ale obsługujemy to)
-      for (const exercise of parsed.exercises) {
-        if (
-          exercise.exercise_id &&
-          missingExercises.includes(exercise.exercise_id)
-        ) {
-          // Zapisz exercise_id przed ustawieniem na null
-          const missingExerciseId = exercise.exercise_id;
-          // Ustaw exercise_id na null i użyj snapshot (jeśli nie został podany, użyj placeholder)
-          exercise.exercise_id = null;
-          if (!exercise.exercise_title) {
-            exercise.exercise_title = `Ćwiczenie (ID: ${missingExerciseId})`;
-            // exercise_type i exercise_part są opcjonalne
-            if (!exercise.exercise_type) {
-              exercise.exercise_type = exercise.section_type;
-            }
-            if (!exercise.exercise_part) {
-              exercise.exercise_part = parsed.part ?? undefined;
-            }
-          }
-        }
-      }
-    }
-
-    // Utwórz plan
-    const { data: plan, error: planError } = await insertWorkoutPlan(
-      supabase,
-      userId,
-      {
-        name: parsed.name,
-        description: parsed.description,
-        part: parsed.part,
-      }
+    enrichExercisesFromLibraryAndConvertMissing(
+      parsed,
+      exercisesDataMap,
+      missingExercises
     );
+    applySnapshotDefaultsToAll(parsed);
 
-    if (planError) {
-      throw mapDbError(planError);
-    }
-
-    if (!plan) {
-      throw new ServiceError(
-        "INTERNAL",
-        "Nie udało się utworzyć planu treningowego."
+    const plan = await persistImportedPlan(supabase, userId, parsed);
+    const { plan: updatedPlan, exercises } =
+      await fetchPlanWithExercisesAndUpdateTime(
+        supabase,
+        userId,
+        plan.id,
+        plan
       );
-    }
-
-    const getSnapshotId = createSnapshotIdFactory();
-
-    // Wstaw ćwiczenia (z exercise_id lub snapshot)
-    const { error: exercisesInsertError } = await insertWorkoutPlanExercises(
-      supabase,
-      plan.id,
-      parsed.exercises.map((e) => {
-        // Jeśli to snapshot (brak exercise_id), generuj/przypisz snapshot_id
-        // exercise_type i exercise_part są opcjonalne
-        const snapshotId =
-          !e.exercise_id && e.exercise_title
-            ? getSnapshotId(
-                e.exercise_title,
-                e.exercise_type ?? null,
-                e.exercise_part ?? null
-              )
-            : null;
-
-        return {
-          exercise_id: e.exercise_id ?? null,
-          snapshot_id: snapshotId,
-          exercise_title: e.exercise_title ?? null,
-          exercise_type: e.exercise_type ?? null,
-          exercise_part: e.exercise_part ?? null,
-          exercise_details: e.exercise_details ?? null,
-          section_type: e.section_type,
-          section_order: e.section_order,
-          planned_sets: e.planned_sets,
-          planned_reps: e.planned_reps,
-          planned_duration_seconds: e.planned_duration_seconds,
-          planned_rest_seconds: e.planned_rest_seconds,
-          planned_rest_after_series_seconds:
-            e.planned_rest_after_series_seconds,
-          estimated_set_time_seconds: e.estimated_set_time_seconds,
-        };
-      })
-    );
-
-    if (exercisesInsertError) {
-      await supabase.from("workout_plans").delete().eq("id", plan.id);
-      throw mapDbError(exercisesInsertError);
-    }
-
-    // Pobierz utworzony plan z ćwiczeniami
-    const { data: planWithExercises, error: fetchError } =
-      await listWorkoutPlanExercises(supabase, plan.id);
-
-    if (fetchError) {
-      throw mapDbError(fetchError);
-    }
-
-    // exercise_details jest już w DTO z bazy
-    const exercisesWithDescription = planWithExercises ?? [];
-
-    // Oblicz i zaktualizuj szacunkowy całkowity czas treningu
-    const estimatedTotalTime = calculateEstimatedTotalTime(
-      exercisesWithDescription
-    );
-    const { error: updateTimeError } = await updateWorkoutPlan(
-      supabase,
-      userId,
-      plan.id,
-      { estimated_total_time_seconds: estimatedTotalTime }
-    );
-
-    if (updateTimeError) {
-      console.error(
-        "[importWorkoutPlanService] Failed to update estimated_total_time_seconds:",
-        updateTimeError
-      );
-    }
-
-    // Pobierz zaktualizowany plan
-    const { data: updatedPlan, error: fetchUpdatedError } =
-      await findWorkoutPlanById(supabase, userId, plan.id);
-
-    if (fetchUpdatedError) {
-      throw mapDbError(fetchUpdatedError);
-    }
 
     return {
-      ...(updatedPlan ?? plan),
-      exercises: exercisesWithDescription,
+      ...updatedPlan,
+      exercises,
       warnings:
         missingExercises.length > 0
           ? { missing_exercises: missingExercises }

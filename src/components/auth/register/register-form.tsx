@@ -9,6 +9,7 @@ import {
   validateRegisterField,
   validateRegisterForm,
 } from "@/lib/validation/register-form";
+import { useAuthRedirect } from "@/contexts/auth-redirect-context";
 import { EmailInput } from "./email-input";
 import { PasswordInput } from "./password-input";
 import { ConfirmPasswordInput } from "./confirm-password-input";
@@ -21,6 +22,7 @@ import { LoginLink } from "./login-link";
  */
 export function RegisterForm() {
   const router = useRouter();
+  const { basePath } = useAuthRedirect();
 
   // Stan formularza
   const [formState, setFormState] = useState<RegisterFormState>({
@@ -57,7 +59,8 @@ export function RegisterForm() {
   // Handler opuszczenia pola (walidacja)
   const handleBlur = (field: keyof RegisterFormState) => {
     const value = formState[field];
-    const password = field === "confirmPassword" ? formState.password : undefined;
+    const password =
+      field === "confirmPassword" ? formState.password : undefined;
     const error = validateRegisterField(field, value, password);
 
     if (error) {
@@ -99,21 +102,37 @@ export function RegisterForm() {
 
       if (error) {
         // Obsługa błędów z Supabase Auth
-        let errorMessage = "Wystąpił błąd podczas rejestracji. Spróbuj ponownie później.";
+        let errorMessage =
+          "Wystąpił błąd podczas rejestracji. Spróbuj ponownie później.";
         const fieldErrors: RegisterFormErrors = {};
 
         // Mapowanie błędów na komunikaty po polsku
-        if (error.message.includes("already registered") || error.message.includes("already exists")) {
-          errorMessage = "Konto z tym adresem email już istnieje. Zaloguj się lub zresetuj hasło.";
+        if (
+          error.message.includes("already registered") ||
+          error.message.includes("already exists")
+        ) {
+          errorMessage =
+            "Konto z tym adresem email już istnieje. Zaloguj się lub zresetuj hasło.";
           fieldErrors.email = "Konto z tym adresem email już istnieje";
-        } else if (error.message.includes("Password") || error.message.includes("password")) {
-          errorMessage = "Hasło nie spełnia wymagań. Upewnij się, że ma minimum 6 znaków.";
+        } else if (
+          error.message.includes("Password") ||
+          error.message.includes("password")
+        ) {
+          errorMessage =
+            "Hasło nie spełnia wymagań. Upewnij się, że ma minimum 6 znaków.";
           fieldErrors.password = "Hasło nie spełnia wymagań";
-        } else if (error.message.includes("email") || error.message.includes("Email")) {
+        } else if (
+          error.message.includes("email") ||
+          error.message.includes("Email")
+        ) {
           errorMessage = "Nieprawidłowy format email.";
           fieldErrors.email = "Nieprawidłowy format email";
-        } else if (error.message.includes("network") || error.message.includes("fetch")) {
-          errorMessage = "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.";
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          errorMessage =
+            "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.";
         }
 
         toast.error(errorMessage);
@@ -123,17 +142,19 @@ export function RegisterForm() {
       }
 
       // Sukces - sprawdź, czy użytkowniczka została automatycznie zalogowana
+      const home = basePath || "/";
+      const loginPath = basePath ? `${basePath}/login` : "/login";
       if (data.user && data.session) {
         // Automatyczne logowanie (enable_confirmations = false)
         toast.success("Rejestracja zakończona pomyślnie! Zostałaś zalogowana.");
-        router.push("/");
+        router.push(home);
         router.refresh();
       } else if (data.user && !data.session) {
         // Wymagane potwierdzenie emaila (enable_confirmations = true)
         toast.success(
           "Rejestracja zakończona pomyślnie! Sprawdź swoją skrzynkę email, aby potwierdzić konto."
         );
-        router.push("/login");
+        router.push(loginPath);
       } else {
         // Nieoczekiwany stan
         toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.");
@@ -142,7 +163,9 @@ export function RegisterForm() {
     } catch (error) {
       // Obsługa błędów sieciowych i innych nieoczekiwanych błędów
       console.error("Registration error:", error);
-      toast.error("Wystąpił błąd podczas rejestracji. Spróbuj ponownie później.");
+      toast.error(
+        "Wystąpił błąd podczas rejestracji. Spróbuj ponownie później."
+      );
       setIsLoading(false);
     }
   };

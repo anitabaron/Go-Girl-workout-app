@@ -169,7 +169,13 @@ export default async function M3Page({
           <p className="m3-title">
             &quot;Strong today, unstoppable tomorrow.&quot;
           </p>
-          <div className="flex justify-center gap-5 text-sm font-semibold">
+          <div className="flex flex-wrap justify-center gap-5 text-sm font-semibold">
+            <Link
+              href="/m3/privacy-policy"
+              className="text-primary hover:underline underline-offset-4"
+            >
+              Privacy Policy
+            </Link>
             <a
               href="https://github.com/anitabaron"
               target="_blank"

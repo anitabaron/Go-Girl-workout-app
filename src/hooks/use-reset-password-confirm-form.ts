@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/db/supabase.client";
+import { useAuthRedirect } from "@/contexts/auth-redirect-context";
 
 /**
  * Schema Zod do walidacji formularza potwierdzenia resetu hasła.
@@ -42,7 +43,7 @@ export type ResetPasswordConfirmFormErrors = {
 
 /**
  * Custom hook zarządzający stanem i logiką formularza potwierdzenia resetu hasła.
- * 
+ *
  * Hook obsługuje:
  * - Walidację pól (minimum 6 znaków, zgodność haseł)
  * - Wywołanie `supabase.auth.updateUser({ password })` do zmiany hasła
@@ -51,6 +52,7 @@ export type ResetPasswordConfirmFormErrors = {
  */
 export function useResetPasswordConfirmForm() {
   const router = useRouter();
+  const { basePath } = useAuthRedirect();
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [errors, setErrors] = useState<ResetPasswordConfirmFormErrors>({});
@@ -75,9 +77,11 @@ export function useResetPasswordConfirmForm() {
           toast.error(
             "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
           );
-          // Przekierowanie do /reset-password po krótkim opóźnieniu
+          const resetPath = basePath
+            ? `${basePath}/reset-password?error=invalid_token`
+            : "/reset-password?error=invalid_token";
           setTimeout(() => {
-            router.push("/reset-password?error=invalid_token");
+            router.push(resetPath);
           }, 2000);
           return;
         }
@@ -90,8 +94,11 @@ export function useResetPasswordConfirmForm() {
         console.error("Error checking token:", error);
         setIsTokenValid(false);
         toast.error("Wystąpił błąd podczas weryfikacji tokenu.");
+        const resetPath = basePath
+          ? `${basePath}/reset-password?error=invalid_token`
+          : "/reset-password?error=invalid_token";
         setTimeout(() => {
-          router.push("/reset-password?error=invalid_token");
+          router.push(resetPath);
         }, 2000);
       }
     };
@@ -119,7 +126,11 @@ export function useResetPasswordConfirmForm() {
       }
       return undefined;
     } catch (error) {
-      if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+      if (
+        error instanceof z.ZodError &&
+        error.issues &&
+        error.issues.length > 0
+      ) {
         return error.issues[0]?.message;
       }
       return "Nieprawidłowa wartość";
@@ -217,7 +228,11 @@ export function useResetPasswordConfirmForm() {
    * Handler opuszczenia pola confirmPassword.
    */
   const handleConfirmPasswordBlur = (): void => {
-    const error = validateField("confirmPassword", confirmPassword, newPassword);
+    const error = validateField(
+      "confirmPassword",
+      confirmPassword,
+      newPassword
+    );
     setErrors((prev) => ({ ...prev, confirmPassword: error }));
   };
 
@@ -234,7 +249,10 @@ export function useResetPasswordConfirmForm() {
       toast.error(
         "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
       );
-      router.push("/reset-password?error=invalid_token");
+      const resetPath = basePath
+        ? `${basePath}/reset-password?error=invalid_token`
+        : "/reset-password?error=invalid_token";
+      router.push(resetPath);
       return;
     }
 
@@ -269,16 +287,17 @@ export function useResetPasswordConfirmForm() {
           toast.error(
             "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
           );
-          router.push("/reset-password?error=invalid_token");
+          const resetPath = basePath
+            ? `${basePath}/reset-password?error=invalid_token`
+            : "/reset-password?error=invalid_token";
+          router.push(resetPath);
         } else if (error.message.includes("password")) {
           setErrors({
             newPassword: "Hasło nie spełnia wymagań. Minimum 6 znaków.",
           });
           toast.error("Hasło nie spełnia wymagań. Minimum 6 znaków.");
         } else {
-          toast.error(
-            "Nie udało się zmienić hasła. Spróbuj ponownie później."
-          );
+          toast.error("Nie udało się zmienić hasła. Spróbuj ponownie później.");
         }
         setIsLoading(false);
         return;
@@ -294,12 +313,13 @@ export function useResetPasswordConfirmForm() {
         // Kontynuujemy mimo błędu wylogowania - przekierowanie do /login
       }
 
-      toast.success("Hasło zostało pomyślnie zmienione. Możesz się teraz zalogować.");
-      
-      // Przekierowanie do /login po krótkim opóźnieniu
+      toast.success(
+        "Hasło zostało pomyślnie zmienione. Możesz się teraz zalogować."
+      );
+      const loginPath = basePath ? `${basePath}/login` : "/login";
       setTimeout(() => {
-        router.push("/login");
-        router.refresh(); // Odświeżenie routera, aby upewnić się, że sesja została usunięta
+        router.push(loginPath);
+        router.refresh();
       }, 1500);
     } catch (error) {
       // Obsługa błędów sieciowych

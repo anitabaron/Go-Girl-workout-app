@@ -379,8 +379,8 @@
 }
 
 /* ============================================
-   BUTTONS - full M3 override (no legacy styles)
-   ============================================ */
+     BUTTONS - full M3 override (no legacy styles)
+     ============================================ */
 
 /* Base: reset legacy scale/shadow/ring, M3 radius, cross-browser reset */
 .ui-m3 [data-slot="button"] {
@@ -497,8 +497,8 @@
 }
 
 /* ============================================
-   CARD - full M3 override (no legacy rounded-xl, shadow-sm)
-   ============================================ */
+     CARD - full M3 override (no legacy rounded-xl, shadow-sm)
+     ============================================ */
 .ui-m3 [data-slot="card"] {
   background: var(--m3-surface-container) !important;
   color: var(--m3-on-surface) !important;
@@ -529,8 +529,8 @@
 }
 
 /* ============================================
-   INPUT - full M3 override (no legacy rounded-md, dark:bg-input)
-   ============================================ */
+     INPUT - full M3 override (no legacy rounded-md, dark:bg-input)
+     ============================================ */
 .ui-m3 [data-slot="input"] {
   background: transparent !important;
   border: 1px solid var(--m3-outline-variant) !important;
@@ -553,8 +553,8 @@
 }
 
 /* ============================================
-   SELECT - full M3 override (trigger + content via portal)
-   ============================================ */
+     SELECT - full M3 override (trigger + content via portal)
+     ============================================ */
 .ui-m3 [data-slot="select-trigger"] {
   background: transparent !important;
   border: 1px solid var(--m3-outline-variant) !important;
@@ -722,8 +722,8 @@ body:has(.ui-m3) [data-slot="sheet-overlay"] {
 }
 
 /* ============================================
-   SKELETON - M3 surface styling
-   ============================================ */
+     SKELETON - M3 surface styling
+     ============================================ */
 .ui-m3 [data-slot="skeleton"] {
   background: var(--m3-surface-container-high) !important;
   border-radius: var(--m3-radius-md) !important;
@@ -734,8 +734,8 @@ body:has(.ui-m3) [data-slot="sheet-overlay"] {
 }
 
 /* ============================================
-   NAVIGATION RAIL - fixed positioning, safe areas
-   ============================================ */
+     NAVIGATION RAIL - fixed positioning, safe areas
+     ============================================ */
 /* Ensure document scrolls when content exceeds viewport (fixes "can't scroll to bottom") */
 html:has(.ui-m3) {
   overflow-y: auto;

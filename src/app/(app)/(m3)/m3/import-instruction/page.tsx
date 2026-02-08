@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import workoutPlanImportExample from "@/ai/workout-plan-import-example.json";
+import workoutPlanImportExample from "@/lib/json/workout-plan-import-example.json";
 import { PageHeader, Surface } from "../_components";
 
 export default function ImportInstructionPage() {
@@ -34,42 +34,43 @@ export default function ImportInstructionPage() {
             </div>
             <div className="ml-11 space-y-6">
               <div className="space-y-2">
-                <p className="m3-body text-muted-foreground text-xs">
-                  Poniżej znajdują się pola wymagane do utworzenia planu
-                  treningowego.
-                </p>
                 <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-3 text-xs">
-                  <p className="m3-label text-xs mb-2">
-                    Pola na poziomie planu:
-                  </p>
-                  <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
-                    <li>
-                      <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
-                        name
-                      </code>{" "}
-                      (string, max 120 znaków) - nazwa planu treningowego
-                    </li>
-                    <li>
-                      <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
-                        description
-                      </code>{" "}
-                      (string | null, opcjonalne) - opis planu
-                    </li>
-                    <li>
-                      <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
-                        part
-                      </code>{" "}
-                      (enum: &quot;Legs&quot; | &quot;Core&quot; |
-                      &quot;Back&quot; | &quot;Arms&quot; | &quot;Chest&quot; |
-                      null, opcjonalne) - partia mięśniowa
-                    </li>
-                    <li>
-                      <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
-                        exercises
-                      </code>{" "}
-                      (array, min 1 element) - tablica ćwiczeń
-                    </li>
-                  </ul>
+                  <div>
+                    <p className="m3-label text-xs mb-2">Wymagane:</p>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
+                      <li>
+                        <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                          name
+                        </code>{" "}
+                        (string, max 120 znaków) – nazwa planu
+                      </li>
+                      <li>
+                        <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                          exercises
+                        </code>{" "}
+                        (array, min 1 element) – tablica ćwiczeń
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="m3-label text-xs mb-2">Opcjonalne:</p>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
+                      <li>
+                        <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                          description
+                        </code>{" "}
+                        (string | null) – opis planu
+                      </li>
+                      <li>
+                        <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                          part
+                        </code>{" "}
+                        (&quot;Legs&quot; | &quot;Core&quot; | &quot;Back&quot;
+                        | &quot;Arms&quot; | &quot;Chest&quot; | null) – partia
+                        mięśniowa
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -111,11 +112,18 @@ export default function ImportInstructionPage() {
                 </div>
               </div>
               <p className="text-muted-foreground text-xs mt-2">
-                Numeracja{" "}
                 <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                   section_order
                 </code>{" "}
-                jest oddzielna dla każdej sekcji. Każda sekcja zaczyna się od 1.
+                numeracja jest oddzielna dla każdej sekcji, jeśli nie podano
+                zostanie ustalona według kolejności występowania ćwiczeń w pliku
+                JSON.
+                <br />
+                <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                  section_type
+                </code>{" "}
+                – jeśli nie podano, używana jest sekcja &quot;Main
+                Workout&quot;.
               </p>
             </div>
           </div>
@@ -135,31 +143,37 @@ export default function ImportInstructionPage() {
               <div className="space-y-2">
                 <h3 className="m3-title">Opcja A: Istniejące ćwiczenie</h3>
                 <p className="m3-body text-muted-foreground text-xs">
-                  Użyj, gdy ćwiczenie już istnieje w bibliotece. Możesz je
-                  zidentyfikować przez ID (UUID) lub nazwę. Jeśli nie podasz
-                  opcjonalnych pól, zostaną one automatycznie pobrane z bazy
-                  danych.
+                  Gdy ćwiczenie jest w bibliotece, wskaż je przez{" "}
+                  <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                    exercise_id
+                  </code>{" "}
+                  lub{" "}
+                  <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                    match_by_name
+                  </code>
+                  . Niewypełnione pola zostaną uzupełnione z bazy lub
+                  wartościami domyślnymi.
                 </p>
                 <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-3 text-xs">
                   <div>
-                    <p className="m3-label text-xs mb-2">Wymagane pola:</p>
+                    <p className="m3-label text-xs mb-2">Wymagane:</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
+                        <strong>Jedno z:</strong>{" "}
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           exercise_id
                         </code>{" "}
-                        (UUID string) - identyfikator ćwiczenia
-                      </li>
-                      <li>
+                        (UUID - identyfikator ćwiczenia) <strong>lub</strong>{" "}
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           match_by_name
                         </code>{" "}
-                        (string, max 120 znaków) - nazwa ćwiczenia do wyszukania
+                        (string, max 120 znaków)
                       </li>
-                      <p className="text-muted-foreground italic mt-1">
-                        Musisz podać przynajmniej jedno z powyższych
-                        (exercise_id lub match_by_name).
-                      </p>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="m3-label text-xs mb-2">Opcjonalne:</p>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           section_type
@@ -174,15 +188,7 @@ export default function ImportInstructionPage() {
                         (number &gt; 0, unikalna w ramach sekcji) - kolejność w
                         sekcji
                       </li>
-                    </ul>
-                  </div>
 
-                  <div>
-                    <p className="m3-label text-xs mb-2">
-                      Pola opcjonalne (jeśli nie podane, zostaną pobrane z
-                      bazy):
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           planned_sets
@@ -230,10 +236,10 @@ export default function ImportInstructionPage() {
                     </ul>
                     <p className="text-muted-foreground italic mt-2">
                       Jeśli nie podasz żadnego z opcjonalnych pól, wszystkie
-                      wartości zostaną automatycznie pobrane z bazy danych na
-                      podstawie ćwiczenia zidentyfikowanego przez exercise_id
-                      lub match_by_name.
-                    </p>
+                      wartości zostaną automatycznie pobrane z bazy danych lub
+                      wartości domyślne na podstawie ćwiczenia zidentyfikowanego
+                      przez exercise_id lub match_by_name.
+                    </p>{" "}
                   </div>
                 </div>
               </div>
@@ -247,7 +253,7 @@ export default function ImportInstructionPage() {
                 </p>
                 <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-3 text-xs">
                   <div>
-                    <p className="m3-label text-xs mb-2">Wymagane pola:</p>
+                    <p className="m3-label text-xs mb-2">Wymagane:</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
@@ -255,46 +261,43 @@ export default function ImportInstructionPage() {
                         </code>{" "}
                         (string, max 120 znaków) - nazwa ćwiczenia
                       </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="m3-label text-xs mb-2">Opcjonalne:</p>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           section_type
                         </code>{" "}
-                        (enum: &quot;Warm-up&quot; | &quot;Main Workout&quot; |
-                        &quot;Cool-down&quot;) - typ sekcji
+                        – &quot;Main Workout&quot;
                       </li>
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           section_order
                         </code>{" "}
-                        (number &gt; 0, unikalna w ramach sekcji) - kolejność w
-                        sekcji
+                        – kolejność w pliku JSON
                       </li>
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           planned_sets
                         </code>{" "}
-                        (number &gt; 0 | null) - liczba serii
+                        – 3
                       </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
+                        {" "}
+                        <strong>Jedno z:</strong>{" "}
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           planned_reps
                         </code>{" "}
-                        (number &gt; 0 | null) - liczba powtórzeń
-                      </li>
-                      <li>
+                        (number &gt; 0 | null) - liczba powtórzeń{" "}
+                        <strong>lub</strong>{" "}
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           planned_duration_seconds
                         </code>{" "}
                         (number &gt; 0 | null) - czas trwania w sekundach
                       </li>
-                      <p className="text-muted-foreground italic mt-1">
-                        Musisz podać przynajmniej jedno z powyższych (reps lub
-                        duration).
-                      </p>{" "}
+
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           planned_rest_seconds
@@ -316,11 +319,6 @@ export default function ImportInstructionPage() {
                         (number &gt; 0 | null) - szacowany czas wykonania serii
                         w sekundach
                       </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="m3-label text-xs mb-2">Opcjonalne pola:</p>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                           exercise_part

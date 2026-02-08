@@ -7,6 +7,7 @@ import { z } from "zod";
 import { supabase } from "@/db/supabase.client";
 import { useAuthStore } from "@/stores/auth-store";
 import { mapAuthError } from "@/lib/auth-errors";
+import { useAuthRedirect } from "@/contexts/auth-redirect-context";
 
 // ViewModel - stan formularza logowania
 export type LoginFormState = {
@@ -38,6 +39,7 @@ type UseLoginFormProps = {
 export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
+  const { basePath } = useAuthRedirect();
   const [fields, setFields] = useState<LoginFormState>({
     email: "",
     password: "",
@@ -49,7 +51,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
   const validateField = useCallback(
     (
       field: keyof LoginFormState,
-      value: string | boolean,
+      value: string | boolean
     ): string | undefined => {
       const fieldSchema =
         field === "email"
@@ -64,7 +66,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
 
       return undefined;
     },
-    [],
+    []
   );
 
   // Handler zmiany wartości pola
@@ -97,7 +99,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         });
       }
     },
-    [errors],
+    [errors]
   );
 
   // Handler blur dla walidacji
@@ -124,7 +126,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         });
       }
     },
-    [fields, validateField],
+    [fields, validateField]
   );
 
   // Handler submit formularza
@@ -155,7 +157,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         // Scroll do pierwszego błędu walidacji
         setTimeout(() => {
           const firstErrorElement = document.querySelector(
-            '[aria-invalid="true"]',
+            '[aria-invalid="true"]'
           );
           if (firstErrorElement) {
             firstErrorElement.scrollIntoView({
@@ -198,7 +200,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
           // Scroll do pierwszego błędu
           setTimeout(() => {
             const firstErrorElement = document.querySelector(
-              '[aria-invalid="true"], [role="alert"]',
+              '[aria-invalid="true"], [role="alert"]'
             );
             if (firstErrorElement) {
               firstErrorElement.scrollIntoView({
@@ -222,8 +224,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
           if (onSuccess) {
             onSuccess();
           } else {
-            // Kolejność operacji: setUser() → router.push() → router.refresh()
-            router.push("/");
+            router.push(basePath || "/");
             router.refresh();
           }
         }
@@ -250,7 +251,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         setIsLoading(false);
       }
     },
-    [fields, router, onSuccess, setUser],
+    [fields, router, onSuccess, setUser, basePath]
   );
 
   return {
