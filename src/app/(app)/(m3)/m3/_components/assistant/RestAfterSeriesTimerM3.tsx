@@ -14,13 +14,17 @@ export function RestAfterSeriesTimerM3({
   if (!restSeconds || restSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
 
-  let message: string;
+  let messageContent: React.ReactNode;
   if (isLastExercise) {
-    message = "End of workout";
+    messageContent = "End of workout";
   } else if (nextExerciseName?.trim()) {
-    message = `Get ready: ${nextExerciseName}`;
+    messageContent = (
+      <>
+        Get ready: <span className="font-bold">{nextExerciseName}</span>
+      </>
+    );
   } else {
-    message = "Get ready for the next exercise";
+    messageContent = "Get ready for the next exercise";
   }
 
   return (
@@ -56,7 +60,7 @@ export function RestAfterSeriesTimerM3({
         Skip break
       </Button>
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">{message}</p>
+        <p className="text-sm text-muted-foreground">{messageContent}</p>
       </div>
     </div>
   );
