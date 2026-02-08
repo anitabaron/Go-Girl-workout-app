@@ -2,8 +2,7 @@ import { AuthProvider } from "@/components/auth/auth-provider";
 import { createClient } from "@/db/supabase.server";
 import { DesignModeFooter } from "@/components/design-mode-footer";
 import { NavigationRail } from "./_components";
-/* m3.css ładowane na końcu w globals.css – stała kolejność po odświeżeniu */
-
+import "./m3.css";
 /**
  * M3 Layout – GSAP ScrollTrigger uses native scroll.
  */
