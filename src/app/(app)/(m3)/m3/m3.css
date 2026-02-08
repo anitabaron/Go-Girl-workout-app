@@ -51,8 +51,8 @@
 }
 
 /* ============================================
-     M3 COLOR TOKENS (light + dark, peach/pink family) – scoped to .ui-m3
-     ============================================ */
+   M3 COLOR TOKENS (light + dark, peach/pink family) – scoped to .ui-m3
+   ============================================ */
 .ui-m3 {
   /* Primary (from root for initial cascade; dark/light override below) */
   --m3-primary: var(--m3-raw-primary);
@@ -297,7 +297,7 @@
 }
 
 /* Hero - tonal primaryContainer (raw token so --m3-primary-container override never turns it white)
-     section selector + !important so global/base/Tailwind bg-* never overrides after hydration */
+   section selector + !important so global/base/Tailwind bg-* never overrides after hydration */
 .ui-m3 section.m3-surface-hero {
   background: var(--m3-raw-primary-container) !important;
   background-color: var(--m3-raw-primary-container) !important;
@@ -763,8 +763,8 @@ html:has(.ui-m3) {
 }
 
 /* ============================================
-     DARK MODE
-     ============================================ */
+   DARK MODE
+   ============================================ */
 /* Dark mode – only token overrides; shadcn mapping inherits from .ui-m3 */
 @media (prefers-color-scheme: dark) {
   .ui-m3:not(.light) {
