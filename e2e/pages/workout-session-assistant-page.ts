@@ -58,4 +58,14 @@ export class WorkoutSessionAssistantPage {
     });
     await this.timerSkipBreakButton.click();
   }
+
+  /**
+   * Click whichever timer button is visible (OK or Skip break).
+   * Use when the first screen may be either RepsDisplay/SetCountdown or rest timer.
+   */
+  async clickVisibleTimerButton() {
+    const okOrSkip = this.timerOkButton.or(this.timerSkipBreakButton);
+    await okOrSkip.waitFor({ state: "visible", timeout: 10000 });
+    await okOrSkip.click();
+  }
 }

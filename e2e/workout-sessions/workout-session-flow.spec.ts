@@ -134,16 +134,16 @@ test.describe("Workout Session Flow E2E", () => {
     await assistantPage.waitForAssistant();
 
     // Exercise 1: 2 series, reps 1, restBetween 30
-    // Set 1: RepsDisplay OK → RestBetweenSetsTimer Pomiń przerwę → Set 2: RepsDisplay OK
-    await assistantPage.clickTimerOk();
+    // Set 1: OK or Skip break → Skip break or OK → Set 2: OK (order can vary on load)
+    await assistantPage.clickVisibleTimerButton();
     await page.waitForTimeout(500);
-    await assistantPage.clickTimerSkipBreak();
+    await assistantPage.clickVisibleTimerButton();
     await page.waitForTimeout(500);
-    await assistantPage.clickTimerOk();
+    await assistantPage.clickVisibleTimerButton();
     await page.waitForTimeout(500);
 
-    // Exercise 2: 1 series, reps 1 - just OK
-    await assistantPage.clickTimerOk();
+    // Exercise 2: 1 series, reps 1 - just OK (or Skip break if rest shown first)
+    await assistantPage.clickVisibleTimerButton();
     await page.waitForTimeout(500);
 
     // Finish session

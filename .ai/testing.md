@@ -41,12 +41,31 @@ pnpm test:e2e:codegen
 # Run specific test file
 pnpm test:e2e e2e/workout-plans/workout-plan.spec.ts
 
-# Run all tests from a directory
-pnpm test:e2e e2e/workout-plans
-pnpm test:e2e e2e/exercises
+# Dostępne plany testów E2E (pojedyncze pliki)
+# Auth
+pnpm test:e2e e2e/auth/login.spec.ts
+# Exercises
+pnpm test:e2e e2e/exercises/add-exercise.spec.ts
+# Workout plans
+pnpm test:e2e e2e/workout-plans/workout-plan.spec.ts
+pnpm test:e2e e2e/workout-plans/create-workout-plan.spec.ts
+# Workout sessions
+pnpm test:e2e e2e/workout-sessions/workout-session-flow.spec.ts
 
-# Run multiple test files/directories
+# Run all tests from a directory (wszystkie specy w katalogu)
+# Auth – logowanie
+pnpm test:e2e e2e/auth
+# Exercises – ćwiczenia
+pnpm test:e2e e2e/exercises
+# Workout plans – plany treningowe
+pnpm test:e2e e2e/workout-plans
+# Workout sessions – sesje treningowe
+pnpm test:e2e e2e/workout-sessions
+
+# Run multiple test files/directories (kilka katalogów lub plików naraz)
 pnpm test:e2e e2e/workout-plans e2e/exercises
+pnpm test:e2e e2e/auth e2e/workout-sessions
+pnpm test:e2e e2e/workout-plans e2e/workout-sessions e2e/exercises
 ```
 
 ## Test Structure
