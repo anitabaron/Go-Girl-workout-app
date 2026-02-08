@@ -81,11 +81,14 @@
   --m3-radius-hero: 1.75rem; /* 28px - hero, major containers */
 
   /* Softer elevation - subtle, spread, not harsh */
-  --m3-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
-  --m3-shadow-2: 0 2px 4px -1px rgb(0 0 0 / 0.05),
-    0 4px 8px -2px rgb(0 0 0 / 0.05), 0 8px 16px -4px rgb(0 0 0 / 0.04);
-  --m3-shadow-hero: 0 4px 6px -2px rgb(0 0 0 / 0.05),
-    0 10px 20px -5px rgb(0 0 0 / 0.06), 0 20px 40px -10px rgb(0 0 0 / 0.05);
+  --m3-shadow-1:
+    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2:
+    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
+    0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-hero:
+    0 4px 6px -2px rgb(0 0 0 / 0.05), 0 10px 20px -5px rgb(0 0 0 / 0.06),
+    0 20px 40px -10px rgb(0 0 0 / 0.05);
 
   /* Focus ring - single source for button, card, input, select */
   --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
@@ -161,10 +164,14 @@
   --m3-spacing-16: 4rem;
 
   color-scheme: light;
+  background-color: var(--m3-surface);
 
   /* Smooth theme transition (light ↔ dark) */
-  transition: background-color 0.35s ease, color 0.35s ease,
-    border-color 0.35s ease, box-shadow 0.35s ease;
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
 
   display: flex;
   flex-direction: column;
@@ -181,8 +188,11 @@
 
 /* Theme transition – smooth switch for all color-using elements */
 .ui-m3 * {
-  transition: background-color 0.35s ease, color 0.35s ease,
-    border-color 0.35s ease, box-shadow 0.35s ease;
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
 }
 
 .ui-m3 .m3-hero {
@@ -286,11 +296,11 @@
   box-shadow: var(--m3-shadow-2);
 }
 
-/* Hero - tonal primaryContainer or surfaceContainerHigh
-   !important so global/base background (e.g. body/--background) never overrides after hydration */
-.ui-m3 .m3-surface-hero {
-  background: var(--m3-primary-container) !important;
-  background-color: var(--m3-primary-container) !important;
+/* Hero - tonal primaryContainer (raw token so --m3-primary-container override never turns it white)
+   section selector + !important so global/base/Tailwind bg-* never overrides after hydration */
+.ui-m3 section.m3-surface-hero {
+  background: var(--m3-raw-primary-container) !important;
+  background-color: var(--m3-raw-primary-container) !important;
   color: var(--m3-on-primary-container);
   border: 1px solid transparent;
   border-radius: var(--m3-radius-hero);
@@ -314,7 +324,10 @@
   font-weight: 600;
   border-radius: var(--m3-radius-lg);
   border: none;
-  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
 }
 
 .ui-m3 .m3-cta:hover {
@@ -330,7 +343,9 @@
 
 .ui-m3 .m3-cta:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--m3-surface), 0 0 0 5px var(--m3-primary);
+  box-shadow:
+    0 0 0 3px var(--m3-surface),
+    0 0 0 5px var(--m3-primary);
 }
 
 /* Shared surface container base – border, radius (DRY) */
@@ -375,7 +390,10 @@
   transform: none !important;
   box-shadow: none !important;
   margin: 0 !important;
-  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s,
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s,
     transform 0.15s;
 }
 
@@ -487,7 +505,10 @@
   border: 1px solid var(--m3-outline-variant) !important;
   border-radius: var(--m3-radius-large) !important;
   box-shadow: var(--m3-shadow-1) !important;
-  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    border-color 0.2s;
 }
 
 .ui-m3 [data-slot="card"]:hover {
@@ -516,7 +537,9 @@
   border-radius: var(--m3-radius-md) !important;
   color: var(--m3-on-surface) !important;
   box-shadow: none !important;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .ui-m3 [data-slot="input"]::placeholder {
@@ -538,7 +561,10 @@
   border-radius: var(--m3-radius-md) !important;
   color: var(--m3-on-surface) !important;
   box-shadow: none !important;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
 }
 
 .ui-m3 [data-slot="select-trigger"]:hover {
@@ -563,9 +589,11 @@ body:has(.ui-m3) {
   --m3-radius-md: 1rem;
   --m3-radius-sm: 0.75rem;
   --m3-radius-lg: 1.25rem;
-  --m3-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
-  --m3-shadow-2: 0 2px 4px -1px rgb(0 0 0 / 0.05),
-    0 4px 8px -2px rgb(0 0 0 / 0.05), 0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-1:
+    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2:
+    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
+    0 8px 16px -4px rgb(0 0 0 / 0.04);
   --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
 }
 
@@ -614,7 +642,10 @@ body:has(.ui-m3) [data-slot="alert-dialog-content"] [data-slot="button"] {
   border-radius: var(--m3-radius-lg) !important;
   transform: none !important;
   box-shadow: none !important;
-  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
 }
 
 body:has(.ui-m3)
@@ -748,16 +779,19 @@ html:has(.ui-m3) {
     --m3-on-surface-variant: var(--m3-raw-on-surface-variant-dark);
     --m3-surface-container: var(--m3-raw-surface-container-dark);
     --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
-    --m3-surface-container-highest: var(--m3-raw-surface-container-highest-dark);
+    --m3-surface-container-highest: var(
+      --m3-raw-surface-container-highest-dark
+    );
 
     --m3-outline: var(--m3-raw-outline-dark);
     --m3-outline-variant: var(--m3-raw-outline-variant-dark);
 
-    --m3-shadow-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
-    --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
-      0 4px 12px -2px rgb(0 0 0 / 0.25);
-    --m3-shadow-hero: 0 4px 8px -2px rgb(0 0 0 / 0.35),
-      0 12px 24px -6px rgb(0 0 0 / 0.3);
+    --m3-shadow-1:
+      0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --m3-shadow-2:
+      0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+    --m3-shadow-hero:
+      0 4px 8px -2px rgb(0 0 0 / 0.35), 0 12px 24px -6px rgb(0 0 0 / 0.3);
 
     --destructive: var(--m3-raw-destructive-dark);
     --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
@@ -780,16 +814,17 @@ html:has(.ui-m3) {
     );
   }
 
-  .ui-m3:not(.light) .m3-surface-hero {
-    background: var(--m3-primary-container);
+  .ui-m3:not(.light) section.m3-surface-hero {
+    background: var(--m3-raw-primary-container-dark) !important;
+    background-color: var(--m3-raw-primary-container-dark) !important;
     color: var(--m3-on-primary-container);
   }
 
-  .ui-m3:not(.light) .m3-surface-hero .text-foreground {
+  .ui-m3:not(.light) section.m3-surface-hero .text-foreground {
     color: var(--m3-on-primary-container);
   }
 
-  .ui-m3:not(.light) .m3-surface-hero .text-muted-foreground {
+  .ui-m3:not(.light) section.m3-surface-hero .text-muted-foreground {
     color: var(--m3-on-primary-container);
     opacity: 0.9;
   }
@@ -808,7 +843,7 @@ html:has(.ui-m3) {
     border-color: var(--m3-outline-variant);
   }
 
-  .ui-m3:not(.light) .m3-surface-hero .m3-chip {
+  .ui-m3:not(.light) section.m3-surface-hero .m3-chip {
     background: transparent;
     color: var(--m3-on-primary-container);
     border-color: var(--m3-on-primary-container);
@@ -822,8 +857,8 @@ html:has(.ui-m3) {
     --m3-outline-variant: var(--m3-raw-outline-variant-dark);
     --m3-primary-container: var(--m3-raw-primary-container-dark);
     --m3-on-primary-container: var(--m3-on-primary-container-from-root);
-    --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
-      0 4px 12px -2px rgb(0 0 0 / 0.25);
+    --m3-shadow-2:
+      0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
     --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
   }
 }
@@ -846,11 +881,14 @@ html:has(.ui-m3) {
   --m3-outline: var(--m3-raw-outline);
   --m3-outline-variant: var(--m3-raw-outline-variant);
 
-  --m3-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
-  --m3-shadow-2: 0 2px 4px -1px rgb(0 0 0 / 0.05),
-    0 4px 8px -2px rgb(0 0 0 / 0.05), 0 8px 16px -4px rgb(0 0 0 / 0.04);
-  --m3-shadow-hero: 0 4px 6px -2px rgb(0 0 0 / 0.05),
-    0 10px 20px -5px rgb(0 0 0 / 0.06), 0 20px 40px -10px rgb(0 0 0 / 0.05);
+  --m3-shadow-1:
+    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2:
+    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
+    0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-hero:
+    0 4px 6px -2px rgb(0 0 0 / 0.05), 0 10px 20px -5px rgb(0 0 0 / 0.06),
+    0 20px 40px -10px rgb(0 0 0 / 0.05);
 
   --destructive: var(--m3-raw-destructive);
   --destructive-foreground: var(--m3-raw-destructive-foreground);
@@ -875,10 +913,10 @@ html:has(.ui-m3) {
   --m3-outline-variant: var(--m3-raw-outline-variant-dark);
 
   --m3-shadow-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
-  --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
-    0 4px 12px -2px rgb(0 0 0 / 0.25);
-  --m3-shadow-hero: 0 4px 8px -2px rgb(0 0 0 / 0.35),
-    0 12px 24px -6px rgb(0 0 0 / 0.3);
+  --m3-shadow-2:
+    0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+  --m3-shadow-hero:
+    0 4px 8px -2px rgb(0 0 0 / 0.35), 0 12px 24px -6px rgb(0 0 0 / 0.3);
 
   --destructive: var(--m3-raw-destructive-dark);
   --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
@@ -906,7 +944,7 @@ body:has(.ui-m3.dark) {
   --m3-outline-variant: var(--m3-raw-outline-variant-dark);
   --m3-primary-container: var(--m3-raw-primary-container-dark);
   --m3-on-primary-container: var(--m3-on-primary-container-from-root);
-  --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
-    0 4px 12px -2px rgb(0 0 0 / 0.25);
+  --m3-shadow-2:
+    0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
   --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
 }

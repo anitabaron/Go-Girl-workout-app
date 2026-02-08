@@ -596,3 +596,6 @@ body {
   background-color: var(--brand-pink);
   color: var(--primary-foreground);
 }
+
+/* M3 – na końcu, żeby .ui-m3 i .m3-surface-hero nie były nadpisywane przez utilities */
+@import "./(app)/(m3)/m3/m3.css";
