@@ -1,7 +1,6 @@
 "use client";
 
 import { SetLogsListM3 } from "./SetLogsListM3";
-import { ExecutionSummaryDisplayM3 } from "./ExecutionSummaryDisplayM3";
 import { useExerciseExecutionForm } from "@/hooks/use-exercise-execution-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -24,7 +23,6 @@ export function ExerciseExecutionFormM3({
 }: Readonly<ExerciseExecutionFormM3Props>) {
   const {
     formData,
-    summaryValues,
     handlers: {
       handleSetAdd,
       handleSetUpdate,
@@ -50,11 +48,6 @@ export function ExerciseExecutionFormM3({
         showDuration={showDuration}
         showReps={exercise.planned_reps !== null && exercise.planned_reps > 0}
         isSkipped={formData.is_skipped}
-      />
-
-      <ExecutionSummaryDisplayM3
-        values={summaryValues}
-        showDuration={showDuration}
       />
 
       <div className="flex items-center gap-2 space-y-0">

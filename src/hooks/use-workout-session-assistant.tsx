@@ -142,6 +142,14 @@ export function useWorkoutSessionAssistant({
     }
   }, [autoPause, router, exitHref]);
 
+  const nextExerciseName =
+    session?.exercises?.[currentExerciseIndex + 1]?.exercise_title_at_time ??
+    null;
+
+  const exercisesLength = session?.exercises?.length ?? 0;
+  const isLastExercise =
+    exercisesLength > 0 && currentExerciseIndex === exercisesLength - 1;
+
   const exerciseTimerProps: ExerciseTimerProps | null = useMemo(
     () =>
       currentExercise
@@ -153,12 +161,16 @@ export function useWorkoutSessionAssistant({
             onRestBetweenComplete: handleRestBetweenComplete,
             onRestAfterSeriesComplete: handleRestAfterSeriesComplete,
             onRepsComplete: handleRepsComplete,
+            nextExerciseName,
+            isLastExercise,
           }
         : null,
     [
       currentExercise,
       currentSetNumber,
       isPaused,
+      nextExerciseName,
+      isLastExercise,
       handleSetComplete,
       handleRestBetweenComplete,
       handleRestAfterSeriesComplete,

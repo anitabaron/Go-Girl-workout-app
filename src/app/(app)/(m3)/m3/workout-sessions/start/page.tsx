@@ -20,33 +20,54 @@ export const metadata: Metadata = {
   description: "Select a workout plan or resume an existing session",
 };
 
-export default async function StartWorkoutSessionPage() {
-  const userId = await requireAuth();
-
-  let inProgressSession: SessionDetailDTO | null = null;
-
+async function fetchInProgressSession(
+  userId: string,
+): Promise<SessionDetailDTO | null> {
   try {
     const sessionsResult = await listWorkoutSessionsService(userId, {
       status: "in_progress",
       limit: 1,
     });
-
-    if (sessionsResult.items.length > 0) {
-      inProgressSession = await getWorkoutSessionService(
-        userId,
-        sessionsResult.items[0].id,
-      );
-    }
+    if (sessionsResult.items.length === 0) return null;
+    return getWorkoutSessionService(userId, sessionsResult.items[0].id);
   } catch (error) {
-    if (error instanceof ServiceError) {
-      if (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN") {
-        redirect("/login");
-      }
+    if (
+      error instanceof ServiceError &&
+      (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN")
+    ) {
+      redirect("/login");
     }
     console.error("Error fetching in-progress session:", error);
+    return null;
   }
+}
 
-  if (inProgressSession && inProgressSession.status === "in_progress") {
+async function fetchWorkoutPlansForStart(
+  userId: string,
+): Promise<Awaited<ReturnType<typeof listWorkoutPlansService>> | null> {
+  try {
+    return listWorkoutPlansService(userId, {
+      sort: "created_at",
+      order: "desc",
+      limit: 20,
+    });
+  } catch (error) {
+    if (
+      error instanceof ServiceError &&
+      (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN")
+    ) {
+      redirect("/login");
+    }
+    console.error("Error fetching workout plans:", error);
+    return null;
+  }
+}
+
+export default async function StartWorkoutSessionPage() {
+  const userId = await requireAuth();
+  const inProgressSession = await fetchInProgressSession(userId);
+
+  if (inProgressSession?.status === "in_progress") {
     return (
       <div className="space-y-8">
         <header>
@@ -72,25 +93,9 @@ export default async function StartWorkoutSessionPage() {
     );
   }
 
-  let plansResult: Awaited<ReturnType<typeof listWorkoutPlansService>> | null =
-    null;
+  const plansResult = await fetchWorkoutPlansForStart(userId);
 
-  try {
-    plansResult = await listWorkoutPlansService(userId, {
-      sort: "created_at",
-      order: "desc",
-      limit: 20,
-    });
-  } catch (error) {
-    if (error instanceof ServiceError) {
-      if (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN") {
-        redirect("/login");
-      }
-    }
-    console.error("Error fetching workout plans:", error);
-  }
-
-  if (!plansResult || plansResult.items.length === 0) {
+  if (!plansResult?.items.length) {
     return (
       <div className="space-y-8">
         <header>

@@ -37,7 +37,7 @@ export function CurrentExerciseInfoM3({
             variant="outline"
             className="border-[var(--m3-outline)] text-[var(--m3-on-surface-variant)]"
           >
-            Unilateral (first / second side)
+            Unilateral
           </Badge>
         )}
       </div>
@@ -75,29 +75,41 @@ export function CurrentExerciseInfoM3({
             </div>
           )}
 
-        {exercise.rest_in_between_seconds !== null &&
-          exercise.rest_in_between_seconds !== undefined && (
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Rest between sets
-              </p>
-              <p className="m3-title">
-                {formatDuration(exercise.rest_in_between_seconds)}
-              </p>
-            </div>
-          )}
+        {(exercise.planned_rest_seconds !== null &&
+          exercise.planned_rest_seconds !== undefined) ||
+        (exercise.rest_in_between_seconds !== null &&
+          exercise.rest_in_between_seconds !== undefined) ? (
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">
+              Planned rest
+            </p>
+            <p className="m3-title">
+              {formatDuration(
+                exercise.planned_rest_seconds ??
+                  exercise.rest_in_between_seconds ??
+                  0,
+              )}
+            </p>
+          </div>
+        ) : null}
 
-        {exercise.rest_after_series_seconds !== null &&
-          exercise.rest_after_series_seconds !== undefined && (
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Rest after completed sets
-              </p>
-              <p className="m3-title">
-                {formatDuration(exercise.rest_after_series_seconds)}
-              </p>
-            </div>
-          )}
+        {(exercise.planned_rest_after_series_seconds !== null &&
+          exercise.planned_rest_after_series_seconds !== undefined) ||
+        (exercise.rest_after_series_seconds !== null &&
+          exercise.rest_after_series_seconds !== undefined) ? (
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">
+              Planned rest after
+            </p>
+            <p className="m3-title">
+              {formatDuration(
+                exercise.planned_rest_after_series_seconds ??
+                  exercise.rest_after_series_seconds ??
+                  0,
+              )}
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -3,13 +3,18 @@
 import { useId } from "react";
 import { Input } from "@/components/ui/input";
 import type { PlannedParamsState } from "@/types/workout-plan-form";
-import { calculateEstimatedSetTimeSeconds } from "@/lib/exercises/estimated-set-time";
+import {
+  calculateEstimatedSetTimeSeconds,
+  getEstimatedSetTimeLabel,
+} from "@/lib/exercises/estimated-set-time";
 
 type PlannedParamsEditorM3Props = {
   params: PlannedParamsState;
   onChange: (field: string, value: number | null) => void;
   errors: Record<string, string>;
   disabled: boolean;
+  /** Czy ćwiczenie jest unilateralne (estimated set time ×2 dla czasu pracy). */
+  isUnilateral?: boolean;
   /** Prefix for data-test-id on each field (e.g. workout-plan-exercise-item-xxx) */
   "data-test-id-prefix"?: string;
 };
@@ -17,7 +22,7 @@ type PlannedParamsEditorM3Props = {
 const PLANNED_PARAMS_CONFIG: Array<{
   key: keyof PlannedParamsState;
   label: string;
-  labelFn?: (params: PlannedParamsState) => string;
+  labelFn?: (params: PlannedParamsState, isUnilateral?: boolean) => string;
   min: number;
   conditional?: (params: PlannedParamsState) => boolean;
 }> = [
@@ -48,18 +53,18 @@ const PLANNED_PARAMS_CONFIG: Array<{
   {
     key: "estimated_set_time_seconds",
     label: "Estimated set time (s)",
-    labelFn: (p) => {
-      const result = calculateEstimatedSetTimeSeconds({
-        series: p.planned_sets ?? "",
-        reps: p.planned_reps ?? null,
-        duration_seconds: p.planned_duration_seconds ?? null,
-        rest_in_between_seconds: p.planned_rest_seconds ?? null,
-        rest_after_series_seconds: p.planned_rest_after_series_seconds ?? null,
-      });
-      return result === null
-        ? "Estimated set time (s)"
-        : `Estimated set time (s) ≈ ${result} s`;
-    },
+    labelFn: (p, isUnilateral) =>
+      getEstimatedSetTimeLabel(
+        calculateEstimatedSetTimeSeconds({
+          series: p.planned_sets ?? "",
+          reps: p.planned_reps ?? null,
+          duration_seconds: p.planned_duration_seconds ?? null,
+          rest_in_between_seconds: p.planned_rest_seconds ?? null,
+          rest_after_series_seconds: p.planned_rest_after_series_seconds ?? null,
+          exercise_is_unilateral: isUnilateral ?? undefined,
+        }),
+        "s",
+      ),
     min: 1,
   },
 ];
@@ -133,6 +138,7 @@ export function PlannedParamsEditorM3({
   onChange,
   errors,
   disabled,
+  isUnilateral,
   "data-test-id-prefix": testIdPrefix,
 }: Readonly<PlannedParamsEditorM3Props>) {
   const firstRowFields = PLANNED_PARAMS_CONFIG.slice(0, 4);
@@ -145,7 +151,9 @@ export function PlannedParamsEditorM3({
     const error = errors[config.key];
     const keyKebab = config.key.replaceAll("_", "-");
     const dataTestId = testIdPrefix ? `${testIdPrefix}-${keyKebab}` : undefined;
-    const label = config.labelFn ? config.labelFn(params) : config.label;
+    const label = config.labelFn
+      ? config.labelFn(params, isUnilateral)
+      : config.label;
 
     return (
       <PlannedParamField

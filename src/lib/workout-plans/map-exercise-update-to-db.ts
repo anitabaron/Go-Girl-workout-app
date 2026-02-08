@@ -8,6 +8,7 @@ export type WorkoutPlanExerciseUpdateData =
     exercise_title?: string | null;
     exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
     exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+    exercise_is_unilateral?: boolean | null;
   };
 
 /**
@@ -29,18 +30,17 @@ export function mapExerciseUpdateToDb(
     updateData.exercise_title = exerciseUpdate.exercise_title ?? null;
   }
   if (exerciseUpdate.exercise_type !== undefined) {
-    updateData.exercise_type = exerciseUpdate.exercise_type as
-      | Database["public"]["Enums"]["exercise_type"]
-      | null;
+    updateData.exercise_type = exerciseUpdate.exercise_type;
   }
   if (exerciseUpdate.exercise_part !== undefined) {
-    updateData.exercise_part = exerciseUpdate.exercise_part as
-      | Database["public"]["Enums"]["exercise_part"]
-      | null;
+    updateData.exercise_part = exerciseUpdate.exercise_part;
+  }
+  if (exerciseUpdate.exercise_is_unilateral !== undefined) {
+    updateData.exercise_is_unilateral =
+      exerciseUpdate.exercise_is_unilateral ?? null;
   }
   if (exerciseUpdate.section_type !== undefined) {
-    updateData.section_type =
-      exerciseUpdate.section_type as Database["public"]["Enums"]["exercise_type"];
+    updateData.section_type = exerciseUpdate.section_type;
   }
   if (exerciseUpdate.section_order !== undefined) {
     updateData.section_order = exerciseUpdate.section_order;

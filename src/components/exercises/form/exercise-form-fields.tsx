@@ -215,16 +215,24 @@ export function ExerciseFormFields({
       "duration_seconds",
       "rest_in_between_seconds",
       "rest_after_series_seconds",
+      "is_unilateral",
     ],
   });
-  const [series, reps, duration_seconds, rest_in_between_seconds, rest_after_series_seconds] =
-    watched;
+  const [
+    series,
+    reps,
+    duration_seconds,
+    rest_in_between_seconds,
+    rest_after_series_seconds,
+    is_unilateral,
+  ] = watched;
   const estimatedResult = calculateEstimatedSetTimeSeconds({
     series: series ?? "",
     reps: reps ?? null,
     duration_seconds: duration_seconds ?? null,
     rest_in_between_seconds: rest_in_between_seconds ?? null,
     rest_after_series_seconds: rest_after_series_seconds ?? null,
+    exercise_is_unilateral: is_unilateral ?? undefined,
   });
 
   useEffect(() => {

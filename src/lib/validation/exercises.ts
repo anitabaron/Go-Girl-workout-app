@@ -1,8 +1,8 @@
 import { z } from "zod";
 
+import { EXERCISE_PART_VALUES } from "@/lib/constants";
 import type {
   ExerciseCreateCommand,
-  ExercisePart,
   ExerciseQueryParams,
   ExerciseType,
 } from "@/types";
@@ -10,13 +10,7 @@ import type {
 export const EXERCISE_MAX_LIMIT = 50;
 export const EXERCISE_DEFAULT_LIMIT = 50;
 
-export const exercisePartValues = [
-  "Legs",
-  "Core",
-  "Back",
-  "Arms",
-  "Chest",
-] as const satisfies ExercisePart[];
+export { EXERCISE_PART_VALUES as exercisePartValues } from "@/lib/constants";
 
 export const exerciseTypeValues = [
   "Warm-up",
@@ -55,7 +49,7 @@ const exerciseBaseSchema = z
   .object({
     title: titleSchema,
     types: z.array(z.enum(exerciseTypeValues)).min(1),
-    parts: z.array(z.enum(exercisePartValues)).min(1),
+    parts: z.array(z.enum(EXERCISE_PART_VALUES)).min(1),
     level: levelSchema,
     details: detailsSchema,
     is_unilateral: z.boolean().optional().default(false),
@@ -108,7 +102,7 @@ export const exerciseUpdateSchema = exerciseBaseSchema
 export const exerciseQuerySchema = z
   .object({
     search: z.string().trim().max(100).optional(),
-    part: z.enum(exercisePartValues).optional(),
+    part: z.enum(EXERCISE_PART_VALUES).optional(),
     type: z.enum(exerciseTypeValues).optional(),
     exercise_id: z.uuid().optional(),
     sort: z.enum(exerciseSortFields).default("created_at"),

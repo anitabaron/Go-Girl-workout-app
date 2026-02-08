@@ -10,6 +10,7 @@ import { ExerciseTimerM3 } from "./ExerciseTimerM3";
 import { NavigationButtonsM3 } from "./NavigationButtonsM3";
 import { AutosaveIndicatorM3 } from "./AutosaveIndicatorM3";
 import { ExitSessionButtonM3 } from "./ExitSessionButtonM3";
+import { AssistantExerciseListM3 } from "./AssistantExerciseListM3";
 
 export type WorkoutSessionAssistantM3Props = {
   readonly sessionId: string;
@@ -72,7 +73,7 @@ export function WorkoutSessionAssistantM3({
           errorMessage={autosaveError}
         />
 
-        <div className="flex-1 overflow-y-auto pb-[10.5rem] md:pb-0 md:pt-4">
+        <div className="flex-1 overflow-y-auto pb-[10.5rem] md:pb-24 md:pt-4">
           <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6">
             <WorkoutTimerM3
               activeDurationSeconds={session.active_duration_seconds ?? 0}
@@ -99,6 +100,11 @@ export function WorkoutSessionAssistantM3({
               exercise={currentExercise}
               onChange={setFormData}
               errors={formErrors}
+            />
+
+            <AssistantExerciseListM3
+              exercises={session.exercises}
+              currentExerciseIndex={currentExerciseIndex}
             />
           </div>
         </div>

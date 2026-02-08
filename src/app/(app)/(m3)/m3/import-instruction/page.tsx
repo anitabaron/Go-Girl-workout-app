@@ -66,8 +66,8 @@ export default function ImportInstructionPage() {
                           part
                         </code>{" "}
                         (&quot;Legs&quot; | &quot;Core&quot; | &quot;Back&quot;
-                        | &quot;Arms&quot; | &quot;Chest&quot; | null) – partia
-                        mięśniowa
+                        | &quot;Arms&quot; | &quot;Chest&quot; |
+                        &quot;Glutes&quot; | null) – partia mięśniowa
                       </li>
                     </ul>
                   </div>
@@ -150,7 +150,7 @@ export default function ImportInstructionPage() {
                   lub{" "}
                   <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
                     match_by_name
-                  </code>
+                  </code>{" "}
                   . Niewypełnione pola zostaną uzupełnione z bazy lub
                   wartościami domyślnymi.
                 </p>
@@ -232,6 +232,13 @@ export default function ImportInstructionPage() {
                         (number &gt; 0 | null) - szacowany czas wykonania serii
                         w sekundach (domyślnie z bazy:
                         estimated_set_time_seconds)
+                      </li>
+                      <li>
+                        <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                          exercise_is_unilateral
+                        </code>{" "}
+                        (boolean | null) – czy ćwiczenie jest jednostronne
+                        (domyślnie z bazy: is_unilateral)
                       </li>
                     </ul>
                     <p className="text-muted-foreground italic mt-2">
@@ -324,8 +331,8 @@ export default function ImportInstructionPage() {
                           exercise_part
                         </code>{" "}
                         (enum: &quot;Legs&quot; | &quot;Core&quot; |
-                        &quot;Back&quot; | &quot;Arms&quot; | &quot;Chest&quot;)
-                        - partia mięśniowa
+                        &quot;Back&quot; | &quot;Arms&quot; | &quot;Chest&quot;
+                        | &quot;Glutes&quot;) - partia mięśniowa
                       </li>
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
@@ -339,6 +346,12 @@ export default function ImportInstructionPage() {
                           exercise_details
                         </code>{" "}
                         (string, max 1000 znaków) - dodatkowe szczegóły
+                      </li>
+                      <li>
+                        <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                          exercise_is_unilateral
+                        </code>{" "}
+                        (boolean | null) – czy ćwiczenie jest jednostronne
                       </li>
                     </ul>
                   </div>

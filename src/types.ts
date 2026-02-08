@@ -123,6 +123,7 @@ export type WorkoutPlanExerciseInput = Omit<
   exercise_type?: ExerciseType | null;
   exercise_part?: ExercisePart | null;
   exercise_details?: string | null; // Opis ćwiczenia (z JSON importu)
+  exercise_is_unilateral?: boolean | null; // Dla snapshotów: czy ćwiczenie jest unilateralne
 };
 
 export type WorkoutPlanCreateCommand = Pick<

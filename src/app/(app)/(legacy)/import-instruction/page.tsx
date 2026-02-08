@@ -56,7 +56,8 @@ export default function ImportInstructionPage() {
                         </code>{" "}
                         (enum: &quot;Legs&quot; | &quot;Core&quot; |
                         &quot;Back&quot; | &quot;Arms&quot; | &quot;Chest&quot;
-                        | null, opcjonalne) - partia mięśniowa
+                        | &quot;Glutes&quot; | null, opcjonalne) - partia
+                        mięśniowa
                       </li>
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">
@@ -326,8 +327,8 @@ export default function ImportInstructionPage() {
                           exercise_part
                         </code>{" "}
                         (enum: &quot;Legs&quot; | &quot;Core&quot; |
-                        &quot;Back&quot; | &quot;Arms&quot; | &quot;Chest&quot;)
-                        - partia mięśniowa
+                        &quot;Back&quot; | &quot;Arms&quot; | &quot;Chest&quot;
+                        | &quot;Glutes&quot;) - partia mięśniowa
                       </li>
                       <li>
                         <code className="bg-white dark:bg-zinc-950 px-1 py-0.5 rounded">

@@ -38,7 +38,10 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
-import { calculateEstimatedSetTimeSeconds } from "@/lib/exercises/estimated-set-time";
+import {
+  calculateEstimatedSetTimeSeconds,
+  getEstimatedSetTimeLabel,
+} from "@/lib/exercises/estimated-set-time";
 import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
 import type { ExerciseDTO } from "@/types";
 
@@ -203,16 +206,24 @@ function ExerciseFormM3Fields({
       "duration_seconds",
       "rest_in_between_seconds",
       "rest_after_series_seconds",
+      "is_unilateral",
     ],
   });
-  const [series, reps, duration_seconds, rest_in_between_seconds, rest_after_series_seconds] =
-    watched;
+  const [
+    series,
+    reps,
+    duration_seconds,
+    rest_in_between_seconds,
+    rest_after_series_seconds,
+    is_unilateral,
+  ] = watched;
   const estimatedResult = calculateEstimatedSetTimeSeconds({
     series: series ?? "",
     reps: reps ?? null,
     duration_seconds: duration_seconds ?? null,
     rest_in_between_seconds: rest_in_between_seconds ?? null,
     rest_after_series_seconds: rest_after_series_seconds ?? null,
+    exercise_is_unilateral: is_unilateral ?? undefined,
   });
 
   useEffect(() => {
@@ -551,11 +562,7 @@ function ExerciseFormM3Fields({
           render={({ field }) => (
             <FormNumberInput
               id="estimated_set_time_seconds"
-              label={
-                estimatedResult === null
-                  ? "Estimated set time (sec)"
-                  : `Estimated set time (sec) ≈ ${estimatedResult} s`
-              }
+              label={getEstimatedSetTimeLabel(estimatedResult, "sec")}
               value={String(field.value ?? "")}
               onChange={field.onChange}
               onBlur={field.onBlur}

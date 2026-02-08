@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import { SetLogsListM3 } from "./assistant/SetLogsListM3";
-import { ExecutionSummaryDisplayM3 } from "./assistant/ExecutionSummaryDisplayM3";
 import { useExerciseExecutionForm } from "@/hooks/use-exercise-execution-form";
 import { patchWorkoutSessionExercise } from "@/lib/api/workout-sessions";
 import { formDataToAutosaveCommand } from "@/types/workout-session-assistant";
@@ -35,7 +34,6 @@ export function WorkoutSessionExerciseItemEditableM3({
 
   const {
     formData,
-    summaryValues,
     handlers: {
       handleSetAdd,
       handleSetUpdate,
@@ -109,11 +107,6 @@ export function WorkoutSessionExerciseItemEditableM3({
             showDuration={showDuration}
             showReps={showReps}
             isSkipped={formData.is_skipped}
-          />
-
-          <ExecutionSummaryDisplayM3
-            values={summaryValues}
-            showDuration={showDuration}
           />
 
           <div className="mt-4 flex items-center gap-2">

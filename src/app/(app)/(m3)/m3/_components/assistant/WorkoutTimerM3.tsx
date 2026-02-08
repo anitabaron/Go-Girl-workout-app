@@ -4,11 +4,6 @@ import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { useUnilateralDisplay } from "./UnilateralDisplayContext";
 
-const SIDE_LABELS: Record<string, string> = {
-  one_side: "first side",
-  other_side: "second side",
-};
-
 type WorkoutTimerM3Props = {
   activeDurationSeconds: number;
   lastTimerStartedAt: string | null;
@@ -35,10 +30,6 @@ export function WorkoutTimerM3({
   onTimerStop,
 }: Readonly<WorkoutTimerM3Props>) {
   const unilateralDisplay = useUnilateralDisplay();
-  const setLabel = useMemo(() => {
-    if (!unilateralDisplay?.displayInfo?.side) return null;
-    return SIDE_LABELS[unilateralDisplay.displayInfo.side] ?? null;
-  }, [unilateralDisplay?.displayInfo?.side]);
   const displaySetNumber =
     unilateralDisplay?.displayInfo?.displaySetNumber ?? currentSetNumber;
 
@@ -128,10 +119,7 @@ export function WorkoutTimerM3({
           )}
         </CountdownCircleTimer>
         <div className="text-center">
-          <h3 className="m3-title">
-            Set {displaySetNumber}
-            {setLabel ? ` (${setLabel})` : ""}
-          </h3>
+          <h3 className="m3-title">Set {displaySetNumber}</h3>
         </div>
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
@@ -148,10 +136,7 @@ export function WorkoutTimerM3({
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       <div className="text-center">
-        <h3 className="m3-title">
-          Set {displaySetNumber}
-          {setLabel ? ` (${setLabel})` : ""}
-        </h3>
+        <h3 className="m3-title">Set {displaySetNumber}</h3>
       </div>
       {exerciseTimerContent}
       <div

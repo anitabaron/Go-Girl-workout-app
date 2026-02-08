@@ -1,6 +1,19 @@
 import type { ExercisePart, ExerciseType } from "@/types";
 
 /**
+ * Dozwolone wartości części ciała (workout part / exercise part).
+ * Używane w: planach treningowych (part), ćwiczeniach (part/parts), imporcie JSON (part, exercise_part).
+ */
+export const EXERCISE_PART_VALUES = [
+  "Legs",
+  "Core",
+  "Back",
+  "Arms",
+  "Chest",
+  "Glutes",
+] as const satisfies ExercisePart[];
+
+/**
  * Etykiety części ciała (ExercisePart) w języku angielskim.
  */
 export const EXERCISE_PART_LABELS: Record<ExercisePart, string> = {
@@ -9,6 +22,7 @@ export const EXERCISE_PART_LABELS: Record<ExercisePart, string> = {
   Back: "Back",
   Arms: "Arms",
   Chest: "Chest",
+  Glutes: "Glutes",
 };
 
 /**
@@ -42,9 +56,6 @@ export const EXERCISE_TYPE_BADGE_CLASSES: Record<ExerciseType, string> = {
 export const DEFAULT_EXERCISE_VALUE = {
   section_type: EXERCISE_TYPE_VALUES[1], // "Main Workout"
   planned_sets: 3,
-  planned_reps: 10,
-  planned_duration_seconds: null,
-  planned_rest_seconds: 60,
-  planned_rest_after_series_seconds: 120,
+  planned_rest_after_series_seconds: 60,
   estimated_set_time_seconds: 360,
 };

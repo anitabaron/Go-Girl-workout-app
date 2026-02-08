@@ -561,6 +561,9 @@ function createSessionSnapshots(
       exercisePart = planExercise.exercise_part ?? "Legs";
       exerciseId = null;
     }
+    // Plan (import/edytor) ma pierwszeństwo dla unilateral
+    exerciseIsUnilateral =
+      planExercise.exercise_is_unilateral ?? exerciseIsUnilateral;
 
     // Użyj planned_* z planu, jeśli dostępne
     const plannedSets = planExercise.planned_sets ?? null;

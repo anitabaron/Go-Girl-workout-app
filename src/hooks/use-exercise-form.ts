@@ -23,7 +23,7 @@ type UseExerciseFormProps = {
 
 function toFormArray(
   arr: string[] | undefined,
-  fallback: string | undefined
+  fallback: string | undefined,
 ): string[] {
   if (arr?.length) return [...arr];
   if (fallback) return [fallback];
@@ -69,29 +69,25 @@ function dtoToFormValues(dto?: ExerciseDTO): ExerciseFormValues {
         estimated_set_time_seconds: "",
       };
 
-  const d = DEFAULT_EXERCISE_VALUE;
-  const typesDefault = [d.section_type] as ExerciseFormValues["types"];
-  const needsOneMetric =
-    (raw.reps === "" || raw.reps == null) &&
-    (raw.duration_seconds === "" || raw.duration_seconds == null);
+  const defaultValues = DEFAULT_EXERCISE_VALUE;
+  const typesDefault = [
+    defaultValues.section_type,
+  ] as ExerciseFormValues["types"];
 
   return {
     ...raw,
     types: applyDefaultIfEmpty(raw.types, typesDefault),
-    series: applyDefaultIfEmpty(raw.series, String(d.planned_sets)),
-    reps: needsOneMetric ? String(d.planned_reps) : raw.reps,
+    series: applyDefaultIfEmpty(raw.series, String(defaultValues.planned_sets)),
+    reps: raw.reps,
     duration_seconds: raw.duration_seconds,
-    rest_in_between_seconds: applyDefaultIfEmpty(
-      raw.rest_in_between_seconds,
-      String(d.planned_rest_seconds)
-    ),
+    rest_in_between_seconds: raw.rest_in_between_seconds,
     rest_after_series_seconds: applyDefaultIfEmpty(
       raw.rest_after_series_seconds,
-      String(d.planned_rest_after_series_seconds)
+      String(defaultValues.planned_rest_after_series_seconds),
     ),
     estimated_set_time_seconds: applyDefaultIfEmpty(
       raw.estimated_set_time_seconds,
-      String(d.estimated_set_time_seconds)
+      String(defaultValues.estimated_set_time_seconds),
     ),
   };
 }
@@ -121,7 +117,7 @@ export function useExerciseForm({
 
   const form = useForm<ExerciseFormValues>({
     resolver: zodResolver(
-      exerciseFormSchema
+      exerciseFormSchema,
     ) as unknown as Resolver<ExerciseFormValues>,
     defaultValues: dtoToFormValues(initialData),
   });
@@ -131,7 +127,7 @@ export function useExerciseForm({
 
   const onSubmit = async (data: unknown) => {
     const command = formValuesToCommand(
-      data as Parameters<typeof formValuesToCommand>[0]
+      data as Parameters<typeof formValuesToCommand>[0],
     );
     const url =
       mode === "create"
@@ -155,7 +151,7 @@ export function useExerciseForm({
         const { fieldErrors, formErrors } = parseApiValidationErrors(
           errorData.message,
           errorData.details,
-          EXERCISE_FIELD_MAPPING
+          EXERCISE_FIELD_MAPPING,
         );
         setFormErrors(formErrors);
         for (const [field, message] of Object.entries(fieldErrors)) {

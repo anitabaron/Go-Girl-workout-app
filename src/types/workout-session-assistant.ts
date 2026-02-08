@@ -80,6 +80,10 @@ export type ExerciseTimerProps = {
   onRestBetweenComplete: () => void;
   onRestAfterSeriesComplete: () => void;
   onRepsComplete: () => void;
+  /** Nazwa kolejnego ćwiczenia (przekazywana do timera przerwy po seriach). */
+  nextExerciseName?: string | null;
+  /** Czy to ostatnie ćwiczenie w treningu. */
+  isLastExercise?: boolean;
 };
 
 /**
@@ -123,6 +127,10 @@ export type RestAfterSeriesTimerProps = {
   restSeconds: number;
   isPaused: boolean;
   onComplete: () => void;
+  /** Nazwa kolejnego ćwiczenia (np. do komunikatu "Get ready: …"). */
+  nextExerciseName?: string | null;
+  /** Czy to ostatnie ćwiczenie w treningu (wyświetl "End of workout"). */
+  isLastExercise?: boolean;
 };
 
 /**

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useState, useEffect } from "react";
+import { useMemo, useCallback, useState, useEffect, startTransition } from "react";
 import type {
   ExerciseTimerProps,
   UnilateralSide,
@@ -16,7 +16,8 @@ type UnilateralPhase = "one_side" | "other_side";
 
 /**
  * M3 version of ExerciseTimer – manages timer state and transitions.
- * For unilateral exercises: displays one_side phases (with autosave) then other_side phases (display only, no autosave).
+ * For unilateral exercises: per set shows first side (updates form) → second side (display only) → rest.
+ * Records and form updates only for first side.
  */
 export function ExerciseTimerM3({
   exercise,
@@ -26,6 +27,8 @@ export function ExerciseTimerM3({
   onRestBetweenComplete,
   onRestAfterSeriesComplete,
   onRepsComplete,
+  nextExerciseName,
+  isLastExercise,
 }: Readonly<ExerciseTimerProps>) {
   const { setDisplayInfo } = useUnilateralDisplay() ?? {};
   const isUnilateral = exercise.exercise_is_unilateral_at_time ?? false;
@@ -33,42 +36,20 @@ export function ExerciseTimerM3({
 
   const [unilateralPhase, setUnilateralPhase] =
     useState<UnilateralPhase>("one_side");
-  const [unilateralDisplaySetIndex, setUnilateralDisplaySetIndex] = useState(1);
 
-  const effectiveSetNumber =
-    isUnilateral && unilateralPhase === "other_side"
-      ? unilateralDisplaySetIndex
-      : currentSetNumber;
+  const effectiveSetNumber = currentSetNumber;
+
+  // When set advances (after rest between), show first side again for the new set.
+  // Defer setState to avoid synchronous setState in effect (React compiler rule).
+  useEffect(() => {
+    startTransition(() => setUnilateralPhase("one_side"));
+  }, [currentSetNumber]);
 
   const wrappedOnRestBetweenComplete = useCallback(() => {
-    if (
-      isUnilateral &&
-      unilateralPhase === "one_side" &&
-      currentSetNumber >= plannedSets
-    ) {
-      setUnilateralPhase("other_side");
-      setUnilateralDisplaySetIndex(1);
-      return;
-    }
-    if (
-      isUnilateral &&
-      unilateralPhase === "other_side" &&
-      unilateralDisplaySetIndex < plannedSets
-    ) {
-      setUnilateralDisplaySetIndex((i) => i + 1);
-      return;
-    }
     onRestBetweenComplete();
-  }, [
-    isUnilateral,
-    unilateralPhase,
-    unilateralDisplaySetIndex,
-    currentSetNumber,
-    plannedSets,
-    onRestBetweenComplete,
-  ]);
+  }, [onRestBetweenComplete]);
 
-  const { timerState, startRestBetweenTimer, startRestAfterSeriesTimer } =
+  const { timerState, startSetTimer, startRestBetweenTimer, startRestAfterSeriesTimer } =
     useExerciseTimer(
       exercise,
       effectiveSetNumber,
@@ -128,13 +109,22 @@ export function ExerciseTimerM3({
       onSetComplete();
     }
 
-    if (isOtherSide && isLastSet) {
-      startRestAfterSeriesTimer();
-    } else if (isOtherSide && !isLastSet) {
-      startRestBetweenTimer();
-    } else if (!isOtherSide && isLastSet && isUnilateral) {
-      startRestBetweenTimer();
-    } else if (!isOtherSide && isLastSet) {
+    if (isOtherSide) {
+      if (isLastSet) {
+        startRestAfterSeriesTimer();
+      } else {
+        startRestBetweenTimer();
+      }
+      return;
+    }
+
+    if (isUnilateral) {
+      setUnilateralPhase("other_side");
+      startSetTimer();
+      return;
+    }
+
+    if (isLastSet) {
       startRestAfterSeriesTimer();
     } else {
       startRestBetweenTimer();
@@ -145,6 +135,7 @@ export function ExerciseTimerM3({
     isUnilateral,
     unilateralPhase,
     onSetComplete,
+    startSetTimer,
     startRestBetweenTimer,
     startRestAfterSeriesTimer,
   ]);
@@ -157,13 +148,21 @@ export function ExerciseTimerM3({
       onRepsComplete();
     }
 
-    if (isOtherSide && isLastSet) {
-      startRestAfterSeriesTimer();
-    } else if (isOtherSide && !isLastSet) {
-      startRestBetweenTimer();
-    } else if (!isOtherSide && isLastSet && isUnilateral) {
-      startRestBetweenTimer();
-    } else if (!isOtherSide && isLastSet) {
+    if (isOtherSide) {
+      if (isLastSet) {
+        startRestAfterSeriesTimer();
+      } else {
+        startRestBetweenTimer();
+      }
+      return;
+    }
+
+    if (isUnilateral) {
+      setUnilateralPhase("other_side");
+      return;
+    }
+
+    if (isLastSet) {
       startRestAfterSeriesTimer();
     } else {
       startRestBetweenTimer();
@@ -217,6 +216,8 @@ export function ExerciseTimerM3({
           restSeconds={timerState.remainingSeconds}
           isPaused={isPaused}
           onComplete={onRestAfterSeriesComplete}
+          nextExerciseName={nextExerciseName}
+          isLastExercise={isLastExercise}
         />
       );
     default:

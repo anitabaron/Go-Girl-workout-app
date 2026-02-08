@@ -218,6 +218,7 @@ export function WorkoutPlanExerciseItemM3({
             onChange={(field, value) => onChange({ [field]: value })}
             errors={plannedParamsErrors}
             disabled={disabled}
+            isUnilateral={exercise.exercise_is_unilateral}
             data-test-id-prefix={exerciseTestId}
           />
         </div>
