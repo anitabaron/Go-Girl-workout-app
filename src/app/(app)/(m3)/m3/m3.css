@@ -6,30 +6,71 @@
  */
 
 /* ============================================
-   M3 COLOR TOKENS (light + dark, peach/pink family)
+   M3 RAW HEX PALETTE – only on :root so body (portals) can use var(--m3-raw-*).
+   Light/dark use separate vars when the same hex has different roles.
    ============================================ */
-/* Primary + primary-container – single source on :root (#fcdce0) */
 :root {
-  --m3-primary: #c3021c;
-  --m3-on-primary: #ffffff;
-  --m3-primary-container: #fcdce0;
-  /* alias so dark mode can use root value for on-primary-container */
-  --m3-on-primary-container-from-root: var(--m3-primary-container);
-  --m3-on-primary-container: #5c282c;
+  /* Light theme hex values */
+  --m3-raw-surface: #fafafa;
+  --m3-raw-on-surface: #1c1b1f;
+  --m3-raw-on-surface-variant: #49454f;
+  --m3-raw-surface-container: #f5f0ef;
+  --m3-raw-surface-container-high: #f0e9e7;
+  --m3-raw-surface-container-highest: #ebe3e0;
+  --m3-raw-outline: #79747e;
+  --m3-raw-outline-variant: #cac4d0;
+  --m3-raw-primary: #c3021c;
+  --m3-raw-on-primary: #ffffff;
+  --m3-raw-primary-container: #fcdce0;
+  --m3-raw-on-primary-container: #5c282c;
+  --m3-raw-primary-override: #e07d8a; /* portal / .ui-m3.light primary */
+  --m3-raw-destructive: #b3261e;
+  --m3-raw-destructive-foreground: #ffffff;
+  --m3-raw-chart-2: #7d5260;
+  --m3-raw-chart-3: #79747e;
+  --m3-raw-chart-4: #49454f;
+  --m3-raw-chart-5: #938f99;
+
+  /* Dark theme hex values (same hex in both themes = separate vars) */
+  --m3-raw-surface-dark: #1c1b1f;
+  --m3-raw-on-surface-dark: #e6e1e5;
+  --m3-raw-on-surface-variant-dark: #cac4d0;
+  --m3-raw-surface-container-dark: #221f1e;
+  --m3-raw-surface-container-high-dark: #2c2827;
+  --m3-raw-surface-container-highest-dark: #373230;
+  --m3-raw-outline-dark: #938f99;
+  --m3-raw-outline-variant-dark: #49454f;
+  --m3-raw-primary-dark: #f19da4;
+  --m3-raw-on-primary-dark: #5c282c;
+  --m3-raw-primary-container-dark: #8b4a52;
+  --m3-raw-destructive-dark: #f2b8b5;
+  --m3-raw-destructive-foreground-dark: #601410;
+
+  /* Alias for dark mode (body/portals need this; they don't inherit from .ui-m3) */
+  --m3-on-primary-container-from-root: var(--m3-raw-primary-container);
 }
 
+/* ============================================
+   M3 COLOR TOKENS (light + dark, peach/pink family) – scoped to .ui-m3
+   ============================================ */
 .ui-m3 {
+  /* Primary (from root for initial cascade; dark/light override below) */
+  --m3-primary: var(--m3-raw-primary);
+  --m3-on-primary: var(--m3-raw-on-primary);
+  --m3-primary-container: var(--m3-raw-primary-container);
+  --m3-on-primary-container: var(--m3-raw-on-primary-container);
+
   /* Surfaces - tonal hierarchy (slightly warmed) */
-  --m3-surface: #fafafa;
-  --m3-on-surface: #1c1b1f;
-  --m3-on-surface-variant: #49454f;
-  --m3-surface-container: #f5f0ef;
-  --m3-surface-container-high: #f0e9e7;
-  --m3-surface-container-highest: #ebe3e0;
+  --m3-surface: var(--m3-raw-surface);
+  --m3-on-surface: var(--m3-raw-on-surface);
+  --m3-on-surface-variant: var(--m3-raw-on-surface-variant);
+  --m3-surface-container: var(--m3-raw-surface-container);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high);
+  --m3-surface-container-highest: var(--m3-raw-surface-container-highest);
 
   /* Outline */
-  --m3-outline: #79747e;
-  --m3-outline-variant: #cac4d0;
+  --m3-outline: var(--m3-raw-outline);
+  --m3-outline-variant: var(--m3-raw-outline-variant);
 
   /* Large surface radius (24–28px) */
   --m3-radius-sm: 0.75rem;
@@ -77,16 +118,16 @@
   --muted-foreground: var(--m3-on-surface-variant);
   --accent: var(--m3-primary-container);
   --accent-foreground: var(--m3-on-primary-container);
-  --destructive: #b3261e;
-  --destructive-foreground: #ffffff;
+  --destructive: var(--m3-raw-destructive);
+  --destructive-foreground: var(--m3-raw-destructive-foreground);
   --border: var(--m3-outline-variant);
   --input: var(--m3-outline-variant);
   --ring: var(--m3-primary);
   --chart-1: var(--m3-primary);
-  --chart-2: #7d5260;
-  --chart-3: #79747e;
-  --chart-4: #49454f;
-  --chart-5: #938f99;
+  --chart-2: var(--m3-raw-chart-2);
+  --chart-3: var(--m3-raw-chart-3);
+  --chart-4: var(--m3-raw-chart-4);
+  --chart-5: var(--m3-raw-chart-5);
   --sidebar: var(--m3-surface-container);
   --sidebar-foreground: var(--m3-on-surface);
   --sidebar-primary: var(--m3-primary);
@@ -245,9 +286,11 @@
   box-shadow: var(--m3-shadow-2);
 }
 
-/* Hero - tonal primaryContainer or surfaceContainerHigh */
+/* Hero - tonal primaryContainer or surfaceContainerHigh
+   !important so global/base background (e.g. body/--background) never overrides after hydration */
 .ui-m3 .m3-surface-hero {
-  background: var(--m3-primary-container);
+  background: var(--m3-primary-container) !important;
+  background-color: var(--m3-primary-container) !important;
   color: var(--m3-on-primary-container);
   border: 1px solid transparent;
   border-radius: var(--m3-radius-hero);
@@ -509,14 +552,14 @@
 
 /* Portal (Select, Dialog, Sheet) renders outside .ui-m3 – body gets M3 vars for inheritance */
 body:has(.ui-m3) {
-  --m3-surface: #fafafa;
-  --m3-surface-container-high: #f0e9e7;
-  --m3-on-surface: #1c1b1f;
-  --m3-outline: #79747e;
-  --m3-outline-variant: #cac4d0;
-  --m3-primary: #e07d8a;
+  --m3-surface: var(--m3-raw-surface);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high);
+  --m3-on-surface: var(--m3-raw-on-surface);
+  --m3-outline: var(--m3-raw-outline);
+  --m3-outline-variant: var(--m3-raw-outline-variant);
+  --m3-primary: var(--m3-raw-primary-override);
   --m3-primary-container: var(--m3-primary-container);
-  --m3-on-primary-container: #5c282c;
+  --m3-on-primary-container: var(--m3-raw-on-primary-container);
   --m3-radius-md: 1rem;
   --m3-radius-sm: 0.75rem;
   --m3-radius-lg: 1.25rem;
@@ -695,20 +738,20 @@ html:has(.ui-m3) {
 @media (prefers-color-scheme: dark) {
   .ui-m3:not(.light) {
     color-scheme: dark;
-    --m3-primary: #f19da4;
-    --m3-on-primary: #5c282c;
-    --m3-primary-container: #8b4a52;
+    --m3-primary: var(--m3-raw-primary-dark);
+    --m3-on-primary: var(--m3-raw-on-primary-dark);
+    --m3-primary-container: var(--m3-raw-primary-container-dark);
     --m3-on-primary-container: var(--m3-primary-container);
 
-    --m3-surface: #1c1b1f;
-    --m3-on-surface: #e6e1e5;
-    --m3-on-surface-variant: #cac4d0;
-    --m3-surface-container: #221f1e;
-    --m3-surface-container-high: #2c2827;
-    --m3-surface-container-highest: #373230;
+    --m3-surface: var(--m3-raw-surface-dark);
+    --m3-on-surface: var(--m3-raw-on-surface-dark);
+    --m3-on-surface-variant: var(--m3-raw-on-surface-variant-dark);
+    --m3-surface-container: var(--m3-raw-surface-container-dark);
+    --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
+    --m3-surface-container-highest: var(--m3-raw-surface-container-highest-dark);
 
-    --m3-outline: #938f99;
-    --m3-outline-variant: #49454f;
+    --m3-outline: var(--m3-raw-outline-dark);
+    --m3-outline-variant: var(--m3-raw-outline-variant-dark);
 
     --m3-shadow-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
     --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
@@ -716,8 +759,8 @@ html:has(.ui-m3) {
     --m3-shadow-hero: 0 4px 8px -2px rgb(0 0 0 / 0.35),
       0 12px 24px -6px rgb(0 0 0 / 0.3);
 
-    --destructive: #f2b8b5;
-    --destructive-foreground: #601410;
+    --destructive: var(--m3-raw-destructive-dark);
+    --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
 
     --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
     --m3-button-default-active: color-mix(
@@ -772,12 +815,12 @@ html:has(.ui-m3) {
   }
 
   body:has(.ui-m3):not(:has(.ui-m3.light)) {
-    --m3-surface: #1c1b1f;
-    --m3-primary: #f19da4;
-    --m3-surface-container-high: #2c2827;
-    --m3-on-surface: #e6e1e5;
-    --m3-outline-variant: #49454f;
-    --m3-primary-container: #8b4a52;
+    --m3-surface: var(--m3-raw-surface-dark);
+    --m3-primary: var(--m3-raw-primary-dark);
+    --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
+    --m3-on-surface: var(--m3-raw-on-surface-dark);
+    --m3-outline-variant: var(--m3-raw-outline-variant-dark);
+    --m3-primary-container: var(--m3-raw-primary-container-dark);
     --m3-on-primary-container: var(--m3-on-primary-container-from-root);
     --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
       0 4px 12px -2px rgb(0 0 0 / 0.25);
@@ -788,20 +831,20 @@ html:has(.ui-m3) {
 /* Light mode – manual override (same tokens as .ui-m3 base; no shadcn mapping repeat) */
 .ui-m3.light {
   color-scheme: light;
-  --m3-primary: #e07d8a;
-  --m3-on-primary: #ffffff;
+  --m3-primary: var(--m3-raw-primary-override);
+  --m3-on-primary: var(--m3-raw-on-primary);
   --m3-primary-container: var(--m3-primary-container);
-  --m3-on-primary-container: #5c282c;
+  --m3-on-primary-container: var(--m3-raw-on-primary-container);
 
-  --m3-surface: #fafafa;
-  --m3-on-surface: #1c1b1f;
-  --m3-on-surface-variant: #49454f;
-  --m3-surface-container: #f5f0ef;
-  --m3-surface-container-high: #f0e9e7;
-  --m3-surface-container-highest: #ebe3e0;
+  --m3-surface: var(--m3-raw-surface);
+  --m3-on-surface: var(--m3-raw-on-surface);
+  --m3-on-surface-variant: var(--m3-raw-on-surface-variant);
+  --m3-surface-container: var(--m3-raw-surface-container);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high);
+  --m3-surface-container-highest: var(--m3-raw-surface-container-highest);
 
-  --m3-outline: #79747e;
-  --m3-outline-variant: #cac4d0;
+  --m3-outline: var(--m3-raw-outline);
+  --m3-outline-variant: var(--m3-raw-outline-variant);
 
   --m3-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
   --m3-shadow-2: 0 2px 4px -1px rgb(0 0 0 / 0.05),
@@ -809,27 +852,27 @@ html:has(.ui-m3) {
   --m3-shadow-hero: 0 4px 6px -2px rgb(0 0 0 / 0.05),
     0 10px 20px -5px rgb(0 0 0 / 0.06), 0 20px 40px -10px rgb(0 0 0 / 0.05);
 
-  --destructive: #b3261e;
-  --destructive-foreground: #ffffff;
+  --destructive: var(--m3-raw-destructive);
+  --destructive-foreground: var(--m3-raw-destructive-foreground);
 }
 
 /* Dark mode – manual toggle; only tokens + button vars (shadcn mapping inherited) */
 .ui-m3.dark {
   color-scheme: dark;
-  --m3-primary: #f19da4;
-  --m3-on-primary: #5c282c;
-  --m3-primary-container: #8b4a52;
+  --m3-primary: var(--m3-raw-primary-dark);
+  --m3-on-primary: var(--m3-raw-on-primary-dark);
+  --m3-primary-container: var(--m3-raw-primary-container-dark);
   --m3-on-primary-container: var(--m3-on-primary-container-from-root);
 
-  --m3-surface: #1c1b1f;
-  --m3-on-surface: #e6e1e5;
-  --m3-on-surface-variant: #cac4d0;
-  --m3-surface-container: #221f1e;
-  --m3-surface-container-high: #2c2827;
-  --m3-surface-container-highest: #373230;
+  --m3-surface: var(--m3-raw-surface-dark);
+  --m3-on-surface: var(--m3-raw-on-surface-dark);
+  --m3-on-surface-variant: var(--m3-raw-on-surface-variant-dark);
+  --m3-surface-container: var(--m3-raw-surface-container-dark);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
+  --m3-surface-container-highest: var(--m3-raw-surface-container-highest-dark);
 
-  --m3-outline: #938f99;
-  --m3-outline-variant: #49454f;
+  --m3-outline: var(--m3-raw-outline-dark);
+  --m3-outline-variant: var(--m3-raw-outline-variant-dark);
 
   --m3-shadow-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
   --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
@@ -837,8 +880,8 @@ html:has(.ui-m3) {
   --m3-shadow-hero: 0 4px 8px -2px rgb(0 0 0 / 0.35),
     0 12px 24px -6px rgb(0 0 0 / 0.3);
 
-  --destructive: #f2b8b5;
-  --destructive-foreground: #601410;
+  --destructive: var(--m3-raw-destructive-dark);
+  --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
 
   --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
   --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 80%, white);
@@ -856,12 +899,12 @@ html:has(.ui-m3) {
 
 /* Portal – dark vars on body for manual dark toggle */
 body:has(.ui-m3.dark) {
-  --m3-surface: #1c1b1f;
-  --m3-primary: #f19da4;
-  --m3-surface-container-high: #2c2827;
-  --m3-on-surface: #e6e1e5;
-  --m3-outline-variant: #49454f;
-  --m3-primary-container: #8b4a52;
+  --m3-surface: var(--m3-raw-surface-dark);
+  --m3-primary: var(--m3-raw-primary-dark);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
+  --m3-on-surface: var(--m3-raw-on-surface-dark);
+  --m3-outline-variant: var(--m3-raw-outline-variant-dark);
+  --m3-primary-container: var(--m3-raw-primary-container-dark);
   --m3-on-primary-container: var(--m3-on-primary-container-from-root);
   --m3-shadow-2: 0 2px 6px -1px rgb(0 0 0 / 0.35),
     0 4px 12px -2px rgb(0 0 0 / 0.25);
