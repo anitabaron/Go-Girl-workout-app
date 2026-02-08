@@ -114,10 +114,8 @@ export class WorkoutPlansPage {
       return;
     }
 
-    // Fallback: href (legacy uses /workout-plans/new, M3 uses /m3/workout-plans/new)
-    const allLinks = this.page.locator(
-      'a[href="/workout-plans/new"], a[href="/m3/workout-plans/new"]',
-    );
+    // Fallback: href (main app uses /workout-plans/new)
+    const allLinks = this.page.locator('a[href="/workout-plans/new"]');
     const count = await allLinks.count();
     for (let i = 0; i < count; i++) {
       const link = allLinks.nth(i);

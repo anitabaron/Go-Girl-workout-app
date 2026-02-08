@@ -181,7 +181,7 @@ export function useAutoPause(
     if (isFirstRenderRef.current) return;
 
     const legacyActivePath = `/workout-sessions/${sessionId}/active`;
-    const m3ActivePath = `/m3/workout-sessions/${sessionId}/active`;
+    const m3ActivePath = `/workout-sessions/${sessionId}/active`;
     const isOnActivePage =
       pathname === legacyActivePath || pathname === m3ActivePath;
     const pathnameChanged = previousPathnameRef.current !== pathname;
