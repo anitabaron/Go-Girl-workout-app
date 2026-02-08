@@ -33,7 +33,7 @@ export function ExitSessionButtonM3({ onExit }: ExitSessionButtonM3Props) {
         variant="ghost"
         size="icon"
         onClick={() => setIsDialogOpen(true)}
-        className="fixed left-4 top-4 z-50 h-10 w-10 rounded-full bg-[var(--m3-surface-container-high)] shadow-sm hover:bg-[var(--m3-surface-container-highest)] md:top-20"
+        className="fixed left-4 top-4 z-50 h-10 w-10 rounded-full bg-[var(--m3-surface-container-high)] shadow-sm hover:bg-[var(--m3-surface-container-highest)] md:left-[104px] lg:left-[112px]"
         aria-label="Exit workout session"
       >
         <X className="size-5" />
