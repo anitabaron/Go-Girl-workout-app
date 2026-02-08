@@ -31,7 +31,7 @@ const planSelectColumns =
 export async function findWorkoutPlanById(
   client: DbClient,
   userId: string,
-  id: string
+  id: string,
 ) {
   const { data, error } = await client
     .from("workout_plans")
@@ -63,7 +63,7 @@ function buildNextCursor(
   items: WorkoutPlanRow[],
   limit: number,
   sort: "created_at" | "name",
-  order: "asc" | "desc"
+  order: "asc" | "desc",
 ): string | null {
   if (items.length <= limit) return null;
   const tail = items.pop()!;
@@ -74,7 +74,7 @@ function buildNextCursor(
 async function loadPlanExerciseMetadata(
   client: DbClient,
   userId: string,
-  planIds: string[]
+  planIds: string[],
 ): Promise<PlanExerciseMetadata> {
   const exerciseCounts: Record<string, number> = {};
   const exercisesByPlanId = new Map<string, string[]>();
@@ -94,7 +94,7 @@ async function loadPlanExerciseMetadata(
   const { data: exercisesData, error: exercisesError } = await client
     .from("workout_plan_exercises")
     .select(
-      "plan_id, exercise_id, exercise_title, planned_sets, planned_reps, planned_duration_seconds, planned_rest_seconds, exercises(title)"
+      "plan_id, exercise_id, exercise_title, planned_sets, planned_reps, planned_duration_seconds, planned_rest_seconds, exercises(title)",
     )
     .in("plan_id", planIds)
     .order("section_type", { ascending: true })
@@ -143,12 +143,12 @@ async function loadPlanExerciseMetadata(
   const libraryTitlesNormalized = await fetchLibraryTitlesNormalized(
     client,
     userId,
-    unlinkedTitlesByPlanId
+    unlinkedTitlesByPlanId,
   );
 
   for (const [planId, normalizedTitles] of unlinkedTitlesByPlanId) {
     const hasUnlinkedNotInLibrary = [...normalizedTitles].some(
-      (t) => !libraryTitlesNormalized.has(t)
+      (t) => !libraryTitlesNormalized.has(t),
     );
     hasMissingExercisesByPlanId.set(planId, hasUnlinkedNotInLibrary);
   }
@@ -164,7 +164,7 @@ async function loadPlanExerciseMetadata(
 async function fetchLibraryTitlesNormalized(
   client: DbClient,
   userId: string,
-  unlinkedTitlesByPlanId: Map<string, Set<string>>
+  unlinkedTitlesByPlanId: Map<string, Set<string>>,
 ): Promise<Set<string>> {
   if (unlinkedTitlesByPlanId.size === 0) return new Set();
   const { data: libraryExercises } = await client
@@ -173,8 +173,8 @@ async function fetchLibraryTitlesNormalized(
     .eq("user_id", userId);
   return new Set(
     (libraryExercises ?? []).map((e) =>
-      (e.title_normalized ?? "").toLowerCase()
-    )
+      (e.title_normalized ?? "").toLowerCase(),
+    ),
   );
 }
 
@@ -185,7 +185,7 @@ export async function findWorkoutPlansByUserId(
   client: DbClient,
   userId: string,
   params: Required<Pick<PlanQueryParams, "sort" | "order" | "limit">> &
-    PlanQueryParams
+    PlanQueryParams,
 ): Promise<{
   data?: (Omit<WorkoutPlanDTO, "exercises"> & {
     exercise_count?: number;
@@ -198,7 +198,7 @@ export async function findWorkoutPlansByUserId(
 }> {
   const limit = Math.min(
     params.limit ?? WORKOUT_PLAN_DEFAULT_LIMIT,
-    WORKOUT_PLAN_MAX_LIMIT
+    WORKOUT_PLAN_MAX_LIMIT,
   );
   const sort: "created_at" | "name" = params.sort ?? "created_at";
   const order: "asc" | "desc" = params.order ?? "desc";
@@ -259,7 +259,7 @@ export async function insertWorkoutPlan(
   userId: string,
   input: Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
     estimated_total_time_seconds?: number | null;
-  }
+  },
 ) {
   const { data, error } = await client
     .from("workout_plans")
@@ -288,9 +288,10 @@ export async function insertWorkoutPlanExercises(
       exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
       exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
       exercise_details?: string | null;
+      exercise_is_unilateral?: boolean | null;
       snapshot_id?: string | null;
     }
-  >
+  >,
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
     plan_id: planId,
@@ -300,6 +301,7 @@ export async function insertWorkoutPlanExercises(
     exercise_type: exercise.exercise_type ?? null,
     exercise_part: exercise.exercise_part ?? null,
     exercise_details: exercise.exercise_details ?? null,
+    exercise_is_unilateral: exercise.exercise_is_unilateral ?? null,
     section_type: exercise.section_type,
     section_order: exercise.section_order,
     planned_sets: exercise.planned_sets ?? null,
@@ -336,12 +338,12 @@ export async function updateWorkoutPlan(
     Pick<WorkoutPlanCreateCommand, "name" | "description" | "part"> & {
       estimated_total_time_seconds?: number | null;
     }
-  >
+  >,
 ) {
   const updateData: {
     name?: string;
     description?: string | null;
-    part?: "Legs" | "Core" | "Back" | "Arms" | "Chest" | null;
+    part?: Database["public"]["Enums"]["exercise_part"] | null;
     estimated_total_time_seconds?: number | null;
   } = {};
 
@@ -391,6 +393,7 @@ export async function updateWorkoutPlanExercise(
     exercise_title?: string | null;
     exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
     exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+    exercise_is_unilateral?: boolean | null;
     section_type?: Database["public"]["Enums"]["exercise_type"];
     section_order?: number;
     planned_sets?: number | null;
@@ -399,7 +402,7 @@ export async function updateWorkoutPlanExercise(
     planned_rest_seconds?: number | null;
     planned_rest_after_series_seconds?: number | null;
     estimated_set_time_seconds?: number | null;
-  }
+  },
 ) {
   const updateData: Database["public"]["Tables"]["workout_plan_exercises"]["Update"] & {
     planned_rest_after_series_seconds?: number | null;
@@ -407,6 +410,7 @@ export async function updateWorkoutPlanExercise(
     exercise_title?: string | null;
     exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
     exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
+    exercise_is_unilateral?: boolean | null;
   } = {};
 
   if (input.exercise_id !== undefined) {
@@ -420,6 +424,9 @@ export async function updateWorkoutPlanExercise(
   }
   if (input.exercise_part !== undefined) {
     updateData.exercise_part = input.exercise_part ?? null;
+  }
+  if (input.exercise_is_unilateral !== undefined) {
+    updateData.exercise_is_unilateral = input.exercise_is_unilateral ?? null;
   }
   if (input.section_type !== undefined) {
     updateData.section_type = input.section_type;
@@ -468,7 +475,7 @@ export async function updateWorkoutPlanExercise(
  */
 export async function deleteWorkoutPlanExercises(
   client: DbClient,
-  planId: string
+  planId: string,
 ) {
   const { error } = await client
     .from("workout_plan_exercises")
@@ -484,7 +491,7 @@ export async function deleteWorkoutPlanExercises(
 export async function deleteWorkoutPlanExercisesByIds(
   client: DbClient,
   planId: string,
-  ids: string[]
+  ids: string[],
 ) {
   if (ids.length === 0) return { error: null };
   const { error } = await client
@@ -502,7 +509,7 @@ export async function deleteWorkoutPlanExercisesByIds(
 export async function updateWorkoutPlanExercisesBySnapshotId(
   client: DbClient,
   snapshotId: string,
-  exerciseId: string
+  exerciseId: string,
 ) {
   const { data, error } = await client
     .from("workout_plan_exercises")
@@ -525,7 +532,7 @@ export async function updateWorkoutPlanExercisesBySnapshotId(
  */
 export async function listWorkoutPlanExercises(
   client: DbClient,
-  planId: string
+  planId: string,
 ): Promise<{
   data?: WorkoutPlanExerciseDTO[];
   error?: PostgrestError | null;
@@ -545,7 +552,7 @@ export async function listWorkoutPlanExercises(
         estimated_set_time_seconds,
         rest_after_series_seconds
       )
-    `
+    `,
     )
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
@@ -574,6 +581,7 @@ export async function listWorkoutPlanExercises(
       exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
       exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
       exercise_details?: string | null;
+      exercise_is_unilateral?: boolean | null;
       estimated_set_time_seconds?: number | null;
       planned_rest_after_series_seconds?: number | null;
     };
@@ -581,14 +589,14 @@ export async function listWorkoutPlanExercises(
     // Użyj snapshot jeśli exercise_id jest NULL, w przeciwnym razie użyj danych z exercises
     // exercises ma types/parts (tablice) - używamy pierwszego elementu
     const exerciseTitle = row.exercise_id
-      ? exercise?.title ?? null
-      : rowWithSnapshot.exercise_title ?? null;
+      ? (exercise?.title ?? null)
+      : (rowWithSnapshot.exercise_title ?? null);
     const exerciseType = row.exercise_id
-      ? exercise?.types?.[0] ?? null
-      : rowWithSnapshot.exercise_type ?? null;
+      ? (exercise?.types?.[0] ?? null)
+      : (rowWithSnapshot.exercise_type ?? null);
     const exercisePart = row.exercise_id
-      ? exercise?.parts?.[0] ?? null
-      : rowWithSnapshot.exercise_part ?? null;
+      ? (exercise?.parts?.[0] ?? null)
+      : (rowWithSnapshot.exercise_part ?? null);
 
     // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
     // For estimated_set_time_seconds, prioritize workout_plan_exercises value if it's not null/undefined
@@ -602,13 +610,13 @@ export async function listWorkoutPlanExercises(
     // Only fall back to exercise default if the value is truly undefined (not present in DB result)
     const finalRestAfterSeries =
       rowWithSnapshot.planned_rest_after_series_seconds === undefined
-        ? exercise?.rest_after_series_seconds ?? null
+        ? (exercise?.rest_after_series_seconds ?? null)
         : rowWithSnapshot.planned_rest_after_series_seconds;
 
     // Pobierz exercise_details z snapshot (jeśli dostępne) lub z exercises.details
     const exerciseDetails = row.exercise_id
-      ? exercise?.details ?? null
-      : rowWithSnapshot.exercise_details ?? null;
+      ? (exercise?.details ?? null)
+      : (rowWithSnapshot.exercise_details ?? null);
 
     return {
       id: row.id,
@@ -626,8 +634,8 @@ export async function listWorkoutPlanExercises(
       exercise_type: exerciseType,
       exercise_part: exercisePart,
       exercise_is_unilateral: row.exercise_id
-        ? exercise?.is_unilateral ?? false
-        : null,
+        ? (exercise?.is_unilateral ?? false)
+        : (rowWithSnapshot.exercise_is_unilateral ?? false),
       exercise_estimated_set_time_seconds: finalEstimatedSetTime,
       exercise_rest_after_series_seconds:
         exercise?.rest_after_series_seconds ?? null,
@@ -645,7 +653,7 @@ export async function listWorkoutPlanExercises(
 export async function findExercisesByIds(
   client: DbClient,
   userId: string,
-  exerciseIds: string[]
+  exerciseIds: string[],
 ) {
   if (exerciseIds.length === 0) {
     return { data: [], error: null };
@@ -666,7 +674,7 @@ export async function findExercisesByIds(
 export async function findExercisesByIdsWithFullData(
   client: DbClient,
   userId: string,
-  exerciseIds: string[]
+  exerciseIds: string[],
 ) {
   if (exerciseIds.length === 0) {
     return { data: [], error: null };
@@ -675,7 +683,7 @@ export async function findExercisesByIdsWithFullData(
   const { data, error } = await client
     .from("exercises")
     .select(
-      "id,series,reps,duration_seconds,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds"
+      "id,series,reps,duration_seconds,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds",
     )
     .eq("user_id", userId)
     .in("id", exerciseIds);
@@ -689,7 +697,7 @@ export async function findExercisesByIdsWithFullData(
 type WorkoutPlanSelectResult = Omit<WorkoutPlanRow, "user_id">;
 
 export function mapToDTO(
-  row: WorkoutPlanRow | WorkoutPlanSelectResult
+  row: WorkoutPlanRow | WorkoutPlanSelectResult,
 ): Omit<WorkoutPlanDTO, "exercises"> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user_id, ...rest } = row as WorkoutPlanRow;
@@ -711,7 +719,7 @@ export function mapExerciseToDTO(
     } | null;
     estimated_set_time_seconds?: number | null; // Override value from workout_plan_exercises
     planned_rest_after_series_seconds?: number | null; // Override value from workout_plan_exercises
-  }
+  },
 ): WorkoutPlanExerciseDTO {
   /* eslint-disable @typescript-eslint/no-unused-vars -- destructuring to omit from rest */
   const {
@@ -736,25 +744,25 @@ export function mapExerciseToDTO(
   // Use override value from workout_plan_exercises if available, otherwise fall back to exercise default
   const finalEstimatedSetTime =
     estimated_set_time_seconds === undefined
-      ? exercises?.estimated_set_time_seconds ?? null
+      ? (exercises?.estimated_set_time_seconds ?? null)
       : estimated_set_time_seconds;
 
   const finalRestAfterSeries =
     planned_rest_after_series_seconds === undefined
-      ? exercises?.rest_after_series_seconds ?? null
+      ? (exercises?.rest_after_series_seconds ?? null)
       : planned_rest_after_series_seconds;
 
   // Użyj snapshot jeśli exercise_id jest NULL, w przeciwnym razie użyj danych z exercises
   // exercises ma types/parts (tablice) - używamy pierwszego elementu
   const exerciseTitle = rest.exercise_id
-    ? exercises?.title ?? null
-    : rowWithSnapshot.exercise_title ?? null;
+    ? (exercises?.title ?? null)
+    : (rowWithSnapshot.exercise_title ?? null);
   const exerciseType = rest.exercise_id
-    ? exercises?.types?.[0] ?? null
-    : rowWithSnapshot.exercise_type ?? null;
+    ? (exercises?.types?.[0] ?? null)
+    : (rowWithSnapshot.exercise_type ?? null);
   const exercisePart = rest.exercise_id
-    ? exercises?.parts?.[0] ?? null
-    : rowWithSnapshot.exercise_part ?? null;
+    ? (exercises?.parts?.[0] ?? null)
+    : (rowWithSnapshot.exercise_part ?? null);
 
   return {
     ...rest,

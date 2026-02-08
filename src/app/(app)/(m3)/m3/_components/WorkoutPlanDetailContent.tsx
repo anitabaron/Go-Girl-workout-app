@@ -19,6 +19,10 @@ import {
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import { formatDuration, formatTotalDuration } from "@/lib/utils/time-format";
+import {
+  calculateEstimatedSetTimeSeconds,
+  getEstimatedSetTimeLabel,
+} from "@/lib/exercises/estimated-set-time";
 import { toast } from "sonner";
 import type { WorkoutPlanDTO, WorkoutPlanExerciseDTO } from "@/types";
 import { AddSnapshotExerciseButtonM3 } from "./AddSnapshotExerciseButtonM3";
@@ -261,6 +265,16 @@ function ExerciseCard({
   index: number;
   planId: string;
 }) {
+  const estimatedSetTimeHint = calculateEstimatedSetTimeSeconds({
+    series: exercise.planned_sets ?? "",
+    reps: exercise.planned_reps ?? null,
+    duration_seconds: exercise.planned_duration_seconds ?? null,
+    rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
+    rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
+    exercise_is_unilateral: exercise.exercise_is_unilateral ?? undefined,
+  });
+  const estimatedSetTimeLabel = getEstimatedSetTimeLabel(estimatedSetTimeHint, "s");
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -330,7 +344,7 @@ function ExerciseCard({
           </div>
           <div>
             <p className="text-xs font-medium text-muted-foreground">
-              Estimated set time (s)
+              {estimatedSetTimeLabel}
             </p>
             <p className="m3-body mt-1">
               {exercise.exercise_estimated_set_time_seconds == null

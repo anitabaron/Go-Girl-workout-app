@@ -56,7 +56,7 @@ export const workoutPlanExerciseInputSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "exercise_id musi być prawidłowym UUID"
+        "exercise_id musi być prawidłowym UUID",
       ),
     section_type: sectionTypeSchema,
     section_order: sectionOrderSchema,
@@ -79,13 +79,13 @@ export const workoutPlanExerciseUpdateSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "id musi być prawidłowym UUID ćwiczenia w planie"
+        "id musi być prawidłowym UUID ćwiczenia w planie",
       ),
     exercise_id: z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "exercise_id musi być prawidłowym UUID"
+        "exercise_id musi być prawidłowym UUID",
       )
       .optional(),
     section_type: sectionTypeSchema.optional(),
@@ -111,14 +111,14 @@ export const workoutPlanExerciseUpdateOrCreateSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "id musi być prawidłowym UUID ćwiczenia w planie"
+        "id musi być prawidłowym UUID ćwiczenia w planie",
       )
       .optional(),
     exercise_id: z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "exercise_id musi być prawidłowym UUID"
+        "exercise_id musi być prawidłowym UUID",
       )
       .optional()
       .nullable(),
@@ -183,7 +183,7 @@ export const workoutPlanCreateSchema = z
       ctx.addIssue({
         code: "custom",
         message,
-      })
+      }),
     );
   });
 
@@ -211,52 +211,47 @@ export const workoutPlanUpdateSchema = z
       for (let i = 0; i < data.exercises.length; i++) {
         const exercise = data.exercises[i];
 
-        // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego
-        // Jeśli nie ma id, to jest nowym ćwiczeniem i wymaga wszystkich pól
-        if (!exercise.id) {
-          // Nowe ćwiczenie - sprawdź czy ma wszystkie wymagane pola
-          if (
-            !exercise.exercise_id ||
-            !exercise.section_type ||
-            !exercise.section_order
-          ) {
-            ctx.addIssue({
-              code: "custom",
-              message: `Nowe ćwiczenie na pozycji ${i} musi mieć exercise_id, section_type i section_order.`,
-              path: ["exercises", i],
-            });
-          } else {
-            exercisesForBusinessRules.push({
-              exercise_id: exercise.exercise_id,
-              section_type: exercise.section_type,
-              section_order: exercise.section_order,
-              planned_sets: exercise.planned_sets,
-              planned_reps: exercise.planned_reps,
-              planned_duration_seconds: exercise.planned_duration_seconds,
-              planned_rest_seconds: exercise.planned_rest_seconds,
-              planned_rest_after_series_seconds:
-                exercise.planned_rest_after_series_seconds,
-              estimated_set_time_seconds: exercise.estimated_set_time_seconds,
-            });
-          }
+        // Jeśli ćwiczenie ma id, to jest aktualizacją istniejącego - pomijamy walidację reguł biznesowych
+        if (exercise.id) {
+          continue;
+        }
+        // Nowe ćwiczenie - sprawdź czy ma wszystkie wymagane pola
+        if (
+          !exercise.exercise_id ||
+          !exercise.section_type ||
+          !exercise.section_order
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Nowe ćwiczenie na pozycji ${i} musi mieć exercise_id, section_type i section_order.`,
+            path: ["exercises", i],
+          });
         } else {
-          // Istniejące ćwiczenie - użyj wartości z aktualizacji lub istniejących
-          // Dla walidacji reguł biznesowych potrzebujemy pełnych danych
-          // Ale w trybie aktualizacji nie wszystkie pola są wymagane
-          // Więc pomijamy walidację reguł biznesowych dla aktualizacji
+          exercisesForBusinessRules.push({
+            exercise_id: exercise.exercise_id,
+            section_type: exercise.section_type,
+            section_order: exercise.section_order,
+            planned_sets: exercise.planned_sets,
+            planned_reps: exercise.planned_reps,
+            planned_duration_seconds: exercise.planned_duration_seconds,
+            planned_rest_seconds: exercise.planned_rest_seconds,
+            planned_rest_after_series_seconds:
+              exercise.planned_rest_after_series_seconds,
+            estimated_set_time_seconds: exercise.estimated_set_time_seconds,
+          });
         }
       }
 
       // Walidacja reguł biznesowych tylko dla nowych ćwiczeń
       if (exercisesForBusinessRules.length > 0) {
         const errors = validateWorkoutPlanBusinessRules(
-          exercisesForBusinessRules
+          exercisesForBusinessRules,
         );
         errors.forEach((message) =>
           ctx.addIssue({
             code: "custom",
             message,
-          })
+          }),
         );
       }
     }
@@ -280,24 +275,10 @@ export const workoutPlanQuerySchema = z
   })
   .strict();
 
-/**
- * Walidacja reguł biznesowych dla ćwiczeń w planie treningowym.
- * Sprawdza:
- * - Co najmniej jedno ćwiczenie
- * - Unikalność pozycji w ramach każdej sekcji
- * - Pozytywne wartości dla planned_* (jeśli podane)
- */
-export function validateWorkoutPlanBusinessRules(
-  exercises: WorkoutPlanExerciseInput[]
+function getDuplicateOrderErrors(
+  exercises: WorkoutPlanExerciseInput[],
 ): string[] {
   const errors: string[] = [];
-
-  if (exercises.length === 0) {
-    errors.push("Plan treningowy musi zawierać co najmniej jedno ćwiczenie.");
-    return errors;
-  }
-
-  // Sprawdzenie unikalności pozycji w ramach każdej sekcji
   const positionMap = new Map<string, Set<number>>();
 
   for (const exercise of exercises) {
@@ -309,77 +290,93 @@ export function validateWorkoutPlanBusinessRules(
     }
 
     const orders = positionMap.get(sectionKey)!;
-
     if (orders.has(order)) {
       errors.push(
-        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`
+        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`,
       );
     } else {
       orders.add(order);
     }
-
-    // Walidacja wartości planned_*
-    if (
-      exercise.planned_sets !== undefined &&
-      exercise.planned_sets !== null &&
-      exercise.planned_sets <= 0
-    ) {
-      errors.push(
-        `planned_sets musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
-      );
-    }
-
-    if (
-      exercise.planned_reps !== undefined &&
-      exercise.planned_reps !== null &&
-      exercise.planned_reps <= 0
-    ) {
-      errors.push(
-        `planned_reps musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
-      );
-    }
-
-    if (
-      exercise.planned_duration_seconds !== undefined &&
-      exercise.planned_duration_seconds !== null &&
-      exercise.planned_duration_seconds <= 0
-    ) {
-      errors.push(
-        `planned_duration_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
-      );
-    }
-
-    if (
-      exercise.planned_rest_seconds !== undefined &&
-      exercise.planned_rest_seconds !== null &&
-      exercise.planned_rest_seconds < 0
-    ) {
-      errors.push(
-        `planned_rest_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
-      );
-    }
-
-    if (
-      exercise.planned_rest_after_series_seconds !== undefined &&
-      exercise.planned_rest_after_series_seconds !== null &&
-      exercise.planned_rest_after_series_seconds < 0
-    ) {
-      errors.push(
-        `planned_rest_after_series_seconds nie może być ujemne dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
-      );
-    }
-
-    if (
-      exercise.estimated_set_time_seconds !== undefined &&
-      exercise.estimated_set_time_seconds !== null &&
-      exercise.estimated_set_time_seconds <= 0
-    ) {
-      errors.push(
-        `estimated_set_time_seconds musi być większe od zera dla ćwiczenia na kolejności ${order} w sekcji ${exercise.section_type}.`
-      );
-    }
   }
 
+  return errors;
+}
+
+function getPlannedValuesErrors(exercise: WorkoutPlanExerciseInput): string[] {
+  const errors: string[] = [];
+  const { section_type, section_order } = exercise;
+  const label = `ćwiczenia na kolejności ${section_order} w sekcji ${section_type}`;
+
+  if (
+    exercise.planned_sets !== undefined &&
+    exercise.planned_sets !== null &&
+    exercise.planned_sets <= 0
+  ) {
+    errors.push(`planned_sets musi być większe od zera dla ${label}.`);
+  }
+  if (
+    exercise.planned_reps !== undefined &&
+    exercise.planned_reps !== null &&
+    exercise.planned_reps <= 0
+  ) {
+    errors.push(`planned_reps musi być większe od zera dla ${label}.`);
+  }
+  if (
+    exercise.planned_duration_seconds !== undefined &&
+    exercise.planned_duration_seconds !== null &&
+    exercise.planned_duration_seconds <= 0
+  ) {
+    errors.push(
+      `planned_duration_seconds musi być większe od zera dla ${label}.`,
+    );
+  }
+  if (
+    exercise.planned_rest_seconds !== undefined &&
+    exercise.planned_rest_seconds !== null &&
+    exercise.planned_rest_seconds < 0
+  ) {
+    errors.push(`planned_rest_seconds nie może być ujemne dla ${label}.`);
+  }
+  if (
+    exercise.planned_rest_after_series_seconds !== undefined &&
+    exercise.planned_rest_after_series_seconds !== null &&
+    exercise.planned_rest_after_series_seconds < 0
+  ) {
+    errors.push(
+      `planned_rest_after_series_seconds nie może być ujemne dla ${label}.`,
+    );
+  }
+  if (
+    exercise.estimated_set_time_seconds !== undefined &&
+    exercise.estimated_set_time_seconds !== null &&
+    exercise.estimated_set_time_seconds <= 0
+  ) {
+    errors.push(
+      `estimated_set_time_seconds musi być większe od zera dla ${label}.`,
+    );
+  }
+
+  return errors;
+}
+
+/**
+ * Walidacja reguł biznesowych dla ćwiczeń w planie treningowym.
+ * Sprawdza:
+ * - Co najmniej jedno ćwiczenie
+ * - Unikalność pozycji w ramach każdej sekcji
+ * - Pozytywne wartości dla planned_* (jeśli podane)
+ */
+export function validateWorkoutPlanBusinessRules(
+  exercises: WorkoutPlanExerciseInput[],
+): string[] {
+  if (exercises.length === 0) {
+    return ["Plan treningowy musi zawierać co najmniej jedno ćwiczenie."];
+  }
+
+  const errors = [...getDuplicateOrderErrors(exercises)];
+  for (const exercise of exercises) {
+    errors.push(...getPlannedValuesErrors(exercise));
+  }
   return errors;
 }
 
@@ -398,7 +395,7 @@ export const workoutPlanExerciseImportSchema = z
       .string()
       .refine(
         (val) => uuidRegex.test(val),
-        "exercise_id musi być prawidłowym UUID"
+        "exercise_id musi być prawidłowym UUID",
       )
       .optional()
       .nullable(),
@@ -418,6 +415,7 @@ export const workoutPlanExerciseImportSchema = z
     planned_rest_seconds: plannedRestSchema,
     planned_rest_after_series_seconds: plannedRestAfterSeriesSchema,
     estimated_set_time_seconds: estimatedSetTimeSchema,
+    exercise_is_unilateral: z.boolean().optional().nullable(),
   })
   .strict()
   .superRefine((data, ctx) => {
@@ -515,7 +513,7 @@ export const workoutPlanImportSchema = z
       ctx.addIssue({
         code: "custom",
         message,
-      })
+      }),
     );
   });
 

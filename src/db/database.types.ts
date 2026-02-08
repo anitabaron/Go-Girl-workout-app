@@ -257,6 +257,7 @@ export type Database = {
           estimated_set_time_seconds: number | null;
           exercise_details: string | null;
           exercise_id: string | null;
+          exercise_is_unilateral: boolean | null;
           exercise_part: Database["public"]["Enums"]["exercise_part"] | null;
           exercise_title: string | null;
           exercise_type: Database["public"]["Enums"]["exercise_type"] | null;
@@ -276,6 +277,7 @@ export type Database = {
           estimated_set_time_seconds?: number | null;
           exercise_details?: string | null;
           exercise_id?: string | null;
+          exercise_is_unilateral?: boolean | null;
           exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
           exercise_title?: string | null;
           exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
@@ -295,6 +297,7 @@ export type Database = {
           estimated_set_time_seconds?: number | null;
           exercise_details?: string | null;
           exercise_id?: string | null;
+          exercise_is_unilateral?: boolean | null;
           exercise_part?: Database["public"]["Enums"]["exercise_part"] | null;
           exercise_title?: string | null;
           exercise_type?: Database["public"]["Enums"]["exercise_type"] | null;
@@ -566,7 +569,7 @@ export type Database = {
     };
     Enums: {
       ai_request_type: "generate" | "optimize";
-      exercise_part: "Legs" | "Core" | "Back" | "Arms" | "Chest";
+      exercise_part: "Legs" | "Core" | "Back" | "Arms" | "Chest" | "Glutes";
       exercise_type: "Warm-up" | "Main Workout" | "Cool-down";
       pr_metric_type: "total_reps" | "max_duration" | "max_weight";
       workout_session_status: "in_progress" | "completed";
@@ -604,14 +607,14 @@ export type Tables<
     ? R
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-      DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R;
-    }
-    ? R
-    : never
-  : never;
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -631,12 +634,12 @@ export type TablesInsert<
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Insert: infer I;
-    }
-    ? I
-    : never
-  : never;
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -656,12 +659,12 @@ export type TablesUpdate<
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Update: infer U;
-    }
-    ? U
-    : never
-  : never;
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -677,8 +680,8 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never;
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never;
 
 // When CompositeTypes is empty, keyof is never. Conditional avoids union with never.
 type SchemaOption = { schema: keyof DatabaseWithoutInternals };
@@ -704,8 +707,8 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never;
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never;
 
 export const Constants = {
   graphql_public: {
@@ -714,7 +717,7 @@ export const Constants = {
   public: {
     Enums: {
       ai_request_type: ["generate", "optimize"],
-      exercise_part: ["Legs", "Core", "Back", "Arms", "Chest"],
+      exercise_part: ["Legs", "Core", "Back", "Arms", "Chest", "Glutes"],
       exercise_type: ["Warm-up", "Main Workout", "Cool-down"],
       pr_metric_type: ["total_reps", "max_duration", "max_weight"],
       workout_session_status: ["in_progress", "completed"],
