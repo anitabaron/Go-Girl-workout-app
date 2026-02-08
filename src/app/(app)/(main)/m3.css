@@ -993,6 +993,28 @@ html:has(.ui-m3) {
   );
 }
 
+/* Hero surface in manual dark – same as prefers-color-scheme dark so headline is visible */
+.ui-m3.dark section.m3-surface-hero {
+  background: var(--m3-raw-primary-container-dark) !important;
+  background-color: var(--m3-raw-primary-container-dark) !important;
+  color: var(--m3-raw-on-surface-dark);
+}
+
+.ui-m3.dark section.m3-surface-hero .text-foreground {
+  color: var(--m3-raw-on-surface-dark);
+}
+
+.ui-m3.dark section.m3-surface-hero .text-muted-foreground {
+  color: var(--m3-raw-on-surface-dark);
+  opacity: 0.9;
+}
+
+.ui-m3.dark section.m3-surface-hero .m3-chip {
+  background: transparent;
+  color: var(--m3-on-primary-container);
+  border-color: var(--m3-on-primary-container);
+}
+
 /* Portal – dark vars on body for manual dark toggle */
 body:has(.ui-m3.dark) {
   --m3-surface: var(--m3-raw-surface-dark);
