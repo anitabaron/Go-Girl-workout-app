@@ -1,6 +1,6 @@
 ---
 description: M3 migration boundaries – import rules and style conventions for M3 routes
-globs: src/app/(app)/(m3)/**/*
+globs: src/app/(app)/(main)/**/*
 alwaysApply: false
 ---
 
@@ -8,8 +8,8 @@ alwaysApply: false
 
 ## Scope
 
-- **M3-ready**: Routes under `(m3)/m3/`; components under `m3/_components/` or `m3/_ui/`; only `m3.css` tokens (`--m3-*`, `.m3-*`).
-- **Legacy-only**: Routes under `(legacy)/`; components under `components/`; may use globals.css tokens and legacy patterns.
+- **M3 (main app)**: Routes under `(app)/(main)/` serve `/`, `/exercises`, `/workout-plans`, etc.; components under `(main)/_components/` or `(main)/_ui/`; only `m3.css` tokens (`--m3-*`, `.m3-*`).
+- **Legacy**: Routes under `(app)/legacy/workout-plan/` serve `/legacy/workout-plan`, `/legacy/workout-plan/exercises`, etc.; components under `components/`; may use globals.css tokens and legacy patterns.
 
 ## Import Boundaries (M3 routes)
 
@@ -21,21 +21,21 @@ M3 routes and M3 components **must not** import:
 - `@/components/navigation/*` (TopNavigation, BottomNavigation, PageHeader from legacy)
 - `@/components/exercises/*` (ExerciseCard, ExercisesList, ExerciseFilters, ExerciseSort, AddExerciseButton, DeleteExerciseDialog)
 - `@/components/workout-plans/*`, `@/components/workout-sessions/*`, `@/components/personal-records/*`
-- `@/components/shared/empty-state` (use `m3/_components/EmptyState` instead)
+- `@/components/shared/empty-state` (use `(main)/_components/EmptyState` instead)
 
 ### Allowed imports
 
 M3 routes may import:
 
 - `@/components/ui/*` (shadcn primitives)
-- `m3/_components/*`, `m3/_ui/*`
+- `(main)/_components/*`, `(main)/_ui/*` (relative or from app)
 - `@/services/*`, `@/hooks/*`, `@/lib/*`, `@/types`
 
 ## Style Conventions (M3)
 
 - **No legacy Tailwind classes**: Avoid `bg-secondary`, `text-zinc-*`, `dark:bg-zinc-*`, `rounded-2xl`, `border-border` in M3 components.
 - **Use M3 tokens**: Prefer `var(--m3-*)`, `.m3-headline`, `.m3-label`, `.m3-cta`, `.m3-chip`.
-- **Links**: M3 internal links must target `/m3/*` (e.g. `/m3/exercises/new`, `/m3/exercises/[id]`), not legacy paths like `/exercises/new`.
+- **Links**: M3 internal links use main paths: `/`, `/exercises/new`, `/exercises/[id]`, `/workout-plans`, etc. Legacy is under `/legacy/workout-plan/*`.
 
 ## Shadcn Purity
 

@@ -5,7 +5,7 @@ import { createContext, useMemo, useContext, type ReactNode } from "react";
 /**
  * Base path for auth redirects and links.
  * - Legacy: "" (so /login, /, /reset-password)
- * - M3: "/m3" (so /m3/login, /m3, /m3/reset-password)
+ * - Main app: "" (so /login, /, /reset-password)
  */
 export type AuthRedirectContextValue = Readonly<{
   basePath: string;

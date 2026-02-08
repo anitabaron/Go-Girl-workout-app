@@ -20,10 +20,13 @@ export function DesignModeToggle({
     await setDesignMode(newMode);
 
     if (currentMode === "m3") {
-      const legacyPath = pathname.replace(/^\/m3/, "") || "/";
+      const legacyPath =
+        pathname === "/"
+          ? "/legacy/workout-plan"
+          : `/legacy/workout-plan${pathname}`;
       router.push(legacyPath);
     } else {
-      const m3Path = pathname === "/" ? "/m3" : `/m3${pathname}`;
+      const m3Path = pathname.replace(/^\/legacy\/workout-plan/, "") || "/";
       router.push(m3Path);
     }
     router.refresh();

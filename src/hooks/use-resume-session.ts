@@ -10,7 +10,7 @@ import {
 import type { SessionDetailDTO } from "@/types";
 
 type UseResumeSessionOptions = {
-  /** Where to redirect on resume. Default legacy path. Use /m3/workout-sessions/[id]/active for M3. */
+  /** Where to redirect on resume. Use /workout-sessions/[id]/active for main app. */
   redirectHref?: string;
 };
 

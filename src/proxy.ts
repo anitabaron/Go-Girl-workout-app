@@ -1,14 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const M3_PREFIX = "/m3";
+const LEGACY_PREFIX = "/legacy/workout-plan";
 const DESIGN_COOKIE = "design_mode";
 
-function shouldUseM3(req: NextRequest): boolean {
-  const cookieValue = req.cookies.get(DESIGN_COOKIE)?.value;
-  if (cookieValue === "legacy") return false;
-  // M3 is default; cookie "m3" or no cookie → M3
-  return true;
+function shouldUseLegacy(req: NextRequest): boolean {
+  return req.cookies.get(DESIGN_COOKIE)?.value === "legacy";
 }
 
 export async function proxy(request: NextRequest) {
@@ -42,40 +39,24 @@ export async function proxy(request: NextRequest) {
   // Refresh session if expired - required for Server Components
   await supabase.auth.getUser();
 
-  // Design mode rewrite (po odświeżeniu sesji)
-  if (shouldUseM3(request)) {
+  // When design_mode=legacy and user hits main app paths, rewrite to legacy routes
+  if (shouldUseLegacy(request)) {
     const { pathname } = request.nextUrl;
-    const isWorkoutSessions =
-      pathname === "/workout-sessions" ||
-      pathname.startsWith("/workout-sessions/");
-    const isPersonalRecords =
-      pathname === "/personal-records" ||
-      pathname.startsWith("/personal-records/");
-    const isImportInstruction = pathname === "/import-instruction";
-
-    const isAuthPath =
-      pathname === "/login" ||
-      pathname === "/register" ||
-      pathname === "/reset-password" ||
-      pathname.startsWith("/reset-password/");
-
-    const shouldRewriteApp =
+    const isMainAppPath =
       pathname === "/" ||
-      pathname === "/exercises" ||
-      pathname.startsWith("/exercises/") ||
-      pathname === "/workout-plans" ||
-      pathname.startsWith("/workout-plans/") ||
-      isWorkoutSessions ||
-      isPersonalRecords ||
-      isImportInstruction;
+      pathname.startsWith("/exercises") ||
+      pathname.startsWith("/workout-plans") ||
+      pathname.startsWith("/workout-sessions") ||
+      pathname.startsWith("/personal-records") ||
+      pathname === "/import-instruction" ||
+      pathname === "/kitchen-sink" ||
+      pathname === "/test";
 
-    const shouldRewrite = shouldRewriteApp || isAuthPath;
-
-    if (shouldRewrite) {
+    if (isMainAppPath) {
       const url = request.nextUrl.clone();
-      url.pathname = `${M3_PREFIX}${pathname === "/" ? "" : pathname}`;
+      url.pathname =
+        pathname === "/" ? LEGACY_PREFIX : `${LEGACY_PREFIX}${pathname}`;
       const rewriteResponse = NextResponse.rewrite(url);
-      // Zachowaj cookies z Supabase (np. odświeżona sesja)
       supabaseResponse.cookies
         .getAll()
         .forEach((cookie) =>

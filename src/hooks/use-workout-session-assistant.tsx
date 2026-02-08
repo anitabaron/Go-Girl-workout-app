@@ -17,7 +17,7 @@ import type {
 export type UseWorkoutSessionAssistantProps = {
   readonly sessionId: string;
   readonly initialSession: SessionDetailDTO;
-  /** Where to redirect on exit. Default "/" for legacy, use "/m3/workout-sessions" for M3. */
+  /** Where to redirect on exit. Default "/workout-sessions" for main app. */
   readonly exitHref?: string;
 };
 

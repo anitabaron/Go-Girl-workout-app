@@ -427,6 +427,86 @@
 
 ---
 
+### 8) Zamiana M3 na główną ścieżkę, legacy pod `/legacy/workout-plan`
+
+**Cel**: M3 staje się domyślną aplikacją pod `/`, `/exercises`, `/workout-plans` itd. Legacy UI przenosi się pod prefix `/legacy/workout-plan`.
+
+**Zasada (żeby aplikacja się nie rozwaliła)**:
+
+1. **Najpierw** przenieś obecną ścieżkę legacy do folderu `legacy` – czyli całą aplikację legacy umieść w `(app)/legacy/workout-plan/`. W ten sposób legacy ma nowy adres (`/legacy/workout-plan`, …), a główne URL-e (`/`, `/exercises`, …) na chwilę przestają być obsługiwane.
+2. **Potem** usuń `/m3` ze ścieżki – przenieś treść M3 z `(m3)/m3/` na główną ścieżkę `(app)/`. Wtedy `/`, `/exercises`, itd. znowu działają (M3). Aplikacja nie jest rozwalona, bo obie zmiany robisz w jednym PR (commity 1 i 2, ewentualnie z 3), bez deploya między nimi.
+
+**Struktura przed**:
+
+- `(app)/(legacy)/` → `/`, `/exercises`, `/workout-plans`, …
+- `(app)/(m3)/m3/` → `/m3`, `/m3/exercises`, `/m3/workout-plans`, …
+- Proxy: gdy `design_mode=m3`, rewrite `/` → `/m3`, `/exercises` → `/m3/exercises`, itd.
+
+**Struktura po**:
+
+- Główna aplikacja (M3): `(app)/` → `/`, `/exercises`, `/workout-plans`, …
+- Legacy: `(app)/legacy/workout-plan/` → `/legacy/workout-plan`, `/legacy/workout-plan/exercises`, …
+- Proxy: nie rewrituje już na M3 (główne trasy to M3). Opcjonalnie: przy `design_mode=legacy` redirect `/` → `/legacy/workout-plan`.
+
+**Kroki do wykonania (po jednym commicie)**:
+
+1. **Commit 1: `refactor(routes): move legacy app under legacy/workout-plan`** *(jako pierwszy – legacy do folderu)*
+   - Utworzyć katalog `src/app/(app)/legacy/workout-plan/`.
+   - Przenieść całą zawartość `(app)/(legacy)/` do `(app)/legacy/workout-plan/` (layout, page, exercises, workout-plans, workout-sessions, personal-records, import-instruction, kitchen-sink, test, error/loading).
+   - Usunąć pusty `(app)/(legacy)/`.
+   - **Efekt**: Legacy dostępne pod `/legacy/workout-plan`, `/legacy/workout-plan/exercises`, itd. Główne trasy `/`, `/exercises` tymczasowo 404 – **od razu w tym samym PR rób commit 2 (i ewentualnie 3), żeby nie deployować tego stanu**.
+
+2. **Commit 2: `refactor(routes): move M3 app to main app path`** *(potem – usunięcie /m3 ze ścieżki)*
+   - Przenieść zawartość `(app)/(m3)/m3/` do `(app)/`: layout.tsx, page.tsx, m3.css, _components/, _ui/, _lib/, oraz wszystkie segmenty (exercises/, workout-plans/, workout-sessions/, personal-records/, import-instruction/, privacy-policy/, statistics/).
+   - Usunąć `(app)/(m3)/`.
+   - **Efekt**: Główna aplikacja (M3) znów obsługuje `/`, `/exercises`, `/workout-plans`, itd. Aplikacja nie jest rozwalona, jeśli 1 i 2 (oraz ewentualnie 3) są w jednym PR.
+
+3. **Commit 3: `fix(imports): update M3 component and CSS import paths`**
+   - Zaktualizować importy wskazujące na `@/app/(app)/(m3)/m3/` na nową ścieżkę (np. `@/app/(app)/` lub alias do `_components`/`_ui`/`_lib`).
+   - Pliki do przejrzenia: `src/app/(auth-m3)/m3/layout.tsx` (import m3.css), wszystkie pliki w byłym `m3/_components` i `m3/_ui` (względne importy `../_lib`, `./...` mogą zostać, jeśli struktura _lib/_components/_ui jest zachowana pod `(app)/`).
+   - Upewnić się, że `m3.css` jest importowany w głównym layoutcie app (np. `(app)/layout.tsx`).
+
+4. **Commit 4: `fix(links): replace /m3/* with main path (/) in app and hooks`**
+   - Zamienić wszystkie `href="/m3/..."`, `router.push("/m3/...")`, `redirect("/m3/...")` na wersje bez prefiksu: `/`, `/exercises`, `/workout-plans`, itd.
+   - Pliki: WorkoutPlanDetailContent, WorkoutSessionAssistantM3, ExerciseDetailContent, ExerciseFormM3, NavigationRail, M3ExerciseCard, M3WorkoutPlanCard, M3WorkoutSessionCard, M3PersonalRecordCard, WorkoutPlanFormM3, WorkoutSessionDetailContent, WorkoutPlanStartCardM3, ResumeSessionCardM3, wszystkie page.tsx (redirect/link), ExercisesToolbar, WorkoutPlansToolbar, PersonalRecordsToolbar, PersonalRecordDetailContentM3, PersonalRecordsListM3, ImportPlanButtonM3, EditPersonalRecordsModalM3, PersonalRecordMetricCardM3, PersonalRecordMetricItemM3, privacy-policy, import-instruction, workout-sessions/start.
+   - Hooki: `use-workout-session-assistant.tsx` (exitHref domyślnie `/workout-sessions`), `use-resume-session.ts`, `use-auto-pause.ts` (ścieżki active session).
+
+5. **Commit 5: `fix(design-mode): toggle between / and /legacy/workout-plan`**
+   - W `src/components/design-mode-toggle.tsx`: zamiast zamiany `/m3` ↔ legacy path: dla M3 używać `/` (pathname bez zmian), dla legacy zamieniać `/` na `/legacy/workout-plan` oraz np. `/exercises` → `/legacy/workout-plan/exercises`.
+   - Logika: `currentMode === "m3"` → przełącz na legacy: `pathname === "/" ? "/legacy/workout-plan" : `/legacy/workout-plan${pathname}`; `currentMode === "legacy"` → przełącz na M3: `pathname.replace(/^\/legacy\/workout-plan/, "") || "/"`.
+
+6. **Commit 6: `fix(proxy): make M3 default at /, optional redirect legacy to /legacy/workout-plan`**
+   - W `src/proxy.ts` (lub middleware): usunąć rewrite `pathname` → `${M3_PREFIX}${pathname}` (M3 jest już pod głównymi trasami).
+   - Opcjonalnie: jeśli `design_mode === "legacy"` i request to `/` lub `/exercises` itd., można rewritować na `/legacy/workout-plan` lub `/legacy/workout-plan/exercises` (wtedy legacy ma te same “logiczne” URL-e pod prefiksem). Alternatywa: tylko ustawienie cookie; przełącznik w UI przenosi na `/legacy/workout-plan`.
+
+7. **Commit 7: `fix(auth): M3 auth at /login, update AuthRedirectContext basePath`**
+   - Auth: główny flow to M3, więc `/login`, `/register`, `/reset-password` powinny serwować M3 auth (np. przenieść layout i strony z `(auth-m3)/m3/` do `app/login/`, `app/register/`, `app/reset-password/` lub zostawić root auth i upewnić się, że to wersja M3).
+   - W `AuthRedirectContext`: domyślny `basePath: ""` (główna aplikacja pod `/`).
+   - Zaktualizować layout auth, żeby importował m3.css jeśli używany jest ten sam wygląd co w app.
+
+8. **Commit 8: `test(e2e): point page objects and specs to main paths`**
+   - `e2e/pages/exercises-page.ts`: `goto("/m3/exercises")` → `goto("/exercises")`.
+   - `e2e/pages/workout-plans-page.ts`, `workout-plan-form-page.ts`, `workout-session-start-page.ts`, `workout-session-details-page.ts`: upewnić się, że używają `/workout-plans`, `/workout-sessions` (już bez `/m3`).
+   - `e2e/auth/login.spec.ts`: asercje po logowaniu – zamiast `["/m3", "/m3/exercises"]` użyć `["/", "/exercises"]` (lub odpowiednie główne ścieżki).
+   - Wszelkie selektory `href="/m3/..."` w e2e zamienić na `href="/..."` (np. `a[href="/exercises/new"]`).
+   - `e2e/fixtures/auth.ts`: jeśli jest hardcodowana ścieżka po logowaniu, ustawić na `/` lub `/exercises`.
+
+9. **Commit 9: `test(unit): fix path or design-mode assumptions if any`**
+   - Przejrzeć `src/__tests__/` pod kątem założeń o `/m3` lub legacy path; zaktualizować mocki/ścieżki tak, aby główna aplikacja była pod `/`.
+
+10. **Commit 10: `docs(rules): update m3-migration and project rules for new structure`**
+    - W `.cursor/rules/m3-migration.mdc`: zaktualizować opisy ścieżek – M3 pod `(app)/`, legacy pod `(app)/legacy/workout-plan/`; linki wewnętrzne M3 to `/`, `/exercises`, itd. (bez prefiksu `/m3`).
+    - W `.cursor/rules/shared.mdc` (Project Structure): jeśli jest opis ścieżek `(m3)/m3/` i `(legacy)/`, zaktualizować na `(app)/` (M3) i `(app)/legacy/workout-plan/` (legacy).
+
+**Uwagi**:
+
+- **Zawsze najpierw legacy do folderu, potem usunięcie /m3** – w jednym PR zrób commity 1 i 2 (oraz ewentualnie 3) razem, żeby nie deployować stanu z 404 na `/`.
+- Po commitach 1 i 2 build może chwilowo psuć się przez importy – commit 3 to koryguje; można łączyć 2+3 w jeden commit, jeśli wolisz mniej rewizji.
+- Zachowanie design_mode cookie i przełącznika: użytkownik w M3 (`/`) przełącza na Legacy → przekierowanie na `/legacy/workout-plan`; w Legacy przełącza na M3 → przekierowanie na `/`.
+- E2E: po zmianie głównej ścieżki na M3, testy domyślnie testują już M3; jeśli chcesz osobne testy legacy, bazować je na URL `/legacy/workout-plan/...`.
+
+---
+
 ## Summary
 
 | Step | Focus           | Key deliverables                                   |
@@ -434,5 +514,6 @@
 | PR 1 | Exercises list  | Real data, M3ExerciseCard, correct M3 links        |
 | PR 2 | Exercise detail | Detail page, M3DeleteExerciseDialog                |
 | PR 3 | Exercise form   | M3 form primitives, ExerciseFormM3, new/edit pages |
+| **8** | **Route swap** | **M3 at `/`, legacy at `/legacy/workout-plan`, imports, proxy, tests, docs** |
 
-After these 3 PRs, the M3 exercises flow (list → detail → new/edit) is complete and can be used to validate the migration pattern for workout plans and sessions.
+After these 3 PRs, the M3 exercises flow (list → detail → new/edit) is complete and can be used to validate the migration pattern for workout plans and sessions. Step 8 flips the routing so M3 is the default app and legacy remains available under `/legacy/workout-plan`.

@@ -25,12 +25,10 @@ export class ExercisesPage {
   }
 
   /**
-   * Navigate to exercises page
-   * Uses /m3/exercises directly - proxy rewrites /exercises to M3 by default,
-   * so explicit M3 path avoids cookie/proxy confusion.
+   * Navigate to exercises page (main app path).
    */
   async goto() {
-    await this.page.goto("/m3/exercises");
+    await this.page.goto("/exercises");
   }
 
   /**
@@ -96,10 +94,8 @@ export class ExercisesPage {
       return;
     }
 
-    // Fallback: href (legacy uses /exercises/new, M3 uses /m3/exercises/new)
-    const allLinks = this.page.locator(
-      'a[href="/exercises/new"], a[href="/m3/exercises/new"]',
-    );
+    // Fallback: href (main app uses /exercises/new)
+    const allLinks = this.page.locator('a[href="/exercises/new"]');
     const count = await allLinks.count();
     for (let i = 0; i < count; i++) {
       const link = allLinks.nth(i);
