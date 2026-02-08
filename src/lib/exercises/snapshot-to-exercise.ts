@@ -68,5 +68,9 @@ export function convertSnapshotToExercise(
       snapshot.exercise_estimated_set_time_seconds;
   }
 
+  if (snapshot.exercise_is_unilateral !== undefined) {
+    exerciseData.is_unilateral = snapshot.exercise_is_unilateral === true;
+  }
+
   return exerciseData;
 }
