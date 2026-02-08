@@ -633,9 +633,10 @@ export async function listWorkoutPlanExercises(
       exercise_title: exerciseTitle,
       exercise_type: exerciseType,
       exercise_part: exercisePart,
-      exercise_is_unilateral: row.exercise_id
-        ? (exercise?.is_unilateral ?? false)
-        : (rowWithSnapshot.exercise_is_unilateral ?? false),
+      // Plan override (import/edytor) ma pierwszeństwo; dla linkowanych z biblioteki fallback do exercises.is_unilateral
+      exercise_is_unilateral:
+        row.exercise_is_unilateral ??
+        (row.exercise_id ? (exercise?.is_unilateral ?? false) : false),
       exercise_estimated_set_time_seconds: finalEstimatedSetTime,
       exercise_rest_after_series_seconds:
         exercise?.rest_after_series_seconds ?? null,

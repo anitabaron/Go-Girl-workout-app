@@ -1,7 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth";
 import {
   getWorkoutSessionService,
@@ -55,19 +52,6 @@ export default async function WorkoutSessionActivePage({
 
   return (
     <div className="min-h-dvh flex flex-col" data-page="workout-active">
-      <header className="flex items-center gap-4 px-4 py-4 sm:px-6">
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link
-            href="/m3/workout-sessions"
-            className="flex items-center gap-2"
-            aria-label="Powrót do sesji"
-          >
-            <ArrowLeft className="size-4" />
-            <span className="hidden sm:inline">Wstecz</span>
-          </Link>
-        </Button>
-      </header>
-
       <WorkoutSessionAssistantM3
         key={id}
         sessionId={id}

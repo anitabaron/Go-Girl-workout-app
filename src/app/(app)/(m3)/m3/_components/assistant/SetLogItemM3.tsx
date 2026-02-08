@@ -34,104 +34,98 @@ export function SetLogItemM3({
 
   return (
     <div className="rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              Set:
+      <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-1 flex-wrap items-end gap-3">
+          <div className="shrink-0">
+            <span
+              className="mb-1 block text-sm font-medium text-foreground"
+              aria-hidden
+            >
+              Set
             </span>
-            <span className="rounded-full bg-[var(--m3-primary-container)] px-3 py-1 text-sm font-semibold text-destructive">
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--m3-raw-primary-container)] text-sm font-semibold text-destructive"
+              aria-label={`Set ${set.set_number}`}
+            >
               {set.set_number}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
-            {showReps && (
-              <div>
-                <label
-                  htmlFor={`reps-${set.set_number}`}
-                  className="mb-1 block text-sm font-medium text-foreground"
-                >
-                  Reps
-                </label>
-                <Input
-                  id={`reps-${set.set_number}`}
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={set.reps ?? ""}
-                  onChange={(e) => handleChange("reps", e.target.value)}
-                  placeholder="0"
-                  disabled={isSkipped}
-                  aria-label={`Reps for set ${set.set_number}`}
-                  aria-invalid={error ? "true" : "false"}
-                  aria-describedby={
-                    error ? `error-${set.set_number}` : undefined
-                  }
-                />
-              </div>
-            )}
-
-            {showDuration && (
-              <div>
-                <label
-                  htmlFor={`duration-${set.set_number}`}
-                  className="mb-1 block text-sm font-medium text-foreground"
-                >
-                  Time (seconds)
-                </label>
-                <Input
-                  id={`duration-${set.set_number}`}
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={set.duration_seconds ?? ""}
-                  onChange={(e) =>
-                    handleChange("duration_seconds", e.target.value)
-                  }
-                  placeholder="0"
-                  disabled={isSkipped}
-                  aria-label={`Duration for set ${set.set_number}`}
-                  aria-invalid={error ? "true" : "false"}
-                  aria-describedby={
-                    error ? `error-${set.set_number}` : undefined
-                  }
-                />
-              </div>
-            )}
-
-            <div>
-              <label
-                htmlFor={`weight-${set.set_number}`}
-                className="mb-1 block text-sm font-medium text-foreground"
-              >
-                Weight (kg)
-              </label>
-              <Input
-                id={`weight-${set.set_number}`}
-                type="number"
-                min="0"
-                step="0.1"
-                value={set.weight_kg ?? ""}
-                onChange={(e) => handleChange("weight_kg", e.target.value)}
-                placeholder="0"
-                disabled={isSkipped}
-                aria-label={`Weight for set ${set.set_number}`}
-                aria-invalid={error ? "true" : "false"}
-                aria-describedby={error ? `error-${set.set_number}` : undefined}
-              />
             </div>
           </div>
 
-          {error && (
-            <p
-              id={`error-${set.set_number}`}
-              className="text-sm text-destructive"
-              role="alert"
-            >
-              {error}
-            </p>
+          {showReps && (
+            <div className="min-w-0 flex-1 basis-20">
+              <label
+                htmlFor={`reps-${set.set_number}`}
+                className="mb-1 block text-sm font-medium text-foreground"
+              >
+                Reps
+              </label>
+              <Input
+                id={`reps-${set.set_number}`}
+                type="number"
+                min="0"
+                step="1"
+                value={set.reps ?? ""}
+                onChange={(e) => handleChange("reps", e.target.value)}
+                placeholder="0"
+                disabled={isSkipped}
+                aria-label={`Reps for set ${set.set_number}`}
+                aria-invalid={error ? "true" : "false"}
+                aria-describedby={
+                  error ? `error-${set.set_number}` : undefined
+                }
+              />
+            </div>
           )}
+
+          {showDuration && (
+            <div className="min-w-0 flex-1 basis-24">
+              <label
+                htmlFor={`duration-${set.set_number}`}
+                className="mb-1 block text-sm font-medium text-foreground"
+              >
+                Time (seconds)
+              </label>
+              <Input
+                id={`duration-${set.set_number}`}
+                type="number"
+                min="0"
+                step="1"
+                value={set.duration_seconds ?? ""}
+                onChange={(e) =>
+                  handleChange("duration_seconds", e.target.value)
+                }
+                placeholder="0"
+                disabled={isSkipped}
+                aria-label={`Duration for set ${set.set_number}`}
+                aria-invalid={error ? "true" : "false"}
+                aria-describedby={
+                  error ? `error-${set.set_number}` : undefined
+                }
+              />
+            </div>
+          )}
+
+          <div className="min-w-0 flex-1 basis-24">
+            <label
+              htmlFor={`weight-${set.set_number}`}
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
+              Weight (kg)
+            </label>
+            <Input
+              id={`weight-${set.set_number}`}
+              type="number"
+              min="0"
+              step="0.1"
+              value={set.weight_kg ?? ""}
+              onChange={(e) => handleChange("weight_kg", e.target.value)}
+              placeholder="0"
+              disabled={isSkipped}
+              aria-label={`Weight for set ${set.set_number}`}
+              aria-invalid={error ? "true" : "false"}
+              aria-describedby={error ? `error-${set.set_number}` : undefined}
+            />
+          </div>
         </div>
 
         <Button
@@ -146,6 +140,16 @@ export function SetLogItemM3({
           <X className="size-4" />
         </Button>
       </div>
+
+      {error && (
+        <p
+          id={`error-${set.set_number}`}
+          className="mt-2 text-sm text-destructive"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }

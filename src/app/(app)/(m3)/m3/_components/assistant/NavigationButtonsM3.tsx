@@ -72,7 +72,7 @@ export function NavigationButtonsM3({
         size="lg"
         onClick={onSkip}
         disabled={isLoading}
-        className="h-12 text-base font-semibold px-2 sm:h-16 sm:px-4"
+        className="m3-skip-btn h-12 text-base font-semibold px-2 sm:h-16 sm:px-4"
         aria-label="Skip exercise"
         data-test-id="workout-assistant-skip-button"
       >

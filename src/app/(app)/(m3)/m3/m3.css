@@ -446,6 +446,20 @@
   background: var(--m3-button-secondary-active) !important;
 }
 
+.ui-m3 [data-slot="button"].m3-skip-btn {
+  background: var(--m3-raw-primary-container) !important;
+  color: var(--destructive) !important;
+  border: none !important;
+}
+
+.ui-m3 [data-slot="button"].m3-skip-btn:hover {
+  background: var(--m3-button-secondary-hover) !important;
+}
+
+.ui-m3 [data-slot="button"].m3-skip-btn:active {
+  background: var(--m3-button-secondary-active) !important;
+}
+
 /* Outline - M3 surface, no legacy dark: classes */
 .ui-m3 [data-slot="button"][data-variant="outline"] {
   background: transparent !important;

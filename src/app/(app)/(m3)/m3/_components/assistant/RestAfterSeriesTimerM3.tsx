@@ -8,9 +8,20 @@ export function RestAfterSeriesTimerM3({
   restSeconds,
   isPaused,
   onComplete,
+  nextExerciseName,
+  isLastExercise,
 }: Readonly<RestAfterSeriesTimerProps>) {
   if (!restSeconds || restSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
+
+  let message: string;
+  if (isLastExercise) {
+    message = "End of workout";
+  } else if (nextExerciseName?.trim()) {
+    message = `Get ready: ${nextExerciseName}`;
+  } else {
+    message = "Get ready for the next exercise";
+  }
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">
@@ -45,9 +56,7 @@ export function RestAfterSeriesTimerM3({
         Skip break
       </Button>
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          Get ready for the next exercise
-        </p>
+        <p className="text-sm text-muted-foreground">{message}</p>
       </div>
     </div>
   );

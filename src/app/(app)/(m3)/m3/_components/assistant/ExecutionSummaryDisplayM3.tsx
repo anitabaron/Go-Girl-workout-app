@@ -30,7 +30,9 @@ export function ExecutionSummaryDisplayM3({
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
       <SummaryFieldM3 label="Number of sets" value={values.count_sets} />
-      <SummaryFieldM3 label="Total reps" value={values.sum_reps} />
+      {!showDuration && (
+        <SummaryFieldM3 label="Total reps" value={values.sum_reps} />
+      )}
       {showDuration && (
         <SummaryFieldM3
           label="Duration (seconds)"
