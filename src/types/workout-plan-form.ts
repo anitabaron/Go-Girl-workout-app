@@ -144,6 +144,19 @@ export type AddExerciseDialogProps = {
 };
 
 /**
+ * Props dla AddScopeDialog
+ */
+export type AddScopeDialogProps = {
+  onAddScope: (
+    exercises: ExerciseDTO[],
+    sectionType: ExerciseType,
+    repeatCount: number,
+  ) => void;
+  disabled: boolean;
+  existingExerciseIds?: string[];
+};
+
+/**
  * Props dla ExerciseSelector
  */
 export type ExerciseSelectorProps = {

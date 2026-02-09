@@ -221,6 +221,45 @@ export function useWorkoutPlanForm({
     toAppend.forEach((item) => append(item));
   };
 
+  const handleAddScope = (
+    exercises: ExerciseDTO[],
+    sectionType: ExerciseDTO["type"],
+    repeatCount: number,
+  ) => {
+    if (exercises.length === 0 || repeatCount < 1) return;
+
+    const currentExercises = watch("exercises");
+    const exercisesInSection = currentExercises.filter(
+      (e) => e.section_type === sectionType,
+    );
+    const nextSlotOrder =
+      exercisesInSection.length > 0
+        ? Math.max(...exercisesInSection.map((e) => e.section_order)) + 1
+        : 1;
+
+    const scopeId = crypto.randomUUID();
+    const toAppend = exercises.map((ex, i) => ({
+      exercise_id: ex.id,
+      exercise_title: ex.title,
+      exercise_type: ex.type,
+      exercise_part: ex.part,
+      exercise_is_unilateral: ex.is_unilateral,
+      section_type: sectionType,
+      section_order: nextSlotOrder,
+      scope_id: scopeId,
+      in_scope_nr: i + 1,
+      scope_repeat_count: repeatCount,
+      planned_sets: ex.series ?? null,
+      planned_reps: ex.reps ?? null,
+      planned_duration_seconds: ex.duration_seconds ?? null,
+      planned_rest_seconds: ex.rest_in_between_seconds ?? null,
+      planned_rest_after_series_seconds: ex.rest_after_series_seconds ?? null,
+      estimated_set_time_seconds: ex.estimated_set_time_seconds ?? null,
+    }));
+
+    toAppend.forEach((item) => append(item));
+  };
+
   const handleRemoveExercise = (index: number) => {
     remove(index);
   };
@@ -405,6 +444,7 @@ export function useWorkoutPlanForm({
     handleChange,
     handleBlur,
     handleAddExercise,
+    handleAddScope,
     handleRemoveExercise,
     handleUpdateExercise,
     handleMoveExercise,
