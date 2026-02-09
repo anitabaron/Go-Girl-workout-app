@@ -146,6 +146,20 @@ export const workoutPlanExerciseTitleSchema = z
  * Schema dla walidacji pojedynczego ćwiczenia w formularzu
  * Ćwiczenie musi mieć exercise_id LUB exercise_title (dla snapshot)
  */
+export const workoutPlanScopeIdSchema = z.string().uuid().nullable().optional();
+export const workoutPlanInScopeNrSchema = z
+  .number()
+  .int()
+  .positive()
+  .nullable()
+  .optional();
+export const workoutPlanScopeRepeatCountSchema = z
+  .number()
+  .int()
+  .min(1)
+  .nullable()
+  .optional();
+
 export const workoutPlanExerciseItemFormSchema = z
   .object({
     id: z.string().optional(),
@@ -156,6 +170,9 @@ export const workoutPlanExerciseItemFormSchema = z
     exercise_is_unilateral: z.boolean().optional(),
     section_type: workoutPlanSectionTypeSchema,
     section_order: workoutPlanSectionOrderSchema,
+    scope_id: workoutPlanScopeIdSchema,
+    in_scope_nr: workoutPlanInScopeNrSchema,
+    scope_repeat_count: workoutPlanScopeRepeatCountSchema,
     planned_sets: workoutPlanPlannedSetsSchema,
     planned_reps: workoutPlanPlannedRepsSchema,
     planned_duration_seconds: workoutPlanPlannedDurationSchema,
@@ -234,14 +251,18 @@ export type WorkoutPlanFormValues = z.infer<typeof workoutPlanFormSchema>;
 export function formValuesToCreateCommand(
   data: WorkoutPlanFormValues,
 ): WorkoutPlanCreateCommand {
+  const normalized = normalizeSectionOrders(data.exercises);
   return {
     name: data.name.trim(),
     description: data.description?.trim() || null,
     part: data.part ?? null,
-    exercises: data.exercises.map((ex) => ({
+    exercises: normalized.map((ex) => ({
       exercise_id: ex.exercise_id ?? undefined,
       section_type: ex.section_type,
       section_order: ex.section_order,
+      scope_id: ex.scope_id ?? undefined,
+      in_scope_nr: ex.in_scope_nr ?? undefined,
+      scope_repeat_count: ex.scope_repeat_count ?? undefined,
       planned_sets: ex.planned_sets ?? undefined,
       planned_reps: ex.planned_reps ?? undefined,
       planned_duration_seconds: ex.planned_duration_seconds ?? undefined,
@@ -260,26 +281,44 @@ const SECTION_TYPE_ORDER: Record<string, number> = {
 };
 
 /**
- * Normalizuje section_order – sortuje ćwiczenia według sekcji i kolejności,
+ * Normalizuje section_order – sortuje ćwiczenia według sekcji i slotów,
  * przypisuje unikalne wartości 1, 2, 3… w ramach każdej sekcji.
- * Zapobiega duplikatom przy zmianie kolejności (reorder).
+ * Slot = jedno ćwiczenie (in_scope_nr null) albo cały scope (te same scope_id).
  */
-function normalizeSectionOrders<T extends { section_type: string; section_order: number }>(
-  exercises: T[],
-): T[] {
+function normalizeSectionOrders<
+  T extends {
+    section_type: string;
+    section_order: number;
+    in_scope_nr?: number | null;
+    scope_id?: string | null;
+  },
+>(exercises: T[]): T[] {
   const sorted = [...exercises].sort((a, b) => {
     const typeDiff =
       (SECTION_TYPE_ORDER[a.section_type] ?? 999) -
       (SECTION_TYPE_ORDER[b.section_type] ?? 999);
     if (typeDiff !== 0) return typeDiff;
-    return a.section_order - b.section_order;
+    if (a.section_order !== b.section_order) return a.section_order - b.section_order;
+    const aNr = a.in_scope_nr ?? 0;
+    const bNr = b.in_scope_nr ?? 0;
+    return aNr - bNr;
   });
 
   const sectionCounters = new Map<string, number>();
+  let prevSlotKey: string | null = null;
   return sorted.map((ex) => {
-    const nextOrder = (sectionCounters.get(ex.section_type) ?? 0) + 1;
-    sectionCounters.set(ex.section_type, nextOrder);
-    return { ...ex, section_order: nextOrder };
+    const slotKey =
+      ex.in_scope_nr != null && ex.scope_id != null
+        ? `${ex.section_type}:${ex.section_order}:${ex.scope_id}`
+        : `${ex.section_type}:${ex.section_order}:single`;
+    if (slotKey !== prevSlotKey) {
+      prevSlotKey = slotKey;
+      const nextOrder = (sectionCounters.get(ex.section_type) ?? 0) + 1;
+      sectionCounters.set(ex.section_type, nextOrder);
+      return { ...ex, section_order: nextOrder };
+    }
+    const order = sectionCounters.get(ex.section_type) ?? 1;
+    return { ...ex, section_order: order };
   });
 }
 
@@ -301,6 +340,9 @@ export function formValuesToUpdateCommand(
         exercise_id: ex.exercise_id,
         section_type: ex.section_type,
         section_order: ex.section_order,
+        scope_id: ex.scope_id ?? null,
+        in_scope_nr: ex.in_scope_nr ?? null,
+        scope_repeat_count: ex.scope_repeat_count ?? null,
         planned_sets: ex.planned_sets ?? null,
         planned_reps: ex.planned_reps ?? null,
         planned_duration_seconds: ex.planned_duration_seconds ?? null,
@@ -328,26 +370,39 @@ function validateSectionOrderDuplicates(
   exercises: WorkoutPlanExerciseItemState[],
 ): string[] {
   const errors: string[] = [];
-  const positionMap = new Map<string, Set<number>>();
-
-  for (const exercise of exercises) {
-    const sectionKey = exercise.section_type;
-    const order = exercise.section_order;
-
-    if (!positionMap.has(sectionKey)) {
-      positionMap.set(sectionKey, new Set());
-    }
-
-    const orders = positionMap.get(sectionKey)!;
-    if (orders.has(order)) {
+  const slotKey = (ex: WorkoutPlanExerciseItemState) =>
+    `${ex.section_type}:${ex.section_order}`;
+  const groups = new Map<string, WorkoutPlanExerciseItemState[]>();
+  for (const ex of exercises) {
+    const key = slotKey(ex);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(ex);
+  }
+  for (const [key, group] of groups) {
+    if (group.length === 1) continue;
+    const withScope = group.filter(
+      (ex) => ex.in_scope_nr != null && ex.scope_id != null,
+    );
+    const withoutScope = group.filter((ex) => ex.in_scope_nr == null);
+    if (withoutScope.length > 0 && withScope.length > 0) {
       errors.push(
-        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`,
+        `W slocie ${key} może być albo jedno ćwiczenie, albo zestaw (scope); mieszanie niedozwolone.`,
       );
-    } else {
-      orders.add(order);
+      continue;
+    }
+    if (withoutScope.length > 1) {
+      errors.push(
+        `Duplikat kolejności w sekcji ${key}. W slocie może być tylko jedno ćwiczenie bez zestawu.`,
+      );
+      continue;
+    }
+    const scopeIds = new Set(withScope.map((ex) => ex.scope_id));
+    if (scopeIds.size > 1) {
+      errors.push(
+        `W jednym slocie ${key} tylko jeden zestaw (scope). Różne scope_id.`,
+      );
     }
   }
-
   return errors;
 }
 

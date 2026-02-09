@@ -45,10 +45,23 @@ const estimatedSetTimeSchema = z
   .optional();
 
 /**
- * Schema dla pojedynczego ćwiczenia w planie treningowym.
+ * UUID regex for exercise_id and scope_id.
  */
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const scopeIdSchema = z
+  .string()
+  .refine((val) => uuidRegex.test(val), "scope_id musi być prawidłowym UUID")
+  .nullable()
+  .optional();
+const inScopeNrSchema = z.number().int().positive().nullable().optional();
+const scopeRepeatCountSchema = z
+  .number()
+  .int()
+  .min(1, "scope_repeat_count musi być >= 1")
+  .nullable()
+  .optional();
 
 export const workoutPlanExerciseInputSchema = z
   .object({
@@ -60,6 +73,9 @@ export const workoutPlanExerciseInputSchema = z
       ),
     section_type: sectionTypeSchema,
     section_order: sectionOrderSchema,
+    scope_id: scopeIdSchema,
+    in_scope_nr: inScopeNrSchema,
+    scope_repeat_count: scopeRepeatCountSchema,
     planned_sets: plannedSetsSchema,
     planned_reps: plannedRepsSchema,
     planned_duration_seconds: plannedDurationSchema,
@@ -128,6 +144,9 @@ export const workoutPlanExerciseUpdateOrCreateSchema = z
     exercise_part: z.enum(exercisePartValues).optional().nullable(),
     section_type: sectionTypeSchema.optional(),
     section_order: sectionOrderSchema.optional(),
+    scope_id: scopeIdSchema,
+    in_scope_nr: inScopeNrSchema,
+    scope_repeat_count: scopeRepeatCountSchema,
     planned_sets: plannedSetsSchema,
     planned_reps: plannedRepsSchema,
     planned_duration_seconds: plannedDurationSchema,
@@ -279,26 +298,39 @@ function getDuplicateOrderErrors(
   exercises: WorkoutPlanExerciseInput[],
 ): string[] {
   const errors: string[] = [];
-  const positionMap = new Map<string, Set<number>>();
-
-  for (const exercise of exercises) {
-    const sectionKey = exercise.section_type;
-    const order = exercise.section_order;
-
-    if (!positionMap.has(sectionKey)) {
-      positionMap.set(sectionKey, new Set());
-    }
-
-    const orders = positionMap.get(sectionKey)!;
-    if (orders.has(order)) {
+  const slotKey = (ex: WorkoutPlanExerciseInput) =>
+    `${ex.section_type}:${ex.section_order}`;
+  const groups = new Map<string, WorkoutPlanExerciseInput[]>();
+  for (const ex of exercises) {
+    const key = slotKey(ex);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(ex);
+  }
+  for (const [key, group] of groups) {
+    if (group.length === 1) continue;
+    const withScope = group.filter(
+      (ex) => ex.in_scope_nr != null && ex.scope_id != null,
+    );
+    const withoutScope = group.filter((ex) => ex.in_scope_nr == null);
+    if (withoutScope.length > 0 && withScope.length > 0) {
       errors.push(
-        `Duplikat kolejności ${order} w sekcji ${exercise.section_type}.`,
+        `W slocie ${key} może być albo jedno ćwiczenie, albo zestaw (scope); mieszanie niedozwolone.`,
       );
-    } else {
-      orders.add(order);
+      continue;
+    }
+    if (withoutScope.length > 1) {
+      errors.push(
+        `Duplikat kolejności w sekcji ${key}. W slocie może być tylko jedno ćwiczenie bez zestawu.`,
+      );
+      continue;
+    }
+    const scopeIds = new Set(withScope.map((ex) => ex.scope_id));
+    if (scopeIds.size > 1) {
+      errors.push(
+        `W jednym slocie ${key} tylko jeden zestaw (scope). Różne scope_id.`,
+      );
     }
   }
-
   return errors;
 }
 
