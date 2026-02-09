@@ -317,37 +317,65 @@ export function useWorkoutPlanForm({
     const currentExercise = currentExercises[index];
     if (!currentExercise) return;
 
-    const exercisesInSection = currentExercises
+    const sectionType = currentExercise.section_type;
+
+    const slotKeys = new Map<
+      string,
+      { indices: number[]; sectionOrder: number }
+    >();
+    const withIndex = currentExercises
       .map((ex, i) => ({ exercise: ex, originalIndex: i }))
-      .filter(
-        ({ exercise }) =>
-          exercise.section_type === currentExercise.section_type,
-      )
-      .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
+      .filter(({ exercise }) => exercise.section_type === sectionType)
+      .sort((a, b) => {
+        if (a.exercise.section_order !== b.exercise.section_order) {
+          return a.exercise.section_order - b.exercise.section_order;
+        }
+        const aNr = a.exercise.in_scope_nr ?? 0;
+        const bNr = b.exercise.in_scope_nr ?? 0;
+        return aNr - bNr;
+      });
 
-    const currentPosition = exercisesInSection.findIndex(
-      ({ originalIndex }) => originalIndex === index,
+    for (const { exercise, originalIndex } of withIndex) {
+      const scopeId =
+        exercise.in_scope_nr != null && exercise.scope_id != null
+          ? exercise.scope_id
+          : `single-${originalIndex}`;
+      const key = `${exercise.section_order}:${scopeId}`;
+      if (!slotKeys.has(key)) {
+        slotKeys.set(key, {
+          indices: [],
+          sectionOrder: exercise.section_order,
+        });
+      }
+      slotKeys.get(key)!.indices.push(originalIndex);
+    }
+
+    const slotsInOrder = [...slotKeys.entries()].sort(
+      (a, b) => a[1].sectionOrder - b[1].sectionOrder,
     );
-    if (currentPosition === -1) return;
-    if (direction === "up" && currentPosition === 0) return;
-    if (
-      direction === "down" &&
-      currentPosition === exercisesInSection.length - 1
-    )
+    const currentSlotIndex = slotsInOrder.findIndex(([, data]) =>
+      data.indices.includes(index),
+    );
+    if (currentSlotIndex === -1) return;
+    if (direction === "up" && currentSlotIndex === 0) return;
+    if (direction === "down" && currentSlotIndex === slotsInOrder.length - 1) {
       return;
+    }
 
-    const newPosition =
-      direction === "up" ? currentPosition - 1 : currentPosition + 1;
-    const reorderedSection = [...exercisesInSection];
-    const [movedItem] = reorderedSection.splice(currentPosition, 1);
-    reorderedSection.splice(newPosition, 0, movedItem);
+    const swapIndex = direction === "up" ? currentSlotIndex - 1 : currentSlotIndex + 1;
+    const currentSlot = slotsInOrder[currentSlotIndex][1];
+    const swapSlot = slotsInOrder[swapIndex][1];
+    const newOrderCurrent = swapSlot.sectionOrder;
+    const newOrderSwap = currentSlot.sectionOrder;
 
-    const newExercises = [...currentExercises];
-    reorderedSection.forEach(({ originalIndex }, orderIndex) => {
-      newExercises[originalIndex] = {
-        ...newExercises[originalIndex],
-        section_order: orderIndex + 1,
-      };
+    const newExercises = currentExercises.map((ex, i) => {
+      if (currentSlot.indices.includes(i)) {
+        return { ...ex, section_order: newOrderCurrent };
+      }
+      if (swapSlot.indices.includes(i)) {
+        return { ...ex, section_order: newOrderSwap };
+      }
+      return ex;
     });
     setValue("exercises", newExercises, { shouldDirty: true });
   };
