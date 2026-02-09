@@ -5,6 +5,7 @@ import { useWorkoutPlanForm } from "@/hooks/use-workout-plan-form";
 import type { WorkoutPlanFormProps } from "@/types/workout-plan-form";
 import { WorkoutPlanMetadataFieldsM3 } from "./WorkoutPlanMetadataFieldsM3";
 import { AddExerciseDialogM3 } from "./AddExerciseDialogM3";
+import { AddScopeDialogM3 } from "./AddScopeDialogM3";
 import { WorkoutPlansExercisesListM3 } from "./WorkoutPlansExercisesListM3";
 import { CancelButtonM3 } from "./CancelButtonM3";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export function WorkoutPlanFormM3({
     handleChange,
     handleBlur,
     handleAddExercise,
+    handleAddScope,
     handleRemoveExercise,
     handleUpdateExercise,
     handleMoveExercise,
@@ -78,13 +80,22 @@ export function WorkoutPlanFormM3({
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="m3-title">Exercises in plan</h2>
-          <AddExerciseDialogM3
-            onAddExercise={handleAddExercise}
-            disabled={isLoading}
-            existingExerciseIds={fields.exercises
-              .map((e) => e.exercise_id)
-              .filter((id): id is string => id !== null)}
-          />
+          <div className="flex gap-2">
+            <AddExerciseDialogM3
+              onAddExercise={handleAddExercise}
+              disabled={isLoading}
+              existingExerciseIds={fields.exercises
+                .map((e) => e.exercise_id)
+                .filter((id): id is string => id !== null)}
+            />
+            <AddScopeDialogM3
+              onAddScope={handleAddScope}
+              disabled={isLoading}
+              existingExerciseIds={fields.exercises
+                .map((e) => e.exercise_id)
+                .filter((id): id is string => id !== null)}
+            />
+          </div>
         </div>
         {fields.exercises.length === 0 ? (
           <div
