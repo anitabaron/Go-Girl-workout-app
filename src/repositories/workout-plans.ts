@@ -297,6 +297,9 @@ export async function insertWorkoutPlanExercises(
     plan_id: planId,
     exercise_id: exercise.exercise_id ?? null,
     snapshot_id: exercise.snapshot_id ?? null,
+    scope_id: exercise.scope_id ?? null,
+    in_scope_nr: exercise.in_scope_nr ?? null,
+    scope_repeat_count: exercise.scope_repeat_count ?? null,
     exercise_title: exercise.exercise_title ?? null,
     exercise_type: exercise.exercise_type ?? null,
     exercise_part: exercise.exercise_part ?? null,
@@ -396,6 +399,9 @@ export async function updateWorkoutPlanExercise(
     exercise_is_unilateral?: boolean | null;
     section_type?: Database["public"]["Enums"]["exercise_type"];
     section_order?: number;
+    scope_id?: string | null;
+    in_scope_nr?: number | null;
+    scope_repeat_count?: number | null;
     planned_sets?: number | null;
     planned_reps?: number | null;
     planned_duration_seconds?: number | null;
@@ -433,6 +439,15 @@ export async function updateWorkoutPlanExercise(
   }
   if (input.section_order !== undefined) {
     updateData.section_order = input.section_order;
+  }
+  if (input.scope_id !== undefined) {
+    updateData.scope_id = input.scope_id ?? null;
+  }
+  if (input.in_scope_nr !== undefined) {
+    updateData.in_scope_nr = input.in_scope_nr ?? null;
+  }
+  if (input.scope_repeat_count !== undefined) {
+    updateData.scope_repeat_count = input.scope_repeat_count ?? null;
   }
   if (input.planned_sets !== undefined) {
     updateData.planned_sets = input.planned_sets;

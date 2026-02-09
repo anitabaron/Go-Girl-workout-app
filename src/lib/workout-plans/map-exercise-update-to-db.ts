@@ -45,6 +45,15 @@ export function mapExerciseUpdateToDb(
   if (exerciseUpdate.section_order !== undefined) {
     updateData.section_order = exerciseUpdate.section_order;
   }
+  if (exerciseUpdate.scope_id !== undefined) {
+    updateData.scope_id = exerciseUpdate.scope_id ?? null;
+  }
+  if (exerciseUpdate.in_scope_nr !== undefined) {
+    updateData.in_scope_nr = exerciseUpdate.in_scope_nr ?? null;
+  }
+  if (exerciseUpdate.scope_repeat_count !== undefined) {
+    updateData.scope_repeat_count = exerciseUpdate.scope_repeat_count ?? null;
+  }
   if (exerciseUpdate.planned_sets !== undefined) {
     updateData.planned_sets = exerciseUpdate.planned_sets ?? null;
   }

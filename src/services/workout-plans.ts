@@ -254,6 +254,9 @@ function buildExercisesToInsert(
     return {
       exercise_id: exercise.exercise_id ?? null,
       snapshot_id: snapshotId,
+      scope_id: exercise.scope_id ?? null,
+      in_scope_nr: exercise.in_scope_nr ?? null,
+      scope_repeat_count: exercise.scope_repeat_count ?? null,
       exercise_title: exercise.exercise_title ?? null,
       exercise_type: exercise.exercise_type ?? null,
       exercise_part: exercise.exercise_part ?? null,

@@ -51,9 +51,10 @@ const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const scopeIdSchema = z
-  .string()
-  .refine((val) => uuidRegex.test(val), "scope_id musi być prawidłowym UUID")
-  .nullable()
+  .union([
+    z.string().refine((val) => uuidRegex.test(val), "scope_id musi być UUID"),
+    z.null(),
+  ])
   .optional();
 const inScopeNrSchema = z.number().int().positive().nullable().optional();
 const scopeRepeatCountSchema = z
