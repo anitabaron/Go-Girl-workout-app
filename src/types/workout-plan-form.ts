@@ -21,6 +21,9 @@ export type WorkoutPlanExerciseItemState = {
   // Parametry planu
   section_type: ExerciseType; // Warm-up | Main Workout | Cool-down
   section_order: number; // Kolejność w sekcji (> 0)
+  scope_id?: string | null; // Scope block id; null = single exercise
+  in_scope_nr?: number | null; // Order within scope (1,2,3…); null = not in scope
+  scope_repeat_count?: number | null; // How many times to repeat scope
   planned_sets: number | null;
   planned_reps: number | null;
   planned_duration_seconds: number | null;
@@ -191,6 +194,9 @@ export function dtoToFormState(dto?: WorkoutPlanDTO): WorkoutPlanFormState {
       exercise_is_unilateral: exercise.exercise_is_unilateral ?? undefined,
       section_type: exercise.section_type,
       section_order: exercise.section_order,
+      scope_id: exercise.scope_id ?? undefined,
+      in_scope_nr: exercise.in_scope_nr ?? undefined,
+      scope_repeat_count: exercise.scope_repeat_count ?? undefined,
       planned_sets: exercise.planned_sets,
       planned_reps: exercise.planned_reps,
       planned_duration_seconds: exercise.planned_duration_seconds,
@@ -222,6 +228,9 @@ export function exerciseDtoToItemState(
     exercise_is_unilateral: exerciseMetadata?.is_unilateral,
     section_type: exerciseDto.section_type,
     section_order: exerciseDto.section_order,
+    scope_id: exerciseDto.scope_id ?? undefined,
+    in_scope_nr: exerciseDto.in_scope_nr ?? undefined,
+    scope_repeat_count: exerciseDto.scope_repeat_count ?? undefined,
     planned_sets: exerciseDto.planned_sets,
     planned_reps: exerciseDto.planned_reps,
     planned_duration_seconds: exerciseDto.planned_duration_seconds,
