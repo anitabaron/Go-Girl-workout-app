@@ -132,9 +132,83 @@ Efekt: asystent sesji i historia sesji działają na płaskiej liście; użytkow
 
 ---
 
+## 8. Kroki implementacji (Do zrobienia)
+
+Wszystkie zmiany dotyczą **stron i komponentów z `src/app/(app)/(main)`** (oraz współdzielonych warstw: typy, walidacja, eksport). Nie wiązać z `(legacy)`.
+
+---
+
+### 8.0 Widoczność scope w UI (wymagane miejsca)
+
+Scope (zestaw ćwiczeń) ma być **widoczny** w trzech miejscach aplikacji (main):
+
+| Miejsce | Komponent / strona | Wymaganie |
+|--------|---------------------|-----------|
+| **Widok detali planu** | `(main)/_components/WorkoutPlanDetailContent.tsx` – lista ćwiczeń planu | Ćwiczenia zgrupowane po scope; każdy zestaw jako blok „Scope × N” z listą ćwiczeń wewnątrz (nie płaska lista). |
+| **Formularz tworzenia/edycji planu** | `(main)/_components/WorkoutPlansExercisesListM3.tsx` w `WorkoutPlanFormM3` | Grupowanie po slotach; slot-scope w wspólnej ramce z nagłówkiem „Scope × N”, edycja repeat count, ruch/usuwanie – patrz 8.1. |
+| **Karta planu na liście** | `(main)/_ui/M3WorkoutPlanCard.tsx` w `WorkoutPlansListM3` | Na karcie (list/preview) planu scope ma być widoczny – np. zamiast płaskiej listy ćwiczeń: pojedyncze ćwiczenia + bloki „Scope × N” (skrótowo: liczba ćwiczeń w scope lub etykieta „Scope” przy zestawie). |
+
+**Kroki implementacji dla każdego miejsca:**
+
+- **Widok detali planu:** W `WorkoutPlanDetailContent` sortować ćwiczenia jak dotąd (section_type → section_order → in_scope_nr), następnie grupować po slocie (section_type + section_order; slot-scope = wiersze z tym samym scope_id). Render: pojedyncze ćwiczenie – jedna karta/pozycja; slot-scope – jeden blok z ramką, nagłówek „Scope × N”, wewnątrz lista ćwiczeń wg in_scope_nr. Użyć tej samej stylistyki ramki co w formularzu (m3.css).
+- **Formularz tworzenia/edycji:** Patrz 8.1 poniżej.
+- **Karta planu na liście:** W `M3WorkoutPlanCard` w podglądzie ćwiczeń (preview) nie pokazywać płaskiej listy wszystkich pozycji – pojedyncze ćwiczenia + dla każdego scope jeden wpis typu „Scope × N” (np. „3 exercises × 2”) lub zwięzła etykieta „Scope”, tak aby na liście planów było widać, że plan zawiera zestawy.
+
+---
+
+### 8.1 Wyróżnienie graficzne scope na UI (formularz)
+
+- **Cel:** Scope (zestaw ćwiczeń) ma być wizualnie odróżniony od pojedynczych ćwiczeń – wspólna obejmująca ramka zgodna ze stylistyką M3.
+- **Miejsce:** `src/app/(app)/(main)/_components/WorkoutPlansExercisesListM3.tsx` oraz ewentualnie `WorkoutPlanExerciseItemM3.tsx`.
+- **Kroki:**
+  1. W `WorkoutPlansExercisesListM3` grupować ćwiczenia po **slocie**: (section_type, section_order), przy czym slot-scope = wszystkie wiersze z tym samym `scope_id` (i `in_scope_nr` != null).
+  2. Dla slotu bez scope: renderować pojedynczy `WorkoutPlanExerciseItemM3` jak dotąd (bez dodatkowej ramki).
+  3. Dla slotu-scope: otoczyć grupę ćwiczeń wspólnym kontenerem z ramką – np. `border`, `padding`, zaokrąglone rogi (klasy M3 / `m3.css`), tło wyróżniające (np. `var(--m3-surface-container)` lub delikatny outline). W nagłówku bloku: etykieta typu "Scope × N" + opcjonalnie pole edycji `scope_repeat_count` i przycisk "Remove scope".
+  4. Wewnątrz bloku scope: lista `WorkoutPlanExerciseItemM3` wg `in_scope_nr`; ruch/usuwanie w górę/dół w obrębie scope (bez zmiany `section_order` całego slotu).
+  5. Klucze do renderu: slot bez scope → `single-${exercise.id ?? index}`; slot-scope → `scope-${scope_id}`. Wewnątrz scope: key np. `scope-${scope_id}-${in_scope_nr}`.
+- **Stylistyka:** Użyć tokenów z `m3.css` (np. `--m3-outline-variant`, `--m3-surface-container`) i ewentualnie `rounded-lg` / `rounded-xl` spójnie z innymi kartami w (main).
+
+---
+
+### 8.2 Dialog dodawania scope – zaokrąglone rogi i spójność z designem
+
+- **Cel:** Add scope dialog ma mieć zaokrąglone rogi i nie odbiegać od reszty UI (M3).
+- **Miejsce:** `src/app/(app)/(main)/_components/AddScopeDialogM3.tsx` – używa `DialogContent` z `@/components/ui/dialog`.
+- **Kroki:**
+  1. Sprawdzić `src/components/ui/dialog.tsx`: `DialogContent` ma domyślnie `rounded-lg`. W (main) dialogi mogą być nadpisywane przez kontekst `.ui-m3` lub globalne style – upewnić się, że dla M3 używane są większe zaokrąglenia jeśli tak ma reszta (np. `rounded-2xl` w m3.css dla kart/dialogów).
+  2. W `AddScopeDialogM3` dodać do `DialogContent` klasę nadpisującą zaokrąglenia, np. `className="... rounded-2xl"` (albo wartość z m3.css, np. `rounded-[var(--m3-shape-extra-large)]` jeśli zdefiniowane), tak aby dialog wyglądał spójnie z `AddExerciseDialogM3` i innymi dialogami w (main).
+  3. Porównać wizualnie z `AddExerciseDialogM3` – ten sam border, shadow, padding, żeby oba dialogi były spójne.
+
+---
+
+### 8.3 Edycja planu ze scope – przycisk Save ma zapisywać zmiany
+
+- **Cel:** Plan utworzony ze scope po wejściu w edycję i kliknięciu Save ma faktycznie wykonywać update (nie nic nie robić, bez błędu).
+- **Przyczyna:** W `src/hooks/use-workout-plan-form.ts` funkcja `formStateToFormValues` mapuje stan formularza (z `dtoToFormState`) na wartości do react-hook-form **bez pól scope**. W trybie edit `defaultValues` są ustawiane z tej mapy, więc `scope_id`, `in_scope_nr`, `scope_repeat_count` trafiają do formularza jako `undefined`. Przy submicie wysyłane są więc ćwiczenia bez scope (lub z null), a formularz może nie uznawać zmian za "dirty" w oczekiwany sposób, albo backend dostaje niepełne dane.
+- **Kroki:**
+  1. W `use-workout-plan-form.ts` w `formStateToFormValues` dodać do mapowania każdego ćwiczenia pola: `scope_id`, `in_scope_nr`, `scope_repeat_count` (wartości z `ex.scope_id`, `ex.in_scope_nr`, `ex.scope_repeat_count` – zachować null/undefined spójnie z `WorkoutPlanFormValues`).
+  2. Upewnić się, że `dtoToFormState` zwraca te pola (już zwraca – `types/workout-plan-form.ts`). Po poprawce `formStateToFormValues` formularz w trybie edit będzie miał poprawne defaultValues ze scope.
+  3. Przetestować: plan ze scope → Edytuj → (opcjonalnie zmiana nazwy lub repeat count) → Save → plan ma być zaktualizowany i przekierowanie na listę; w bazie ćwiczenia muszą zachować `scope_id` / `in_scope_nr` / `scope_repeat_count`.
+
+---
+
+### 8.4 Eksport JSON planu z uwzględnieniem scope
+
+- **Cel:** Eksport planu do JSON (przycisk w widoku szczegółów planu) ma zawierać dane scope, tak aby po imporcie pliku plan odtwarzał zestawy (scope × N).
+- **Miejsca:**  
+  - `src/lib/workout-plans/plan-to-import-format.ts` – funkcja `workoutPlanToImportFormat` i `exerciseToImportFormat`;  
+  - `src/lib/validation/workout-plans.ts` – schemat importu `workoutPlanExerciseImportSchema` / `workoutPlanImportSchema` musi dopuszczać (i ewentualnie wymagać przy scope) pola scope.
+- **Kroki:**
+  1. W `exerciseToImportFormat`: do obiektu eksportowanego ćwiczenia dodać pola `scope_id`, `in_scope_nr`, `scope_repeat_count` (wartości z `ex.scope_id`, `ex.in_scope_nr`, `ex.scope_repeat_count` – null gdy brak scope).
+  2. W schemacie importu w `workout-plans.ts`: upewnić się, że `workoutPlanExerciseImportSchema` zawiera opcjonalne (nullable) pola `scope_id`, `in_scope_nr`, `scope_repeat_count` (zgodnie z regułami scope: jeśli `in_scope_nr` podane, to `scope_id` wymagane itd. – patrz istniejące walidatory scope w tym pliku).
+  3. W logice importu planu (serwis/repo): przy wstawianiu ćwiczeń z pliku przekazywać te trzy pola do bazy, żeby zaimportowany plan miał te same zestawy co wyeksportowany.
+  4. Przetestować: plan ze scope → Export JSON → Import tego pliku → nowy plan ma identyczną strukturę scope (te same scope_id grupy, in_scope_nr, scope_repeat_count).
+
+---
+
 ## Uwagi
 
 - **Nazewnictwo w UI:** W (main) wszystko jest po angielsku – w UI używać "scope" (np. "Add scope", "Scope × 3"); w kodzie/DB: `scope_id`, `in_scope_nr`, `scope_repeat_count`.
-- **Import planów (JSON):** Docelowo import ma obsługiwać scope (scope_id / in_scope_nr / scope_repeat_count w pliku). Wdrożyć to na końcu; w pierwszej iteracji przy imporcie ustawiać brak scope (null).
+- **Import planów (JSON):** Docelowo import ma obsługiwać scope (scope_id / in_scope_nr / scope_repeat_count w pliku). Wdrożyć to na końcu; w pierwszej iteracji przy imporcie ustawiać brak scope (null). **Po realizacji pkt 8.4** import będzie pełny dla scope.
 - **Edycja planów:** Istniejące plany zostają jak są; przy odczycie/edycji ćwiczenia bez scope mają `scope_id`/`in_scope_nr`/`scope_repeat_count` = null. Można im potem dodać scope (nowe zestawy) lub zostawić pojedyncze ćwiczenia.
 - **Gdzie robić zmiany UI:** Komponenty formularza w `src/components/` są współdzielone; strony i nawigacja – tylko te pod **`src/app/(app)/(main)`**. Przy dodawaniu linków, routów czy odniesień do widoków planu/sesji używać wyłącznie ścieżek i komponentów z (main).
