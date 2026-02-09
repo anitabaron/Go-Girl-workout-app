@@ -51,6 +51,9 @@ function formStateToFormValues(
       exercise_is_unilateral: ex.exercise_is_unilateral,
       section_type: ex.section_type,
       section_order: ex.section_order,
+      scope_id: ex.scope_id ?? undefined,
+      in_scope_nr: ex.in_scope_nr ?? undefined,
+      scope_repeat_count: ex.scope_repeat_count ?? undefined,
       planned_sets: ex.planned_sets,
       planned_reps: ex.planned_reps,
       planned_duration_seconds: ex.planned_duration_seconds,
@@ -221,6 +224,45 @@ export function useWorkoutPlanForm({
     toAppend.forEach((item) => append(item));
   };
 
+  const handleAddScope = (
+    exercises: ExerciseDTO[],
+    sectionType: ExerciseDTO["type"],
+    repeatCount: number,
+  ) => {
+    if (exercises.length === 0 || repeatCount < 1) return;
+
+    const currentExercises = watch("exercises");
+    const exercisesInSection = currentExercises.filter(
+      (e) => e.section_type === sectionType,
+    );
+    const nextSlotOrder =
+      exercisesInSection.length > 0
+        ? Math.max(...exercisesInSection.map((e) => e.section_order)) + 1
+        : 1;
+
+    const scopeId = crypto.randomUUID();
+    const toAppend = exercises.map((ex, i) => ({
+      exercise_id: ex.id,
+      exercise_title: ex.title,
+      exercise_type: ex.type,
+      exercise_part: ex.part,
+      exercise_is_unilateral: ex.is_unilateral,
+      section_type: sectionType,
+      section_order: nextSlotOrder,
+      scope_id: scopeId,
+      in_scope_nr: i + 1,
+      scope_repeat_count: repeatCount,
+      planned_sets: ex.series ?? null,
+      planned_reps: ex.reps ?? null,
+      planned_duration_seconds: ex.duration_seconds ?? null,
+      planned_rest_seconds: ex.rest_in_between_seconds ?? null,
+      planned_rest_after_series_seconds: ex.rest_after_series_seconds ?? null,
+      estimated_set_time_seconds: ex.estimated_set_time_seconds ?? null,
+    }));
+
+    toAppend.forEach((item) => append(item));
+  };
+
   const handleRemoveExercise = (index: number) => {
     remove(index);
   };
@@ -278,39 +320,115 @@ export function useWorkoutPlanForm({
     const currentExercise = currentExercises[index];
     if (!currentExercise) return;
 
-    const exercisesInSection = currentExercises
+    const sectionType = currentExercise.section_type;
+
+    const slotKeys = new Map<
+      string,
+      { indices: number[]; sectionOrder: number }
+    >();
+    const withIndex = currentExercises
       .map((ex, i) => ({ exercise: ex, originalIndex: i }))
-      .filter(
-        ({ exercise }) =>
-          exercise.section_type === currentExercise.section_type,
-      )
-      .sort((a, b) => a.exercise.section_order - b.exercise.section_order);
+      .filter(({ exercise }) => exercise.section_type === sectionType)
+      .sort((a, b) => {
+        if (a.exercise.section_order !== b.exercise.section_order) {
+          return a.exercise.section_order - b.exercise.section_order;
+        }
+        const aNr = a.exercise.in_scope_nr ?? 0;
+        const bNr = b.exercise.in_scope_nr ?? 0;
+        return aNr - bNr;
+      });
 
-    const currentPosition = exercisesInSection.findIndex(
-      ({ originalIndex }) => originalIndex === index,
+    for (const { exercise, originalIndex } of withIndex) {
+      const scopeId =
+        exercise.in_scope_nr != null && exercise.scope_id != null
+          ? exercise.scope_id
+          : `single-${originalIndex}`;
+      const key = `${exercise.section_order}:${scopeId}`;
+      if (!slotKeys.has(key)) {
+        slotKeys.set(key, {
+          indices: [],
+          sectionOrder: exercise.section_order,
+        });
+      }
+      slotKeys.get(key)!.indices.push(originalIndex);
+    }
+
+    const slotsInOrder = [...slotKeys.entries()].sort(
+      (a, b) => a[1].sectionOrder - b[1].sectionOrder,
     );
-    if (currentPosition === -1) return;
-    if (direction === "up" && currentPosition === 0) return;
-    if (
-      direction === "down" &&
-      currentPosition === exercisesInSection.length - 1
-    )
+    const currentSlotIndex = slotsInOrder.findIndex(([, data]) =>
+      data.indices.includes(index),
+    );
+    if (currentSlotIndex === -1) return;
+    if (direction === "up" && currentSlotIndex === 0) return;
+    if (direction === "down" && currentSlotIndex === slotsInOrder.length - 1) {
       return;
+    }
 
-    const newPosition =
-      direction === "up" ? currentPosition - 1 : currentPosition + 1;
-    const reorderedSection = [...exercisesInSection];
-    const [movedItem] = reorderedSection.splice(currentPosition, 1);
-    reorderedSection.splice(newPosition, 0, movedItem);
+    const swapIndex =
+      direction === "up" ? currentSlotIndex - 1 : currentSlotIndex + 1;
+    const currentSlot = slotsInOrder[currentSlotIndex][1];
+    const swapSlot = slotsInOrder[swapIndex][1];
+    const newOrderCurrent = swapSlot.sectionOrder;
+    const newOrderSwap = currentSlot.sectionOrder;
 
-    const newExercises = [...currentExercises];
-    reorderedSection.forEach(({ originalIndex }, orderIndex) => {
-      newExercises[originalIndex] = {
-        ...newExercises[originalIndex],
-        section_order: orderIndex + 1,
-      };
+    const newExercises = currentExercises.map((ex, i) => {
+      if (currentSlot.indices.includes(i)) {
+        return { ...ex, section_order: newOrderCurrent };
+      }
+      if (swapSlot.indices.includes(i)) {
+        return { ...ex, section_order: newOrderSwap };
+      }
+      return ex;
     });
     setValue("exercises", newExercises, { shouldDirty: true });
+  };
+
+  const handleUpdateScopeSectionOrder = (
+    indices: number[],
+    sectionOrder: number,
+  ) => {
+    if (indices.length === 0 || sectionOrder < 1) return;
+    const currentExercises = watch("exercises");
+    const next = currentExercises.map((ex, i) =>
+      indices.includes(i) ? { ...ex, section_order: sectionOrder } : ex,
+    );
+    setValue("exercises", next, { shouldDirty: true });
+  };
+
+  const handleMoveWithinScope = (index: number, direction: "up" | "down") => {
+    const currentExercises = watch("exercises");
+    const current = currentExercises[index];
+    if (!current || current.scope_id == null || current.in_scope_nr == null) {
+      return;
+    }
+    const scopeId = current.scope_id;
+    const inScope = currentExercises
+      .map((ex, i) => ({ exercise: ex, index: i }))
+      .filter(
+        ({ exercise }) =>
+          exercise.scope_id === scopeId && exercise.in_scope_nr != null,
+      )
+      .sort(
+        (a, b) => (a.exercise.in_scope_nr ?? 0) - (b.exercise.in_scope_nr ?? 0),
+      );
+    const pos = inScope.findIndex(({ index: i }) => i === index);
+    if (pos === -1) return;
+    if (direction === "up" && pos === 0) return;
+    if (direction === "down" && pos === inScope.length - 1) return;
+    const swapPos = direction === "up" ? pos - 1 : pos + 1;
+    const currentNr = inScope[pos].exercise.in_scope_nr ?? 0;
+    const swapNr = inScope[swapPos].exercise.in_scope_nr ?? 0;
+    const next = currentExercises.map((ex, i) => {
+      if (i === inScope[pos].index) {
+        return { ...ex, in_scope_nr: swapNr };
+      }
+      if (i === inScope[swapPos].index) {
+        return { ...ex, in_scope_nr: currentNr };
+      }
+      return ex;
+    });
+    setValue("exercises", next, { shouldDirty: true });
   };
 
   const scrollToFirstError = () => {
@@ -323,9 +441,12 @@ export function useWorkoutPlanForm({
     });
   };
 
-  const handleSubmitError = (
-    result: { success: false; error: string; code?: string; details?: string },
-  ) => {
+  const handleSubmitError = (result: {
+    success: false;
+    error: string;
+    code?: string;
+    details?: string;
+  }) => {
     if (result.code === "BAD_REQUEST") {
       handleBadRequest({
         message: result.error,
@@ -405,9 +526,12 @@ export function useWorkoutPlanForm({
     handleChange,
     handleBlur,
     handleAddExercise,
+    handleAddScope,
     handleRemoveExercise,
     handleUpdateExercise,
     handleMoveExercise,
+    handleUpdateScopeSectionOrder,
+    handleMoveWithinScope,
     handleSubmit,
   };
 }

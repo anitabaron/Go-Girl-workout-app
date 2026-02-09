@@ -511,27 +511,59 @@ function createSessionSnapshots(
   planned_rest_after_series_seconds: number | null;
   exercise_order: number;
 }> {
-  // Sortuj ćwiczenia planu: najpierw Warm-up, potem Main Workout, potem Cool-down
-  // W ramach każdej sekcji sortuj po section_order
+  const typeOrder = {
+    "Warm-up": 1,
+    "Main Workout": 2,
+    "Cool-down": 3,
+  };
+
+  // Sort: section_type → section_order → in_scope_nr (null last so scope 1,2,3 are consecutive)
   const sortedExercises = [...planExercises].sort((a, b) => {
-    const typeOrder = {
-      "Warm-up": 1,
-      "Main Workout": 2,
-      "Cool-down": 3,
-    };
-
-    const aOrder = typeOrder[a.section_type];
-    const bOrder = typeOrder[b.section_type];
-
-    if (aOrder !== bOrder) {
-      return aOrder - bOrder;
-    }
-
-    return a.section_order - b.section_order;
+    const aType = typeOrder[a.section_type];
+    const bType = typeOrder[b.section_type];
+    if (aType !== bType) return aType - bType;
+    if (a.section_order !== b.section_order) return a.section_order - b.section_order;
+    const aNr = a.in_scope_nr ?? 999;
+    const bNr = b.in_scope_nr ?? 999;
+    return aNr - bNr;
   });
 
-  // Oblicz flattened order (1, 2, 3, ...)
-  const snapshots = sortedExercises.map((planExercise, index) => {
+  // Group into slots: same (section_type, section_order). Single = one with in_scope_nr null; scope = same scope_id.
+  const slots: WorkoutPlanExerciseDTO[][] = [];
+  let currentSlot: WorkoutPlanExerciseDTO[] = [];
+  let currentSlotKey: string | null = null;
+
+  for (const ex of sortedExercises) {
+    const slotKey = `${ex.section_type}:${ex.section_order}`;
+    const inScope = ex.in_scope_nr != null && ex.scope_id != null;
+    const slotId = inScope ? `${slotKey}:${ex.scope_id}` : `${slotKey}:single`;
+
+    if (currentSlotKey !== slotId) {
+      if (currentSlot.length > 0) slots.push(currentSlot);
+      currentSlot = [ex];
+      currentSlotKey = slotId;
+    } else {
+      currentSlot.push(ex);
+    }
+  }
+  if (currentSlot.length > 0) slots.push(currentSlot);
+
+  // Expand scopes: each slot either 1 exercise (single) or N repeats of scope block
+  const flatExercises: WorkoutPlanExerciseDTO[] = [];
+  for (const slot of slots) {
+    const first = slot[0];
+    if (first.in_scope_nr == null || first.scope_id == null) {
+      flatExercises.push(first);
+      continue;
+    }
+    const repeatCount = Math.max(1, first.scope_repeat_count ?? 1);
+    for (let r = 0; r < repeatCount; r++) {
+      flatExercises.push(...slot);
+    }
+  }
+
+  // Build snapshots with exercise_order 1, 2, 3...
+  const snapshots = flatExercises.map((planExercise, index) => {
     // Jeśli ćwiczenie ma exercise_id, pobierz dane z mapy
     // W przeciwnym razie użyj snapshot z planu
     let exerciseTitle: string;
@@ -590,6 +622,7 @@ function createSessionSnapshots(
 
   return snapshots;
 }
+
 
 /**
  * Waliduje path parameters dla autosave.

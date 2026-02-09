@@ -94,11 +94,12 @@ async function loadPlanExerciseMetadata(
   const { data: exercisesData, error: exercisesError } = await client
     .from("workout_plan_exercises")
     .select(
-      "plan_id, exercise_id, exercise_title, planned_sets, planned_reps, planned_duration_seconds, planned_rest_seconds, exercises(title)",
+      "plan_id, exercise_id, exercise_title, planned_sets, planned_reps, planned_duration_seconds, planned_rest_seconds, scope_id, in_scope_nr, scope_repeat_count, exercises(title)",
     )
     .in("plan_id", planIds)
     .order("section_type", { ascending: true })
-    .order("section_order", { ascending: true });
+    .order("section_order", { ascending: true })
+    .order("in_scope_nr", { ascending: true, nullsFirst: false });
 
   if (exercisesError || !exercisesData) {
     return {
@@ -109,11 +110,60 @@ async function loadPlanExerciseMetadata(
     };
   }
 
-  for (const row of exercisesData) {
+  type Row = (typeof exercisesData)[number];
+  let i = 0;
+  while (i < exercisesData.length) {
+    const row = exercisesData[i] as Row & {
+      scope_id?: string | null;
+      in_scope_nr?: number | null;
+      scope_repeat_count?: number | null;
+    };
     const planId = row.plan_id;
     const exerciseTitle =
       (row.exercises as { title: string } | null)?.title ??
       (row as { exercise_title?: string | null }).exercise_title;
+
+    if (row.scope_id != null && row.in_scope_nr != null) {
+      const scopeId = row.scope_id;
+      const scopeRows = exercisesData.filter(
+        (r: Row) =>
+          r.plan_id === planId &&
+          (r as { scope_id?: string | null }).scope_id === scopeId,
+      ) as (Row & { scope_id?: string | null; scope_repeat_count?: number | null })[];
+      const repeatCount = row.scope_repeat_count ?? 1;
+      const n = scopeRows.length;
+      const scopeLabel = `Scope × ${repeatCount}`;
+      exerciseCounts[planId] = (exerciseCounts[planId] ?? 0) + n;
+      const summaries = exerciseSummariesByPlanId.get(planId) ?? [];
+      const names = exercisesByPlanId.get(planId) ?? [];
+      for (const scopeRow of scopeRows) {
+        const title =
+          (scopeRow.exercises as { title: string } | null)?.title ??
+          (scopeRow as { exercise_title?: string | null }).exercise_title;
+        if (scopeRow.exercise_id === null && title) {
+          const titles = unlinkedTitlesByPlanId.get(planId) ?? new Set();
+          titles.add(normalizeTitleForDbLookup(title));
+          unlinkedTitlesByPlanId.set(planId, titles);
+        }
+        if (title) {
+          names.push(title);
+          summaries.push({
+            title,
+            planned_sets: scopeRow.planned_sets ?? null,
+            planned_reps: scopeRow.planned_reps ?? null,
+            planned_duration_seconds: scopeRow.planned_duration_seconds ?? null,
+            planned_rest_seconds: scopeRow.planned_rest_seconds ?? null,
+            scope_label: scopeLabel,
+            scope_id: scopeId,
+            scope_repeat_count: repeatCount,
+          });
+        }
+      }
+      exercisesByPlanId.set(planId, names);
+      exerciseSummariesByPlanId.set(planId, summaries);
+      i += n;
+      continue;
+    }
 
     exerciseCounts[planId] = (exerciseCounts[planId] ?? 0) + 1;
 
@@ -135,9 +185,11 @@ async function loadPlanExerciseMetadata(
         planned_reps: row.planned_reps ?? null,
         planned_duration_seconds: row.planned_duration_seconds ?? null,
         planned_rest_seconds: row.planned_rest_seconds ?? null,
+        scope_label: null,
       });
       exerciseSummariesByPlanId.set(planId, summaries);
     }
+    i += 1;
   }
 
   const libraryTitlesNormalized = await fetchLibraryTitlesNormalized(
@@ -297,6 +349,9 @@ export async function insertWorkoutPlanExercises(
     plan_id: planId,
     exercise_id: exercise.exercise_id ?? null,
     snapshot_id: exercise.snapshot_id ?? null,
+    scope_id: exercise.scope_id ?? null,
+    in_scope_nr: exercise.in_scope_nr ?? null,
+    scope_repeat_count: exercise.scope_repeat_count ?? null,
     exercise_title: exercise.exercise_title ?? null,
     exercise_type: exercise.exercise_type ?? null,
     exercise_part: exercise.exercise_part ?? null,
@@ -396,6 +451,9 @@ export async function updateWorkoutPlanExercise(
     exercise_is_unilateral?: boolean | null;
     section_type?: Database["public"]["Enums"]["exercise_type"];
     section_order?: number;
+    scope_id?: string | null;
+    in_scope_nr?: number | null;
+    scope_repeat_count?: number | null;
     planned_sets?: number | null;
     planned_reps?: number | null;
     planned_duration_seconds?: number | null;
@@ -433,6 +491,15 @@ export async function updateWorkoutPlanExercise(
   }
   if (input.section_order !== undefined) {
     updateData.section_order = input.section_order;
+  }
+  if (input.scope_id !== undefined) {
+    updateData.scope_id = input.scope_id ?? null;
+  }
+  if (input.in_scope_nr !== undefined) {
+    updateData.in_scope_nr = input.in_scope_nr ?? null;
+  }
+  if (input.scope_repeat_count !== undefined) {
+    updateData.scope_repeat_count = input.scope_repeat_count ?? null;
   }
   if (input.planned_sets !== undefined) {
     updateData.planned_sets = input.planned_sets;
@@ -556,7 +623,8 @@ export async function listWorkoutPlanExercises(
     )
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
-    .order("section_order", { ascending: true });
+    .order("section_order", { ascending: true })
+    .order("in_scope_nr", { ascending: true, nullsFirst: false });
 
   if (error) {
     return { error };
@@ -622,6 +690,9 @@ export async function listWorkoutPlanExercises(
       id: row.id,
       exercise_id: row.exercise_id,
       snapshot_id: rowWithSnapshot.snapshot_id ?? null,
+      scope_id: row.scope_id ?? null,
+      in_scope_nr: row.in_scope_nr ?? null,
+      scope_repeat_count: row.scope_repeat_count ?? null,
       section_type: row.section_type,
       section_order: row.section_order,
       planned_sets: row.planned_sets,

@@ -124,6 +124,10 @@ export type WorkoutPlanExerciseInput = Omit<
   exercise_part?: ExercisePart | null;
   exercise_details?: string | null; // Opis ćwiczenia (z JSON importu)
   exercise_is_unilateral?: boolean | null; // Dla snapshotów: czy ćwiczenie jest unilateralne
+  // Scope (repeatable block): same scope_id for exercises in one block, in_scope_nr = order within block
+  scope_id?: string | null;
+  in_scope_nr?: number | null;
+  scope_repeat_count?: number | null;
 };
 
 export type WorkoutPlanCreateCommand = Pick<
@@ -171,6 +175,12 @@ export type PlanExerciseSummary = {
   planned_reps: number | null;
   planned_duration_seconds: number | null;
   planned_rest_seconds: number | null;
+  /** Scope label when exercise is part of a scope, e.g. "Scope × 3" */
+  scope_label?: string | null;
+  /** Scope block id for grouping; null = single exercise row */
+  scope_id?: string | null;
+  /** Number of scope repetitions (for display left of scope frame) */
+  scope_repeat_count?: number | null;
 };
 
 export type PlanQueryParams = {

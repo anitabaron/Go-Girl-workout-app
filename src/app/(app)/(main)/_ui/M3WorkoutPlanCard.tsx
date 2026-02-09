@@ -17,6 +17,44 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteWorkoutPlanDialogM3 } from "../_components/DeleteWorkoutPlanDialogM3";
 import type { PlanExerciseSummary, WorkoutPlanDTO } from "@/types";
+
+type ExerciseSlot =
+  | { type: "single"; items: PlanExerciseSummary[] }
+  | {
+      type: "scope";
+      scopeRepeatCount: number;
+      items: PlanExerciseSummary[];
+    };
+
+function groupSummariesIntoSlots(
+  summaries: PlanExerciseSummary[]
+): ExerciseSlot[] {
+  const slots: ExerciseSlot[] = [];
+  let i = 0;
+  while (i < summaries.length) {
+    const ex = summaries[i];
+    if (ex.scope_id != null && ex.scope_repeat_count != null) {
+      const scopeId = ex.scope_id;
+      const items: PlanExerciseSummary[] = [];
+      while (
+        i < summaries.length &&
+        (summaries[i] as PlanExerciseSummary).scope_id === scopeId
+      ) {
+        items.push(summaries[i]);
+        i += 1;
+      }
+      slots.push({
+        type: "scope",
+        scopeRepeatCount: ex.scope_repeat_count,
+        items,
+      });
+    } else {
+      slots.push({ type: "single", items: [ex] });
+      i += 1;
+    }
+  }
+  return slots;
+}
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import {
   formatTotalDuration,
@@ -216,7 +254,7 @@ function M3WorkoutPlanCardComponent({
                 </div>
               )}
               {finalExerciseCount > 0 && (
-                <div className="flex flex-col gap-1">
+                <>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Dumbbell className="size-4" />
                     <span className="font-medium">
@@ -225,18 +263,19 @@ function M3WorkoutPlanCardComponent({
                   </div>
                   {plan.exercise_summaries &&
                   plan.exercise_summaries.length > 0 ? (
-                    <div className="ml-6 overflow-x-auto">
+                    <div className="overflow-x-auto">
                       <table className="w-full min-w-[280px] text-xs text-muted-foreground">
                         <thead>
                           <tr className="border-b border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] text-foreground">
-                            <th className="py-1 pr-3 text-left font-medium">
+                            <th className="w-8 shrink-0 py-1 pr-1" aria-label="Scope repeats" />
+                            <th className="py-1 pr-2 text-left font-medium">
                               Exercise
                             </th>
-                            <th className="py-1 pr-3 text-left font-medium">
+                            <th className="py-1 pr-2 text-left font-medium">
                               Reps/time
                             </th>
-                            <th className="py-1 pr-3 text-left font-medium">
-                              Sets
+                            <th className="py-1 pr-2 text-left font-medium">
+                              S
                             </th>
                             <th className="py-1 text-left font-medium">
                               Rest
@@ -244,45 +283,87 @@ function M3WorkoutPlanCardComponent({
                           </tr>
                         </thead>
                         <tbody>
-                          {plan.exercise_summaries.map((ex, i) => (
-                            <tr
-                              key={`${ex.title}-${i}`}
-                              className="border-b border-[var(--m3-outline-variant)] last:border-0"
-                            >
-                              <td className="py-1 pr-3 font-medium">
-                                {ex.title}
-                              </td>
-                              <td className="py-1 pr-3">
-                                {formatRepsOrDuration(
-                                  ex.planned_reps,
-                                  ex.planned_duration_seconds
-                                )}
-                              </td>
-                              <td className="py-1 pr-3">
-                                {ex.planned_sets != null && ex.planned_sets > 0
-                                  ? `${ex.planned_sets}`
-                                  : "-"}
-                              </td>
-                              <td className="py-1">
-                                {ex.planned_rest_seconds != null &&
-                                ex.planned_rest_seconds > 0
-                                  ? `${ex.planned_rest_seconds}s`
-                                  : "-"}
-                              </td>
-                            </tr>
-                          ))}
+                          {groupSummariesIntoSlots(plan.exercise_summaries).map(
+                            (slot, slotIdx) =>
+                              slot.type === "single" ? (
+                                <tr
+                                  key={`single-${slotIdx}-${slot.items[0].title}`}
+                                  className="border-b border-[var(--m3-outline-variant)] last:border-0"
+                                >
+                                  <td className="w-8 shrink-0 py-1 pr-1" />
+                                  <td className="py-1 pr-2 font-medium">
+                                    {slot.items[0].title}
+                                  </td>
+                                  <td className="py-1 pr-2">
+                                    {formatRepsOrDuration(
+                                      slot.items[0].planned_reps,
+                                      slot.items[0].planned_duration_seconds
+                                    )}
+                                  </td>
+                                  <td className="py-1 pr-2">
+                                    {slot.items[0].planned_sets != null &&
+                                    slot.items[0].planned_sets > 0
+                                      ? `${slot.items[0].planned_sets}`
+                                      : "-"}
+                                  </td>
+                                  <td className="py-1">
+                                    {slot.items[0].planned_rest_seconds != null &&
+                                    slot.items[0].planned_rest_seconds > 0
+                                      ? `${slot.items[0].planned_rest_seconds}s`
+                                      : "-"}
+                                  </td>
+                                </tr>
+                              ) : (
+                                slot.items.map((ex, rowIdx) => (
+                                  <tr
+                                    key={`scope-${slotIdx}-${rowIdx}-${ex.title}`}
+                                    className="border-b border-[var(--m3-outline-variant)] last:border-0"
+                                  >
+                                    {rowIdx === 0 ? (
+                                      <td
+                                        rowSpan={slot.items.length}
+                                        className="w-8 shrink-0 border-l-4 border-[var(--m3-primary)] bg-[var(--m3-surface-container)] py-1 pr-1 text-center align-middle text-sm font-semibold text-[var(--m3-on-surface)]"
+                                      >
+                                        {slot.scopeRepeatCount}
+                                      </td>
+                                    ) : null}
+                                    <td className="py-1 pr-2 font-medium">
+                                      {ex.title}
+                                    </td>
+                                    <td className="py-1 pr-2">
+                                      {formatRepsOrDuration(
+                                        ex.planned_reps,
+                                        ex.planned_duration_seconds
+                                      )}
+                                    </td>
+                                    <td className="py-1 pr-2">
+                                      {ex.planned_sets != null &&
+                                      ex.planned_sets > 0
+                                        ? `${ex.planned_sets}`
+                                        : "-"}
+                                    </td>
+                                    <td className="py-1">
+                                      {ex.planned_rest_seconds != null &&
+                                      ex.planned_rest_seconds > 0
+                                        ? `${ex.planned_rest_seconds}s`
+                                        : "-"}
+                                    </td>
+                                  </tr>
+                                ))
+                              )
+                          )}
                         </tbody>
                       </table>
                     </div>
                   ) : (
                     plan.exercise_names &&
                     plan.exercise_names.length > 0 && (
-                      <div className="ml-6 text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {plan.exercise_names.join(", ")}
                       </div>
                     )
                   )}
-                </div>
+                </>
               )}
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">
