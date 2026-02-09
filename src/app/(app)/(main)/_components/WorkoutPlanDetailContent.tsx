@@ -52,8 +52,47 @@ export function WorkoutPlanDetailContent({
       (SECTION_TYPE_ORDER[a.section_type] ?? 999) -
       (SECTION_TYPE_ORDER[b.section_type] ?? 999);
     if (typeDiff !== 0) return typeDiff;
-    return a.section_order - b.section_order;
+    if (a.section_order !== b.section_order)
+      return a.section_order - b.section_order;
+    const aNr = a.in_scope_nr ?? 0;
+    const bNr = b.in_scope_nr ?? 0;
+    return aNr - bNr;
   });
+
+  type ExerciseSlot =
+    | { kind: "single"; exercise: WorkoutPlanExerciseDTO }
+    | {
+        kind: "scope";
+        scopeId: string;
+        repeatCount: number;
+        exercises: WorkoutPlanExerciseDTO[];
+      };
+
+  const slots = ((): ExerciseSlot[] => {
+    const result: ExerciseSlot[] = [];
+    let i = 0;
+    while (i < sortedExercises.length) {
+      const ex = sortedExercises[i];
+      if (ex.scope_id != null && ex.in_scope_nr != null) {
+        const scopeId = ex.scope_id;
+        const repeatCount = ex.scope_repeat_count ?? 1;
+        const scopeExercises = sortedExercises
+          .filter((e) => e.scope_id === scopeId)
+          .sort((a, b) => (a.in_scope_nr ?? 0) - (b.in_scope_nr ?? 0));
+        result.push({
+          kind: "scope",
+          scopeId,
+          repeatCount,
+          exercises: scopeExercises,
+        });
+        i += scopeExercises.length;
+      } else {
+        result.push({ kind: "single", exercise: ex });
+        i += 1;
+      }
+    }
+    return result;
+  })();
 
   const estimatedTotalTime = plan.estimated_total_time_seconds ?? 0;
 
@@ -245,20 +284,47 @@ export function WorkoutPlanDetailContent({
       <section className="space-y-4">
         <h2 className="m3-title">Exercises in plan</h2>
 
-        {sortedExercises.length === 0 ? (
+        {slots.length === 0 ? (
           <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-6 text-center">
             <p className="text-muted-foreground">No exercises in plan.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedExercises.map((exercise, index) => (
-              <ExerciseCard
-                key={exercise.id}
-                exercise={exercise}
-                index={index}
-                planId={plan.id}
-              />
-            ))}
+            {slots.map((slot, slotIndex) =>
+              slot.kind === "single" ? (
+                <ExerciseCard
+                  key={slot.exercise.id}
+                  exercise={slot.exercise}
+                  index={slotIndex}
+                  planId={plan.id}
+                />
+              ) : (
+                <div
+                  key={`scope-${slot.scopeId}`}
+                  className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-4"
+                >
+                  <div className="mb-3 flex items-center gap-2 border-b border-[var(--m3-outline-variant)] pb-2">
+                    <span className="m3-title text-[var(--m3-on-surface-variant)]">
+                      Scope × {slot.repeatCount}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      ({slot.exercises.length} exercise
+                      {slot.exercises.length === 1 ? "" : "s"})
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {slot.exercises.map((exercise, idx) => (
+                      <ExerciseCard
+                        key={exercise.id}
+                        exercise={exercise}
+                        index={slotIndex * 10 + idx}
+                        planId={plan.id}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ),
+            )}
           </div>
         )}
       </section>

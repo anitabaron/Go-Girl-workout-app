@@ -26,6 +26,7 @@ export function WorkoutPlanExerciseItemM3({
   onRemove,
   onMoveUp,
   onMoveDown,
+  onMoveWithinScope,
   errors,
   disabled,
 }: Readonly<WorkoutPlanExerciseItemProps>) {
@@ -41,7 +42,34 @@ export function WorkoutPlanExerciseItemM3({
     exerciseErrors.section_order = errors[`${exerciseKey}.section_order`];
   }
 
+  const inScope = exercise.scope_id != null && exercise.in_scope_nr != null;
+  const scopeMoveFlags = useMemo(() => {
+    if (!inScope) return null;
+    const inScopeExercises = exercises
+      .filter(
+        (ex) => ex.scope_id === exercise.scope_id && ex.in_scope_nr != null,
+      )
+      .sort((a, b) => (a.in_scope_nr ?? 0) - (b.in_scope_nr ?? 0));
+    const myNr = exercise.in_scope_nr ?? 0;
+    const hasPrev = inScopeExercises.some(
+      (ex) => (ex.in_scope_nr ?? 0) === myNr - 1,
+    );
+    const hasNext = inScopeExercises.some(
+      (ex) => (ex.in_scope_nr ?? 0) === myNr + 1,
+    );
+    return {
+      canMoveUp: hasPrev,
+      canMoveDown: hasNext,
+    };
+  }, [exercises, exercise.scope_id, exercise.in_scope_nr, inScope]);
+
   const { canMoveUp, canMoveDown } = useMemo(() => {
+    if (inScope && onMoveWithinScope != null && scopeMoveFlags) {
+      return {
+        canMoveUp: scopeMoveFlags.canMoveUp,
+        canMoveDown: scopeMoveFlags.canMoveDown,
+      };
+    }
     const exercisesInSection = exercises
       .map((ex, i) => ({ exercise: ex, originalIndex: i }))
       .filter(({ exercise: ex }) => ex.section_type === exercise.section_type)
@@ -60,7 +88,16 @@ export function WorkoutPlanExerciseItemM3({
       canMoveDown:
         onMoveDown != null && currentPosition < exercisesInSection.length - 1,
     };
-  }, [exercises, exercise.section_type, index, onMoveUp, onMoveDown]);
+  }, [
+    inScope,
+    onMoveWithinScope,
+    scopeMoveFlags,
+    exercises,
+    exercise.section_type,
+    index,
+    onMoveUp,
+    onMoveDown,
+  ]);
 
   const plannedParamsErrors: Record<string, string> = {};
   const plannedKeys = [
@@ -139,7 +176,10 @@ export function WorkoutPlanExerciseItemM3({
               }
               disabled={disabled}
             >
-              <SelectTrigger id={`${exerciseTestId}-section-type`} className="mt-1">
+              <SelectTrigger
+                id={`${exerciseTestId}-section-type`}
+                className="mt-1"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -159,24 +199,34 @@ export function WorkoutPlanExerciseItemM3({
 
           <div>
             <span className="block text-xs font-medium text-muted-foreground">
-              Order
+              {exercise.in_scope_nr != null ? "Order in scope" : "Order"}
             </span>
             <div className="mt-1 flex items-center gap-1.5">
               <div
                 className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium"
-                aria-invalid={!!exerciseErrors.section_order}
+                aria-invalid={
+                  exercise.in_scope_nr != null
+                    ? false
+                    : !!exerciseErrors.section_order
+                }
               >
-                {exercise.section_order}
+                {exercise.in_scope_nr != null
+                  ? exercise.in_scope_nr
+                  : exercise.section_order}
               </div>
               <div className="flex gap-0.5">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
-                  onClick={onMoveUp}
+                  onClick={() =>
+                    inScope && onMoveWithinScope
+                      ? onMoveWithinScope("up")
+                      : onMoveUp?.()
+                  }
                   disabled={disabled || !canMoveUp}
                   className="h-8 w-8 shrink-0"
-                  aria-label="Move up"
+                  aria-label={inScope ? "Move up within scope" : "Move up"}
                 >
                   <ChevronUp className="size-4" />
                 </Button>
@@ -184,16 +234,20 @@ export function WorkoutPlanExerciseItemM3({
                   type="button"
                   variant="outline"
                   size="icon"
-                  onClick={onMoveDown}
+                  onClick={() =>
+                    inScope && onMoveWithinScope
+                      ? onMoveWithinScope("down")
+                      : onMoveDown?.()
+                  }
                   disabled={disabled || !canMoveDown}
                   className="h-8 w-8 shrink-0"
-                  aria-label="Move down"
+                  aria-label={inScope ? "Move down within scope" : "Move down"}
                 >
                   <ChevronDown className="size-4" />
                 </Button>
               </div>
             </div>
-            {exerciseErrors.section_order && (
+            {exercise.in_scope_nr == null && exerciseErrors.section_order && (
               <p className="mt-1 text-xs text-destructive" role="alert">
                 {exerciseErrors.section_order}
               </p>

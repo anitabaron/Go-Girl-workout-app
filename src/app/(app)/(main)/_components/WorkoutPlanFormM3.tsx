@@ -27,6 +27,8 @@ export function WorkoutPlanFormM3({
     handleRemoveExercise,
     handleUpdateExercise,
     handleMoveExercise,
+    handleUpdateScopeSectionOrder,
+    handleMoveWithinScope,
     handleSubmit,
   } = useWorkoutPlanForm({
     initialData,
@@ -112,6 +114,8 @@ export function WorkoutPlanFormM3({
             onRemoveExercise={handleRemoveExercise}
             onUpdateExercise={handleUpdateExercise}
             onMoveExercise={handleMoveExercise}
+            onUpdateScopeSectionOrder={handleUpdateScopeSectionOrder}
+            onMoveWithinScope={handleMoveWithinScope}
             errors={errors.exercises ?? {}}
             disabled={isLoading}
           />

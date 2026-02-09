@@ -119,6 +119,8 @@ export type WorkoutPlanExerciseItemProps = {
   onRemove: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  /** When set, used for "Order in scope" arrows (reorder within scope). */
+  onMoveWithinScope?: (direction: "up" | "down") => void;
   errors: Record<string, string>;
   disabled: boolean;
 };

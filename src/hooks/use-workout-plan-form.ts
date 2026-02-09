@@ -365,7 +365,8 @@ export function useWorkoutPlanForm({
       return;
     }
 
-    const swapIndex = direction === "up" ? currentSlotIndex - 1 : currentSlotIndex + 1;
+    const swapIndex =
+      direction === "up" ? currentSlotIndex - 1 : currentSlotIndex + 1;
     const currentSlot = slotsInOrder[currentSlotIndex][1];
     const swapSlot = slotsInOrder[swapIndex][1];
     const newOrderCurrent = swapSlot.sectionOrder;
@@ -383,6 +384,53 @@ export function useWorkoutPlanForm({
     setValue("exercises", newExercises, { shouldDirty: true });
   };
 
+  const handleUpdateScopeSectionOrder = (
+    indices: number[],
+    sectionOrder: number,
+  ) => {
+    if (indices.length === 0 || sectionOrder < 1) return;
+    const currentExercises = watch("exercises");
+    const next = currentExercises.map((ex, i) =>
+      indices.includes(i) ? { ...ex, section_order: sectionOrder } : ex,
+    );
+    setValue("exercises", next, { shouldDirty: true });
+  };
+
+  const handleMoveWithinScope = (index: number, direction: "up" | "down") => {
+    const currentExercises = watch("exercises");
+    const current = currentExercises[index];
+    if (!current || current.scope_id == null || current.in_scope_nr == null) {
+      return;
+    }
+    const scopeId = current.scope_id;
+    const inScope = currentExercises
+      .map((ex, i) => ({ exercise: ex, index: i }))
+      .filter(
+        ({ exercise }) =>
+          exercise.scope_id === scopeId && exercise.in_scope_nr != null,
+      )
+      .sort(
+        (a, b) => (a.exercise.in_scope_nr ?? 0) - (b.exercise.in_scope_nr ?? 0),
+      );
+    const pos = inScope.findIndex(({ index: i }) => i === index);
+    if (pos === -1) return;
+    if (direction === "up" && pos === 0) return;
+    if (direction === "down" && pos === inScope.length - 1) return;
+    const swapPos = direction === "up" ? pos - 1 : pos + 1;
+    const currentNr = inScope[pos].exercise.in_scope_nr ?? 0;
+    const swapNr = inScope[swapPos].exercise.in_scope_nr ?? 0;
+    const next = currentExercises.map((ex, i) => {
+      if (i === inScope[pos].index) {
+        return { ...ex, in_scope_nr: swapNr };
+      }
+      if (i === inScope[swapPos].index) {
+        return { ...ex, in_scope_nr: currentNr };
+      }
+      return ex;
+    });
+    setValue("exercises", next, { shouldDirty: true });
+  };
+
   const scrollToFirstError = () => {
     const firstErrorElement = document.querySelector(
       '[aria-invalid="true"], [role="alert"]',
@@ -393,9 +441,12 @@ export function useWorkoutPlanForm({
     });
   };
 
-  const handleSubmitError = (
-    result: { success: false; error: string; code?: string; details?: string },
-  ) => {
+  const handleSubmitError = (result: {
+    success: false;
+    error: string;
+    code?: string;
+    details?: string;
+  }) => {
     if (result.code === "BAD_REQUEST") {
       handleBadRequest({
         message: result.error,
@@ -479,6 +530,8 @@ export function useWorkoutPlanForm({
     handleRemoveExercise,
     handleUpdateExercise,
     handleMoveExercise,
+    handleUpdateScopeSectionOrder,
+    handleMoveWithinScope,
     handleSubmit,
   };
 }
