@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Edit, Loader2, Play, Trash2 } from "lucide-react";
+import { Copy, Download, Edit, Loader2, Play, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -24,6 +24,7 @@ import {
   getEstimatedSetTimeLabel,
 } from "@/lib/exercises/estimated-set-time";
 import { toast } from "sonner";
+import { workoutPlanToImportFormat } from "@/lib/workout-plans/plan-to-import-format";
 import type { WorkoutPlanDTO, WorkoutPlanExerciseDTO } from "@/types";
 import { AddSnapshotExerciseButtonM3 } from "./AddSnapshotExerciseButtonM3";
 import { ExerciseLibraryBadgeM3 } from "./ExerciseLibraryBadgeM3";
@@ -58,6 +59,25 @@ export function WorkoutPlanDetailContent({
 
   const handleEdit = () => {
     router.push(`/workout-plans/${plan.id}/edit`);
+  };
+
+  const handleDuplicate = () => {
+    router.push(`/workout-plans/new?duplicate=${plan.id}`);
+  };
+
+  const handleExportJson = () => {
+    const payload = workoutPlanToImportFormat(plan);
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${plan.name.replaceAll(/[^\p{L}\p{N}\s-]/gu, "").trim() || "workout-plan"}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Plan exported to JSON");
   };
 
   const handleStartWorkout = async () => {
@@ -160,6 +180,24 @@ export function WorkoutPlanDetailContent({
             aria-label={`Edit plan: ${plan.name}`}
           >
             <Edit className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleDuplicate}
+            aria-label={`Duplicate plan: ${plan.name}`}
+          >
+            <Copy className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleExportJson}
+            aria-label="Export plan to JSON"
+          >
+            <Download className="size-4" />
           </Button>
           <Button
             variant="ghost"

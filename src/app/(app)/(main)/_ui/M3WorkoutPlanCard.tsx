@@ -152,19 +152,19 @@ function M3WorkoutPlanCardComponent({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={handleDuplicate}
-            aria-label={`Duplicate plan: ${plan.name}`}
+            onClick={handleEdit}
+            aria-label={`Edit plan: ${plan.name}`}
           >
-            <Copy className="size-4" />
+            <Pencil className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={handleEdit}
-            aria-label={`Edit plan: ${plan.name}`}
+            onClick={handleDuplicate}
+            aria-label={`Duplicate plan: ${plan.name}`}
           >
-            <Pencil className="size-4" />
+            <Copy className="size-4" />
           </Button>
           <Button
             variant="ghost"
