@@ -556,7 +556,8 @@ export async function listWorkoutPlanExercises(
     )
     .eq("plan_id", planId)
     .order("section_type", { ascending: true })
-    .order("section_order", { ascending: true });
+    .order("section_order", { ascending: true })
+    .order("in_scope_nr", { ascending: true, nullsFirst: false });
 
   if (error) {
     return { error };
@@ -622,6 +623,9 @@ export async function listWorkoutPlanExercises(
       id: row.id,
       exercise_id: row.exercise_id,
       snapshot_id: rowWithSnapshot.snapshot_id ?? null,
+      scope_id: row.scope_id ?? null,
+      in_scope_nr: row.in_scope_nr ?? null,
+      scope_repeat_count: row.scope_repeat_count ?? null,
       section_type: row.section_type,
       section_order: row.section_order,
       planned_sets: row.planned_sets,
