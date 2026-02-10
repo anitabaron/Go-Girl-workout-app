@@ -120,6 +120,7 @@ export type Database = {
           duration_seconds: number | null;
           estimated_set_time_seconds: number | null;
           id: string;
+          is_save_to_pr: boolean | null;
           is_unilateral: boolean;
           level: string | null;
           parts: Database["public"]["Enums"]["exercise_part"][];
@@ -139,6 +140,7 @@ export type Database = {
           duration_seconds?: number | null;
           estimated_set_time_seconds?: number | null;
           id?: string;
+          is_save_to_pr?: boolean | null;
           is_unilateral?: boolean;
           level?: string | null;
           parts: Database["public"]["Enums"]["exercise_part"][];
@@ -158,6 +160,7 @@ export type Database = {
           duration_seconds?: number | null;
           estimated_set_time_seconds?: number | null;
           id?: string;
+          is_save_to_pr?: boolean | null;
           is_unilateral?: boolean;
           level?: string | null;
           parts?: Database["public"]["Enums"]["exercise_part"][];

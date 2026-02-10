@@ -8,7 +8,7 @@ import {
   type FieldErrors,
 } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, ArrowDown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -294,7 +294,7 @@ function ExerciseFormM3Fields({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Controller
           name="types"
           control={control}
@@ -409,6 +409,38 @@ function ExerciseFormM3Fields({
             </FormField>
           )}
         />
+        <Controller
+          name="is_save_to_pr"
+          control={control}
+          render={({ field }) => (
+            <FormField
+              label="PR"
+              htmlFor="is_save_to_pr"
+              error={errors.is_save_to_pr?.message as string | undefined}
+            >
+              <div
+                className="flex items-center gap-2"
+                data-test-id="exercise-form-is-save-to-pr"
+              >
+                <Checkbox
+                  id="is_save_to_pr"
+                  checked={field.value ?? false}
+                  onCheckedChange={(checked) =>
+                    field.onChange(checked === true)
+                  }
+                  disabled={disabled}
+                  aria-invalid={!!errors.is_save_to_pr}
+                />
+                <label
+                  htmlFor="is_save_to_pr"
+                  className="cursor-pointer text-sm font-medium"
+                >
+                  Save results to PRs
+                </label>
+              </div>
+            </FormField>
+          )}
+        />
       </div>
 
       <Controller
@@ -434,52 +466,59 @@ function ExerciseFormM3Fields({
           </FormField>
         )}
       />
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Controller
-          name="reps"
-          control={control}
-          render={({ field }) => (
-            <FormNumberInput
-              id="reps"
-              label={
-                <>
-                  Reps <span className="text-destructive">**</span>
-                </>
-              }
-              value={String(field.value ?? "")}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={errors.reps?.message as string | undefined}
-              disabled={disabled}
-              min={1}
-              data-test-id="exercise-form-reps"
-              className="w-full"
-            />
-          )}
-        />
-        <Controller
-          name="duration_seconds"
-          control={control}
-          render={({ field }) => (
-            <FormNumberInput
-              id="duration_seconds"
-              label={
-                <>
-                  Duration (sec) <span className="text-destructive">**</span>
-                </>
-              }
-              value={String(field.value ?? "")}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={errors.duration_seconds?.message as string | undefined}
-              disabled={disabled}
-              min={1}
-              data-test-id="exercise-form-duration"
-              className="w-full"
-            />
-          )}
-        />
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+        <div>
+          <Controller
+            name="reps"
+            control={control}
+            render={({ field }) => (
+              <FormNumberInput
+                id="reps"
+                label={
+                  <>
+                    Reps <span className="text-destructive">**</span>
+                  </>
+                }
+                value={String(field.value ?? "")}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.reps?.message as string | undefined}
+                disabled={disabled}
+                min={1}
+                data-test-id="exercise-form-reps"
+                className="w-full"
+              />
+            )}
+          />
+          <p className="flex text-xs text-muted-foreground whitespace-nowrap pt-1">
+            Provide exactly one: reps or duration{" "}
+            <span className="text-destructive">**</span>
+          </p>
+        </div>
+        <div>
+          <Controller
+            name="duration_seconds"
+            control={control}
+            render={({ field }) => (
+              <FormNumberInput
+                id="duration_seconds"
+                label={
+                  <>
+                    Duration (sec) <span className="text-destructive">**</span>
+                  </>
+                }
+                value={String(field.value ?? "")}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.duration_seconds?.message as string | undefined}
+                disabled={disabled}
+                min={1}
+                data-test-id="exercise-form-duration"
+                className="w-full"
+              />
+            )}
+          />
+        </div>
         <Controller
           name="series"
           control={control}
@@ -500,37 +539,39 @@ function ExerciseFormM3Fields({
           )}
         />
       </div>
-      <p className="m3-label text-muted-foreground">
-        Provide exactly one: reps or duration{" "}
-        <span className="text-destructive">**</span>
-      </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Controller
-          name="rest_in_between_seconds"
-          control={control}
-          render={({ field }) => (
-            <FormNumberInput
-              id="rest_in_between_seconds"
-              label={
-                <>
-                  Rest between sets (sec){" "}
-                  <span className="text-destructive">***</span>
-                </>
-              }
-              value={String(field.value ?? "")}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={
-                errors.rest_in_between_seconds?.message as string | undefined
-              }
-              disabled={disabled}
-              min={0}
-              data-test-id="exercise-form-rest-between"
-              className="w-full"
-            />
-          )}
-        />
+        <div>
+          <Controller
+            name="rest_in_between_seconds"
+            control={control}
+            render={({ field }) => (
+              <FormNumberInput
+                id="rest_in_between_seconds"
+                label={
+                  <>
+                    Rest between sets (sec){" "}
+                    <span className="text-destructive">***</span>
+                  </>
+                }
+                value={String(field.value ?? "")}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={
+                  errors.rest_in_between_seconds?.message as string | undefined
+                }
+                disabled={disabled}
+                min={0}
+                data-test-id="exercise-form-rest-between"
+                className="w-full"
+              />
+            )}
+          />{" "}
+          <p className="flex text-xs text-muted-foreground whitespace-nowrap pt-1">
+            Provide at least one rest field{" "}
+            <span className="text-destructive">***</span>
+          </p>
+        </div>
         <Controller
           name="rest_after_series_seconds"
           control={control}
@@ -559,28 +600,50 @@ function ExerciseFormM3Fields({
         <Controller
           name="estimated_set_time_seconds"
           control={control}
-          render={({ field }) => (
-            <FormNumberInput
-              id="estimated_set_time_seconds"
-              label={getEstimatedSetTimeLabel(estimatedResult, "sec")}
-              value={String(field.value ?? "")}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={
-                errors.estimated_set_time_seconds?.message as string | undefined
-              }
-              disabled={disabled}
-              min={1}
-              data-test-id="exercise-form-estimated-set-time"
-              className="w-full"
-            />
-          )}
+          render={({ field }) => {
+            const canApplySuggested =
+              estimatedResult != null &&
+              Number.isFinite(estimatedResult) &&
+              estimatedResult >= 1;
+            return (
+              <FormNumberInput
+                id="estimated_set_time_seconds"
+                label={
+                  <span className="inline-flex items-center gap-1">
+                    {getEstimatedSetTimeLabel(estimatedResult, "sec")}
+                    {canApplySuggested && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          field.onChange(String(Math.round(estimatedResult!)))
+                        }
+                        disabled={disabled}
+                        className="cursor-pointer inline-flex shrink-0 items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        title={`Użyj szacowanej wartości (${estimatedResult} s)`}
+                        aria-label={`Użyj szacowanej wartości ${estimatedResult} s`}
+                      >
+                        <ArrowDown className="size-3.5" />
+                      </button>
+                    )}
+                  </span>
+                }
+                value={String(field.value ?? "")}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={
+                  errors.estimated_set_time_seconds?.message as
+                    | string
+                    | undefined
+                }
+                disabled={disabled}
+                min={1}
+                data-test-id="exercise-form-estimated-set-time"
+                className="w-full"
+              />
+            );
+          }}
         />
       </div>
-      <p className="m3-label text-muted-foreground">
-        Provide at least one rest field{" "}
-        <span className="text-destructive">***</span>
-      </p>
     </div>
   );
 }

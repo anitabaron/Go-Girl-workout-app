@@ -199,7 +199,9 @@ export function WorkoutPlanExerciseItemM3({
 
           <div>
             <span className="block text-xs font-medium text-muted-foreground">
-              {exercise.in_scope_nr != null ? "Order in scope" : "Order"}
+              {exercise.in_scope_nr != null
+                ? "Order in scope"
+                : "Order in section"}
             </span>
             <div className="mt-1 flex items-center gap-1.5">
               <div
@@ -274,6 +276,10 @@ export function WorkoutPlanExerciseItemM3({
             disabled={disabled}
             isUnilateral={exercise.exercise_is_unilateral}
             data-test-id-prefix={exerciseTestId}
+            showRepsField={(exercise.initial_planned_reps ?? 0) > 0}
+            showDurationField={
+              (exercise.initial_planned_duration_seconds ?? 0) > 0
+            }
           />
         </div>
       </CardContent>

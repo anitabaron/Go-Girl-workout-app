@@ -102,56 +102,58 @@ export function WorkoutPlansToolbar({
 
   return (
     <Toolbar className="flex flex-wrap items-center gap-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="part-filter" className="sr-only">
-          Filter by body part
-        </label>
-        <Select
-          value={part ?? "all"}
-          onValueChange={handlePartChange}
-          disabled={isPending}
-        >
-          <SelectTrigger
-            id="part-filter"
-            className="w-[180px]"
-            aria-label="Filter workout plans by body part"
+      <div className="flex flex-nowrap items-center gap-4">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="part-filter" className="sr-only">
+            Filter by body part
+          </label>
+          <Select
+            value={part ?? "all"}
+            onValueChange={handlePartChange}
+            disabled={isPending}
           >
-            <SelectValue placeholder="Body part" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All parts</SelectItem>
-            {exercisePartValues.map((p) => (
-              <SelectItem key={p} value={p}>
-                {EXERCISE_PART_LABELS[p]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="sort-select" className="sr-only">
-          Sort workout plans
-        </label>
-        <Select
-          value={sortValue}
-          onValueChange={handleSortChange}
-          disabled={isPending}
-        >
-          <SelectTrigger
-            id="sort-select"
-            className="w-[180px]"
-            aria-label="Sort workout plans"
+            <SelectTrigger
+              id="part-filter"
+              className="w-[180px]"
+              aria-label="Filter workout plans by body part"
+            >
+              <SelectValue placeholder="Body part" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All parts</SelectItem>
+              {exercisePartValues.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {EXERCISE_PART_LABELS[p]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="sort-select" className="sr-only">
+            Sort workout plans
+          </label>
+          <Select
+            value={sortValue}
+            onValueChange={handleSortChange}
+            disabled={isPending}
           >
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <SelectTrigger
+              id="sort-select"
+              className="w-[180px]"
+              aria-label="Sort workout plans"
+            >
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {hasActiveFilters && (
         <Button

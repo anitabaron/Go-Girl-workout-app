@@ -63,9 +63,6 @@ export function PersonalRecordMetricCardM3({
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (record.sessionId) {
-      return;
-    }
     setIsEditDialogOpen(true);
   };
 
@@ -74,27 +71,16 @@ export function PersonalRecordMetricCardM3({
       <Card className="rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)]">
         <CardHeader className="flex flex-row items-start justify-between gap-2">
           <CardTitle className="m3-title">{record.label}</CardTitle>
-          {record.sessionId ? (
-            <Link
-              href={`/workout-sessions/${record.sessionId}?edit=1`}
-              className="m3-label inline-flex items-center gap-1.5 text-primary hover:underline shrink-0"
-              aria-label="Edytuj rekord w szczegółach sesji treningowej"
-            >
-              <Pencil className="size-4" />
-              Edytuj
-            </Link>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="m3-label inline-flex items-center gap-1.5 text-primary hover:underline shrink-0 h-auto py-1"
-              onClick={handleEditClick}
-              aria-label="Edytuj rekord w miejscu"
-            >
-              <Pencil className="size-4" />
-              Edytuj
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="m3-label inline-flex items-center gap-1.5 text-primary hover:underline shrink-0 h-auto py-1"
+            onClick={handleEditClick}
+            aria-label="Edytuj rekord w miejscu"
+          >
+            <Pencil className="size-4" />
+            Edytuj
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="m3-hero-sm text-primary">{record.valueDisplay}</p>
@@ -136,13 +122,11 @@ export function PersonalRecordMetricCardM3({
           )}
         </CardContent>
       </Card>
-      {!record.sessionId && (
-        <EditPersonalRecordDialogM3
-          metric={record}
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-        />
-      )}
+      <EditPersonalRecordDialogM3
+        metric={record}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </>
   );
 }

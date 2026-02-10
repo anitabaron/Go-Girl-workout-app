@@ -8,7 +8,9 @@ export type WorkoutPlanImportPayload = z.infer<typeof workoutPlanImportSchema>;
  * Maps a WorkoutPlanDTO to the JSON structure used for import (see import-instruction page).
  * Exporting and re-importing this JSON recreates the same plan structure.
  */
-export function workoutPlanToImportFormat(plan: WorkoutPlanDTO): WorkoutPlanImportPayload {
+export function workoutPlanToImportFormat(
+  plan: WorkoutPlanDTO,
+): WorkoutPlanImportPayload {
   return {
     name: plan.name,
     description: plan.description ?? null,
@@ -20,19 +22,25 @@ export function workoutPlanToImportFormat(plan: WorkoutPlanDTO): WorkoutPlanImpo
 function exerciseToImportFormat(
   ex: WorkoutPlanExerciseDTO,
 ): WorkoutPlanImportPayload["exercises"][number] {
-  const base = {
+  const base: Record<string, unknown> = {
     section_type: ex.section_type,
     section_order: ex.section_order,
+    scope_id: ex.scope_id ?? null,
+    in_scope_nr: ex.in_scope_nr ?? null,
+    scope_repeat_count: ex.scope_repeat_count ?? null,
     planned_sets: ex.planned_sets ?? null,
     planned_reps: ex.planned_reps ?? null,
     planned_duration_seconds: ex.planned_duration_seconds ?? null,
     planned_rest_seconds: ex.planned_rest_seconds ?? null,
     planned_rest_after_series_seconds:
       ex.planned_rest_after_series_seconds ?? null,
-    estimated_set_time_seconds:
-      ex.exercise_estimated_set_time_seconds ?? null,
+    estimated_set_time_seconds: ex.exercise_estimated_set_time_seconds ?? null,
     exercise_is_unilateral: ex.exercise_is_unilateral ?? null,
   };
+  // Opcjonalnie: opis ćwiczenia – przy imporcie odbiorca ma więcej kontekstu i może dodać do bazy z opisem
+  if (ex.exercise_details != null && ex.exercise_details.trim() !== "") {
+    base.exercise_details = ex.exercise_details.trim();
+  }
 
   const hasLibraryExercise =
     ex.exercise_id != null && ex.is_exercise_in_library !== false;

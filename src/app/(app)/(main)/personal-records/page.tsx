@@ -75,7 +75,7 @@ export default async function PersonalRecordsPage({
           />
         </Suspense>
 
-        <div className="mt-8">
+        <div className="mt-4">
           <PersonalRecordsListM3
             initialData={viewModel}
             errorMessage={errorMessage}

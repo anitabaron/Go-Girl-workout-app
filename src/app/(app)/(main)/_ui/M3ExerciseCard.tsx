@@ -153,6 +153,19 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               {exercise.is_unilateral && (
                 <Badge variant="secondary">Unilateral</Badge>
               )}
+              {exercise.is_save_to_pr === true ? (
+                <Badge variant="secondary" className="bg-primary/15 text-primary">
+                  PR
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className="border-muted-foreground/50 text-muted-foreground line-through"
+                  title="Results not saved to personal records"
+                >
+                  PR
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent className="pt-0 px-4 pb-3 space-y-2.5">

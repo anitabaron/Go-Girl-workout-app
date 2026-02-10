@@ -80,9 +80,9 @@ export function WorkoutPlanFormM3({
       </section>
 
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="m3-title">Exercises in plan</h2>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <AddExerciseDialogM3
               onAddExercise={handleAddExercise}
               disabled={isLoading}

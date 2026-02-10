@@ -148,10 +148,10 @@ export function AddScopeDialogM3({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label htmlFor="scope-section-type" className="m3-label">
+        <div className="space-y-2">
+          <div className="flex gap-2 items-end">
+            <div className="min-w-0 space-y-2">
+              <label htmlFor="scope-section-type" className="text-sm">
                 Section
               </label>
               <Select
@@ -170,30 +170,33 @@ export function AddScopeDialogM3({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="scope-repeat-count" className="m3-label">
+            <div className="w-16 shrink-0 space-y-2">
+              <label
+                htmlFor="scope-repeat-count"
+                className="text-sm whitespace-nowrap"
+              >
                 Repeat (times)
               </label>
               <Input
                 id="scope-repeat-count"
                 type="number"
                 min={1}
+                max={9}
                 value={repeatCount}
                 onChange={(e) => {
                   const v = e.target.value;
                   setRepeatCount(
-                    v === ""
-                      ? DEFAULT_REPEAT_COUNT
-                      : Number.parseInt(v, 10),
+                    v === "" ? DEFAULT_REPEAT_COUNT : Number.parseInt(v, 10),
                   );
                 }}
+                className="w-full text-center tabular-nums"
                 data-test-id="workout-plan-form-add-scope-repeat"
               />
             </div>
           </div>
 
           <div>
-            <p className="m3-label mb-2">Exercises in scope (order)</p>
+            <p className="text-sm mb-2">Exercises in scope (order)</p>
             <ExerciseSelectorM3
               selectedExerciseIds={selectedExerciseIds}
               onToggleExercise={handleToggleExercise}

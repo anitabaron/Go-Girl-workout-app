@@ -24,7 +24,7 @@ type DbClient = SupabaseClient<Database>;
 type ExerciseRow = Database["public"]["Tables"]["exercises"]["Row"];
 
 const exerciseSelectColumns =
-  "id,title,types,parts,is_unilateral,level,details,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds,created_at,updated_at,title_normalized,user_id";
+  "id,title,types,parts,is_unilateral,is_save_to_pr,level,details,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds,created_at,updated_at,title_normalized,user_id";
 
 export async function findById(client: DbClient, userId: string, id: string) {
   const { data, error } = await client
@@ -81,21 +81,23 @@ function toDbInsert(input: ExerciseCreateCommand): Omit<
   types: Database["public"]["Enums"]["exercise_type"][];
   parts: Database["public"]["Enums"]["exercise_part"][];
 } {
-  const { types, parts, is_unilateral, ...rest } = input;
+  const { types, parts, is_unilateral, is_save_to_pr, ...rest } = input;
   return {
     ...rest,
     types,
     parts,
     is_unilateral: is_unilateral ?? false,
+    is_save_to_pr: is_save_to_pr ?? false,
   };
 }
 
 function toDbUpdate(input: ExerciseUpdateCommand): Record<string, unknown> {
-  const { types, parts, is_unilateral, ...rest } = input;
+  const { types, parts, is_unilateral, is_save_to_pr, ...rest } = input;
   const result: Record<string, unknown> = { ...rest };
   if (types !== undefined) result.types = types;
   if (parts !== undefined) result.parts = parts;
   if (is_unilateral !== undefined) result.is_unilateral = is_unilateral;
+  if (is_save_to_pr !== undefined) result.is_save_to_pr = is_save_to_pr;
   return result;
 }
 

@@ -76,11 +76,13 @@ export async function listPersonalRecords(
         id,
         title,
         types,
-        parts
+        parts,
+        is_save_to_pr
       )
     `,
     )
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("exercises.is_save_to_pr", true);
 
   if (params.exercise_id) {
     query = query.eq("exercise_id", params.exercise_id);
@@ -169,12 +171,14 @@ export async function listPersonalRecordsByExercise(
         id,
         title,
         types,
-        parts
+        parts,
+        is_save_to_pr
       )
     `,
     )
     .eq("user_id", userId)
     .eq("exercise_id", exerciseId)
+    .eq("exercises.is_save_to_pr", true)
     .order("metric_type", { ascending: true });
 
   if (error) {
@@ -191,7 +195,7 @@ export async function listPersonalRecordsByExercise(
 
 /**
  * Aktualizuje pojedynczy rekord osobisty.
- * Dozwolone tylko dla rekordów bez przypisanej sesji (achieved_in_session_id === null).
+ * Przy edycji rekord jest odłączany od sesji (achieved_in_session_id i achieved_in_set_number = null).
  */
 export async function updatePersonalRecord(
   client: DbClient,
@@ -208,7 +212,7 @@ export async function updatePersonalRecord(
 }> {
   const { data: existing, error: fetchError } = await client
     .from("personal_records")
-    .select("id, achieved_in_session_id")
+    .select("id")
     .eq("id", recordId)
     .eq("user_id", userId)
     .single();
@@ -219,21 +223,12 @@ export async function updatePersonalRecord(
     };
   }
 
-  if (existing.achieved_in_session_id !== null) {
-    return {
-      error: {
-        message:
-          "Nie można edytować rekordu przypisanego do sesji treningowej.",
-        details: "achieved_in_session_id is set",
-        code: "FORBIDDEN",
-      } as unknown as PostgrestError,
-    };
-  }
-
   const updatePayload: Record<string, unknown> = {
     value: updates.value,
     achieved_at: updates.achieved_at,
     updated_at: new Date().toISOString(),
+    achieved_in_session_id: null,
+    achieved_in_set_number: null,
   };
   if (updates.series_values !== undefined) {
     updatePayload.series_values = updates.series_values;
@@ -261,7 +256,8 @@ export async function updatePersonalRecord(
         id,
         title,
         types,
-        parts
+        parts,
+        is_save_to_pr
       )
     `,
     )
@@ -312,6 +308,7 @@ export function mapToDTO(
       title: exercises.title,
       type: exercises.types?.[0] ?? ("Main Workout" as const),
       part: exercises.parts?.[0] ?? ("Legs" as const),
+      is_save_to_pr: exercises.is_save_to_pr ?? undefined,
     },
   };
 }

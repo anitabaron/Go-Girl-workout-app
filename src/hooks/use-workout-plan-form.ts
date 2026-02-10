@@ -60,6 +60,8 @@ function formStateToFormValues(
       planned_rest_seconds: ex.planned_rest_seconds,
       planned_rest_after_series_seconds: ex.planned_rest_after_series_seconds,
       estimated_set_time_seconds: ex.estimated_set_time_seconds,
+      initial_planned_reps: ex.initial_planned_reps,
+      initial_planned_duration_seconds: ex.initial_planned_duration_seconds,
     })),
   };
 }
@@ -200,6 +202,8 @@ export function useWorkoutPlanForm({
           : 1;
 
       sectionExercises.forEach((exercise) => {
+        const plannedReps = exercise.reps ?? null;
+        const plannedDuration = exercise.duration_seconds ?? null;
         toAppend.push({
           exercise_id: exercise.id,
           exercise_title: exercise.title,
@@ -209,13 +213,15 @@ export function useWorkoutPlanForm({
           section_type: sectionType,
           section_order: nextOrder,
           planned_sets: exercise.series ?? null,
-          planned_reps: exercise.reps ?? null,
-          planned_duration_seconds: exercise.duration_seconds ?? null,
+          planned_reps: plannedReps,
+          planned_duration_seconds: plannedDuration,
           planned_rest_seconds: exercise.rest_in_between_seconds ?? null,
           planned_rest_after_series_seconds:
             exercise.rest_after_series_seconds ?? null,
           estimated_set_time_seconds:
             exercise.estimated_set_time_seconds ?? null,
+          initial_planned_reps: plannedReps,
+          initial_planned_duration_seconds: plannedDuration,
         });
         nextOrder += 1;
       });
@@ -241,24 +247,30 @@ export function useWorkoutPlanForm({
         : 1;
 
     const scopeId = crypto.randomUUID();
-    const toAppend = exercises.map((ex, i) => ({
-      exercise_id: ex.id,
-      exercise_title: ex.title,
-      exercise_type: ex.type,
-      exercise_part: ex.part,
-      exercise_is_unilateral: ex.is_unilateral,
-      section_type: sectionType,
-      section_order: nextSlotOrder,
-      scope_id: scopeId,
-      in_scope_nr: i + 1,
-      scope_repeat_count: repeatCount,
-      planned_sets: ex.series ?? null,
-      planned_reps: ex.reps ?? null,
-      planned_duration_seconds: ex.duration_seconds ?? null,
-      planned_rest_seconds: ex.rest_in_between_seconds ?? null,
-      planned_rest_after_series_seconds: ex.rest_after_series_seconds ?? null,
-      estimated_set_time_seconds: ex.estimated_set_time_seconds ?? null,
-    }));
+    const toAppend = exercises.map((ex, i) => {
+      const plannedReps = ex.reps ?? null;
+      const plannedDuration = ex.duration_seconds ?? null;
+      return {
+        exercise_id: ex.id,
+        exercise_title: ex.title,
+        exercise_type: ex.type,
+        exercise_part: ex.part,
+        exercise_is_unilateral: ex.is_unilateral,
+        section_type: sectionType,
+        section_order: nextSlotOrder,
+        scope_id: scopeId,
+        in_scope_nr: i + 1,
+        scope_repeat_count: repeatCount,
+        planned_sets: ex.series ?? null,
+        planned_reps: plannedReps,
+        planned_duration_seconds: plannedDuration,
+        planned_rest_seconds: ex.rest_in_between_seconds ?? null,
+        planned_rest_after_series_seconds: ex.rest_after_series_seconds ?? null,
+        estimated_set_time_seconds: ex.estimated_set_time_seconds ?? null,
+        initial_planned_reps: plannedReps,
+        initial_planned_duration_seconds: plannedDuration,
+      };
+    });
 
     toAppend.forEach((item) => append(item));
   };
@@ -310,6 +322,10 @@ export function useWorkoutPlanForm({
             : 0;
         finalUpdates.section_order = maxOrder + 1;
       }
+    }
+
+    if (updates.planned_sets !== undefined && updates.planned_sets === 1) {
+      finalUpdates.planned_rest_seconds = 0;
     }
 
     update(index, { ...currentExercise, ...finalUpdates });

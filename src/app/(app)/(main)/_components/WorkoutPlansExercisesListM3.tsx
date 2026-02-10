@@ -124,19 +124,38 @@ export function WorkoutPlansExercisesListM3({
         ) : (
           <div
             key={`scope-${slot.scopeId}`}
-            className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-4"
+            className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-raw-primary-container)] p-4"
           >
             <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-[var(--m3-outline-variant)] pb-2">
               <span className="m3-title text-[var(--m3-on-surface-variant)]">
-                Scope × {slot.repeatCount}
+                Scope ×
               </span>
+              <Input
+                type="number"
+                min={1}
+                value={slot.repeatCount}
+                onChange={(e) => {
+                  const v = Number.parseInt(e.target.value, 10);
+                  if (!Number.isNaN(v) && v >= 1) {
+                    for (const { originalIndex } of slot.items) {
+                      onUpdateExercise(originalIndex, {
+                        scope_repeat_count: v,
+                      });
+                    }
+                  }
+                }}
+                disabled={disabled}
+                className="h-9 w-14 text-center text-sm font-medium"
+                aria-label="Scope repeat count (how many times this block is repeated)"
+                data-test-id={`scope-${slot.scopeId}-repeat-count`}
+              />
               <span className="text-sm text-muted-foreground">
                 ({slot.items.length} exercise
                 {slot.items.length === 1 ? "" : "s"})
               </span>
               <div className="ml-auto flex items-center gap-1.5">
                 <span className="text-xs font-medium text-muted-foreground">
-                  Section order
+                  Order in section
                 </span>
                 {onUpdateScopeSectionOrder ? (
                   <Input
@@ -154,7 +173,7 @@ export function WorkoutPlansExercisesListM3({
                     }}
                     disabled={disabled}
                     className="h-9 w-14 text-center text-sm font-medium"
-                    aria-label="Section order"
+                    aria-label="Order in section"
                   />
                 ) : (
                   <div className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium">

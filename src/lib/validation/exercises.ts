@@ -53,6 +53,7 @@ const exerciseBaseSchema = z
     level: levelSchema,
     details: detailsSchema,
     is_unilateral: z.boolean().optional().default(false),
+    is_save_to_pr: z.boolean().optional().nullable().default(false),
     reps: repsSchema,
     duration_seconds: durationSchema,
     series: seriesSchema,
