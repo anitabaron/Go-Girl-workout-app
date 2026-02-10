@@ -119,6 +119,7 @@ Efekt: asystent sesji i historia sesji działają na płaskiej liście; użytkow
 | Formularz            | workout-plan-form.tsx (przycisk Add scope), nowy AddScopeDialog, use-workout-plan-form.ts (handleAddScope, handleMoveExercise po slotach, handleRemove), workout-plan-exercises-list.tsx (grupowanie po slotach, blok scope), workout-plan-exercise-item (obsługa in_scope_nr w scope) |
 | Sesja                | services/workout-sessions.ts (createSessionSnapshots – rozwijanie scope) |
 | Widok planu (detail) | Opcjonalnie: wyświetlanie scope jako blok "Scope × N" w komponentach używanych przez **(main)** – np. WorkoutPlanDetailContent, WorkoutPlansExercisesListM3 w `(main)/_components`. Nie modyfikować widoków w `(legacy)`. |
+| **Testy**            | Testy jednostkowe i ewentualnie integracyjne uwzględniające scope: walidacja, normalizacja slotów, rozwijanie zestawów w sesji, formularz (dodawanie/edycja scope) – patrz sekcja 8.5. |
 
 ---
 
@@ -129,6 +130,7 @@ Efekt: asystent sesji i historia sesji działają na płaskiej liście; użytkow
 3. Formularz: AddScopeDialog, handleAddScope, grupowanie listy po slotach, ruch/usuwanie po slotach.
 4. createSessionSnapshots – rozwijanie zestawów przy starcie sesji.
 5. Opcjonalnie: widok szczegółów planu (scope jako jeden blok) i ewentualne dopracowanie historii (grupowanie wizualne). **Na końcu:** obsługa scope w imporcie planów JSON.
+6. **Testy:** Dopisać (lub rozszerzyć istniejące) testy uwzględniające scope – walidacja, normalizacja, rozwijanie zestawów w sesji, formularz – patrz sekcja 8.5.
 
 ---
 
@@ -203,6 +205,27 @@ Scope (zestaw ćwiczeń) ma być **widoczny** w trzech miejscach aplikacji (main
   2. W schemacie importu w `workout-plans.ts`: upewnić się, że `workoutPlanExerciseImportSchema` zawiera opcjonalne (nullable) pola `scope_id`, `in_scope_nr`, `scope_repeat_count` (zgodnie z regułami scope: jeśli `in_scope_nr` podane, to `scope_id` wymagane itd. – patrz istniejące walidatory scope w tym pliku).
   3. W logice importu planu (serwis/repo): przy wstawianiu ćwiczeń z pliku przekazywać te trzy pola do bazy, żeby zaimportowany plan miał te same zestawy co wyeksportowany.
   4. Przetestować: plan ze scope → Export JSON → Import tego pliku → nowy plan ma identyczną strukturę scope (te same scope_id grupy, in_scope_nr, scope_repeat_count).
+
+---
+
+### 8.5 Testy uwzględniające scope
+
+- **Cel:** Mieć pokrycie testami logiki związanej ze scope, tak aby zmiany w walidacji, normalizacji i rozwijaniu zestawów były zabezpieczone przed regresją.
+- **Zakres:** Testy jednostkowe (oraz ewentualnie integracyjne) dla warstw, w których scope ma wpływ na zachowanie.
+- **Kroki / obszary do przetestowania:**
+  1. **Walidacja (workout-plans, workout-plan-form):**
+     - Schemat ćwiczenia: poprawne przyjmowanie `scope_id`, `in_scope_nr`, `scope_repeat_count`; błąd gdy `in_scope_nr` podane bez `scope_id`; unikalność `in_scope_nr` w obrębie tego samego `scope_id`.
+     - `validateSectionOrderDuplicates`: dopuszczenie wielu ćwiczeń z tym samym (section_type, section_order) tylko gdy należą do zestawu (scope_id + in_scope_nr); błąd przy duplikacie w jednym slocie bez scope.
+  2. **Normalizacja section_order (workout-plan-form):**
+     - `normalizeSectionOrders`: slot = pojedyncze ćwiczenie (in_scope_nr == null) albo cały zestaw (wszystkie wiersze z tym samym scope_id); sortowanie section_type → section_order → in_scope_nr; przypisywanie kolejnych section_order per slot; w obrębie zestawu ten sam section_order dla wszystkich wierszy.
+  3. **Sesja – rozwijanie zestawów:**
+     - `createSessionSnapshots`: plan z mixem pojedynczych ćwiczeń i zestawów (scope × N) daje płaską listę snapshotów w poprawnej kolejności; każdy zestaw rozwinięty N razy (A, B, C, A, B, C, …); exercise_order ciągły 1, 2, 3…
+  4. **Formularz / hook (opcjonalnie, jeśli są testy formularza):**
+     - `handleAddScope`: wstawienie wielu pozycji z jednym scope_id, in_scope_nr 1..n, section_order = następny slot.
+     - Ruch/usuwanie po slotach: przesunięcie slotu zmienia section_order całego slotu (wszystkich wierszy w zestawie); usunięcie ostatniego ćwiczenia ze scope usuwa scope.
+  5. **Import/eksport (po realizacji 8.4):** Eksport planu ze scope zawiera pola scope w JSON; import z tymi polami odtwarza zestawy w bazie.
+- **Miejsca testów:** Istniejące pliki testowe przy walidacji (`workout-plans.test.ts`, `workout-plan-form.test.ts` jeśli są), przy serwisie sesji i przy hooku formularza; w razie braku – dodać nowe pliki w tym samym katalogu co kod źródłowy (np. `*.test.ts` obok modułu).
+- **Kolejność:** Testy walidacji i normalizacji można pisać równolegle z punktami 2–3 wdrożenia; testy createSessionSnapshots po punkcie 4; testy formularza/importu – po realizacji odpowiednich kroków.
 
 ---
 
