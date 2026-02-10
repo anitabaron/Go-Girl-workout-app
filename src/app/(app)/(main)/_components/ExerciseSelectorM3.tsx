@@ -193,7 +193,7 @@ export function ExerciseSelectorM3({
               <Card
                 key={exercise.id}
                 data-test-id="exercise-selector-card"
-                className={`cursor-pointer transition-all hover:shadow-md ${
+                className={`cursor-pointer gap-0 transition-all hover:shadow-md ${
                   selected ? "ring-2 ring-primary" : ""
                 }`}
                 onClick={() => handleExerciseClick(exercise)}
