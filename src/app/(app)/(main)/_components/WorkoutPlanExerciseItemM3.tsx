@@ -276,6 +276,10 @@ export function WorkoutPlanExerciseItemM3({
             disabled={disabled}
             isUnilateral={exercise.exercise_is_unilateral}
             data-test-id-prefix={exerciseTestId}
+            showRepsField={(exercise.initial_planned_reps ?? 0) > 0}
+            showDurationField={
+              (exercise.initial_planned_duration_seconds ?? 0) > 0
+            }
           />
         </div>
       </CardContent>

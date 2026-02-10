@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { ArrowDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { PlannedParamsState } from "@/types/workout-plan-form";
 import {
@@ -17,6 +18,9 @@ type PlannedParamsEditorM3Props = {
   isUnilateral?: boolean;
   /** Prefix for data-test-id on each field (e.g. workout-plan-exercise-item-xxx) */
   "data-test-id-prefix"?: string;
+  /** Widoczność pól z wartości początkowych z bazy (gdy initial > 0). */
+  showRepsField?: boolean;
+  showDurationField?: boolean;
 };
 
 const PLANNED_PARAMS_CONFIG: Array<{
@@ -24,21 +28,21 @@ const PLANNED_PARAMS_CONFIG: Array<{
   label: string;
   labelFn?: (params: PlannedParamsState, isUnilateral?: boolean) => string;
   min: number;
-  conditional?: (params: PlannedParamsState) => boolean;
+  /** Klucz do sprawdzenia widoczności przez props (showRepsField / showDurationField). */
+  visibilityKey?: "reps" | "duration";
 }> = [
   { key: "planned_sets", label: "Sets", min: 1 },
   {
     key: "planned_reps",
     label: "Reps",
     min: 1,
-    conditional: (p) => p.planned_reps != null && p.planned_reps > 0,
+    visibilityKey: "reps",
   },
   {
     key: "planned_duration_seconds",
     label: "Duration (s)",
     min: 1,
-    conditional: (p) =>
-      p.planned_duration_seconds != null && p.planned_duration_seconds > 0,
+    visibilityKey: "duration",
   },
   {
     key: "planned_rest_seconds",
@@ -60,7 +64,8 @@ const PLANNED_PARAMS_CONFIG: Array<{
           reps: p.planned_reps ?? null,
           duration_seconds: p.planned_duration_seconds ?? null,
           rest_in_between_seconds: p.planned_rest_seconds ?? null,
-          rest_after_series_seconds: p.planned_rest_after_series_seconds ?? null,
+          rest_after_series_seconds:
+            p.planned_rest_after_series_seconds ?? null,
           exercise_is_unilateral: isUnilateral ?? undefined,
         }),
         "s",
@@ -79,6 +84,7 @@ function PlannedParamField({
   min = 0,
   placeholder = "—",
   "data-test-id": dataTestId,
+  suggestedValue,
 }: {
   id: string;
   label: string;
@@ -89,8 +95,14 @@ function PlannedParamField({
   min?: number;
   placeholder?: string;
   "data-test-id"?: string;
+  /** Gdy liczba – pokazuje przycisk strzałki w dół do wklejenia tej wartości w pole. */
+  suggestedValue?: number | null;
 }) {
   const errorId = useId();
+  const canApplySuggested =
+    suggestedValue != null &&
+    Number.isFinite(suggestedValue) &&
+    suggestedValue >= min;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
@@ -102,14 +114,32 @@ function PlannedParamField({
     if (!Number.isNaN(num)) onChange(num);
   };
 
+  const handleApplySuggested = () => {
+    if (canApplySuggested) onChange(Math.round(suggestedValue!));
+  };
+
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="block text-xs font-medium text-muted-foreground"
-      >
-        {label}
-      </label>
+      <div className="flex items-center gap-1">
+        <label
+          htmlFor={id}
+          className="block text-xs font-medium text-muted-foreground"
+        >
+          {label}
+        </label>
+        {canApplySuggested && (
+          <button
+            type="button"
+            onClick={handleApplySuggested}
+            disabled={disabled}
+            className="cursor-pointer inline-flex shrink-0 items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            title={`Użyj szacowanej wartości (${suggestedValue} s)`}
+            aria-label={`Użyj szacowanej wartości ${suggestedValue} s`}
+          >
+            <ArrowDown className="size-3.5" />
+          </button>
+        )}
+      </div>
       <Input
         id={id}
         type="number"
@@ -140,20 +170,45 @@ export function PlannedParamsEditorM3({
   disabled,
   isUnilateral,
   "data-test-id-prefix": testIdPrefix,
+  showRepsField = false,
+  showDurationField = false,
 }: Readonly<PlannedParamsEditorM3Props>) {
   const firstRowFields = PLANNED_PARAMS_CONFIG.slice(0, 4);
   const secondRowFields = PLANNED_PARAMS_CONFIG.slice(4);
 
+  const MIN_GREATER_THAN_ONE_MSG = "Liczba musi być większa od 0";
+
   const renderField = (config: (typeof PLANNED_PARAMS_CONFIG)[number]) => {
-    if (config.conditional && !config.conditional(params)) return null;
+    if (config.visibilityKey === "reps" && !showRepsField) return null;
+    if (config.visibilityKey === "duration" && !showDurationField) return null;
 
     const value = params[config.key];
-    const error = errors[config.key];
+    const serverError = errors[config.key];
+    const isRepsOrDuration =
+      config.key === "planned_reps" ||
+      config.key === "planned_duration_seconds";
+    const showMinWarning =
+      isRepsOrDuration && (value === null || value === undefined || value < 1);
+    const error =
+      serverError ?? (showMinWarning ? MIN_GREATER_THAN_ONE_MSG : undefined);
     const keyKebab = config.key.replaceAll("_", "-");
     const dataTestId = testIdPrefix ? `${testIdPrefix}-${keyKebab}` : undefined;
     const label = config.labelFn
       ? config.labelFn(params, isUnilateral)
       : config.label;
+
+    const suggestedValue =
+      config.key === "estimated_set_time_seconds"
+        ? calculateEstimatedSetTimeSeconds({
+            series: params.planned_sets ?? "",
+            reps: params.planned_reps ?? null,
+            duration_seconds: params.planned_duration_seconds ?? null,
+            rest_in_between_seconds: params.planned_rest_seconds ?? null,
+            rest_after_series_seconds:
+              params.planned_rest_after_series_seconds ?? null,
+            exercise_is_unilateral: isUnilateral ?? undefined,
+          })
+        : undefined;
 
     return (
       <PlannedParamField
@@ -166,6 +221,7 @@ export function PlannedParamsEditorM3({
         disabled={disabled}
         min={config.min}
         data-test-id={dataTestId}
+        suggestedValue={suggestedValue}
       />
     );
   };

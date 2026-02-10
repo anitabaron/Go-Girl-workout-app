@@ -301,7 +301,7 @@ export function WorkoutPlanDetailContent({
               ) : (
                 <div
                   key={`scope-${slot.scopeId}`}
-                  className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-4"
+                  className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-raw-primary-container)] p-4"
                 >
                   <div className="mb-3 flex items-center gap-2 border-b border-[var(--m3-outline-variant)] pb-2">
                     <span className="m3-title text-[var(--m3-on-surface-variant)]">

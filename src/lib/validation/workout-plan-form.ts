@@ -179,6 +179,9 @@ export const workoutPlanExerciseItemFormSchema = z
     planned_rest_seconds: workoutPlanPlannedRestSchema,
     planned_rest_after_series_seconds: workoutPlanPlannedRestAfterSeriesSchema,
     estimated_set_time_seconds: workoutPlanEstimatedSetTimeSchema,
+    /** Widoczność pól Reps/Duration – ustawiane przy ładowaniu z bazy lub dodawaniu ćwiczenia. */
+    initial_planned_reps: z.number().int().nullable().optional(),
+    initial_planned_duration_seconds: z.number().int().nullable().optional(),
   })
   .refine(
     (data) => {
@@ -298,7 +301,8 @@ function normalizeSectionOrders<
       (SECTION_TYPE_ORDER[a.section_type] ?? 999) -
       (SECTION_TYPE_ORDER[b.section_type] ?? 999);
     if (typeDiff !== 0) return typeDiff;
-    if (a.section_order !== b.section_order) return a.section_order - b.section_order;
+    if (a.section_order !== b.section_order)
+      return a.section_order - b.section_order;
     const aNr = a.in_scope_nr ?? 0;
     const bNr = b.in_scope_nr ?? 0;
     return aNr - bNr;

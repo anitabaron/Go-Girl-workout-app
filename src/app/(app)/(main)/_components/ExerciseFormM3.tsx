@@ -8,7 +8,7 @@ import {
   type FieldErrors,
 } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, ArrowDown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -591,22 +591,48 @@ function ExerciseFormM3Fields({
         <Controller
           name="estimated_set_time_seconds"
           control={control}
-          render={({ field }) => (
-            <FormNumberInput
-              id="estimated_set_time_seconds"
-              label={getEstimatedSetTimeLabel(estimatedResult, "sec")}
-              value={String(field.value ?? "")}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={
-                errors.estimated_set_time_seconds?.message as string | undefined
-              }
-              disabled={disabled}
-              min={1}
-              data-test-id="exercise-form-estimated-set-time"
-              className="w-full"
-            />
-          )}
+          render={({ field }) => {
+            const canApplySuggested =
+              estimatedResult != null &&
+              Number.isFinite(estimatedResult) &&
+              estimatedResult >= 1;
+            return (
+              <FormNumberInput
+                id="estimated_set_time_seconds"
+                label={
+                  <span className="inline-flex items-center gap-1">
+                    {getEstimatedSetTimeLabel(estimatedResult, "sec")}
+                    {canApplySuggested && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          field.onChange(String(Math.round(estimatedResult!)))
+                        }
+                        disabled={disabled}
+                        className="cursor-pointer inline-flex shrink-0 items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        title={`Użyj szacowanej wartości (${estimatedResult} s)`}
+                        aria-label={`Użyj szacowanej wartości ${estimatedResult} s`}
+                      >
+                        <ArrowDown className="size-3.5" />
+                      </button>
+                    )}
+                  </span>
+                }
+                value={String(field.value ?? "")}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={
+                  errors.estimated_set_time_seconds?.message as
+                    | string
+                    | undefined
+                }
+                disabled={disabled}
+                min={1}
+                data-test-id="exercise-form-estimated-set-time"
+                className="w-full"
+              />
+            );
+          }}
         />
       </div>
       <p className="m3-label text-muted-foreground">

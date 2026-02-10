@@ -30,6 +30,9 @@ export type WorkoutPlanExerciseItemState = {
   planned_rest_seconds: number | null;
   planned_rest_after_series_seconds: number | null;
   estimated_set_time_seconds: number | null;
+  /** Wartości z bazy / przy dodawaniu – od nich zależy widoczność pól Reps/Duration (pole widoczne, gdy > 0). */
+  initial_planned_reps?: number | null;
+  initial_planned_duration_seconds?: number | null;
 };
 
 /**
@@ -222,6 +225,8 @@ export function dtoToFormState(dto?: WorkoutPlanDTO): WorkoutPlanFormState {
         null,
       estimated_set_time_seconds:
         exercise.exercise_estimated_set_time_seconds ?? null,
+      initial_planned_reps: exercise.planned_reps,
+      initial_planned_duration_seconds: exercise.planned_duration_seconds,
     })),
   };
 }
@@ -254,5 +259,7 @@ export function exerciseDtoToItemState(
       exerciseDto.planned_rest_after_series_seconds ?? null,
     estimated_set_time_seconds:
       exerciseMetadata?.estimated_set_time_seconds ?? null,
+    initial_planned_reps: exerciseDto.planned_reps,
+    initial_planned_duration_seconds: exerciseDto.planned_duration_seconds,
   };
 }
