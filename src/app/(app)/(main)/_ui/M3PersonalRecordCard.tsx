@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,6 @@ export function M3PersonalRecordCard({
   );
   const hasNewRecords = recordGroup.metrics.some((metric) => metric.isNew);
 
-  const editableOnly = recordGroup.metrics.filter((m) => !m.sessionId);
-  const sessionMetrics = recordGroup.metrics.filter((m) => m.sessionId);
-
   const handleCardClick = () => {
     router.push(`/personal-records/${recordGroup.exerciseId}`);
   };
@@ -45,16 +42,14 @@ export function M3PersonalRecordCard({
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (sessionMetrics.length > 0) {
-      router.push(`/workout-sessions/${sessionMetrics[0]!.sessionId}?edit=1`);
-    } else if (editableOnly.length === 1) {
-      setDirectEditMetricId(editableOnly[0]!.id);
+    if (recordGroup.metrics.length === 1) {
+      setDirectEditMetricId(recordGroup.metrics[0]!.id);
     } else {
       setIsEditModalOpen(true);
     }
   };
 
-  const singleEditableMetric = editableOnly[0];
+  const singleMetric = recordGroup.metrics[0];
 
   const handleDeleted = () => {
     onDeleted?.();
@@ -131,14 +126,14 @@ export function M3PersonalRecordCard({
         onDeleted={handleDeleted}
       />
 
-      {singleEditableMetric && (
+      {singleMetric && (
         <EditPersonalRecordDialogM3
-          metric={singleEditableMetric}
-          open={directEditMetricId === singleEditableMetric.id}
+          metric={singleMetric}
+          open={directEditMetricId === singleMetric.id}
           onOpenChange={(o) => !o && setDirectEditMetricId(null)}
         />
       )}
-      {editableOnly.length > 1 && (
+      {recordGroup.metrics.length > 1 && (
         <EditPersonalRecordsModalM3
           recordGroup={recordGroup}
           open={isEditModalOpen}

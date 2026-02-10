@@ -72,6 +72,8 @@ export type ExerciseCreateCommand = Pick<
   types: ExerciseType[];
   parts: ExercisePart[];
   is_unilateral?: boolean;
+  /** Gdy true, wyniki ćwiczenia zapisują się i pokazują w Personal Records. */
+  is_save_to_pr?: boolean | null;
 };
 
 export type ExerciseUpdateCommand = Partial<ExerciseCreateCommand>;
@@ -316,6 +318,8 @@ export type PersonalRecordWithExerciseDTO = PersonalRecordDTO & {
     title: string;
     type: ExerciseType;
     part: ExercisePart;
+    /** Gdy true, rekord jest pokazywany na liście PR. Gdy false/null – pomijany. */
+    is_save_to_pr?: boolean | null;
   };
 };
 

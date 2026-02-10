@@ -91,7 +91,9 @@ export function ExerciseDetailContent({
       router.push("/exercises");
     } catch (error) {
       if (error instanceof TypeError) {
-        toast.error("No internet connection. Check your connection and try again.");
+        toast.error(
+          "No internet connection. Check your connection and try again.",
+        );
       } else {
         toast.error("An error occurred while deleting the exercise");
       }
@@ -110,7 +112,7 @@ export function ExerciseDetailContent({
           value={exercise.title}
         />
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-2">
             <p className="m3-label text-muted-foreground">Type</p>
             <div className="flex flex-wrap gap-2">
@@ -148,6 +150,26 @@ export function ExerciseDetailContent({
                 <Badge variant="secondary">Unilateral</Badge>
               ) : (
                 <Badge variant="outline">No</Badge>
+              )}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="m3-label text-muted-foreground">PR</p>
+            <div className="flex flex-wrap gap-2">
+              {exercise.is_save_to_pr === true ? (
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/15 text-primary"
+                >
+                  PR — results saved
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className="border-muted-foreground/50 text-muted-foreground"
+                >
+                  PR — not saved
+                </Badge>
               )}
             </div>
           </div>
@@ -216,12 +238,18 @@ export function ExerciseDetailContent({
           className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2"
           aria-labelledby="exercise-relations-title"
         >
-          <p id="exercise-relations-title" className="m3-label text-destructive" role="alert">
+          <p
+            id="exercise-relations-title"
+            className="m3-label text-destructive"
+            role="alert"
+          >
             Exercise cannot be deleted because it is used in{" "}
             {relationsData.plansCount > 0 && (
               <>
                 {relationsData.plansCount}{" "}
-                {relationsData.plansCount === 1 ? "workout plan" : "workout plans"}
+                {relationsData.plansCount === 1
+                  ? "workout plan"
+                  : "workout plans"}
                 {relationsData.sessionsCount > 0 ? " and " : ""}
               </>
             )}

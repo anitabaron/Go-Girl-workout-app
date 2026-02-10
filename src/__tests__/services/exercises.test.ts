@@ -54,6 +54,7 @@ describe("createExerciseService", () => {
     type: "Main Workout",
     part: "Legs",
     is_unilateral: false,
+    is_save_to_pr: false,
     series: 3,
     reps: 10,
     rest_in_between_seconds: 60,

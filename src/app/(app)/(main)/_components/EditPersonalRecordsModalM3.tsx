@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import {
@@ -28,9 +27,6 @@ export function EditPersonalRecordsModalM3({
   const router = useRouter();
   const [editingMetricId, setEditingMetricId] = useState<string | null>(null);
 
-  const editableMetrics = recordGroup.metrics.filter((m) => !m.sessionId);
-  const sessionMetrics = recordGroup.metrics.filter((m) => m.sessionId);
-
   const handleEditSaved = () => {
     setEditingMetricId(null);
     router.refresh();
@@ -49,7 +45,7 @@ export function EditPersonalRecordsModalM3({
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {editableMetrics.map((metric) => (
+            {recordGroup.metrics.map((metric) => (
               <div
                 key={metric.id}
                 className="flex items-center justify-between rounded-md border border-[var(--m3-outline-variant)] p-3"
@@ -85,32 +81,10 @@ export function EditPersonalRecordsModalM3({
                 </Button>
               </div>
             ))}
-            {sessionMetrics.map((metric) => (
-              <div
-                key={metric.id}
-                className="flex items-center justify-between rounded-md border border-[var(--m3-outline-variant)] p-3"
-              >
-                <div>
-                  <p className="m3-label font-medium">{metric.label}</p>
-                  <p className="m3-body text-muted-foreground text-sm">
-                    {metric.valueDisplay}
-                  </p>
-                </div>
-                <Link
-                  href={`/workout-sessions/${metric.sessionId}?edit=1`}
-                  className="m3-label inline-flex items-center gap-1.5 text-primary hover:underline shrink-0"
-                  onClick={() => onOpenChange(false)}
-                  aria-label={`Edytuj ${metric.label} w sesji`}
-                >
-                  <Pencil className="size-4" />
-                  Edytuj w sesji
-                </Link>
-              </div>
-            ))}
           </div>
         </DialogContent>
       </Dialog>
-      {editableMetrics.map(
+      {recordGroup.metrics.map(
         (metric) =>
           editingMetricId === metric.id && (
             <EditPersonalRecordDialogM3

@@ -409,6 +409,38 @@ function ExerciseFormM3Fields({
             </FormField>
           )}
         />
+        <Controller
+          name="is_save_to_pr"
+          control={control}
+          render={({ field }) => (
+            <FormField
+              label="PR"
+              htmlFor="is_save_to_pr"
+              error={errors.is_save_to_pr?.message as string | undefined}
+            >
+              <div
+                className="flex items-center gap-2"
+                data-test-id="exercise-form-is-save-to-pr"
+              >
+                <Checkbox
+                  id="is_save_to_pr"
+                  checked={field.value ?? false}
+                  onCheckedChange={(checked) =>
+                    field.onChange(checked === true)
+                  }
+                  disabled={disabled}
+                  aria-invalid={!!errors.is_save_to_pr}
+                />
+                <label
+                  htmlFor="is_save_to_pr"
+                  className="cursor-pointer text-sm font-medium"
+                >
+                  Save results to PRs
+                </label>
+              </div>
+            </FormField>
+          )}
+        />
       </div>
 
       <Controller

@@ -159,7 +159,7 @@ export async function deletePersonalRecordsByExerciseService(
 
 /**
  * Aktualizuje pojedynczy rekord osobisty.
- * Dozwolone tylko dla rekordów bez przypisanej sesji (achieved_in_session_id === null).
+ * Przy edycji rekord jest odłączany od sesji (achieved_in_session_id = null).
  */
 export async function updatePersonalRecordService(
   userId: string,
@@ -182,12 +182,6 @@ export async function updatePersonalRecordService(
   );
 
   if (error) {
-    if ((error as { code?: string }).code === "FORBIDDEN") {
-      throw new ServiceError(
-        "FORBIDDEN",
-        "Nie można edytować rekordu przypisanego do sesji treningowej. Przejdź do edycji szczegółów sesji.",
-      );
-    }
     throw mapDbError(error);
   }
 
