@@ -25,6 +25,9 @@ function exerciseToImportFormat(
   const base: Record<string, unknown> = {
     section_type: ex.section_type,
     section_order: ex.section_order,
+    scope_id: ex.scope_id ?? null,
+    in_scope_nr: ex.in_scope_nr ?? null,
+    scope_repeat_count: ex.scope_repeat_count ?? null,
     planned_sets: ex.planned_sets ?? null,
     planned_reps: ex.planned_reps ?? null,
     planned_duration_seconds: ex.planned_duration_seconds ?? null,

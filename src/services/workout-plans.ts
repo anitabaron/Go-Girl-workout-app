@@ -688,6 +688,11 @@ type ExerciseDataMap = Map<
   }
 >;
 
+/**
+ * Uzupełnia section_type/section_order i normalizuje duplikaty.
+ * Gdy w JSON brak scope (np. stary eksport), wiele ćwiczeń może mieć ten sam
+ * section_order – przypisujemy wtedy unikalne kolejności w ramach sekcji.
+ */
 function normalizeImportSectionTypeAndOrder(
   parsed: WorkoutPlanImportPayload,
 ): void {
@@ -706,6 +711,41 @@ function normalizeImportSectionTypeAndOrder(
       exercise.section_order = next;
     }
   }
+  // Sortuj: section_type → section_order → in_scope_nr (single na końcu w slocie)
+  const sectionTypeOrder: Record<string, number> = {
+    "Warm-up": 1,
+    "Main Workout": 2,
+    "Cool-down": 3,
+  };
+  parsed.exercises.sort((a, b) => {
+    const typeA = sectionTypeOrder[a.section_type!] ?? 999;
+    const typeB = sectionTypeOrder[b.section_type!] ?? 999;
+    if (typeA !== typeB) return typeA - typeB;
+    const orderA = a.section_order ?? 0;
+    const orderB = b.section_order ?? 0;
+    if (orderA !== orderB) return orderA - orderB;
+    const nrA = a.in_scope_nr ?? 0;
+    const nrB = b.in_scope_nr ?? 0;
+    return nrA - nrB;
+  });
+  // Przypisz unikalne section_order: jeden numer na slot (scope = jeden slot, single = każdy osobny slot)
+  const sectionCounters = new Map<string, number>();
+  let prevSlotKey: string | null = null;
+  parsed.exercises.forEach((ex, index) => {
+    const inScope =
+      ex.in_scope_nr != null && ex.scope_id != null;
+    const slotKey = inScope
+      ? `${ex.section_type}:${ex.section_order}:${ex.scope_id}`
+      : `${ex.section_type}:single:${index}`;
+    if (slotKey === prevSlotKey) {
+      ex.section_order = sectionCounters.get(ex.section_type!) ?? 1;
+    } else {
+      prevSlotKey = slotKey;
+      const next = (sectionCounters.get(ex.section_type!) ?? 0) + 1;
+      sectionCounters.set(ex.section_type!, next);
+      ex.section_order = next;
+    }
+  });
 }
 
 function validateImportDomainRules(parsed: WorkoutPlanImportPayload): void {
@@ -716,6 +756,9 @@ function validateImportDomainRules(parsed: WorkoutPlanImportPayload): void {
           exercise_id: e.exercise_id ?? undefined,
           section_type: e.section_type,
           section_order: e.section_order,
+          scope_id: e.scope_id ?? undefined,
+          in_scope_nr: e.in_scope_nr ?? undefined,
+          scope_repeat_count: e.scope_repeat_count ?? undefined,
           planned_sets: e.planned_sets,
           planned_reps: e.planned_reps,
           planned_duration_seconds: e.planned_duration_seconds,
@@ -904,6 +947,9 @@ function buildImportExerciseRows(
     return {
       exercise_id: e.exercise_id ?? null,
       snapshot_id: snapshotId,
+      scope_id: e.scope_id ?? null,
+      in_scope_nr: e.in_scope_nr ?? null,
+      scope_repeat_count: e.scope_repeat_count ?? null,
       exercise_title: e.exercise_title ?? null,
       exercise_type: e.exercise_type ?? null,
       exercise_part: e.exercise_part ?? null,
