@@ -13,6 +13,7 @@ const SIDE_LABELS: Record<
 
 export function RepsDisplayM3({
   reps,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- API compatibility
   setNumber: _setNumber,
   sideLabel,
   onComplete,

@@ -28,7 +28,8 @@ export function PlannedParamField({
   placeholder = "—",
   "data-test-id": dataTestId,
 }: Readonly<PlannedParamFieldProps>) {
-  const inputId = useId();
+  const generatedId = useId();
+  const inputId = id || generatedId;
   const errorId = useId();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

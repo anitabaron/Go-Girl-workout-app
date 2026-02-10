@@ -189,6 +189,8 @@ export function useWorkoutPlanForm({
       exercisesBySection.get(sectionType)!.push(ex);
     });
 
+    // react-hook-form watch() – React Compiler skips memoizing this; suppress lint
+    // eslint-disable-next-line react-hooks/incompatible-library
     const currentExercises = watch("exercises");
     const toAppend: Parameters<typeof append>[0][] = [];
 
@@ -415,7 +417,7 @@ export function useWorkoutPlanForm({
   const handleMoveWithinScope = (index: number, direction: "up" | "down") => {
     const currentExercises = watch("exercises");
     const current = currentExercises[index];
-    if (!current || current.scope_id == null || current.in_scope_nr == null) {
+    if (current?.scope_id == null || current?.in_scope_nr == null) {
       return;
     }
     const scopeId = current.scope_id;

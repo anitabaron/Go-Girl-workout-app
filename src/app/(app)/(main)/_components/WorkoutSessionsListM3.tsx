@@ -8,7 +8,6 @@ import { EmptyState } from "./EmptyState";
 import { M3WorkoutSessionCard } from "../_ui/M3WorkoutSessionCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import Link from "next/link";
 
 type WorkoutSessionsListM3Props = {
   initialSessions: SessionSummaryDTO[];

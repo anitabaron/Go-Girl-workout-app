@@ -79,10 +79,7 @@ export default async function WorkoutSessionDetailsPage({
           className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-zinc-950"
           aria-label="Lista ćwiczeń w sesji"
         >
-          <WorkoutSessionExercisesList
-            exercises={session.exercises}
-            sessionId={session.id}
-          />
+          <WorkoutSessionExercisesList exercises={session.exercises} />
         </section>
       </main>
     </div>

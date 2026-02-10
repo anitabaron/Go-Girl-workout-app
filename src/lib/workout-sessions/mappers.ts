@@ -64,6 +64,7 @@ export function mapToDetailDTO(
   }
 
   const exerciseDTOs: SessionExerciseDTO[] = exercises.map((exercise) => {
+    /* eslint-disable @typescript-eslint/no-unused-vars -- destructure to omit from rest */
     const {
       session_id,
       created_at,
@@ -73,6 +74,7 @@ export function mapToDetailDTO(
       exercises: exerciseData,
       ...exerciseRest
     } = exercise;
+    /* eslint-enable @typescript-eslint/no-unused-vars */
 
     const setDTOs: SessionExerciseSetDTO[] = (
       setsByExerciseId.get(exercise.id) ?? []
@@ -114,6 +116,7 @@ export function mapExerciseToDTO(
   },
   sets: WorkoutSessionSetRow[],
 ): SessionExerciseDTO {
+  /* eslint-disable @typescript-eslint/no-unused-vars -- destructure to omit from rest */
   const {
     session_id,
     created_at,
@@ -123,6 +126,7 @@ export function mapExerciseToDTO(
     exercises: exerciseData,
     ...exerciseRest
   } = exercise;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   const setDTOs: SessionExerciseSetDTO[] = sets
     .filter((set) => set.session_exercise_id === exercise.id)

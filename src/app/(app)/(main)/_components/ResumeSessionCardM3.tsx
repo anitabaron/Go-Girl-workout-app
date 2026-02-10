@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Calendar, Play, X, Clock10, Dumbbell } from "lucide-react";
 import type { SessionDetailDTO } from "@/types";
 import {

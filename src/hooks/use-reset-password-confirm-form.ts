@@ -104,7 +104,7 @@ export function useResetPasswordConfirmForm() {
     };
 
     checkToken();
-  }, [router]);
+  }, [router, basePath]);
 
   /**
    * Walidacja pojedynczego pola.
@@ -236,6 +236,62 @@ export function useResetPasswordConfirmForm() {
     setErrors((prev) => ({ ...prev, confirmPassword: error }));
   };
 
+  const redirectToInvalidTokenPage = (): void => {
+    toast.error(
+      "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
+    );
+    const resetPath = basePath
+      ? `${basePath}/reset-password?error=invalid_token`
+      : "/reset-password?error=invalid_token";
+    router.push(resetPath);
+  };
+
+  const handleAuthUpdateError = (error: { message: string }): void => {
+    const msg = error.message.toLowerCase();
+    if (
+      msg.includes("invalid") ||
+      msg.includes("expired") ||
+      msg.includes("token")
+    ) {
+      redirectToInvalidTokenPage();
+    } else if (msg.includes("password")) {
+      setErrors({
+        newPassword: "Hasło nie spełnia wymagań. Minimum 6 znaków.",
+      });
+      toast.error("Hasło nie spełnia wymagań. Minimum 6 znaków.");
+    } else {
+      toast.error("Nie udało się zmienić hasła. Spróbuj ponownie później.");
+    }
+    setIsLoading(false);
+  };
+
+  const finishPasswordResetSuccess = async (): Promise<void> => {
+    const { error: signOutError } = await supabase.auth.signOut();
+    if (signOutError) {
+      console.error("Error signing out after password reset:", signOutError);
+    }
+    toast.success(
+      "Hasło zostało pomyślnie zmienione. Możesz się teraz zalogować."
+    );
+    const loginPath = basePath ? `${basePath}/login` : "/login";
+    setTimeout(() => {
+      router.push(loginPath);
+      router.refresh();
+    }, 1500);
+  };
+
+  const handlePasswordUpdateUnexpectedError = (error: unknown): void => {
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      toast.error(
+        "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."
+      );
+    } else {
+      toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
+      console.error("Unexpected error during password update:", error);
+    }
+    setIsLoading(false);
+  };
+
   /**
    * Handler submit formularza.
    */
@@ -244,94 +300,31 @@ export function useResetPasswordConfirmForm() {
   ): Promise<void> => {
     e.preventDefault();
 
-    // Sprawdzenie ważności tokenu
     if (isTokenValid === false) {
-      toast.error(
-        "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
-      );
-      const resetPath = basePath
-        ? `${basePath}/reset-password?error=invalid_token`
-        : "/reset-password?error=invalid_token";
-      router.push(resetPath);
+      redirectToInvalidTokenPage();
       return;
     }
-
     if (isTokenValid === null) {
-      // Czekamy na weryfikację tokenu
       toast.info("Weryfikacja tokenu...");
       return;
     }
-
-    // Walidacja formularza
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
     setErrors({});
 
     try {
-      // Wywołanie updateUser do zmiany hasła
-      // Supabase automatycznie weryfikuje, czy sesja recovery jest ważna
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
-
       if (error) {
-        // Obsługa błędów Supabase Auth
-        if (
-          error.message.includes("invalid") ||
-          error.message.includes("expired") ||
-          error.message.includes("token")
-        ) {
-          toast.error(
-            "Link resetu hasła jest nieprawidłowy lub wygasł. Poproś o nowy link."
-          );
-          const resetPath = basePath
-            ? `${basePath}/reset-password?error=invalid_token`
-            : "/reset-password?error=invalid_token";
-          router.push(resetPath);
-        } else if (error.message.includes("password")) {
-          setErrors({
-            newPassword: "Hasło nie spełnia wymagań. Minimum 6 znaków.",
-          });
-          toast.error("Hasło nie spełnia wymagań. Minimum 6 znaków.");
-        } else {
-          toast.error("Nie udało się zmienić hasła. Spróbuj ponownie później.");
-        }
-        setIsLoading(false);
+        handleAuthUpdateError(error);
         return;
       }
 
-      // Sukces - hasło zostało zmienione
-      // Supabase automatycznie loguje użytkownika po updateUser, więc musimy go wylogować
-      // aby użytkownik mógł się zalogować z nowym hasłem
-      const { error: signOutError } = await supabase.auth.signOut();
-
-      if (signOutError) {
-        console.error("Error signing out after password reset:", signOutError);
-        // Kontynuujemy mimo błędu wylogowania - przekierowanie do /login
-      }
-
-      toast.success(
-        "Hasło zostało pomyślnie zmienione. Możesz się teraz zalogować."
-      );
-      const loginPath = basePath ? `${basePath}/login` : "/login";
-      setTimeout(() => {
-        router.push(loginPath);
-        router.refresh();
-      }, 1500);
+      await finishPasswordResetSuccess();
     } catch (error) {
-      // Obsługa błędów sieciowych
-      if (error instanceof TypeError && error.message.includes("fetch")) {
-        toast.error(
-          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie."
-        );
-      } else {
-        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
-        console.error("Unexpected error during password update:", error);
-      }
-      setIsLoading(false);
+      handlePasswordUpdateUnexpectedError(error);
     }
   };
 

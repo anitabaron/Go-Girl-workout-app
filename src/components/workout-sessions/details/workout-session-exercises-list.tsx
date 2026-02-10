@@ -1,22 +1,12 @@
-import type {
-  SessionExerciseDTO,
-  PersonalRecordWithExerciseDTO,
-} from "@/types";
+import type { SessionExerciseDTO } from "@/types";
 import { WorkoutSessionExerciseItem } from "./workout-session-exercise-item";
 
 type WorkoutSessionExercisesListProps = {
   readonly exercises: SessionExerciseDTO[];
-  readonly sessionId: string;
-  readonly personalRecordsByExercise?: Map<
-    string,
-    PersonalRecordWithExerciseDTO[]
-  >;
 };
 
 export function WorkoutSessionExercisesList({
   exercises,
-  sessionId,
-  personalRecordsByExercise = new Map(),
 }: WorkoutSessionExercisesListProps) {
   if (exercises.length === 0) {
     return (
@@ -41,12 +31,6 @@ export function WorkoutSessionExercisesList({
             exercise={exercise}
             exerciseIndex={index}
             totalExercises={sortedExercises.length}
-            sessionId={sessionId}
-            personalRecords={
-              exercise.exercise_id
-                ? (personalRecordsByExercise.get(exercise.exercise_id) ?? [])
-                : []
-            }
           />
         ))}
       </div>

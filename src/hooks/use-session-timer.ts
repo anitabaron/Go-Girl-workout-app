@@ -61,6 +61,7 @@ export function useSessionTimer(
       sessionStatusRef.current = session.status;
     }
   }, [
+    session,
     session?.last_timer_started_at,
     session?.last_timer_stopped_at,
     session?.status,
