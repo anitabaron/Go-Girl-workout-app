@@ -58,7 +58,7 @@ export function M3PersonalRecordCard({
   return (
     <>
       <Card
-        className="overflow-hidden rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] transition-colors hover:border-[var(--m3-outline)] cursor-pointer"
+        className="overflow-hidden rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] transition-colors hover:border-[var(--m3-outline)] cursor-pointer gap-0 py-0"
         onClick={handleCardClick}
         role="button"
         tabIndex={0}
@@ -69,21 +69,23 @@ export function M3PersonalRecordCard({
           }
         }}
       >
-        <CardHeader className="relative">
-          <div className="flex items-center justify-between  ">
-            <h3 className="m3-title truncate">{recordGroup.title}</h3>
+        <CardHeader className="relative px-4 py-2.5 pb-0 gap-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-m font-semibold truncate">
+              {recordGroup.title}
+            </h2>
             {hasNewRecords && (
-              <Badge variant="default" className="shrink-0">
+              <Badge variant="default" className="shrink-0 text-xs">
                 Nowy
               </Badge>
             )}
           </div>
 
-          <div className="absolute -top-3 right-2 flex items-center gap-1">
+          <div className="absolute top-2 right-2 flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground hover:text-primary"
+              className="size-7 text-muted-foreground hover:text-primary"
               onClick={handleEditClick}
               aria-label={`Edytuj rekordy dla: ${recordGroup.title}`}
             >
@@ -92,7 +94,7 @@ export function M3PersonalRecordCard({
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground hover:text-destructive"
+              className="size-7 text-muted-foreground hover:text-destructive"
               onClick={handleDeleteClick}
               aria-label={`Usuń rekordy dla: ${recordGroup.title}`}
             >
@@ -100,18 +102,15 @@ export function M3PersonalRecordCard({
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="px-4 py-2 pt-0">
           {recordGroup.metrics.length > 0 ? (
             <div>
               {recordGroup.metrics.map((metric) => (
-                <PersonalRecordMetricItemM3
-                  key={metric.id}
-                  metric={metric}
-                />
+                <PersonalRecordMetricItemM3 key={metric.id} metric={metric} />
               ))}
             </div>
           ) : (
-            <p className="m3-body text-muted-foreground py-4 text-center text-sm">
+            <p className="m3-body text-muted-foreground py-2 text-center text-xs">
               Brak dostępnych rekordów dla tego ćwiczenia
             </p>
           )}
