@@ -87,7 +87,7 @@ function toDbInsert(input: ExerciseCreateCommand): Omit<
     types,
     parts,
     is_unilateral: is_unilateral ?? false,
-    is_save_to_pr: is_save_to_pr ?? false,
+    is_save_to_pr: is_save_to_pr ?? true,
   };
 }
 

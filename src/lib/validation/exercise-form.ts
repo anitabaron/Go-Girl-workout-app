@@ -89,7 +89,7 @@ export const exerciseFormSchema = z
       .optional()
       .nullable(),
     is_unilateral: z.boolean().optional().default(false),
-    is_save_to_pr: z.boolean().optional().nullable().default(false),
+    is_save_to_pr: z.boolean().optional().nullable().default(true),
     reps: optionalPositiveIntString,
     duration_seconds: optionalPositiveIntString,
     series: requiredPositiveIntString,
@@ -199,7 +199,7 @@ export function formValuesToCommand(
     level: data.level ?? null,
     details: data.details?.trim() || null,
     is_unilateral: data.is_unilateral ?? false,
-    is_save_to_pr: data.is_save_to_pr ?? false,
+    is_save_to_pr: data.is_save_to_pr ?? true,
     reps: data.reps ?? undefined,
     duration_seconds: data.duration_seconds ?? undefined,
     rest_in_between_seconds: data.rest_in_between_seconds ?? undefined,
