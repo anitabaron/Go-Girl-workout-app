@@ -294,7 +294,7 @@ function ExerciseFormM3Fields({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Controller
           name="types"
           control={control}
@@ -466,52 +466,59 @@ function ExerciseFormM3Fields({
           </FormField>
         )}
       />
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Controller
-          name="reps"
-          control={control}
-          render={({ field }) => (
-            <FormNumberInput
-              id="reps"
-              label={
-                <>
-                  Reps <span className="text-destructive">**</span>
-                </>
-              }
-              value={String(field.value ?? "")}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={errors.reps?.message as string | undefined}
-              disabled={disabled}
-              min={1}
-              data-test-id="exercise-form-reps"
-              className="w-full"
-            />
-          )}
-        />
-        <Controller
-          name="duration_seconds"
-          control={control}
-          render={({ field }) => (
-            <FormNumberInput
-              id="duration_seconds"
-              label={
-                <>
-                  Duration (sec) <span className="text-destructive">**</span>
-                </>
-              }
-              value={String(field.value ?? "")}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={errors.duration_seconds?.message as string | undefined}
-              disabled={disabled}
-              min={1}
-              data-test-id="exercise-form-duration"
-              className="w-full"
-            />
-          )}
-        />
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+        <div>
+          <Controller
+            name="reps"
+            control={control}
+            render={({ field }) => (
+              <FormNumberInput
+                id="reps"
+                label={
+                  <>
+                    Reps <span className="text-destructive">**</span>
+                  </>
+                }
+                value={String(field.value ?? "")}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.reps?.message as string | undefined}
+                disabled={disabled}
+                min={1}
+                data-test-id="exercise-form-reps"
+                className="w-full"
+              />
+            )}
+          />
+          <p className="flex text-xs text-muted-foreground whitespace-nowrap pt-1">
+            Provide exactly one: reps or duration{" "}
+            <span className="text-destructive">**</span>
+          </p>
+        </div>
+        <div>
+          <Controller
+            name="duration_seconds"
+            control={control}
+            render={({ field }) => (
+              <FormNumberInput
+                id="duration_seconds"
+                label={
+                  <>
+                    Duration (sec) <span className="text-destructive">**</span>
+                  </>
+                }
+                value={String(field.value ?? "")}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.duration_seconds?.message as string | undefined}
+                disabled={disabled}
+                min={1}
+                data-test-id="exercise-form-duration"
+                className="w-full"
+              />
+            )}
+          />
+        </div>
         <Controller
           name="series"
           control={control}
@@ -532,37 +539,39 @@ function ExerciseFormM3Fields({
           )}
         />
       </div>
-      <p className="m3-label text-muted-foreground">
-        Provide exactly one: reps or duration{" "}
-        <span className="text-destructive">**</span>
-      </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Controller
-          name="rest_in_between_seconds"
-          control={control}
-          render={({ field }) => (
-            <FormNumberInput
-              id="rest_in_between_seconds"
-              label={
-                <>
-                  Rest between sets (sec){" "}
-                  <span className="text-destructive">***</span>
-                </>
-              }
-              value={String(field.value ?? "")}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={
-                errors.rest_in_between_seconds?.message as string | undefined
-              }
-              disabled={disabled}
-              min={0}
-              data-test-id="exercise-form-rest-between"
-              className="w-full"
-            />
-          )}
-        />
+        <div>
+          <Controller
+            name="rest_in_between_seconds"
+            control={control}
+            render={({ field }) => (
+              <FormNumberInput
+                id="rest_in_between_seconds"
+                label={
+                  <>
+                    Rest between sets (sec){" "}
+                    <span className="text-destructive">***</span>
+                  </>
+                }
+                value={String(field.value ?? "")}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={
+                  errors.rest_in_between_seconds?.message as string | undefined
+                }
+                disabled={disabled}
+                min={0}
+                data-test-id="exercise-form-rest-between"
+                className="w-full"
+              />
+            )}
+          />{" "}
+          <p className="flex text-xs text-muted-foreground whitespace-nowrap pt-1">
+            Provide at least one rest field{" "}
+            <span className="text-destructive">***</span>
+          </p>
+        </div>
         <Controller
           name="rest_after_series_seconds"
           control={control}
@@ -635,10 +644,6 @@ function ExerciseFormM3Fields({
           }}
         />
       </div>
-      <p className="m3-label text-muted-foreground">
-        Provide at least one rest field{" "}
-        <span className="text-destructive">***</span>
-      </p>
     </div>
   );
 }
