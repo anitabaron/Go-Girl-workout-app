@@ -2,14 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import type { RepsDisplayProps } from "@/types/workout-session-assistant";
-
-const SIDE_LABELS: Record<
-  NonNullable<RepsDisplayProps["sideLabel"]>,
-  string
-> = {
-  one_side: "first side",
-  other_side: "second side",
-};
+import { useTranslations } from "@/i18n/client";
 
 export function RepsDisplayM3({
   reps,
@@ -18,6 +11,7 @@ export function RepsDisplayM3({
   sideLabel,
   onComplete,
 }: Readonly<RepsDisplayProps>) {
+  const t = useTranslations("assistantTimers");
   if (!reps || reps <= 0) return null;
   if (typeof onComplete !== "function") return null;
 
@@ -33,7 +27,14 @@ export function RepsDisplayM3({
             {reps}
           </span>
           <span className="text-sm font-medium text-muted-foreground">
-            reps{sideLabel ? ` (${SIDE_LABELS[sideLabel]})` : ""}
+            {t("reps")}
+            {sideLabel
+              ? ` (${
+                  sideLabel === "one_side"
+                    ? t("firstSide")
+                    : t("secondSide")
+                })`
+              : ""}
           </span>
         </div>
       </div>
@@ -44,7 +45,7 @@ export function RepsDisplayM3({
         className="m3-cta min-w-[120px] text-lg"
         data-test-id="timer-ok-button"
       >
-        OK
+        {t("ok")}
       </Button>
     </div>
   );

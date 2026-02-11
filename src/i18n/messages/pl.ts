@@ -549,6 +549,8 @@ export const plMessages = {
   "assistantTimers.endWorkout": "Koniec treningu",
   "assistantTimers.firstSide": "pierwsza strona",
   "assistantTimers.secondSide": "druga strona",
+  "assistantTimers.reps": "powtórzeń",
+  "assistantTimers.ok": "OK",
   "assistantExerciseList.exercise": "Ćwiczenie",
   "assistantExerciseList.repsTime": "Powt./czas",
   "assistantExerciseList.sets": "Serie",

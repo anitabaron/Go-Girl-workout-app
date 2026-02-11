@@ -547,6 +547,8 @@ export const enMessages = {
   "assistantTimers.endWorkout": "End of workout",
   "assistantTimers.firstSide": "first side",
   "assistantTimers.secondSide": "second side",
+  "assistantTimers.reps": "reps",
+  "assistantTimers.ok": "OK",
   "assistantExerciseList.exercise": "Exercise",
   "assistantExerciseList.repsTime": "Reps/time",
   "assistantExerciseList.sets": "Sets",

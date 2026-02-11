@@ -54,7 +54,7 @@ export function SetCountdownTimerM3({
         className="m3-cta min-w-[120px] text-md font-light"
         data-test-id="timer-ok-button"
       >
-        OK
+        {t("ok")}
       </Button>
     </div>
   );
