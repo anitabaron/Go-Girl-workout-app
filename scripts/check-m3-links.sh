@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# M3 migration: M3 internal links must target /m3/* (not legacy paths).
+# Main-only migration: forbid links/navigation to removed /legacy routes.
 # Exit 1 if legacy links found.
 # Requires: ripgrep (rg) - brew install ripgrep
 
 command -v rg &>/dev/null || { echo "Error: ripgrep (rg) required. Install: brew install ripgrep"; exit 2; }
 
-# Legacy paths that must not be linked from M3 (use /m3/* instead)
-LEGACY_PATHS="href=[\"']/(exercises|workout-plans|workout-sessions|personal-records|import-instruction|kitchen-sink|test)(/|[\"'])"
-M3_DIR="src/app/(app)/(m3)/"
+# Block /legacy references in href and client/server navigations.
+LEGACY_PATHS="(href=[\"']/legacy/|redirect\\([\"']/legacy/|router\\.(push|replace)\\([\"']/legacy/)"
+SCAN_DIR="src"
 
-if rg "$LEGACY_PATHS" "$M3_DIR" 2>/dev/null; then
-  echo "❌ M3 links check failed: legacy links found in $M3_DIR"
-  echo "   M3 internal links must target /m3/* (e.g. /m3/exercises/new)"
+if rg "$LEGACY_PATHS" "$SCAN_DIR" 2>/dev/null; then
+  echo "❌ Legacy links check failed: found /legacy references in $SCAN_DIR"
+  echo "   Use main routes (/exercises, /workout-plans, /workout-sessions, etc.)."
   exit 1
 fi
-echo "✓ M3 links check passed: no legacy links"
+echo "✓ Legacy links check passed: no /legacy navigations"

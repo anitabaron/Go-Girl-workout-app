@@ -160,13 +160,6 @@
   --spacing-3xl: 4rem; /* 64px */
   --spacing: var(--spacing-xs);
 
-  /* ============================================
-     BRAND COLORS - Aliases for backward compatibility
-     ============================================ */
-  --go-pink: var(--brand-pink);
-  --go-light-pink: var(--brand-pink-light);
-  --go-mid-red: var(--brand-red-mid);
-  --go-red: var(--brand-red);
 }
 
 /* ============================================
@@ -293,11 +286,6 @@
     --spacing-3xl: 4rem;
     --spacing: var(--spacing-xs);
 
-    /* Brand colors - Aliases */
-    --go-pink: var(--brand-pink);
-    --go-light-pink: var(--brand-pink-light);
-    --go-mid-red: var(--brand-red-mid);
-    --go-red: var(--brand-red);
   }
 }
 
@@ -424,11 +412,6 @@
   --spacing-3xl: 4rem;
   --spacing: var(--spacing-xs);
 
-  /* Brand colors - Aliases */
-  --go-pink: var(--brand-pink);
-  --go-light-pink: var(--brand-pink-light);
-  --go-mid-red: var(--brand-red-mid);
-  --go-red: var(--brand-red);
 }
 
 /* ============================================
@@ -561,14 +544,6 @@
   --spacing-2xl: var(--spacing-2xl);
   --spacing-3xl: var(--spacing-3xl);
 
-  /* ============================================
-     BRAND COLORS - Backward compatibility
-     camelCase dla kompatybilności z istniejącymi klasami
-     ============================================ */
-  --color-goPink: var(--go-pink);
-  --color-goLightPink: var(--go-light-pink);
-  --color-goMidRed: var(--go-mid-red);
-  --color-goRed: var(--go-red);
 }
 
 /* ============================================
@@ -588,19 +563,19 @@ body {
    Use lighter surfaces to highlight areas of primary focus
    ============================================ */
 
-/* Focus states - Use brand colors for focus rings */
-*:focus-visible {
+/* Focus states for non-M3 views only. M3 uses its own scoped focus styles in m3.css. */
+body:not(:has(.ui-m3)) *:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-/* Selection - Use brand colors for text selection */
-::selection {
+/* Selection for non-M3 views only. */
+body:not(:has(.ui-m3)) ::selection {
   background-color: var(--brand-pink);
   color: var(--primary-foreground);
 }
 
-::-moz-selection {
+body:not(:has(.ui-m3)) ::-moz-selection {
   background-color: var(--brand-pink);
   color: var(--primary-foreground);
 }
