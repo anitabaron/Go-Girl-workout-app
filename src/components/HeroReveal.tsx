@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, useGSAP } from "@/app/(app)/(main)/_lib/gsap";
+import { gsap, useGSAP } from "@/app/(app)/_lib/gsap";
 
 type HeroRevealProps = {
   children: React.ReactNode;

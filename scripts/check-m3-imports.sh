@@ -6,7 +6,7 @@
 command -v rg &>/dev/null || { echo "Error: ripgrep (rg) required. Install: brew install ripgrep"; exit 2; }
 
 FORBIDDEN="from ['\"][^'\"]*(_components|_ui)(/|['\"])"
-M3_DIR="src/app/(app)/(main)/"
+M3_DIR="src/app/(app)/"
 
 if rg "$FORBIDDEN" "$M3_DIR" 2>/dev/null; then
   echo "❌ Main import check failed: old _components/_ui imports found in $M3_DIR"

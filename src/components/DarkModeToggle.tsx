@@ -1,7 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useM3DarkMode } from "@/app/(app)/(main)/_lib/use-m3-dark-mode";
+import { useM3DarkMode } from "@/app/(app)/_lib/use-m3-dark-mode";
 import { cn } from "@/lib/utils";
 
 type DarkModeToggleProps = {

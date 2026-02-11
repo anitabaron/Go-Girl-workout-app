@@ -1,5 +1,5 @@
 import { AuthRedirectProvider } from "@/contexts/auth-redirect-context";
-import "@/app/(app)/(main)/m3.css";
+import "@/app/(app)/m3.css";
 
 /**
  * Layout for unauthenticated auth pages (login, register, reset-password).
