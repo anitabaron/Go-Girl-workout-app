@@ -41,7 +41,12 @@ export const createEmailSchema = (
   messages?: Partial<RegisterValidationMessages>,
 ) => {
   const m = getMessages(messages);
-  return z.string().trim().min(1, m.emailRequired).email(m.emailInvalid);
+  return z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, m.emailRequired)
+    .email(m.emailInvalid);
 };
 
 /**

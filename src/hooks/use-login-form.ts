@@ -28,6 +28,7 @@ function createLoginFormSchema(t: (key: string) => string) {
     email: z
       .string()
       .trim()
+      .toLowerCase()
       .min(1, t("validationEmailRequired"))
       .pipe(z.email({ error: t("validationEmailInvalid") })),
     password: z.string().min(6, t("validationPasswordMin")),
@@ -183,7 +184,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
 
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: fields.email.trim(),
+          email: fields.email.trim().toLowerCase(),
           password: fields.password,
         });
 
