@@ -19,11 +19,11 @@
   --m3-raw-surface-container-highest: #ebe3e0;
   --m3-raw-outline: #79747e;
   --m3-raw-outline-variant: #cac4d0;
-  --m3-raw-primary: #ba3d54;
+  --m3-raw-primary: #c26d76;
   --m3-raw-on-primary: #ffffff;
   --m3-raw-primary-container: #fcdce0;
   --m3-raw-on-primary-container: #5c282c;
-  --m3-raw-primary-override: #ba3d54; /* portal / .ui-m3.light primary */
+  --m3-raw-primary-override: #c26d76; /* portal / .ui-m3.light primary */
   --m3-raw-destructive: #b3261e;
   --m3-raw-destructive-foreground: #ffffff;
   --m3-raw-chart-2: #7d5260;
