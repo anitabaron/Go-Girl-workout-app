@@ -9,11 +9,13 @@ import { AddScopeDialogM3 } from "./AddScopeDialogM3";
 import { WorkoutPlansExercisesListM3 } from "./WorkoutPlansExercisesListM3";
 import { CancelButtonM3 } from "./CancelButtonM3";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 export function WorkoutPlanFormM3({
   initialData,
   mode,
 }: Readonly<WorkoutPlanFormProps>) {
+  const t = useTranslations("workoutPlanForm");
   const router = useRouter();
   const {
     fields,
@@ -50,7 +52,7 @@ export function WorkoutPlanFormM3({
           role="alert"
         >
           <p className="text-sm font-medium text-destructive">
-            Validation errors
+            {t("validationErrors")}
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-destructive">
             {errors._form.map((msg, i) => (
@@ -61,7 +63,7 @@ export function WorkoutPlanFormM3({
       )}
 
       <section className="space-y-4">
-        <h2 className="m3-title">Plan info</h2>
+        <h2 className="m3-title">{t("planInfo")}</h2>
         <WorkoutPlanMetadataFieldsM3
           fields={{
             name: fields.name,
@@ -81,7 +83,7 @@ export function WorkoutPlanFormM3({
 
       <section className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="m3-title">Exercises in plan</h2>
+          <h2 className="m3-title">{t("exercisesInPlan")}</h2>
           <div className="flex flex-col gap-2 sm:flex-row">
             <AddExerciseDialogM3
               onAddExercise={handleAddExercise}
@@ -105,7 +107,7 @@ export function WorkoutPlanFormM3({
             data-test-id="workout-plan-form-exercises-empty"
           >
             <p className="text-muted-foreground">
-              No exercises in plan. Add your first exercise to get started.
+              {t("emptyExercises")}
             </p>
           </div>
         ) : (
@@ -134,7 +136,7 @@ export function WorkoutPlanFormM3({
           aria-busy={isLoading}
           data-test-id="workout-plan-form-save-button"
         >
-          {isLoading ? "Saving..." : "Save"}
+          {isLoading ? t("saving") : t("save")}
         </Button>
       </div>
     </form>

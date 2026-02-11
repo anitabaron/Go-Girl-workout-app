@@ -19,8 +19,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 import { formatDuration } from "@/lib/utils/time-format";
+import { useTranslations } from "@/i18n/client";
 
 type ExerciseSelectorM3Props = {
   selectedExerciseIds: string[];
@@ -33,6 +33,7 @@ export function ExerciseSelectorM3({
   onToggleExercise,
   excludedExerciseIds = [],
 }: Readonly<ExerciseSelectorM3Props>) {
+  const t = useTranslations("exerciseSelector");
   const [search, setSearch] = useState("");
   const [part, setPart] = useState<ExercisePart | "all">("all");
   const [type, setType] = useState<ExerciseType | "all">("all");
@@ -73,7 +74,7 @@ export function ExerciseSelectorM3({
       params.set("limit", "50");
 
       const response = await fetch(`/api/exercises?${params.toString()}`);
-      if (!response.ok) throw new Error("Failed to fetch exercises");
+      if (!response.ok) throw new Error(t("fetchFailed"));
 
       const data = await response.json();
       const filtered = (data.items ?? []).filter(
@@ -81,13 +82,11 @@ export function ExerciseSelectorM3({
       );
       setExercises(filtered);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch exercises",
-      );
+      setError(err instanceof Error ? err.message : t("fetchFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [search, part, type, currentExerciseId, excludedExerciseIds]);
+  }, [search, part, type, currentExerciseId, excludedExerciseIds, t]);
 
   useEffect(() => {
     fetchAllExercises();
@@ -107,14 +106,31 @@ export function ExerciseSelectorM3({
   const hasFilters =
     search || part !== "all" || type !== "all" || currentExerciseId !== "all";
   const emptyMessage = hasFilters
-    ? "No exercises match the filters."
-    : "No exercises available. Add your first exercise to the library.";
+    ? t("emptyFiltered")
+    : t("emptyBase");
+
+  const getPartLabel = (value: string) => {
+    if (value === "Legs") return t("partOption.legs");
+    if (value === "Core") return t("partOption.core");
+    if (value === "Back") return t("partOption.back");
+    if (value === "Arms") return t("partOption.arms");
+    if (value === "Chest") return t("partOption.chest");
+    if (value === "Glutes") return t("partOption.glutes");
+    return value;
+  };
+
+  const getTypeLabel = (value: string) => {
+    if (value === "Warm-up") return t("typeOption.warmup");
+    if (value === "Main Workout") return t("typeOption.mainworkout");
+    if (value === "Cool-down") return t("typeOption.cooldown");
+    return value;
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4">
         <Input
-          placeholder="Search exercise..."
+          placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-[200px]"
@@ -124,10 +140,10 @@ export function ExerciseSelectorM3({
           onValueChange={(v) => setCurrentExerciseId(v === "all" ? "all" : v)}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Exercise" />
+            <SelectValue placeholder={t("exercisePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All exercises</SelectItem>
+            <SelectItem value="all">{t("allExercises")}</SelectItem>
             {allExercises.map((ex) => (
               <SelectItem key={ex.id} value={ex.id}>
                 {ex.title}
@@ -140,13 +156,13 @@ export function ExerciseSelectorM3({
           onValueChange={(v) => setPart(v as ExercisePart | "all")}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Body part" />
+            <SelectValue placeholder={t("bodyPartPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All parts</SelectItem>
+            <SelectItem value="all">{t("allParts")}</SelectItem>
             {exercisePartValues.map((p) => (
               <SelectItem key={p} value={p}>
-                {EXERCISE_PART_LABELS[p]}
+                {getPartLabel(p)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -156,13 +172,13 @@ export function ExerciseSelectorM3({
           onValueChange={(v) => setType(v as ExerciseType | "all")}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Type" />
+            <SelectValue placeholder={t("typePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            {exerciseTypeValues.map((t) => (
-              <SelectItem key={t} value={t}>
-                {EXERCISE_TYPE_LABELS[t]}
+            <SelectItem value="all">{t("allTypes")}</SelectItem>
+            {exerciseTypeValues.map((typeValue) => (
+              <SelectItem key={typeValue} value={typeValue}>
+                {getTypeLabel(typeValue)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -208,7 +224,7 @@ export function ExerciseSelectorM3({
                       onCheckedChange={() => handleExerciseClick(exercise)}
                       onClick={(e) => e.stopPropagation()}
                       className="mt-0.5 shrink-0"
-                      aria-label={`Select ${exercise.title}`}
+                      aria-label={`${t("select")} ${exercise.title}`}
                     />
                   </div>
                 </CardHeader>
@@ -219,7 +235,7 @@ export function ExerciseSelectorM3({
                       variant="outline"
                       className="border-primary text-primary"
                     >
-                      {EXERCISE_PART_LABELS[exercise.part]}
+                      {getPartLabel(exercise.part)}
                     </Badge>
                     {exercise.level && (
                       <Badge variant="outline">{exercise.level}</Badge>
@@ -227,7 +243,7 @@ export function ExerciseSelectorM3({
                   </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
                     <span>
-                      <span className="text-muted-foreground">Serie </span>
+                      <span className="text-muted-foreground">{t("sets")} </span>
                       <span className="font-semibold text-foreground">
                         {exercise.series}
                       </span>
@@ -235,7 +251,7 @@ export function ExerciseSelectorM3({
                     {exercise.reps != null && (
                       <span>
                         <span className="text-muted-foreground">
-                          Powtórzenia{" "}
+                          {t("reps")}{" "}
                         </span>
                         <span className="font-semibold text-foreground">
                           {exercise.reps}
@@ -244,7 +260,7 @@ export function ExerciseSelectorM3({
                     )}
                     {exercise.duration_seconds != null && (
                       <span>
-                        <span className="text-muted-foreground">Czas </span>
+                        <span className="text-muted-foreground">{t("time")} </span>
                         <span className="font-semibold text-foreground">
                           {exercise.duration_seconds}s
                         </span>
@@ -253,7 +269,7 @@ export function ExerciseSelectorM3({
                     {exercise.rest_in_between_seconds != null && (
                       <span>
                         <span className="text-muted-foreground">
-                          Przerwa między{" "}
+                          {t("restBetween")}{" "}
                         </span>
                         <span className="font-medium text-foreground">
                           {formatDuration(exercise.rest_in_between_seconds)}
@@ -263,7 +279,7 @@ export function ExerciseSelectorM3({
                     {exercise.rest_after_series_seconds != null && (
                       <span>
                         <span className="text-muted-foreground">
-                          Przerwa po{" "}
+                          {t("restAfter")}{" "}
                         </span>
                         <span className="font-medium text-foreground">
                           {formatDuration(exercise.rest_after_series_seconds)}
