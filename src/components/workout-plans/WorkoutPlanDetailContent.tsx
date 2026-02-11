@@ -396,6 +396,7 @@ function ExerciseCard({
   const estimatedSetTimeLabel = getEstimatedSetTimeLabel(
     estimatedSetTimeHint,
     "s",
+    t("estimatedSetTime"),
   );
 
   return (

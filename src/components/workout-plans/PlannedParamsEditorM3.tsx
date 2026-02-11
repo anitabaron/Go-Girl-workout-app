@@ -26,7 +26,6 @@ type PlannedParamsEditorM3Props = {
 
 const PLANNED_PARAMS_CONFIG: Array<{
   key: keyof PlannedParamsState;
-  labelFn?: (params: PlannedParamsState, isUnilateral?: boolean) => string;
   min: number;
   /** Klucz do sprawdzenia widoczności przez props (showRepsField / showDurationField). */
   visibilityKey?: "reps" | "duration";
@@ -52,19 +51,6 @@ const PLANNED_PARAMS_CONFIG: Array<{
   },
   {
     key: "estimated_set_time_seconds",
-    labelFn: (p, isUnilateral) =>
-      getEstimatedSetTimeLabel(
-        calculateEstimatedSetTimeSeconds({
-          series: p.planned_sets ?? "",
-          reps: p.planned_reps ?? null,
-          duration_seconds: p.planned_duration_seconds ?? null,
-          rest_in_between_seconds: p.planned_rest_seconds ?? null,
-          rest_after_series_seconds:
-            p.planned_rest_after_series_seconds ?? null,
-          exercise_is_unilateral: isUnilateral ?? undefined,
-        }),
-        "s",
-      ),
     min: 1,
   },
 ];
@@ -191,9 +177,22 @@ export function PlannedParamsEditorM3({
       serverError ?? (showMinWarning ? MIN_GREATER_THAN_ONE_MSG : undefined);
     const keyKebab = config.key.replaceAll("_", "-");
     const dataTestId = testIdPrefix ? `${testIdPrefix}-${keyKebab}` : undefined;
-    const rawLabel = config.labelFn
-      ? config.labelFn(params, isUnilateral)
-      : null;
+    const rawLabel =
+      config.key === "estimated_set_time_seconds"
+        ? getEstimatedSetTimeLabel(
+            calculateEstimatedSetTimeSeconds({
+              series: params.planned_sets ?? "",
+              reps: params.planned_reps ?? null,
+              duration_seconds: params.planned_duration_seconds ?? null,
+              rest_in_between_seconds: params.planned_rest_seconds ?? null,
+              rest_after_series_seconds:
+                params.planned_rest_after_series_seconds ?? null,
+              exercise_is_unilateral: isUnilateral ?? undefined,
+            }),
+            "s",
+            t("estimatedSetTime"),
+          )
+        : null;
     const labelKeyMap: Record<keyof PlannedParamsState, string> = {
       planned_sets: t("sets"),
       planned_reps: t("reps"),

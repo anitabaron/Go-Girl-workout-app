@@ -47,10 +47,12 @@ const ESTIMATED_SET_TIME_LABEL_BASE = "Estimated set time";
 export function getEstimatedSetTimeLabel(
   calculatedSeconds: number | null,
   unit: "s" | "sec" = "s",
+  translatedLabel?: string,
 ): string {
   const suffix = unit === "sec" ? " (sec)" : " (s)";
+  const baseLabel = translatedLabel ?? `${ESTIMATED_SET_TIME_LABEL_BASE}${suffix}`;
   if (calculatedSeconds === null) {
-    return `${ESTIMATED_SET_TIME_LABEL_BASE}${suffix}`;
+    return baseLabel;
   }
-  return `${ESTIMATED_SET_TIME_LABEL_BASE}${suffix} ≈ ${calculatedSeconds} s`;
+  return `${baseLabel} ≈ ${calculatedSeconds} s`;
 }

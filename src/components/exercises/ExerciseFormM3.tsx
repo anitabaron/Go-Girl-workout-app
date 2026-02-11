@@ -636,7 +636,11 @@ function ExerciseFormM3Fields({
                 id="estimated_set_time_seconds"
                 label={
                   <span className="inline-flex items-center gap-1">
-                    {getEstimatedSetTimeLabel(estimatedResult, "sec")}
+                    {getEstimatedSetTimeLabel(
+                      estimatedResult,
+                      "sec",
+                      t("estimatedSetTimeLabel"),
+                    )}
                     {canApplySuggested && (
                       <button
                         type="button"
