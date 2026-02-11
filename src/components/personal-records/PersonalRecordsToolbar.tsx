@@ -21,25 +21,25 @@ type SortOrder = NonNullable<PersonalRecordQueryParams["order"]>;
 const SORT_OPTIONS = [
   {
     value: "achieved_at_desc",
-    label: "Najnowsze pierwsze",
+    labelKey: "sortNewestFirst",
     sort: "achieved_at" as SortField,
     order: "desc" as SortOrder,
   },
   {
     value: "achieved_at_asc",
-    label: "Najstarsze pierwsze",
+    labelKey: "sortOldestFirst",
     sort: "achieved_at" as SortField,
     order: "asc" as SortOrder,
   },
   {
     value: "value_desc",
-    label: "Największa wartość",
+    labelKey: "sortHighestValue",
     sort: "value" as SortField,
     order: "desc" as SortOrder,
   },
   {
     value: "value_asc",
-    label: "Najmniejsza wartość",
+    labelKey: "sortLowestValue",
     sort: "value" as SortField,
     order: "asc" as SortOrder,
   },
@@ -204,13 +204,13 @@ export function PersonalRecordsToolbar({
           >
             <SelectValue placeholder={t("sortPlaceholder")} />
           </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
+            <SelectContent>
+              {SORT_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {t(opt.labelKey)}
+                </SelectItem>
+              ))}
+            </SelectContent>
         </Select>
       </div>
       {hasActiveFilters && (
