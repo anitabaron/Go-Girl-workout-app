@@ -15,11 +15,11 @@ import {
   getExercisePartLabel,
   getExerciseTypeLabel,
 } from "@/lib/exercises/labels";
-import { Surface } from "../../_components";
+import { Surface } from "@/components";
 import {
   ExerciseInfoM3,
   PersonalRecordDetailContentM3,
-} from "../../_components";
+} from "@/components";
 
 type ExercisePersonalRecordsPageProps = {
   params: Promise<{ exercise_id: string }>;

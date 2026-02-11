@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DeleteWorkoutSessionDialogM3 } from "../_components/DeleteWorkoutSessionDialogM3";
-import { CancelWorkoutSessionDialogM3 } from "../_components/CancelWorkoutSessionDialogM3";
+import { DeleteWorkoutSessionDialogM3 } from "./DeleteWorkoutSessionDialogM3";
+import { CancelWorkoutSessionDialogM3 } from "./CancelWorkoutSessionDialogM3";
 import type { SessionSummaryDTO } from "@/types";
 import { formatDateTime } from "@/lib/utils/date-format";
 import { formatSessionDuration } from "@/lib/utils/session-format";

@@ -7,7 +7,7 @@ import type { PersonalRecordsPageResponse } from "@/lib/personal-records/view-mo
 import { mapPersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
 import { EmptyState } from "./EmptyState";
 import { Trophy } from "lucide-react";
-import { M3PersonalRecordCard } from "../_ui/M3PersonalRecordCard";
+import { M3PersonalRecordCard } from "./M3PersonalRecordCard";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/client";
 

@@ -5,7 +5,7 @@ import {
   ServiceError,
 } from "@/services/workout-sessions";
 import type { SessionDetailDTO } from "@/types";
-import { WorkoutSessionAssistantM3 } from "../../../_components/assistant";
+import { WorkoutSessionAssistantM3 } from "@/components/assistant";
 
 type WorkoutSessionActivePageProps = {
   params: Promise<{ id: string }>;

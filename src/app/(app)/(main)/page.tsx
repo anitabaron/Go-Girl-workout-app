@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/db/supabase.server";
 import { getTranslations } from "@/i18n/server";
-import { HeroReveal, ScrollReveal, Surface } from "./_components";
+import { HeroReveal, ScrollReveal, Surface } from "@/components";
 
 const FEATURES = [
   {

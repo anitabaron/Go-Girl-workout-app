@@ -8,8 +8,8 @@ import {
   ServiceError,
 } from "@/services/workout-sessions";
 import { getTranslations } from "@/i18n/server";
-import { Surface } from "../../_components";
-import { WorkoutSessionDetailContent } from "../../_components/WorkoutSessionDetailContent";
+import { Surface } from "@/components";
+import { WorkoutSessionDetailContent } from "@/components/WorkoutSessionDetailContent";
 
 type WorkoutSessionDetailPageProps = {
   params: Promise<{ id: string }>;

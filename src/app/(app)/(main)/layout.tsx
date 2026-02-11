@@ -1,7 +1,7 @@
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { createClient } from "@/db/supabase.server";
-import { NavigationRail } from "./_components";
-import { LanguageToggle } from "./_components/LanguageToggle";
+import { NavigationRail } from "@/components";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import "./m3.css";
 /**
  * M3 Layout – GSAP ScrollTrigger uses native scroll.

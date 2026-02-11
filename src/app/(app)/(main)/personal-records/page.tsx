@@ -11,7 +11,7 @@ import {
   Surface,
   PersonalRecordsToolbar,
   PersonalRecordsListM3,
-} from "../_components";
+} from "@/components";
 
 export default async function PersonalRecordsPage({
   searchParams,

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth";
 import { getExerciseService } from "@/services/exercises";
 import { getTranslations } from "@/i18n/server";
-import { ExerciseFormM3, PageHeader, Surface } from "../../../_components";
+import { ExerciseFormM3, PageHeader, Surface } from "@/components";
 
 export default async function EditExercisePage({
   params,

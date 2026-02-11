@@ -12,7 +12,7 @@ import {
   WorkoutPlansToolbar,
   WorkoutPlansListM3,
   ImportPlanButtonM3,
-} from "../_components";
+} from "@/components";
 import { getTranslations } from "@/i18n/server";
 
 export default async function WorkoutPlansPage({

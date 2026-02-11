@@ -14,8 +14,8 @@ import {
   Surface,
   EmptyState,
   ExercisesToolbar,
-} from "../_components";
-import { M3ExerciseCard } from "../_ui";
+} from "@/components";
+import { M3ExerciseCard } from "@/components";
 import { getTranslations } from "@/i18n/server";
 
 export default async function ExercisesPage({

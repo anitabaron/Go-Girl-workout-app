@@ -2,7 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/client";
-import { PageHeader, Surface, Toolbar } from "../_components";
+import { PageHeader, Surface, Toolbar } from "@/components";
 
 export default function ExercisesLoading() {
   const t = useTranslations("exercisesPage");

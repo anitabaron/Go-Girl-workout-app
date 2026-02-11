@@ -7,10 +7,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { PersonalRecordGroupVM } from "@/lib/personal-records/view-model";
-import { DeletePersonalRecordsDialogM3 } from "../_components/DeletePersonalRecordsDialogM3";
-import { EditPersonalRecordDialogM3 } from "../_components/EditPersonalRecordDialogM3";
-import { EditPersonalRecordsModalM3 } from "../_components/EditPersonalRecordsModalM3";
-import { PersonalRecordMetricItemM3 } from "../_components/PersonalRecordMetricItemM3";
+import { DeletePersonalRecordsDialogM3 } from "./DeletePersonalRecordsDialogM3";
+import { EditPersonalRecordDialogM3 } from "./EditPersonalRecordDialogM3";
+import { EditPersonalRecordsModalM3 } from "./EditPersonalRecordsModalM3";
+import { PersonalRecordMetricItemM3 } from "./PersonalRecordMetricItemM3";
 
 type M3PersonalRecordCardProps = {
   readonly recordGroup: PersonalRecordGroupVM;

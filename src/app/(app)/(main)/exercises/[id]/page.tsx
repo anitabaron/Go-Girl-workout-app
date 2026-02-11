@@ -7,7 +7,7 @@ import { getExerciseRelations } from "@/repositories/exercises";
 import { requireAuth } from "@/lib/auth";
 import { getExerciseService } from "@/services/exercises";
 import { getTranslations } from "@/i18n/server";
-import { ExerciseDetailContent, PageHeader, Surface } from "../../_components";
+import { ExerciseDetailContent, PageHeader, Surface } from "@/components";
 
 export default async function ExerciseDetailPage({
   params,

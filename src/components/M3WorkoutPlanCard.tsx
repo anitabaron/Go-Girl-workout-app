@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DeleteWorkoutPlanDialogM3 } from "../_components/DeleteWorkoutPlanDialogM3";
+import { DeleteWorkoutPlanDialogM3 } from "./DeleteWorkoutPlanDialogM3";
 import type { PlanExerciseSummary, WorkoutPlanDTO } from "@/types";
 import {
   EXERCISE_LABELS_NAMESPACE,
