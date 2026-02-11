@@ -34,6 +34,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useBeforeUnload } from "@/hooks/use-before-unload";
 import { useExerciseForm } from "@/hooks/use-exercise-form";
+import { useTranslations } from "@/i18n/client";
 import {
   exercisePartValues,
   exerciseTypeValues,
@@ -46,11 +47,34 @@ import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
 import type { ExerciseDTO } from "@/types";
 
 const LEVEL_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "Beginner", label: "Beginner" },
-  { value: "Intermediate", label: "Intermediate" },
-  { value: "Advanced", label: "Advanced" },
+  { value: "none", labelKey: "level.none" },
+  { value: "Beginner", labelKey: "level.beginner" },
+  { value: "Intermediate", labelKey: "level.intermediate" },
+  { value: "Advanced", labelKey: "level.advanced" },
 ] as const;
+
+function getExerciseTypeLabel(
+  t: (key: string) => string,
+  opt: string,
+): string {
+  if (opt === "Warm-up") return t("typeOption.warmup");
+  if (opt === "Main Workout") return t("typeOption.mainWorkout");
+  if (opt === "Cool-down") return t("typeOption.cooldown");
+  return opt;
+}
+
+function getExercisePartLabel(
+  t: (key: string) => string,
+  opt: string,
+): string {
+  if (opt === "Legs") return t("partOption.legs");
+  if (opt === "Core") return t("partOption.core");
+  if (opt === "Back") return t("partOption.back");
+  if (opt === "Arms") return t("partOption.arms");
+  if (opt === "Chest") return t("partOption.chest");
+  if (opt === "Glutes") return t("partOption.glutes");
+  return opt;
+}
 
 function createArrayCheckboxChangeHandler(
   field: { value: unknown; onChange: (value: string[]) => void },
@@ -72,6 +96,7 @@ type ExerciseFormM3Props = {
 };
 
 export function ExerciseFormM3({ initialData, mode }: ExerciseFormM3Props) {
+  const t = useTranslations("exerciseForm");
   const router = useRouter();
   const {
     control,
@@ -144,7 +169,7 @@ export function ExerciseFormM3({ initialData, mode }: ExerciseFormM3Props) {
           onClick={handleCancelClick}
           data-test-id="exercise-form-cancel-button"
         >
-          Cancel
+          {t("cancel")}
         </Button>
         <Button
           type="submit"
@@ -155,10 +180,10 @@ export function ExerciseFormM3({ initialData, mode }: ExerciseFormM3Props) {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 size-4 animate-spin" />
-              Saving...
+              {t("saving")}
             </>
           ) : (
-            "Save"
+            t("save")
           )}
         </Button>
       </div>
@@ -166,18 +191,18 @@ export function ExerciseFormM3({ initialData, mode }: ExerciseFormM3Props) {
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogTitle>{t("unsavedTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              You have unsaved changes. Are you sure you want to leave?
+              {t("unsavedDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Stay</AlertDialogCancel>
+            <AlertDialogCancel>{t("stay")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmLeave}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Leave
+              {t("leave")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -197,6 +222,7 @@ function ExerciseFormM3Fields({
   errors,
   disabled,
 }: ExerciseFormM3FieldsProps) {
+  const t = useTranslations("exerciseForm");
   const titleInputRef = useRef<HTMLInputElement>(null);
   const watched = useWatch({
     control,
@@ -238,7 +264,7 @@ function ExerciseFormM3Fields({
           control={control}
           render={({ field }) => (
             <FormField
-              label="Title"
+              label={t("titleLabel")}
               htmlFor="title"
               error={errors.title?.message as string | undefined}
               required
@@ -263,7 +289,7 @@ function ExerciseFormM3Fields({
           control={control}
           render={({ field }) => (
             <FormField
-              label="Level"
+              label={t("levelLabel")}
               htmlFor="level"
               error={errors.level?.message as string | undefined}
               className="w-full md:min-w-[140px]"
@@ -279,12 +305,12 @@ function ExerciseFormM3Fields({
                   data-test-id="exercise-form-level"
                   className="w-full"
                 >
-                  <SelectValue placeholder="Select level (optional)" />
+                  <SelectValue placeholder={t("levelPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {LEVEL_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -300,7 +326,7 @@ function ExerciseFormM3Fields({
           control={control}
           render={({ field }) => (
             <FormField
-              label="Type"
+              label={t("typeLabel")}
               htmlFor="exercise-form-types"
               error={errors.types?.message as string | undefined}
               required
@@ -311,7 +337,7 @@ function ExerciseFormM3Fields({
                 data-test-id="exercise-form-types"
               >
                 <legend id="types-label" className="sr-only">
-                  Select types (at least one)
+                  {t("typeLegend")}
                 </legend>
                 {exerciseTypeValues.map((opt) => (
                   <label
@@ -329,7 +355,7 @@ function ExerciseFormM3Fields({
                       disabled={disabled}
                       aria-invalid={!!errors.types}
                     />
-                    {opt}
+                    {getExerciseTypeLabel(t, opt)}
                   </label>
                 ))}
               </fieldset>
@@ -341,7 +367,7 @@ function ExerciseFormM3Fields({
           control={control}
           render={({ field }) => (
             <FormField
-              label="Part"
+              label={t("partLabel")}
               htmlFor="exercise-form-parts"
               error={errors.parts?.message as string | undefined}
               required
@@ -352,7 +378,7 @@ function ExerciseFormM3Fields({
                 data-test-id="exercise-form-parts"
               >
                 <legend id="parts-label" className="sr-only">
-                  Select parts (at least one)
+                  {t("partLegend")}
                 </legend>
                 {exercisePartValues.map((opt) => (
                   <label
@@ -370,7 +396,7 @@ function ExerciseFormM3Fields({
                       disabled={disabled}
                       aria-invalid={!!errors.parts}
                     />
-                    {opt}
+                    {getExercisePartLabel(t, opt)}
                   </label>
                 ))}
               </fieldset>
@@ -382,7 +408,7 @@ function ExerciseFormM3Fields({
           control={control}
           render={({ field }) => (
             <FormField
-              label="Unilateral"
+              label={t("unilateralLabel")}
               htmlFor="is_unilateral"
               error={errors.is_unilateral?.message as string | undefined}
             >
@@ -403,7 +429,7 @@ function ExerciseFormM3Fields({
                   htmlFor="is_unilateral"
                   className="cursor-pointer text-sm font-medium"
                 >
-                  Left and right
+                  {t("unilateralHint")}
                 </label>
               </div>
             </FormField>
@@ -435,7 +461,7 @@ function ExerciseFormM3Fields({
                   htmlFor="is_save_to_pr"
                   className="cursor-pointer text-sm font-medium"
                 >
-                  Save results to PRs
+                  {t("saveToPrHint")}
                 </label>
               </div>
             </FormField>
@@ -448,7 +474,7 @@ function ExerciseFormM3Fields({
         control={control}
         render={({ field }) => (
           <FormField
-            label="Details"
+            label={t("detailsLabel")}
             htmlFor="details"
             error={errors.details?.message as string | undefined}
           >
@@ -476,7 +502,7 @@ function ExerciseFormM3Fields({
                 id="reps"
                 label={
                   <>
-                    Reps <span className="text-destructive">**</span>
+                    {t("repsLabel")} <span className="text-destructive">**</span>
                   </>
                 }
                 value={String(field.value ?? "")}
@@ -491,7 +517,7 @@ function ExerciseFormM3Fields({
             )}
           />
           <p className="flex text-xs text-muted-foreground whitespace-nowrap pt-1">
-            Provide exactly one: reps or duration{" "}
+            {t("repsDurationHint")}{" "}
             <span className="text-destructive">**</span>
           </p>
         </div>
@@ -504,7 +530,7 @@ function ExerciseFormM3Fields({
                 id="duration_seconds"
                 label={
                   <>
-                    Duration (sec) <span className="text-destructive">**</span>
+                    {t("durationSecLabel")} <span className="text-destructive">**</span>
                   </>
                 }
                 value={String(field.value ?? "")}
@@ -525,7 +551,7 @@ function ExerciseFormM3Fields({
           render={({ field }) => (
             <FormNumberInput
               id="series"
-              label="Series"
+              label={t("seriesLabel")}
               value={String(field.value ?? "")}
               onChange={field.onChange}
               onBlur={field.onBlur}
@@ -550,7 +576,7 @@ function ExerciseFormM3Fields({
                 id="rest_in_between_seconds"
                 label={
                   <>
-                    Rest between sets (sec){" "}
+                    {t("restBetweenSecLabel")}{" "}
                     <span className="text-destructive">***</span>
                   </>
                 }
@@ -568,7 +594,7 @@ function ExerciseFormM3Fields({
             )}
           />{" "}
           <p className="flex text-xs text-muted-foreground whitespace-nowrap pt-1">
-            Provide at least one rest field{" "}
+            {t("restHint")}{" "}
             <span className="text-destructive">***</span>
           </p>
         </div>
@@ -580,7 +606,7 @@ function ExerciseFormM3Fields({
               id="rest_after_series_seconds"
               label={
                 <>
-                  Rest after series (sec){" "}
+                  {t("restAfterSecLabel")}{" "}
                   <span className="text-destructive">***</span>
                 </>
               }
@@ -619,8 +645,8 @@ function ExerciseFormM3Fields({
                         }
                         disabled={disabled}
                         className="cursor-pointer inline-flex shrink-0 items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                        title={`Użyj szacowanej wartości (${estimatedResult} s)`}
-                        aria-label={`Użyj szacowanej wartości ${estimatedResult} s`}
+                        title={`${t("estimatedUse")} (${estimatedResult} s)`}
+                        aria-label={`${t("estimatedUse")} ${estimatedResult} s`}
                       >
                         <ArrowDown className="size-3.5" />
                       </button>
