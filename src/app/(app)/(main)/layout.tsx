@@ -1,6 +1,5 @@
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { createClient } from "@/db/supabase.server";
-import { DesignModeFooter } from "@/components/design-mode-footer";
 import { NavigationRail } from "./_components";
 import { LanguageToggle } from "./_components/LanguageToggle";
 import "./m3.css";
@@ -27,8 +26,6 @@ export default async function M3Layout({
           {children}
         </main>
       </div>
-
-      <DesignModeFooter currentMode="m3" />
     </AuthProvider>
   );
 }

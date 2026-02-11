@@ -1,6 +1,5 @@
 import { TopNavigation } from "@/components/navigation/top-navigation";
 import { BottomNavigation } from "@/components/navigation/bottom-navigation";
-import { DesignModeFooter } from "@/components/design-mode-footer";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { createClient } from "@/db/supabase.server";
 
@@ -35,9 +34,6 @@ export default async function AppLayout({
       <div className="md:hidden">
         <BottomNavigation user={user} />
       </div>
-
-      {/* Toggle Legacy/M3 – widoczny tylko w developmentzie */}
-      <DesignModeFooter currentMode="legacy" />
     </AuthProvider>
   );
 }
