@@ -1,0 +1,232 @@
+/* Theme-specific M3 token overrides (prefers-color-scheme + manual light/dark) */
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+/* Dark mode – only token overrides; shadcn mapping inherits from .ui-m3 */
+@media (prefers-color-scheme: dark) {
+  .ui-m3:not(.light) {
+    color-scheme: dark;
+    --m3-primary: var(--m3-raw-primary-dark);
+    --m3-on-primary: var(--m3-raw-on-primary-dark);
+    --m3-primary-container: var(--m3-raw-primary-container-dark);
+    --m3-on-primary-container: var(--m3-primary-container);
+
+    --m3-surface: var(--m3-raw-surface-dark);
+    --m3-on-surface: var(--m3-raw-on-surface-dark);
+    --m3-on-surface-variant: var(--m3-raw-on-surface-variant-dark);
+    --m3-surface-container: var(--m3-raw-surface-container-dark);
+    --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
+    --m3-surface-container-highest: var(
+      --m3-raw-surface-container-highest-dark
+    );
+
+    --m3-outline: var(--m3-raw-outline-dark);
+    --m3-outline-variant: var(--m3-raw-outline-variant-dark);
+
+    --m3-shadow-1:
+      0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --m3-shadow-2:
+      0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+    --m3-shadow-hero:
+      0 4px 8px -2px rgb(0 0 0 / 0.35), 0 12px 24px -6px rgb(0 0 0 / 0.3);
+
+    --destructive: var(--m3-raw-destructive-dark);
+    --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
+
+    --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
+    --m3-button-default-active: color-mix(
+      in srgb,
+      var(--m3-primary) 80%,
+      white
+    );
+    --m3-button-secondary-hover: color-mix(
+      in srgb,
+      var(--m3-primary-container) 85%,
+      white
+    );
+    --m3-button-secondary-active: color-mix(
+      in srgb,
+      var(--m3-primary-container) 75%,
+      white
+    );
+  }
+
+  .ui-m3:not(.light) section.m3-surface-hero {
+    background: var(--m3-raw-primary-container-dark) !important;
+    background-color: var(--m3-raw-primary-container-dark) !important;
+    color: var(--m3-raw-on-surface-dark);
+  }
+
+  .ui-m3:not(.light) section.m3-surface-hero .text-foreground {
+    color: var(--m3-raw-on-surface-dark);
+  }
+
+  .ui-m3:not(.light) section.m3-surface-hero .text-muted-foreground {
+    color: var(--m3-raw-on-surface-dark);
+    opacity: 0.9;
+  }
+
+  .ui-m3:not(.light) .m3-cta:hover {
+    background: var(--m3-button-default-hover) !important;
+  }
+
+  .ui-m3:not(.light) .m3-cta:active {
+    background: var(--m3-button-default-active) !important;
+  }
+
+  .ui-m3:not(.light) .m3-chip {
+    background: var(--m3-surface-container-high);
+    color: var(--m3-on-surface);
+    border-color: var(--m3-outline-variant);
+  }
+
+  .ui-m3:not(.light) section.m3-surface-hero .m3-chip {
+    background: transparent;
+    color: var(--m3-on-primary-container);
+    border-color: var(--m3-on-primary-container);
+  }
+
+  .ui-m3:not(.light) [data-slot="badge"][data-variant="secondary"] {
+    background: var(--m3-raw-primary-container-dark) !important;
+    background-color: var(--m3-raw-primary-container-dark) !important;
+    color: var(--m3-on-primary-container-from-root) !important;
+    border-color: transparent !important;
+  }
+
+  .ui-m3:not(.light) [data-slot="badge"][data-variant="secondary"]:hover {
+    background: color-mix(
+      in srgb,
+      var(--m3-raw-primary-container-dark) 85%,
+      white
+    ) !important;
+    background-color: color-mix(
+      in srgb,
+      var(--m3-raw-primary-container-dark) 85%,
+      white
+    ) !important;
+  }
+
+  body:has(.ui-m3):not(:has(.ui-m3.light)) {
+    --m3-surface: var(--m3-raw-surface-dark);
+    --m3-primary: var(--m3-raw-primary-dark);
+    --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
+    --m3-on-surface: var(--m3-raw-on-surface-dark);
+    --m3-outline-variant: var(--m3-raw-outline-variant-dark);
+    --m3-primary-container: var(--m3-raw-primary-container-dark);
+    --m3-on-primary-container: var(--m3-on-primary-container-from-root);
+    --m3-shadow-2:
+      0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+    --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
+  }
+}
+
+/* Light mode – manual override (same tokens as .ui-m3 base; no shadcn mapping repeat).
+   Używamy surowych tokenów dla primary-container, żeby uniknąć samoodniesienia
+   (var(--m3-primary-container)) które w light powodowało brak podświetlenia nawigacji/hover. */
+.ui-m3.light {
+  color-scheme: light;
+  --m3-primary: var(--m3-raw-primary-override);
+  --m3-on-primary: var(--m3-raw-on-primary);
+  --m3-primary-container: var(--m3-raw-primary-container);
+  --m3-on-primary-container: var(--m3-raw-on-primary-container);
+
+  --m3-surface: var(--m3-raw-surface);
+  --m3-on-surface: var(--m3-raw-on-surface);
+  --m3-on-surface-variant: var(--m3-raw-on-surface-variant);
+  --m3-surface-container: var(--m3-raw-surface-container);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high);
+  --m3-surface-container-highest: var(--m3-raw-surface-container-highest);
+
+  --m3-outline: var(--m3-raw-outline);
+  --m3-outline-variant: var(--m3-raw-outline-variant);
+
+  --m3-shadow-1:
+    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2:
+    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
+    0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-hero:
+    0 4px 6px -2px rgb(0 0 0 / 0.05), 0 10px 20px -5px rgb(0 0 0 / 0.06),
+    0 20px 40px -10px rgb(0 0 0 / 0.05);
+
+  --destructive: var(--m3-raw-destructive);
+  --destructive-foreground: var(--m3-raw-destructive-foreground);
+}
+
+/* Dark mode – manual toggle; only tokens + button vars (shadcn mapping inherited) */
+.ui-m3.dark {
+  color-scheme: dark;
+  --m3-primary: var(--m3-raw-primary-dark);
+  --m3-on-primary: var(--m3-raw-on-primary-dark);
+  --m3-primary-container: var(--m3-raw-primary-container-dark);
+  --m3-on-primary-container: var(--m3-on-primary-container-from-root);
+
+  --m3-surface: var(--m3-raw-surface-dark);
+  --m3-on-surface: var(--m3-raw-on-surface-dark);
+  --m3-on-surface-variant: var(--m3-raw-on-surface-variant-dark);
+  --m3-surface-container: var(--m3-raw-surface-container-dark);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
+  --m3-surface-container-highest: var(--m3-raw-surface-container-highest-dark);
+
+  --m3-outline: var(--m3-raw-outline-dark);
+  --m3-outline-variant: var(--m3-raw-outline-variant-dark);
+
+  --m3-shadow-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+  --m3-shadow-2:
+    0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+  --m3-shadow-hero:
+    0 4px 8px -2px rgb(0 0 0 / 0.35), 0 12px 24px -6px rgb(0 0 0 / 0.3);
+
+  --destructive: var(--m3-raw-destructive-dark);
+  --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
+
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 80%, white);
+  --m3-button-secondary-hover: color-mix(
+    in srgb,
+    var(--m3-primary-container) 85%,
+    white
+  );
+  --m3-button-secondary-active: color-mix(
+    in srgb,
+    var(--m3-primary-container) 75%,
+    white
+  );
+}
+
+/* Hero surface in manual dark – same as prefers-color-scheme dark so headline is visible */
+.ui-m3.dark section.m3-surface-hero {
+  background: var(--m3-raw-primary-container-dark) !important;
+  background-color: var(--m3-raw-primary-container-dark) !important;
+  color: var(--m3-raw-on-surface-dark);
+}
+
+.ui-m3.dark section.m3-surface-hero .text-foreground {
+  color: var(--m3-raw-on-surface-dark);
+}
+
+.ui-m3.dark section.m3-surface-hero .text-muted-foreground {
+  color: var(--m3-raw-on-surface-dark);
+  opacity: 0.9;
+}
+
+.ui-m3.dark section.m3-surface-hero .m3-chip {
+  background: transparent;
+  color: var(--m3-on-primary-container);
+  border-color: var(--m3-on-primary-container);
+}
+
+/* Portal – dark vars on body for manual dark toggle */
+body:has(.ui-m3.dark) {
+  --m3-surface: var(--m3-raw-surface-dark);
+  --m3-primary: var(--m3-raw-primary-dark);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
+  --m3-on-surface: var(--m3-raw-on-surface-dark);
+  --m3-outline-variant: var(--m3-raw-outline-variant-dark);
+  --m3-primary-container: var(--m3-raw-primary-container-dark);
+  --m3-on-primary-container: var(--m3-on-primary-container-from-root);
+  --m3-shadow-2:
+    0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
+  --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
+}
