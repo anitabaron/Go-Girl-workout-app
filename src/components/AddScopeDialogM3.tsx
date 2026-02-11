@@ -140,7 +140,7 @@ export function AddScopeDialogM3({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="max-w-[400px] md:max-w-[600px] lg:max-w-[1000px]"
+        className="max-w-[400px] rounded-[var(--m3-radius-large)] md:max-w-[600px] lg:max-w-[1000px]"
         data-test-id="workout-plan-form-add-scope-dialog"
       >
         <DialogHeader>
