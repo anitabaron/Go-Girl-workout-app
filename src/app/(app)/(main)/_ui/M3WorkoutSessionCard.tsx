@@ -27,12 +27,14 @@ import { CancelWorkoutSessionDialogM3 } from "../_components/CancelWorkoutSessio
 import type { SessionSummaryDTO } from "@/types";
 import { formatDateTime } from "@/lib/utils/date-format";
 import { formatSessionDuration } from "@/lib/utils/session-format";
+import { useTranslations } from "@/i18n/client";
 
 type M3WorkoutSessionCardProps = {
   readonly session: SessionSummaryDTO;
 };
 
 function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
+  const t = useTranslations("workoutSessionCard");
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
@@ -48,13 +50,13 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
     [session.completed_at],
   );
   const duration = useMemo(() => formatSessionDuration(session), [session]);
-  const planName = session.plan_name_at_time ?? "Plan deleted";
+  const planName = session.plan_name_at_time ?? t("planDeleted");
   const exerciseCountText = useMemo(() => {
     const count = session.exercise_count ?? 0;
     if (count === 0) return "";
-    if (count === 1) return "exercise";
-    return "exercises";
-  }, [session.exercise_count]);
+    if (count === 1) return t("exerciseSingular");
+    return t("exercisePlural");
+  }, [session.exercise_count, t]);
 
   const handleResume = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -89,8 +91,8 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
             onClick={handleEdit}
             aria-label={
               isInProgress
-                ? `Resume session: ${planName}`
-                : `Edit session: ${planName}`
+                ? `${t("resumeSessionAria")} ${planName}`
+                : `${t("editSessionAria")} ${planName}`
             }
           >
             <Pencil className="size-4" />
@@ -100,7 +102,7 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={handleDeleteClick}
-            aria-label={`Delete session: ${planName}`}
+            aria-label={`${t("deleteSessionAria")} ${planName}`}
           >
             <Trash2 className="size-4" />
           </Button>
@@ -113,7 +115,7 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
               : `/workout-sessions/${session.id}`
           }
           className="block h-full"
-          aria-label={`View session details: ${planName}`}
+          aria-label={`${t("detailsAria")} ${planName}`}
         >
           <CardHeader>
             <div className="flex flex-col items-start gap-2">
@@ -124,12 +126,12 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
                   className="bg-primary text-primary-foreground"
                 >
                   <Play className="mr-1 size-3" />
-                  In progress
+                  {t("inProgress")}
                 </Badge>
               ) : (
                 <Badge variant="secondary">
                   <CheckCircle2 className="mr-1 size-3" />
-                  Completed
+                  {t("completed")}
                 </Badge>
               )}
             </div>
@@ -138,17 +140,23 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="size-4" />
-                <span>Started: {formattedStartedAt}</span>
+                <span>
+                  {t("startedLabel")} {formattedStartedAt}
+                </span>
               </div>
               {formattedCompletedAt && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CalendarCheck className="size-4" />
-                  <span>Completed: {formattedCompletedAt}</span>
+                  <span>
+                    {t("completedLabel")} {formattedCompletedAt}
+                  </span>
                 </div>
               )}
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Clock10 className="size-4" />
-                <span>Duration: {duration}</span>
+                <span>
+                  {t("durationLabel")} {duration}
+                </span>
               </div>
               {session.exercise_count != null && session.exercise_count > 0 && (
                 <div className="flex flex-col gap-1">
@@ -176,10 +184,10 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
               onClick={handleResume}
               size="sm"
               className="m3-cta flex-1"
-              aria-label="Resume workout"
+              aria-label={t("resumeWorkoutAria")}
             >
               <Play className="mr-2 size-4" />
-              Resume
+              {t("resume")}
             </Button>
             <Button
               variant="outline"
@@ -190,10 +198,10 @@ function M3WorkoutSessionCardComponent({ session }: M3WorkoutSessionCardProps) {
                 e.stopPropagation();
                 setIsCancelDialogOpen(true);
               }}
-              aria-label="Cancel"
+              aria-label={t("cancelAria")}
             >
               <X className="mr-2 size-4" />
-              Cancel
+              {t("cancel")}
             </Button>
           </CardFooter>
         )}
