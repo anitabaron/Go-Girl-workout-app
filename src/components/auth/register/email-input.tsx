@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "@/i18n/client";
 
 type EmailInputProps = {
   value: string;
@@ -22,12 +23,13 @@ export function EmailInput({
   onBlur,
   disabled,
 }: EmailInputProps) {
+  const t = useTranslations("auth.common");
   const id = useId();
   const errorId = `${id}-error`;
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>Email</Label>
+      <Label htmlFor={id}>{t("email")}</Label>
       <Input
         id={id}
         type="email"

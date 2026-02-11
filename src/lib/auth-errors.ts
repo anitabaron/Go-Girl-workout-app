@@ -1,5 +1,11 @@
 import type { AuthError } from "@supabase/supabase-js";
 
+type AuthErrorTranslator = (key: string) => string;
+
+function translate(t: AuthErrorTranslator | undefined, key: string, fallback: string): string {
+  return t ? t(key) : fallback;
+}
+
 /**
  * Mapuje błędy Supabase Auth na komunikaty użytkownika.
  * 
@@ -18,9 +24,16 @@ import type { AuthError } from "@supabase/supabase-js";
  *   toast.error(message);
  * }
  */
-export function mapAuthError(error: AuthError | Error | null | undefined): string {
+export function mapAuthError(
+  error: AuthError | Error | null | undefined,
+  t?: AuthErrorTranslator,
+): string {
   if (!error) {
-    return "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.";
+    return translate(
+      t,
+      "auth.errors.unexpected",
+      "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.",
+    );
   }
 
   // Obsługa błędów sieciowych
@@ -30,9 +43,17 @@ export function mapAuthError(error: AuthError | Error | null | undefined): strin
       error.message.includes("network") ||
       error.message.includes("Failed to fetch")
     ) {
-      return "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.";
+      return translate(
+        t,
+        "auth.errors.networkOffline",
+        "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+      );
     }
-    return "Wystąpił błąd połączenia. Sprawdź połączenie i spróbuj ponownie.";
+    return translate(
+      t,
+      "auth.errors.networkGeneric",
+      "Wystąpił błąd połączenia. Sprawdź połączenie i spróbuj ponownie.",
+    );
   }
 
   // Obsługa błędów Supabase Auth
@@ -47,7 +68,11 @@ export function mapAuthError(error: AuthError | Error | null | undefined): strin
       errorMsg.includes("email_not_confirmed") ||
       errorMsg.includes("email not verified")
     ) {
-      return "Konto nie zostało aktywowane. Sprawdź email i kliknij link aktywacyjny.";
+      return translate(
+        t,
+        "auth.errors.emailNotConfirmed",
+        "Konto nie zostało aktywowane. Sprawdź email i kliknij link aktywacyjny.",
+      );
     }
 
     // Rate limiting
@@ -56,12 +81,20 @@ export function mapAuthError(error: AuthError | Error | null | undefined): strin
       errorMsg.includes("too many requests") ||
       status === 429
     ) {
-      return "Zbyt wiele prób. Spróbuj ponownie za chwilę.";
+      return translate(
+        t,
+        "auth.errors.rateLimit",
+        "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
+      );
     }
 
     // Błąd serwera (5xx)
     if (status && status >= 500) {
-      return "Wystąpił błąd serwera. Spróbuj ponownie później.";
+      return translate(
+        t,
+        "auth.errors.server",
+        "Wystąpił błąd serwera. Spróbuj ponownie później.",
+      );
     }
 
     // Konto już istnieje (dla rejestracji)
@@ -70,7 +103,11 @@ export function mapAuthError(error: AuthError | Error | null | undefined): strin
       errorMsg.includes("already exists") ||
       errorMsg.includes("user already registered")
     ) {
-      return "Konto z tym adresem email już istnieje. Zaloguj się lub zresetuj hasło.";
+      return translate(
+        t,
+        "auth.errors.accountExists",
+        "Konto z tym adresem email już istnieje. Zaloguj się lub zresetuj hasło.",
+      );
     }
 
     // Nieprawidłowy format email
@@ -78,7 +115,11 @@ export function mapAuthError(error: AuthError | Error | null | undefined): strin
       errorMsg.includes("invalid email") ||
       errorMsg.includes("email format")
     ) {
-      return "Nieprawidłowy format email.";
+      return translate(
+        t,
+        "auth.errors.invalidEmail",
+        "Nieprawidłowy format email.",
+      );
     }
 
     // Błąd hasła (ogólny - nie ujawnia szczegółów)
@@ -87,7 +128,11 @@ export function mapAuthError(error: AuthError | Error | null | undefined): strin
       errorMsg.includes("invalid credentials") ||
       errorMsg.includes("invalid login")
     ) {
-      return "Nieprawidłowy email lub hasło.";
+      return translate(
+        t,
+        "auth.errors.invalidCredentials",
+        "Nieprawidłowy email lub hasło.",
+      );
     }
 
     // Token nieprawidłowy/wygasły
@@ -96,12 +141,20 @@ export function mapAuthError(error: AuthError | Error | null | undefined): strin
       errorMsg.includes("expired") ||
       errorMsg.includes("invalid")
     ) {
-      return "Link wygasł lub jest nieprawidłowy. Spróbuj ponownie.";
+      return translate(
+        t,
+        "auth.errors.tokenInvalid",
+        "Link wygasł lub jest nieprawidłowy. Spróbuj ponownie.",
+      );
     }
   }
 
   // Domyślny komunikat błędu
-  return "Wystąpił błąd. Spróbuj ponownie później.";
+  return translate(
+    t,
+    "auth.errors.unexpected",
+    "Wystąpił błąd. Spróbuj ponownie później.",
+  );
 }
 
 /**

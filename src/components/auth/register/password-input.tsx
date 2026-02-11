@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type PasswordInputProps = {
   value: string;
@@ -28,13 +29,14 @@ export function PasswordInput({
   isVisible,
   onToggleVisibility,
 }: PasswordInputProps) {
+  const t = useTranslations("auth.common");
   const id = useId();
   const errorId = `${id}-error`;
   const toggleId = `${id}-toggle`;
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>Hasło</Label>
+      <Label htmlFor={id}>{t("password")}</Label>
       <div className="relative">
         <Input
           id={id}
@@ -56,7 +58,7 @@ export function PasswordInput({
           className="absolute right-1 top-1/2 -translate-y-1/2"
           onClick={onToggleVisibility}
           disabled={disabled}
-          aria-label={isVisible ? "Ukryj hasło" : "Pokaż hasło"}
+          aria-label={isVisible ? t("hidePassword") : t("showPassword")}
           aria-pressed={isVisible}
         >
           {isVisible ? (

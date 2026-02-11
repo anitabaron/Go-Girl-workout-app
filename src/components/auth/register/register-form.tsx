@@ -10,6 +10,7 @@ import {
   validateRegisterForm,
 } from "@/lib/validation/register-form";
 import { useAuthRedirect } from "@/contexts/auth-redirect-context";
+import { useTranslations } from "@/i18n/client";
 import { EmailInput } from "./email-input";
 import { PasswordInput } from "./password-input";
 import { ConfirmPasswordInput } from "./confirm-password-input";
@@ -21,6 +22,8 @@ import { LoginLink } from "./login-link";
  * Zarządza stanem formularza, walidacją i integracją z Supabase Auth.
  */
 export function RegisterForm() {
+  const t = useTranslations("auth.registerForm");
+  const tValidation = useTranslations("auth.registerValidation");
   const router = useRouter();
   const { basePath } = useAuthRedirect();
 
@@ -61,7 +64,15 @@ export function RegisterForm() {
     const value = formState[field];
     const password =
       field === "confirmPassword" ? formState.password : undefined;
-    const error = validateRegisterField(field, value, password);
+    const error = validateRegisterField(field, value, password, {
+      emailRequired: tValidation("emailRequired"),
+      emailInvalid: tValidation("emailInvalid"),
+      passwordRequired: tValidation("passwordRequired"),
+      passwordMin: tValidation("passwordMin"),
+      passwordNoSpaces: tValidation("passwordNoSpaces"),
+      confirmPasswordRequired: tValidation("confirmPasswordRequired"),
+      passwordsMismatch: tValidation("passwordsMismatch"),
+    });
 
     if (error) {
       setErrors((prev) => ({ ...prev, [field]: error }));
@@ -79,10 +90,18 @@ export function RegisterForm() {
     e.preventDefault();
 
     // Walidacja całego formularza
-    const validationErrors = validateRegisterForm(formState);
+    const validationErrors = validateRegisterForm(formState, {
+      emailRequired: tValidation("emailRequired"),
+      emailInvalid: tValidation("emailInvalid"),
+      passwordRequired: tValidation("passwordRequired"),
+      passwordMin: tValidation("passwordMin"),
+      passwordNoSpaces: tValidation("passwordNoSpaces"),
+      confirmPasswordRequired: tValidation("confirmPasswordRequired"),
+      passwordsMismatch: tValidation("passwordsMismatch"),
+    });
     if (validationErrors) {
       setErrors(validationErrors);
-      toast.error("Popraw błędy w formularzu przed rejestracją.");
+      toast.error(t("validationFixErrors"));
       return;
     }
 
@@ -103,7 +122,7 @@ export function RegisterForm() {
       if (error) {
         // Obsługa błędów z Supabase Auth
         let errorMessage =
-          "Wystąpił błąd podczas rejestracji. Spróbuj ponownie później.";
+          t("errorGeneric");
         const fieldErrors: RegisterFormErrors = {};
 
         // Mapowanie błędów na komunikaty po polsku
@@ -111,28 +130,25 @@ export function RegisterForm() {
           error.message.includes("already registered") ||
           error.message.includes("already exists")
         ) {
-          errorMessage =
-            "Konto z tym adresem email już istnieje. Zaloguj się lub zresetuj hasło.";
-          fieldErrors.email = "Konto z tym adresem email już istnieje";
+          errorMessage = t("errorEmailExists");
+          fieldErrors.email = t("errorEmailExistsField");
         } else if (
           error.message.includes("Password") ||
           error.message.includes("password")
         ) {
-          errorMessage =
-            "Hasło nie spełnia wymagań. Upewnij się, że ma minimum 6 znaków.";
-          fieldErrors.password = "Hasło nie spełnia wymagań";
+          errorMessage = t("errorPasswordRequirements");
+          fieldErrors.password = t("errorPasswordRequirementsField");
         } else if (
           error.message.includes("email") ||
           error.message.includes("Email")
         ) {
-          errorMessage = "Nieprawidłowy format email.";
-          fieldErrors.email = "Nieprawidłowy format email";
+          errorMessage = t("errorInvalidEmail");
+          fieldErrors.email = t("errorInvalidEmailField");
         } else if (
           error.message.includes("network") ||
           error.message.includes("fetch")
         ) {
-          errorMessage =
-            "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.";
+          errorMessage = t("errorNoInternet");
         }
 
         toast.error(errorMessage);
@@ -146,26 +162,22 @@ export function RegisterForm() {
       const loginPath = basePath ? `${basePath}/login` : "/login";
       if (data.user && data.session) {
         // Automatyczne logowanie (enable_confirmations = false)
-        toast.success("Rejestracja zakończona pomyślnie! Zostałaś zalogowana.");
+        toast.success(t("successAutoLogin"));
         router.push(home);
         router.refresh();
       } else if (data.user && !data.session) {
         // Wymagane potwierdzenie emaila (enable_confirmations = true)
-        toast.success(
-          "Rejestracja zakończona pomyślnie! Sprawdź swoją skrzynkę email, aby potwierdzić konto."
-        );
+        toast.success(t("successEmailConfirmation"));
         router.push(loginPath);
       } else {
         // Nieoczekiwany stan
-        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.");
+        toast.error(t("errorUnexpected"));
         setIsLoading(false);
       }
     } catch (error) {
       // Obsługa błędów sieciowych i innych nieoczekiwanych błędów
       console.error("Registration error:", error);
-      toast.error(
-        "Wystąpił błąd podczas rejestracji. Spróbuj ponownie później."
-      );
+      toast.error(t("errorGeneric"));
       setIsLoading(false);
     }
   };

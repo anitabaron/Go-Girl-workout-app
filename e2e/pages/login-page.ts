@@ -1,4 +1,5 @@
 import { Page, Locator } from "@playwright/test";
+import { getAuthLabelMatcher } from "./i18n-labels";
 
 /**
  * Page Object Model for Login Page
@@ -69,6 +70,7 @@ export class LoginPage {
    */
   async isSubmitting(): Promise<boolean> {
     const text = await this.submitButton.textContent();
-    return text?.includes("Logowanie...") ?? false;
+    if (!text) return false;
+    return getAuthLabelMatcher("loginSubmitting").test(text.trim());
   }
 }

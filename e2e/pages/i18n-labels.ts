@@ -15,6 +15,11 @@ const EXERCISE_PART_LABELS: Record<string, string[]> = {
   "": ["None", "Brak"],
 };
 
+const AUTH_LABELS: Record<string, string[]> = {
+  loginSubmit: ["Zaloguj się", "Sign in"],
+  loginSubmitting: ["Logowanie...", "Signing in..."],
+};
+
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -36,4 +41,10 @@ export function getExerciseTypeLabelMatcher(value: string): RegExp {
 
 export function getExercisePartLabelMatcher(value: string): RegExp {
   return toI18nRegex(getCandidates(EXERCISE_PART_LABELS, value));
+}
+
+export function getAuthLabelMatcher(
+  value: keyof typeof AUTH_LABELS | string,
+): RegExp {
+  return toI18nRegex(getCandidates(AUTH_LABELS, value));
 }

@@ -15,6 +15,87 @@ export const enMessages = {
   "auth.signIn": "Sign in",
   "auth.signOut": "Sign out",
   "auth.signOutError": "Could not sign out. Please try again.",
+  "auth.common.email": "Email",
+  "auth.common.password": "Password",
+  "auth.common.showPassword": "Show password",
+  "auth.common.hidePassword": "Hide password",
+  "auth.loginPage.metaTitle": "Login | Go Girl Workout App",
+  "auth.loginPage.metaDescription":
+    "Sign in to your Go Girl Workout App account to access exercises, workout plans, and workout sessions.",
+  "auth.loginPage.title": "Sign in",
+  "auth.loginPage.description":
+    "Enter your details to access your account.",
+  "auth.loginForm.submit": "Sign in",
+  "auth.loginForm.submitting": "Signing in...",
+  "auth.loginForm.forgotPassword": "Forgot your password?",
+  "auth.loginForm.noAccount": "Don't have an account?",
+  "auth.loginForm.register": "Register",
+  "auth.loginForm.validationEmailRequired": "Email is required",
+  "auth.loginForm.validationEmailInvalid": "Invalid email format",
+  "auth.loginForm.validationPasswordMin":
+    "Password must be at least 6 characters",
+  "auth.loginForm.errorInvalidPassword": "Invalid password",
+  "auth.loginForm.successLoggedIn": "Signed in successfully",
+  "auth.registerPage.metaTitle": "Register | Go Girl Workout App",
+  "auth.registerPage.metaDescription":
+    "Create a new account in Go Girl Workout App.",
+  "auth.registerPage.title": "Create account",
+  "auth.registerPage.description":
+    "Register to start training with Go Girl Workout App.",
+  "auth.registerForm.confirmPassword": "Confirm password",
+  "auth.registerForm.submit": "Register",
+  "auth.registerForm.submitting": "Registering...",
+  "auth.registerForm.haveAccount": "Already have an account?",
+  "auth.registerForm.signIn": "Sign in",
+  "auth.registerForm.validationFixErrors":
+    "Fix form errors before registration.",
+  "auth.registerForm.errorGeneric":
+    "An error occurred during registration. Please try again later.",
+  "auth.registerForm.errorEmailExists":
+    "An account with this email already exists. Sign in or reset your password.",
+  "auth.registerForm.errorEmailExistsField":
+    "An account with this email already exists",
+  "auth.registerForm.errorPasswordRequirements":
+    "Password does not meet requirements. Make sure it has at least 6 characters.",
+  "auth.registerForm.errorPasswordRequirementsField":
+    "Password does not meet requirements",
+  "auth.registerForm.errorInvalidEmail": "Invalid email format.",
+  "auth.registerForm.errorInvalidEmailField": "Invalid email format",
+  "auth.registerForm.errorNoInternet":
+    "No internet connection. Check your connection and try again.",
+  "auth.registerForm.successAutoLogin":
+    "Registration completed successfully. You are now signed in.",
+  "auth.registerForm.successEmailConfirmation":
+    "Registration completed successfully. Check your email to confirm your account.",
+  "auth.registerForm.errorUnexpected":
+    "An unexpected error occurred. Please try again later.",
+  "auth.errors.unexpected":
+    "An unexpected error occurred. Please try again later.",
+  "auth.errors.networkOffline":
+    "No internet connection. Check your connection and try again.",
+  "auth.errors.networkGeneric":
+    "Connection error. Check your connection and try again.",
+  "auth.errors.emailNotConfirmed":
+    "Your account is not activated yet. Check your email and click the activation link.",
+  "auth.errors.rateLimit":
+    "Too many attempts. Try again in a moment.",
+  "auth.errors.server": "A server error occurred. Please try again later.",
+  "auth.errors.accountExists":
+    "An account with this email already exists. Sign in or reset your password.",
+  "auth.errors.invalidEmail": "Invalid email format.",
+  "auth.errors.invalidCredentials": "Invalid email or password.",
+  "auth.errors.tokenInvalid": "The link expired or is invalid. Try again.",
+  "auth.registerValidation.emailRequired": "Email is required",
+  "auth.registerValidation.emailInvalid": "Invalid email format",
+  "auth.registerValidation.passwordRequired": "Password is required",
+  "auth.registerValidation.passwordMin":
+    "Password must be at least 6 characters",
+  "auth.registerValidation.passwordNoSpaces":
+    "Password cannot contain spaces",
+  "auth.registerValidation.confirmPasswordRequired":
+    "Password confirmation is required",
+  "auth.registerValidation.passwordsMismatch":
+    "Passwords do not match",
   "theme.toggleDarkMode": "Toggle dark mode",
   "lang.switchAria": "Switch language",
   "lang.polish": "Polish",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -8,6 +8,7 @@ import { supabase } from "@/db/supabase.client";
 import { useAuthStore } from "@/stores/auth-store";
 import { mapAuthError } from "@/lib/auth-errors";
 import { useAuthRedirect } from "@/contexts/auth-redirect-context";
+import { useTranslations } from "@/i18n/client";
 
 // ViewModel - stan formularza logowania
 export type LoginFormState = {
@@ -22,21 +23,25 @@ export type LoginFormErrors = {
   _form?: string[];
 };
 
-// Schema Zod do walidacji formularza
-const loginFormSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email jest wymagany")
-    .pipe(z.email({ error: "Nieprawidłowy format email" })),
-  password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
-});
+function createLoginFormSchema(t: (key: string) => string) {
+  return z.object({
+    email: z
+      .string()
+      .trim()
+      .min(1, t("validationEmailRequired"))
+      .pipe(z.email({ error: t("validationEmailInvalid") })),
+    password: z.string().min(6, t("validationPasswordMin")),
+  });
+}
 
 type UseLoginFormProps = {
   onSuccess?: () => void;
 };
 
 export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
+  const t = useTranslations("auth.loginForm");
+  const tAuthErrors = useTranslations("auth.errors");
+  const loginFormSchema = useMemo(() => createLoginFormSchema(t), [t]);
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
   const { basePath } = useAuthRedirect();
@@ -66,7 +71,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
 
       return undefined;
     },
-    []
+    [loginFormSchema]
   );
 
   // Handler zmiany wartości pola
@@ -184,14 +189,14 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
 
         if (error) {
           // Użycie centralnego mapowania błędów
-          const errorMessage = mapAuthError(error);
+          const errorMessage = mapAuthError(error, tAuthErrors);
           const formErrors: string[] = [errorMessage];
 
           toast.error(errorMessage);
 
           setErrors({
             _form: formErrors,
-            password: "Nieprawidłowe hasło",
+            password: t("errorInvalidPassword"),
           });
 
           // Wyczyszczenie hasła ze względów bezpieczeństwa
@@ -219,7 +224,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
           setUser(data.user);
 
           // Sukces - przekierowanie
-          toast.success("Zalogowano pomyślnie");
+          toast.success(t("successLoggedIn"));
 
           if (onSuccess) {
             onSuccess();
@@ -230,7 +235,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         }
       } catch (error) {
         // Obsługa błędów sieci i innych nieoczekiwanych błędów
-        const errorMessage = mapAuthError(error as Error);
+        const errorMessage = mapAuthError(error as Error, tAuthErrors);
 
         toast.error(errorMessage);
         setErrors({
@@ -251,7 +256,7 @@ export function useLoginForm({ onSuccess }: UseLoginFormProps = {}) {
         setIsLoading(false);
       }
     },
-    [fields, router, onSuccess, setUser, basePath]
+    [fields, router, onSuccess, setUser, basePath, loginFormSchema, tAuthErrors, t]
   );
 
   return {

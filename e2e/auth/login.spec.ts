@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage } from "../pages/login-page";
 import { authenticateUser, getTestUserCredentials } from "../fixtures";
+import { getAuthLabelMatcher } from "../pages/i18n-labels";
 
 /**
  * E2E tests for user login functionality
@@ -39,7 +40,9 @@ test.describe("Login E2E", () => {
     await expect(loginPage.submitButton).toBeVisible();
 
     // Verify submit button has correct text
-    await expect(loginPage.submitButton).toHaveText("Zaloguj się");
+    await expect(loginPage.submitButton).toHaveText(
+      getAuthLabelMatcher("loginSubmit"),
+    );
   });
 
   test("should successfully log in with valid credentials", async ({

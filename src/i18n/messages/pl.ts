@@ -9,6 +9,85 @@ export const plMessages = {
   "auth.signIn": "Zaloguj",
   "auth.signOut": "Wyloguj",
   "auth.signOutError": "Nie udało się wylogować. Spróbuj ponownie.",
+  "auth.common.email": "Email",
+  "auth.common.password": "Hasło",
+  "auth.common.showPassword": "Pokaż hasło",
+  "auth.common.hidePassword": "Ukryj hasło",
+  "auth.loginPage.metaTitle": "Logowanie | Go Girl Workout App",
+  "auth.loginPage.metaDescription":
+    "Zaloguj się do swojego konta Go Girl Workout App, aby uzyskać dostęp do ćwiczeń, planów treningowych i sesji treningowych.",
+  "auth.loginPage.title": "Zaloguj się",
+  "auth.loginPage.description":
+    "Wprowadź swoje dane, aby uzyskać dostęp do konta.",
+  "auth.loginForm.submit": "Zaloguj się",
+  "auth.loginForm.submitting": "Logowanie...",
+  "auth.loginForm.forgotPassword": "Nie pamiętasz hasła?",
+  "auth.loginForm.noAccount": "Nie masz konta?",
+  "auth.loginForm.register": "Zarejestruj się",
+  "auth.loginForm.validationEmailRequired": "Email jest wymagany",
+  "auth.loginForm.validationEmailInvalid": "Nieprawidłowy format email",
+  "auth.loginForm.validationPasswordMin":
+    "Hasło musi mieć co najmniej 6 znaków",
+  "auth.loginForm.errorInvalidPassword": "Nieprawidłowe hasło",
+  "auth.loginForm.successLoggedIn": "Zalogowano pomyślnie",
+  "auth.registerPage.metaTitle": "Rejestracja | Go Girl Workout App",
+  "auth.registerPage.metaDescription":
+    "Utwórz nowe konto w aplikacji Go Girl Workout App.",
+  "auth.registerPage.title": "Utwórz konto",
+  "auth.registerPage.description":
+    "Zarejestruj się, aby rozpocząć treningi z Go Girl Workout App.",
+  "auth.registerForm.confirmPassword": "Potwierdź hasło",
+  "auth.registerForm.submit": "Zarejestruj się",
+  "auth.registerForm.submitting": "Rejestrowanie...",
+  "auth.registerForm.haveAccount": "Masz już konto?",
+  "auth.registerForm.signIn": "Zaloguj się",
+  "auth.registerForm.validationFixErrors":
+    "Popraw błędy w formularzu przed rejestracją.",
+  "auth.registerForm.errorGeneric":
+    "Wystąpił błąd podczas rejestracji. Spróbuj ponownie później.",
+  "auth.registerForm.errorEmailExists":
+    "Konto z tym adresem email już istnieje. Zaloguj się lub zresetuj hasło.",
+  "auth.registerForm.errorEmailExistsField":
+    "Konto z tym adresem email już istnieje",
+  "auth.registerForm.errorPasswordRequirements":
+    "Hasło nie spełnia wymagań. Upewnij się, że ma minimum 6 znaków.",
+  "auth.registerForm.errorPasswordRequirementsField":
+    "Hasło nie spełnia wymagań",
+  "auth.registerForm.errorInvalidEmail": "Nieprawidłowy format email.",
+  "auth.registerForm.errorInvalidEmailField": "Nieprawidłowy format email",
+  "auth.registerForm.errorNoInternet":
+    "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+  "auth.registerForm.successAutoLogin":
+    "Rejestracja zakończona pomyślnie! Zostałaś zalogowana.",
+  "auth.registerForm.successEmailConfirmation":
+    "Rejestracja zakończona pomyślnie! Sprawdź swoją skrzynkę email, aby potwierdzić konto.",
+  "auth.registerForm.errorUnexpected":
+    "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.",
+  "auth.errors.unexpected":
+    "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.",
+  "auth.errors.networkOffline":
+    "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+  "auth.errors.networkGeneric":
+    "Wystąpił błąd połączenia. Sprawdź połączenie i spróbuj ponownie.",
+  "auth.errors.emailNotConfirmed":
+    "Konto nie zostało aktywowane. Sprawdź email i kliknij link aktywacyjny.",
+  "auth.errors.rateLimit": "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
+  "auth.errors.server": "Wystąpił błąd serwera. Spróbuj ponownie później.",
+  "auth.errors.accountExists":
+    "Konto z tym adresem email już istnieje. Zaloguj się lub zresetuj hasło.",
+  "auth.errors.invalidEmail": "Nieprawidłowy format email.",
+  "auth.errors.invalidCredentials": "Nieprawidłowy email lub hasło.",
+  "auth.errors.tokenInvalid":
+    "Link wygasł lub jest nieprawidłowy. Spróbuj ponownie.",
+  "auth.registerValidation.emailRequired": "Email jest wymagany",
+  "auth.registerValidation.emailInvalid": "Nieprawidłowy format email",
+  "auth.registerValidation.passwordRequired": "Hasło jest wymagane",
+  "auth.registerValidation.passwordMin": "Hasło musi mieć minimum 6 znaków",
+  "auth.registerValidation.passwordNoSpaces":
+    "Hasło nie może zawierać spacji",
+  "auth.registerValidation.confirmPasswordRequired":
+    "Potwierdzenie hasła jest wymagane",
+  "auth.registerValidation.passwordsMismatch": "Hasła nie są identyczne",
   "theme.toggleDarkMode": "Przełącz tryb ciemny",
   "lang.switchAria": "Przełącz język",
   "lang.polish": "Polski",
