@@ -16,7 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { formatDuration } from "@/lib/utils/time-format";
 import { toast } from "sonner";
 import type { ExerciseDTO } from "@/types";
@@ -28,6 +31,7 @@ type M3ExerciseCardProps = {
 
 export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
   const t = useTranslations("exerciseCard");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -142,7 +146,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
                   variant="outline"
                   className="border-primary text-primary"
                 >
-                  {EXERCISE_PART_LABELS[p]}
+                  {getExercisePartLabel(tExerciseLabel, p)}
                 </Badge>
               ))}
               {exercise.level && (

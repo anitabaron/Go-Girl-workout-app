@@ -13,7 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Toolbar } from "./Toolbar";
 import type { PlanQueryParams } from "@/types";
 import { exercisePartValues } from "@/lib/validation/exercises";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { useTranslations } from "@/i18n/client";
 
 type SortField = NonNullable<PlanQueryParams["sort"]>;
@@ -66,6 +69,7 @@ export function WorkoutPlansToolbar({
   order = "desc",
 }: WorkoutPlansToolbarProps) {
   const t = useTranslations("workoutPlansToolbar");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -125,7 +129,7 @@ export function WorkoutPlansToolbar({
               <SelectItem value="all">{t("allParts")}</SelectItem>
               {exercisePartValues.map((p) => (
                 <SelectItem key={p} value={p}>
-                  {EXERCISE_PART_LABELS[p]}
+                  {getExercisePartLabel(tExerciseLabel, p)}
                 </SelectItem>
               ))}
             </SelectContent>

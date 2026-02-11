@@ -17,7 +17,11 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
-import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+  getExerciseTypeLabel,
+} from "@/lib/exercises/labels";
 import type { ExercisePart, ExerciseType } from "@/types";
 import { useTranslations } from "@/i18n/client";
 
@@ -42,6 +46,7 @@ export function ExercisesToolbar({
   exerciseId = null,
 }: ExercisesToolbarProps) {
   const t = useTranslations("exercisesToolbar");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -186,7 +191,7 @@ export function ExercisesToolbar({
               <SelectItem value="all">{t("allParts")}</SelectItem>
               {exercisePartValues.map((p) => (
                 <SelectItem key={p} value={p}>
-                  {EXERCISE_PART_LABELS[p]}
+                  {getExercisePartLabel(tExerciseLabel, p)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -212,7 +217,7 @@ export function ExercisesToolbar({
               <SelectItem value="all">{t("allTypes")}</SelectItem>
               {exerciseTypeValues.map((t) => (
                 <SelectItem key={t} value={t}>
-                  {EXERCISE_TYPE_LABELS[t]}
+                  {getExerciseTypeLabel(tExerciseLabel, t)}
                 </SelectItem>
               ))}
             </SelectContent>

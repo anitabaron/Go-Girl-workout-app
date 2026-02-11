@@ -3,7 +3,10 @@
 import type { SessionExerciseDTO } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { formatDuration } from "@/lib/utils/time-format";
 import { useTranslations } from "@/i18n/client";
 
@@ -15,6 +18,7 @@ export function CurrentExerciseInfoM3({
   exercise,
 }: Readonly<CurrentExerciseInfoM3Props>) {
   const t = useTranslations("assistantCurrentExercise");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
 
   return (
     <div className="space-y-4 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-4 shadow-sm">
@@ -31,8 +35,7 @@ export function CurrentExerciseInfoM3({
             variant="outline"
             className="border-destructive text-destructive"
           >
-            {EXERCISE_PART_LABELS[exercise.exercise_part_at_time] ||
-              exercise.exercise_part_at_time}
+            {getExercisePartLabel(tExerciseLabel, exercise.exercise_part_at_time)}
           </Badge>
         )}
         {exercise.exercise_is_unilateral_at_time && (

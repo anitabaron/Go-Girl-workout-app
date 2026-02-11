@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Play, Clock10, Dumbbell } from "lucide-react";
-import type { WorkoutPlanDTO, ExercisePart } from "@/types";
+import type { WorkoutPlanDTO } from "@/types";
 import {
   Card,
   CardContent,
@@ -15,7 +15,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { formatTotalDuration } from "@/lib/utils/time-format";
 import { useTranslations } from "@/i18n/client";
 
@@ -27,20 +30,16 @@ type WorkoutPlanStartCardM3Props = {
   exerciseCount?: number;
 };
 
-function getPartLabel(part: ExercisePart | null): string | null {
-  if (!part) return null;
-  return EXERCISE_PART_LABELS[part] ?? part;
-}
-
 export function WorkoutPlanStartCardM3({
   plan,
   exerciseCount,
 }: WorkoutPlanStartCardM3Props) {
   const t = useTranslations("workoutPlanStartCard");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const [isStarting, setIsStarting] = useState(false);
 
-  const partLabel = getPartLabel(plan.part);
+  const partLabel = getExercisePartLabel(tExerciseLabel, plan.part);
   const finalExerciseCount = exerciseCount ?? plan.exercise_count ?? 0;
   const exerciseCountText = useMemo(() => {
     if (finalExerciseCount === 0) return "";

@@ -21,7 +21,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import type { ExerciseDTO } from "@/types";
 import { useTranslations } from "@/i18n/client";
 
@@ -60,6 +63,7 @@ export function ExerciseDetailContent({
   relationsData,
 }: ExerciseDetailContentProps) {
   const t = useTranslations("exerciseDetailContent");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -128,7 +132,7 @@ export function ExerciseDetailContent({
                   variant="outline"
                   className="border-primary text-primary"
                 >
-                  {EXERCISE_PART_LABELS[p]}
+                  {getExercisePartLabel(tExerciseLabel, p)}
                 </Badge>
               ))}
             </div>

@@ -17,7 +17,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { formatDuration, formatTotalDuration } from "@/lib/utils/time-format";
 import {
   calculateEstimatedSetTimeSeconds,
@@ -28,6 +31,7 @@ import { workoutPlanToImportFormat } from "@/lib/workout-plans/plan-to-import-fo
 import type { WorkoutPlanDTO, WorkoutPlanExerciseDTO } from "@/types";
 import { AddSnapshotExerciseButtonM3 } from "./AddSnapshotExerciseButtonM3";
 import { ExerciseLibraryBadgeM3 } from "./ExerciseLibraryBadgeM3";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutPlanDetailContentProps = {
   readonly plan: WorkoutPlanDTO;
@@ -42,6 +46,7 @@ const SECTION_TYPE_ORDER: Record<string, number> = {
 export function WorkoutPlanDetailContent({
   plan,
 }: WorkoutPlanDetailContentProps) {
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -265,7 +270,9 @@ export function WorkoutPlanDetailContent({
           )}
           <div className="flex flex-wrap items-center gap-2">
             {plan.part && (
-              <Badge variant="outline">{EXERCISE_PART_LABELS[plan.part]}</Badge>
+              <Badge variant="outline">
+                {getExercisePartLabel(tExerciseLabel, plan.part)}
+              </Badge>
             )}
             <Badge variant="secondary">
               {plan.exercises.length}{" "}

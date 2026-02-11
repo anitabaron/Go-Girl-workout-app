@@ -17,6 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteWorkoutPlanDialogM3 } from "../_components/DeleteWorkoutPlanDialogM3";
 import type { PlanExerciseSummary, WorkoutPlanDTO } from "@/types";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 
 type ExerciseSlot =
   | { type: "single"; items: PlanExerciseSummary[] }
@@ -55,7 +59,6 @@ function groupSummariesIntoSlots(
   }
   return slots;
 }
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import {
   formatDuration,
   formatTotalDuration,
@@ -81,6 +84,7 @@ function M3WorkoutPlanCardComponent({
   onDelete,
 }: Readonly<M3WorkoutPlanCardProps>) {
   const t = useTranslations("workoutPlanCard");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const formatRepsOrDurationLabel = (
     reps: number | null | undefined,
     durationSeconds: number | null | undefined,
@@ -243,7 +247,7 @@ function M3WorkoutPlanCardComponent({
                     variant="outline"
                     className="border-primary text-primary"
                   >
-                    {EXERCISE_PART_LABELS[plan.part]}
+                    {getExercisePartLabel(tExerciseLabel, plan.part)}
                   </Badge>
                 )}
                 {plan.has_missing_exercises && (

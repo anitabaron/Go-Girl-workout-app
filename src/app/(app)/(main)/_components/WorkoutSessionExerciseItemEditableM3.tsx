@@ -7,13 +7,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { SetLogsListM3 } from "./assistant/SetLogsListM3";
 import { useExerciseExecutionForm } from "@/hooks/use-exercise-execution-form";
 import { patchWorkoutSessionExercise } from "@/lib/api/workout-sessions";
 import { formDataToAutosaveCommand } from "@/types/workout-session-assistant";
 import type { SessionExerciseDTO } from "@/types";
 import { toast } from "sonner";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutSessionExerciseItemEditableM3Props = {
   readonly exercise: SessionExerciseDTO;
@@ -30,6 +34,7 @@ export function WorkoutSessionExerciseItemEditableM3({
   sessionId,
   onSaved,
 }: WorkoutSessionExerciseItemEditableM3Props) {
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -86,8 +91,7 @@ export function WorkoutSessionExerciseItemEditableM3({
           )}
           {exercise.exercise_part_at_time && (
             <Badge variant="outline">
-              {EXERCISE_PART_LABELS[exercise.exercise_part_at_time] ??
-                exercise.exercise_part_at_time}
+              {getExercisePartLabel(tExerciseLabel, exercise.exercise_part_at_time)}
             </Badge>
           )}
           {exercise.exercise_is_unilateral_at_time && (

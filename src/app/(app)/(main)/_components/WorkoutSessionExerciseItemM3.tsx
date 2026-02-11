@@ -3,8 +3,12 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { formatDuration } from "@/lib/utils/time-format";
+import { useTranslations } from "@/i18n/client";
 
 type Comparison = "up" | "down" | "match" | "na";
 
@@ -46,6 +50,7 @@ export function WorkoutSessionExerciseItemM3({
   exerciseIndex,
   totalExercises,
 }: WorkoutSessionExerciseItemM3Props) {
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const title =
     exercise.exercise_title_at_time ?? `Exercise ${exerciseIndex + 1}`;
 
@@ -88,8 +93,7 @@ export function WorkoutSessionExerciseItemM3({
           )}
           {exercise.exercise_part_at_time && (
             <Badge variant="outline">
-              {EXERCISE_PART_LABELS[exercise.exercise_part_at_time] ??
-                exercise.exercise_part_at_time}
+              {getExercisePartLabel(tExerciseLabel, exercise.exercise_part_at_time)}
             </Badge>
           )}
           {exercise.exercise_is_unilateral_at_time && (
