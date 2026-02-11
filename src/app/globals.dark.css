@@ -72,24 +72,6 @@
     --sidebar-border: var(--neutral-800);
     --sidebar-ring: var(--brand-pink);
 
-    /* Typography - Same as light mode */
-    --font-sans:
-      system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, sans-serif;
-    --font-serif: Georgia, "Times New Roman", serif;
-    --font-mono:
-      "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
-      "Courier New", monospace;
-    --font-geist-sans: var(--font-sans);
-    --font-geist-mono: var(--font-mono);
-
-    /* Border radius - Same as light mode */
-    --radius: 0.5rem;
-    --radius-sm: 0.25rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
-
     /* Shadows - Enhanced for dark mode (lighter shadows on dark background) */
     --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
     --shadow-xs:
@@ -103,24 +85,6 @@
     --shadow-xl: 0 25px 50px -12px hsl(0 0% 0% / 0.8);
     --shadow-2xl: 0 35px 60px -12px hsl(0 0% 0% / 0.9);
     --shadow: var(--shadow-sm);
-
-    /* Letter spacing - Same as light mode */
-    --tracking-tighter: -0.05em;
-    --tracking-tight: -0.025em;
-    --tracking-normal: 0em;
-    --tracking-wide: 0.025em;
-    --tracking-wider: 0.05em;
-    --tracking-widest: 0.1em;
-
-    /* Spacing - Same as light mode */
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    --spacing-2xl: 3rem;
-    --spacing-3xl: 4rem;
-    --spacing: var(--spacing-xs);
 
   }
 }
@@ -198,24 +162,6 @@
   --sidebar-border: var(--neutral-800);
   --sidebar-ring: var(--brand-pink);
 
-  /* Typography */
-  --font-sans:
-    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
-  --font-mono:
-    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
-    monospace;
-  --font-geist-sans: var(--font-sans);
-  --font-geist-mono: var(--font-mono);
-
-  /* Border radius */
-  --radius: 0.5rem;
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-
   /* Shadows - Enhanced for dark mode */
   --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
   --shadow-xs:
@@ -229,23 +175,5 @@
   --shadow-xl: 0 25px 50px -12px hsl(0 0% 0% / 0.8);
   --shadow-2xl: 0 35px 60px -12px hsl(0 0% 0% / 0.9);
   --shadow: var(--shadow-sm);
-
-  /* Letter spacing */
-  --tracking-tighter: -0.05em;
-  --tracking-tight: -0.025em;
-  --tracking-normal: 0em;
-  --tracking-wide: 0.025em;
-  --tracking-wider: 0.05em;
-  --tracking-widest: 0.1em;
-
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --spacing-3xl: 4rem;
-  --spacing: var(--spacing-xs);
 
 }
