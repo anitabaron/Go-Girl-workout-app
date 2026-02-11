@@ -1,0 +1,131 @@
+/* ============================================
+   TAILWIND 4 @THEME - Design tokens mapping
+   Maps CSS variables to Tailwind utilities
+   ============================================ */
+@theme inline {
+  /* ============================================
+     NEUTRAL COLORS
+     ============================================ */
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+  --color-neutral-950: var(--neutral-950);
+
+  /* ============================================
+     BRAND COLORS
+     ============================================ */
+  --color-brand-pink-light: var(--brand-pink-light);
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-pink-dark: var(--brand-pink-dark);
+  --color-brand-red-mid: var(--brand-red-mid);
+  --color-brand-red: var(--brand-red);
+
+  /* ============================================
+     SEMANTIC COLORS
+     ============================================ */
+  --color-semantic-success: var(--semantic-success);
+  --color-semantic-success-foreground: var(--semantic-success-foreground);
+  --color-semantic-success-light: var(--semantic-success-light);
+  --color-semantic-warning: var(--semantic-warning);
+  --color-semantic-warning-foreground: var(--semantic-warning-foreground);
+  --color-semantic-warning-light: var(--semantic-warning-light);
+  --color-semantic-info: var(--semantic-info);
+  --color-semantic-info-foreground: var(--semantic-info-foreground);
+  --color-semantic-info-light: var(--semantic-info-light);
+  --color-semantic-error: var(--semantic-error);
+  --color-semantic-error-foreground: var(--semantic-error-foreground);
+  --color-semantic-error-light: var(--semantic-error-light);
+
+  /* ============================================
+     SHADCN UI COLORS
+     ============================================ */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+
+  /* ============================================
+     BORDER RADIUS
+     ============================================ */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius: var(--radius);
+
+  /* ============================================
+     SHADOWS - Elevation system
+     ============================================ */
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  /* ============================================
+     LETTER SPACING
+     ============================================ */
+  --tracking-tighter: var(--tracking-tighter);
+  --tracking-tight: var(--tracking-tight);
+  --tracking-normal: var(--tracking-normal);
+  --tracking-wide: var(--tracking-wide);
+  --tracking-wider: var(--tracking-wider);
+  --tracking-widest: var(--tracking-widest);
+
+  /* ============================================
+     SPACING
+     ============================================ */
+  --spacing-xs: var(--spacing-xs);
+  --spacing-sm: var(--spacing-sm);
+  --spacing-md: var(--spacing-md);
+  --spacing-lg: var(--spacing-lg);
+  --spacing-xl: var(--spacing-xl);
+  --spacing-2xl: var(--spacing-2xl);
+  --spacing-3xl: var(--spacing-3xl);
+
+}

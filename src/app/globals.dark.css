@@ -1,0 +1,251 @@
+/* ============================================
+   DARK MODE - Automatic based on system preferences
+   Colors shift in saturation and brightness to reduce eye strain
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    /* Neutral colors - Adjusted for dark mode */
+    --neutral-50: #0a0a0a;
+    --neutral-100: #171717;
+    --neutral-200: #262626;
+    --neutral-300: #404040;
+    --neutral-400: #525252;
+    --neutral-500: #737373;
+    --neutral-600: #a3a3a3;
+    --neutral-700: #d4d4d4;
+    --neutral-800: #e5e5e5;
+    --neutral-900: #f5f5f5;
+    --neutral-950: #fafafa;
+
+    /* Brand colors - Reduced saturation, adjusted brightness */
+    --brand-pink-light: #4a1f2a; /* Darker, less saturated */
+    --brand-pink: #ff9fb0; /* Slightly darker, maintains visibility */
+    --brand-pink-dark: #ffbdc8; /* Lighter for contrast */
+    --brand-red-mid: #ff5a66; /* Slightly brighter for visibility */
+    --brand-red: #ff3d42; /* Brighter, maintains urgency */
+
+    /* Semantic colors - Adjusted for dark mode */
+    --semantic-success: #34d399; /* Brighter green */
+    --semantic-success-foreground: #000000;
+    --semantic-success-light: #065f46;
+    --semantic-warning: #fbbf24; /* Brighter amber */
+    --semantic-warning-foreground: #000000;
+    --semantic-warning-light: #78350f;
+    --semantic-info: #60a5fa; /* Brighter blue */
+    --semantic-info-foreground: #000000;
+    --semantic-info-light: #1e3a8a;
+    --semantic-error: #ff3d42; /* Uses adjusted brand red */
+    --semantic-error-foreground: #ffffff;
+    --semantic-error-light: #4a1f2a;
+
+    /* Shadcn UI colors - Dark theme */
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+    --card: #171717;
+    --card-foreground: #fafafa;
+    --popover: #171717;
+    --popover-foreground: #fafafa;
+    --primary: var(--brand-pink);
+    --primary-foreground: #000000;
+    --secondary: var(--brand-pink-light);
+    --secondary-foreground: #ffffff;
+    --muted: var(--neutral-800);
+    --muted-foreground: var(--neutral-400);
+    --accent: var(--brand-red-mid);
+    --accent-foreground: #ffffff;
+    --destructive: var(--brand-red);
+    --destructive-foreground: #ffffff;
+    --border: var(--neutral-800);
+    --input: var(--neutral-800);
+    --ring: var(--brand-pink);
+    --chart-1: var(--brand-pink);
+    --chart-2: var(--brand-pink-light);
+    --chart-3: var(--brand-red-mid);
+    --chart-4: var(--brand-red);
+    --chart-5: var(--neutral-500);
+    --sidebar: var(--brand-pink);
+    --sidebar-foreground: #000000;
+    --sidebar-primary: var(--brand-red-mid);
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: var(--brand-red);
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: var(--neutral-800);
+    --sidebar-ring: var(--brand-pink);
+
+    /* Typography - Same as light mode */
+    --font-sans:
+      system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    --font-serif: Georgia, "Times New Roman", serif;
+    --font-mono:
+      "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
+      "Courier New", monospace;
+    --font-geist-sans: var(--font-sans);
+    --font-geist-mono: var(--font-mono);
+
+    /* Border radius - Same as light mode */
+    --radius: 0.5rem;
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    /* Shadows - Enhanced for dark mode (lighter shadows on dark background) */
+    --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-xs:
+      0 1px 3px 0 hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.4);
+    --shadow-sm:
+      0 4px 6px -1px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.5);
+    --shadow-md:
+      0 10px 15px -3px hsl(0 0% 0% / 0.6), 0 4px 6px -4px hsl(0 0% 0% / 0.6);
+    --shadow-lg:
+      0 20px 25px -5px hsl(0 0% 0% / 0.7), 0 8px 10px -6px hsl(0 0% 0% / 0.7);
+    --shadow-xl: 0 25px 50px -12px hsl(0 0% 0% / 0.8);
+    --shadow-2xl: 0 35px 60px -12px hsl(0 0% 0% / 0.9);
+    --shadow: var(--shadow-sm);
+
+    /* Letter spacing - Same as light mode */
+    --tracking-tighter: -0.05em;
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0em;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+    --tracking-widest: 0.1em;
+
+    /* Spacing - Same as light mode */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    --spacing-3xl: 4rem;
+    --spacing: var(--spacing-xs);
+
+  }
+}
+
+/* ============================================
+   MANUAL DARK MODE - via .dark class
+   Takes precedence over system preference
+   ============================================ */
+.dark {
+  /* Neutral colors - Adjusted for dark mode */
+  --neutral-50: #0a0a0a;
+  --neutral-100: #171717;
+  --neutral-200: #262626;
+  --neutral-300: #404040;
+  --neutral-400: #525252;
+  --neutral-500: #737373;
+  --neutral-600: #a3a3a3;
+  --neutral-700: #d4d4d4;
+  --neutral-800: #e5e5e5;
+  --neutral-900: #f5f5f5;
+  --neutral-950: #fafafa;
+
+  /* Brand colors - Reduced saturation, adjusted brightness */
+  --brand-pink-light: #4a1f2a;
+  --brand-pink: #ff9fb0;
+  --brand-pink-dark: #ffbdc8;
+  --brand-red-mid: #ff5a66;
+  --brand-red: #ff3d42;
+
+  /* Semantic colors - Adjusted for dark mode */
+  --semantic-success: #34d399;
+  --semantic-success-foreground: #000000;
+  --semantic-success-light: #065f46;
+  --semantic-warning: #fbbf24;
+  --semantic-warning-foreground: #000000;
+  --semantic-warning-light: #78350f;
+  --semantic-info: #60a5fa;
+  --semantic-info-foreground: #000000;
+  --semantic-info-light: #1e3a8a;
+  --semantic-error: #ff3d42;
+  --semantic-error-foreground: #ffffff;
+  --semantic-error-light: #4a1f2a;
+
+  /* Shadcn UI colors - Dark theme */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  --primary: var(--brand-pink);
+  --primary-foreground: #000000;
+  --secondary: var(--brand-pink-light);
+  --secondary-foreground: #ffffff;
+  --muted: var(--neutral-800);
+  --muted-foreground: var(--neutral-400);
+  --accent: var(--brand-red-mid);
+  --accent-foreground: #ffffff;
+  --destructive: var(--brand-red);
+  --destructive-foreground: #ffffff;
+  --border: var(--neutral-800);
+  --input: var(--neutral-800);
+  --ring: var(--brand-pink);
+  --chart-1: var(--brand-pink);
+  --chart-2: var(--brand-pink-light);
+  --chart-3: var(--brand-red-mid);
+  --chart-4: var(--brand-red);
+  --chart-5: var(--neutral-500);
+  --sidebar: var(--brand-pink);
+  --sidebar-foreground: #000000;
+  --sidebar-primary: var(--brand-red-mid);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--brand-red);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: var(--neutral-800);
+  --sidebar-ring: var(--brand-pink);
+
+  /* Typography */
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-mono:
+    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
+    monospace;
+  --font-geist-sans: var(--font-sans);
+  --font-geist-mono: var(--font-mono);
+
+  /* Border radius */
+  --radius: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Shadows - Enhanced for dark mode */
+  --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+  --shadow-xs:
+    0 1px 3px 0 hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.4);
+  --shadow-sm:
+    0 4px 6px -1px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.5);
+  --shadow-md:
+    0 10px 15px -3px hsl(0 0% 0% / 0.6), 0 4px 6px -4px hsl(0 0% 0% / 0.6);
+  --shadow-lg:
+    0 20px 25px -5px hsl(0 0% 0% / 0.7), 0 8px 10px -6px hsl(0 0% 0% / 0.7);
+  --shadow-xl: 0 25px 50px -12px hsl(0 0% 0% / 0.8);
+  --shadow-2xl: 0 35px 60px -12px hsl(0 0% 0% / 0.9);
+  --shadow: var(--shadow-sm);
+
+  /* Letter spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  --spacing: var(--spacing-xs);
+
+}
