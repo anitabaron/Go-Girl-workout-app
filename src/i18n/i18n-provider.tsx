@@ -4,14 +4,12 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import {
   DEFAULT_LOCALE,
-  isLocale,
   LOCALE_COOKIE_NAME,
   LOCALE_STORAGE_KEY,
   type Locale,
@@ -41,27 +39,12 @@ export function I18nProvider({
   initialLocale,
   children,
 }: Readonly<I18nProviderProps>) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window === "undefined") {
-      return initialLocale;
-    }
-
-    const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-
-    if (isLocale(storedLocale)) {
-      return storedLocale;
-    }
-
-    return initialLocale;
-  });
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   const setLocale = useCallback((nextLocale: Locale) => {
+    persistLocale(nextLocale);
     setLocaleState(nextLocale);
   }, []);
-
-  useEffect(() => {
-    persistLocale(locale);
-  }, [locale]);
 
   const t = useCallback(
     (key: MessageKey) => {

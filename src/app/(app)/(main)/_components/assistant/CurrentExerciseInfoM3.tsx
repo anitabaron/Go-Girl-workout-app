@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import { formatDuration } from "@/lib/utils/time-format";
+import { useTranslations } from "@/i18n/client";
 
 type CurrentExerciseInfoM3Props = {
   exercise: SessionExerciseDTO;
@@ -13,10 +14,12 @@ type CurrentExerciseInfoM3Props = {
 export function CurrentExerciseInfoM3({
   exercise,
 }: Readonly<CurrentExerciseInfoM3Props>) {
+  const t = useTranslations("assistantCurrentExercise");
+
   return (
     <div className="space-y-4 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-4 shadow-sm">
       <h2 className="m3-headline">
-        {exercise.exercise_title_at_time || "No name"}
+        {exercise.exercise_title_at_time || t("noName")}
       </h2>
 
       <div className="flex flex-wrap gap-2">
@@ -37,7 +40,7 @@ export function CurrentExerciseInfoM3({
             variant="outline"
             className="border-[var(--m3-outline)] text-[var(--m3-on-surface-variant)]"
           >
-            Unilateral
+            {t("unilateral")}
           </Badge>
         )}
       </div>
@@ -47,7 +50,7 @@ export function CurrentExerciseInfoM3({
           exercise.planned_sets !== undefined && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Planned sets
+                {t("plannedSets")}
               </p>
               <p className="m3-title">{exercise.planned_sets}</p>
             </div>
@@ -57,7 +60,7 @@ export function CurrentExerciseInfoM3({
           exercise.planned_reps !== undefined && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Planned reps
+                {t("plannedReps")}
               </p>
               <p className="m3-title">{exercise.planned_reps}</p>
             </div>
@@ -67,7 +70,7 @@ export function CurrentExerciseInfoM3({
           exercise.planned_duration_seconds !== undefined && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Planned duration
+                {t("plannedDuration")}
               </p>
               <p className="m3-title">
                 {formatDuration(exercise.planned_duration_seconds)}
@@ -81,7 +84,7 @@ export function CurrentExerciseInfoM3({
           exercise.rest_in_between_seconds !== undefined) ? (
           <div>
             <p className="text-sm font-medium text-muted-foreground">
-              Planned rest
+              {t("plannedRest")}
             </p>
             <p className="m3-title">
               {formatDuration(
@@ -99,7 +102,7 @@ export function CurrentExerciseInfoM3({
           exercise.rest_after_series_seconds !== undefined) ? (
           <div>
             <p className="text-sm font-medium text-muted-foreground">
-              Planned rest after
+              {t("plannedRestAfter")}
             </p>
             <p className="m3-title">
               {formatDuration(

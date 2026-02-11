@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { SetLogFormData } from "@/types/workout-session-assistant";
+import { useTranslations } from "@/i18n/client";
 
 type SetLogItemM3Props = {
   set: SetLogFormData;
@@ -24,6 +25,8 @@ export function SetLogItemM3({
   showReps,
   isSkipped = false,
 }: Readonly<SetLogItemM3Props>) {
+  const t = useTranslations("assistantSetLog");
+
   const handleChange = (field: keyof SetLogFormData, value: string) => {
     const numValue = value === "" ? null : Number.parseFloat(value);
     onChange({
@@ -41,11 +44,11 @@ export function SetLogItemM3({
               className="mb-1 block text-sm font-medium text-foreground"
               aria-hidden
             >
-              Set
+              {t("set")}
             </span>
             <div
               className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--m3-raw-primary-container)] text-sm font-semibold text-destructive"
-              aria-label={`Set ${set.set_number}`}
+              aria-label={`${t("set")} ${set.set_number}`}
             >
               {set.set_number}
             </div>
@@ -57,7 +60,7 @@ export function SetLogItemM3({
                 htmlFor={`reps-${set.set_number}`}
                 className="mb-1 block text-sm font-medium text-foreground"
               >
-                Reps
+                {t("reps")}
               </label>
               <Input
                 id={`reps-${set.set_number}`}
@@ -68,7 +71,7 @@ export function SetLogItemM3({
                 onChange={(e) => handleChange("reps", e.target.value)}
                 placeholder="0"
                 disabled={isSkipped}
-                aria-label={`Reps for set ${set.set_number}`}
+                aria-label={`${t("repsForSet")} ${set.set_number}`}
                 aria-invalid={error ? "true" : "false"}
                 aria-describedby={
                   error ? `error-${set.set_number}` : undefined
@@ -83,7 +86,7 @@ export function SetLogItemM3({
                 htmlFor={`duration-${set.set_number}`}
                 className="mb-1 block text-sm font-medium text-foreground"
               >
-                Time (seconds)
+                {t("timeSeconds")}
               </label>
               <Input
                 id={`duration-${set.set_number}`}
@@ -96,7 +99,7 @@ export function SetLogItemM3({
                 }
                 placeholder="0"
                 disabled={isSkipped}
-                aria-label={`Duration for set ${set.set_number}`}
+                aria-label={`${t("durationForSet")} ${set.set_number}`}
                 aria-invalid={error ? "true" : "false"}
                 aria-describedby={
                   error ? `error-${set.set_number}` : undefined
@@ -110,7 +113,7 @@ export function SetLogItemM3({
               htmlFor={`weight-${set.set_number}`}
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              Weight (kg)
+              {t("weightKg")}
             </label>
             <Input
               id={`weight-${set.set_number}`}
@@ -121,7 +124,7 @@ export function SetLogItemM3({
               onChange={(e) => handleChange("weight_kg", e.target.value)}
               placeholder="0"
               disabled={isSkipped}
-              aria-label={`Weight for set ${set.set_number}`}
+              aria-label={`${t("weightForSet")} ${set.set_number}`}
               aria-invalid={error ? "true" : "false"}
               aria-describedby={error ? `error-${set.set_number}` : undefined}
             />
@@ -135,7 +138,7 @@ export function SetLogItemM3({
           onClick={onRemove}
           disabled={isSkipped}
           className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-          aria-label={`Remove set ${set.set_number}`}
+          aria-label={`${t("removeSet")} ${set.set_number}`}
         >
           <X className="size-4" />
         </Button>

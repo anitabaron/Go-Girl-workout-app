@@ -9,6 +9,7 @@ import type {
   ExerciseFormData,
   FormErrors,
 } from "@/types/workout-session-assistant";
+import { useTranslations } from "@/i18n/client";
 
 type ExerciseExecutionFormM3Props = {
   exercise: SessionExerciseDTO;
@@ -21,6 +22,7 @@ export function ExerciseExecutionFormM3({
   onChange,
   errors,
 }: Readonly<ExerciseExecutionFormM3Props>) {
+  const t = useTranslations("assistantExerciseExecution");
   const {
     formData,
     handlers: {
@@ -37,7 +39,7 @@ export function ExerciseExecutionFormM3({
 
   return (
     <div className="space-y-2 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-4 shadow-sm">
-      <h3 className="m3-title">Exercise execution</h3>
+      <h3 className="m3-title">{t("title")}</h3>
 
       <SetLogsListM3
         sets={formData.sets}
@@ -55,19 +57,21 @@ export function ExerciseExecutionFormM3({
           id="is_skipped"
           checked={formData.is_skipped}
           onCheckedChange={(checked) => handleSkipToggle(checked === true)}
-          aria-label="Skip exercise"
+          aria-label={t("skipExercise")}
         />
         <Label
           htmlFor="is_skipped"
           className="cursor-pointer text-sm font-medium text-foreground"
         >
-          Skip exercise
+          {t("skipExercise")}
         </Label>
       </div>
 
       {errors?._form && errors._form.length > 0 && (
         <div className="rounded-[var(--m3-radius-lg)] border border-destructive bg-destructive/10 p-3">
-          <p className="text-sm font-medium text-destructive">Form errors:</p>
+          <p className="text-sm font-medium text-destructive">
+            {t("formErrors")}
+          </p>
           <ul className="mt-1 list-disc list-inside text-sm text-destructive">
             {errors._form.map((error) => (
               <li key={error}>{error}</li>
