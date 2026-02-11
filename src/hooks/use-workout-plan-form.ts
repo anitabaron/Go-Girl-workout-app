@@ -527,7 +527,12 @@ export function useWorkoutPlanForm({
     await handleSubmitSuccess();
   };
 
-  const handleSubmit = rhfHandleSubmit(onSubmit, () => scrollToFirstError());
+  const handleInvalidSubmit = () => {
+    scrollToFirstError();
+    toast.error("Popraw błędy w formularzu.");
+  };
+
+  const handleSubmit = rhfHandleSubmit(onSubmit, handleInvalidSubmit);
 
   const fieldsForComponents = {
     name: fieldsState.name ?? "",
