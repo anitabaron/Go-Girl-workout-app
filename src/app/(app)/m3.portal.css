@@ -1,6 +1,6 @@
-/* Portal-scoped M3 overrides (Radix Dialog/Select/Sheet rendered outside .ui-m3) */
+/* Portal-scoped M3 overrides (Radix Dialog/Select/Sheet rendered outside normal flow) */
 
-body:has(.ui-m3) {
+body {
   --m3-surface: var(--m3-raw-surface);
   --m3-surface-container-high: var(--m3-raw-surface-container-high);
   --m3-on-surface: var(--m3-raw-on-surface);
@@ -27,8 +27,8 @@ body:has(.ui-m3) {
   --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
 }
 
-/* SelectContent renders in portal - target when body has .ui-m3 */
-body:has(.ui-m3) [data-slot="select-content"] {
+/* SelectContent renders in portal */
+body [data-slot="select-content"] {
   background: var(--m3-surface-container-high) !important;
   color: var(--m3-on-surface) !important;
   border: 1px solid var(--m3-outline-variant) !important;
@@ -36,24 +36,24 @@ body:has(.ui-m3) [data-slot="select-content"] {
   box-shadow: var(--m3-shadow-2) !important;
 }
 
-body:has(.ui-m3) [data-slot="select-item"] {
+body [data-slot="select-item"] {
   border-radius: var(--m3-radius-sm) !important;
 }
 
-body:has(.ui-m3) [data-slot="select-item"]:focus {
+body [data-slot="select-item"]:focus {
   background: var(--m3-surface-container-high) !important;
   color: var(--m3-on-surface) !important;
   outline: none !important;
 }
 
-body:has(.ui-m3) [data-slot="select-item"][data-highlighted] {
+body [data-slot="select-item"][data-highlighted] {
   background: var(--m3-primary-container) !important;
   color: var(--m3-on-primary-container) !important;
 }
 
-/* Dialog/AlertDialog/Sheet render in portal - target when body has .ui-m3 */
-body:has(.ui-m3) [data-slot="dialog-content"],
-body:has(.ui-m3) [data-slot="alert-dialog-content"] {
+/* Dialog/AlertDialog/Sheet render in portal */
+body [data-slot="dialog-content"],
+body [data-slot="alert-dialog-content"] {
   background: var(--m3-surface-container-high) !important;
   border: 1px solid var(--m3-outline-variant) !important;
   border-radius: var(--m3-radius-large, 1.5rem) !important;
@@ -61,13 +61,13 @@ body:has(.ui-m3) [data-slot="alert-dialog-content"] {
   box-shadow: var(--m3-shadow-2) !important;
 }
 
-body:has(.ui-m3) [data-slot="dialog-overlay"],
-body:has(.ui-m3) [data-slot="alert-dialog-overlay"] {
+body [data-slot="dialog-overlay"],
+body [data-slot="alert-dialog-overlay"] {
   background: rgb(0 0 0 / 0.5) !important;
 }
 
-/* Portal buttons - M3 style (Dialog/AlertDialog render outside .ui-m3) */
-body:has(.ui-m3)
+/* Portal buttons - M3 style (Dialog/AlertDialog render in portal) */
+body
   :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"] {
   appearance: none !important;
@@ -80,7 +80,7 @@ body:has(.ui-m3)
     border-color 0.2s;
 }
 
-body:has(.ui-m3)
+body
   :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="default"] {
   background: var(--m3-primary) !important;
@@ -88,14 +88,14 @@ body:has(.ui-m3)
   border: none !important;
 }
 
-body:has(.ui-m3)
+body
   :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="default"]:hover {
   background: var(--m3-button-default-hover) !important;
   box-shadow: var(--m3-shadow-1);
 }
 
-body:has(.ui-m3)
+body
   :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="outline"] {
   background: transparent !important;
@@ -103,14 +103,14 @@ body:has(.ui-m3)
   border: 1px solid var(--m3-outline-variant) !important;
 }
 
-body:has(.ui-m3)
+body
   :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="outline"]:hover {
   background: var(--m3-surface-container-high) !important;
   border-color: var(--m3-outline) !important;
 }
 
-body:has(.ui-m3)
+body
   :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="destructive"] {
   background: var(--destructive) !important;
@@ -118,19 +118,19 @@ body:has(.ui-m3)
   border: none !important;
 }
 
-body:has(.ui-m3)
+body
   :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="destructive"]:hover {
   background: color-mix(in srgb, var(--destructive) 85%, black) !important;
   box-shadow: var(--m3-shadow-1);
 }
 
-body:has(.ui-m3) [data-slot="sheet-content"] {
+body [data-slot="sheet-content"] {
   background: var(--m3-surface-container-high) !important;
   border: 1px solid var(--m3-outline-variant) !important;
   box-shadow: var(--m3-shadow-2) !important;
 }
 
-body:has(.ui-m3) [data-slot="sheet-overlay"] {
+body [data-slot="sheet-overlay"] {
   background: rgb(0 0 0 / 0.5) !important;
 }
