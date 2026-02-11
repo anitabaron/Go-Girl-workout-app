@@ -23,6 +23,7 @@ import {
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import type { ExerciseDTO } from "@/types";
+import { useTranslations } from "@/i18n/client";
 
 type RelationsData = {
   plansCount: number;
@@ -58,6 +59,7 @@ export function ExerciseDetailContent({
   exercise,
   relationsData,
 }: ExerciseDetailContentProps) {
+  const t = useTranslations("exerciseDetailContent");
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -71,31 +73,27 @@ export function ExerciseDetailContent({
 
       if (!response.ok) {
         if (response.status === 409) {
-          toast.error(
-            "Cannot delete exercise because it is used in workout history",
-          );
+          toast.error(t("deleteConflict"));
         } else if (response.status === 404) {
-          toast.error("Exercise not found");
+          toast.error(t("deleteNotFound"));
         } else if (response.status === 401 || response.status === 403) {
-          toast.error("Unauthorized. Please log in again.");
+          toast.error(t("unauthorized"));
           router.push("/login");
         } else if (response.status >= 500) {
-          toast.error("Server error. Please try again later.");
+          toast.error(t("serverError"));
         } else {
-          toast.error("Failed to delete exercise");
+          toast.error(t("deleteFailed"));
         }
         return;
       }
 
-      toast.success("Exercise deleted");
+      toast.success(t("deleteSuccess"));
       router.push("/exercises");
     } catch (error) {
       if (error instanceof TypeError) {
-        toast.error(
-          "No internet connection. Check your connection and try again.",
-        );
+        toast.error(t("offlineError"));
       } else {
-        toast.error("An error occurred while deleting the exercise");
+        toast.error(t("deleteGenericError"));
       }
     } finally {
       setIsDeleting(false);
@@ -108,13 +106,13 @@ export function ExerciseDetailContent({
       <div className="space-y-4">
         <ReadOnlyField
           id="exercise-detail-title"
-          label="Title"
+          label={t("titleLabel")}
           value={exercise.title}
         />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-2">
-            <p className="m3-label text-muted-foreground">Type</p>
+            <p className="m3-label text-muted-foreground">{t("typeLabel")}</p>
             <div className="flex flex-wrap gap-2">
               {exercise.types.map((t) => (
                 <ExerciseTypeBadge key={t} type={t} />
@@ -122,7 +120,7 @@ export function ExerciseDetailContent({
             </div>
           </div>
           <div className="space-y-2">
-            <p className="m3-label text-muted-foreground">Part</p>
+            <p className="m3-label text-muted-foreground">{t("partLabel")}</p>
             <div className="flex flex-wrap gap-2">
               {exercise.parts.map((p) => (
                 <Badge
@@ -136,7 +134,7 @@ export function ExerciseDetailContent({
             </div>
           </div>
           <div className="space-y-2">
-            <p className="m3-label text-muted-foreground">Level</p>
+            <p className="m3-label text-muted-foreground">{t("levelLabel")}</p>
             <div className="flex flex-wrap gap-2">
               {exercise.level && (
                 <Badge variant="outline">{exercise.level}</Badge>
@@ -144,12 +142,12 @@ export function ExerciseDetailContent({
             </div>
           </div>
           <div className="space-y-2">
-            <p className="m3-label text-muted-foreground">Unilateral</p>
+            <p className="m3-label text-muted-foreground">{t("unilateralLabel")}</p>
             <div className="flex flex-wrap gap-2">
               {exercise.is_unilateral ? (
-                <Badge variant="secondary">Unilateral</Badge>
+                <Badge variant="secondary">{t("unilateral")}</Badge>
               ) : (
-                <Badge variant="outline">No</Badge>
+                <Badge variant="outline">{t("no")}</Badge>
               )}
             </div>
           </div>
@@ -161,14 +159,14 @@ export function ExerciseDetailContent({
                   variant="secondary"
                   className="bg-primary/15 text-primary"
                 >
-                  PR — results saved
+                  {t("prSaved")}
                 </Badge>
               ) : (
                 <Badge
                   variant="outline"
                   className="border-muted-foreground/50 text-muted-foreground"
                 >
-                  PR — not saved
+                  {t("prNotSaved")}
                 </Badge>
               )}
             </div>
@@ -178,7 +176,7 @@ export function ExerciseDetailContent({
         {exercise.details && (
           <ReadOnlyField
             id="exercise-detail-details"
-            label="Details"
+            label={t("detailsLabel")}
             value={
               <span className="whitespace-pre-wrap">{exercise.details}</span>
             }
@@ -189,20 +187,20 @@ export function ExerciseDetailContent({
           {exercise.reps != null && (
             <ReadOnlyField
               id="exercise-detail-reps"
-              label="Reps"
+              label={t("repsLabel")}
               value={exercise.reps}
             />
           )}
           {exercise.duration_seconds != null && (
             <ReadOnlyField
               id="exercise-detail-duration"
-              label="Duration (sec)"
+              label={t("durationSecLabel")}
               value={exercise.duration_seconds}
             />
           )}
           <ReadOnlyField
             id="exercise-detail-series"
-            label="Series"
+            label={t("seriesLabel")}
             value={exercise.series}
           />
         </div>
@@ -211,21 +209,21 @@ export function ExerciseDetailContent({
           {exercise.rest_in_between_seconds != null && (
             <ReadOnlyField
               id="exercise-detail-rest-between"
-              label="Rest between sets (sec)"
+              label={t("restBetweenLabel")}
               value={exercise.rest_in_between_seconds}
             />
           )}
           {exercise.rest_after_series_seconds != null && (
             <ReadOnlyField
               id="exercise-detail-rest-after"
-              label="Rest after series (sec)"
+              label={t("restAfterLabel")}
               value={exercise.rest_after_series_seconds}
             />
           )}
           {exercise.estimated_set_time_seconds != null && (
             <ReadOnlyField
               id="exercise-detail-estimated-set-time"
-              label="Estimated set time (sec)"
+              label={t("estimatedSetTimeLabel")}
               value={exercise.estimated_set_time_seconds}
             />
           )}
@@ -243,20 +241,22 @@ export function ExerciseDetailContent({
             className="m3-label text-destructive"
             role="alert"
           >
-            Exercise cannot be deleted because it is used in{" "}
+            {t("relationPrefix")}{" "}
             {relationsData.plansCount > 0 && (
               <>
                 {relationsData.plansCount}{" "}
                 {relationsData.plansCount === 1
-                  ? "workout plan"
-                  : "workout plans"}
-                {relationsData.sessionsCount > 0 ? " and " : ""}
+                  ? t("workoutPlanSingular")
+                  : t("workoutPlanPlural")}
+                {relationsData.sessionsCount > 0 ? ` ${t("and")} ` : ""}
               </>
             )}
             {relationsData.sessionsCount > 0 && (
               <>
                 {relationsData.sessionsCount}{" "}
-                {relationsData.sessionsCount === 1 ? "session" : "sessions"}
+                {relationsData.sessionsCount === 1
+                  ? t("sessionSingular")
+                  : t("sessionPlural")}
               </>
             )}
             .
@@ -267,7 +267,7 @@ export function ExerciseDetailContent({
       {/* Actions */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <Button variant="default" className="flex-1 m3-cta" asChild>
-          <Link href={`/exercises/${exercise.id}/edit`}>Edit</Link>
+          <Link href={`/exercises/${exercise.id}/edit`}>{t("edit")}</Link>
         </Button>
 
         <TooltipProvider>
@@ -279,22 +279,20 @@ export function ExerciseDetailContent({
                   variant="destructive"
                   disabled={relationsData.hasRelations}
                   className="w-full"
-                  aria-label={`Delete exercise: ${exercise.title}`}
+                  aria-label={`${t("deleteAria")} ${exercise.title}`}
                   aria-describedby={
                     relationsData.hasRelations
                       ? "delete-disabled-tooltip"
                       : undefined
                   }
                 >
-                  Delete
+                  {t("delete")}
                 </Button>
               </span>
             </TooltipTrigger>
             {relationsData.hasRelations && (
               <TooltipContent id="delete-disabled-tooltip">
-                <p>
-                  Cannot delete exercise because it is used in workout history
-                </p>
+                <p>{t("deleteConflict")}</p>
               </TooltipContent>
             )}
           </Tooltip>
@@ -304,10 +302,10 @@ export function ExerciseDetailContent({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent aria-describedby="delete-dialog-description">
           <DialogHeader>
-            <DialogTitle>Delete exercise</DialogTitle>
+            <DialogTitle>{t("deleteDialogTitle")}</DialogTitle>
             <DialogDescription id="delete-dialog-description">
-              Are you sure you want to delete &quot;{exercise.title}&quot;? This
-              action cannot be undone.
+              {t("deleteDialogDescriptionStart")} &quot;{exercise.title}&quot;?{" "}
+              {t("deleteDialogDescriptionEnd")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -315,18 +313,18 @@ export function ExerciseDetailContent({
               onClick={() => setIsDeleteDialogOpen(false)}
               variant="outline"
               disabled={isDeleting}
-              aria-label="Cancel delete"
+              aria-label={t("cancelAria")}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               onClick={handleDelete}
               variant="destructive"
               disabled={isDeleting}
-              aria-label={`Confirm delete: ${exercise.title}`}
+              aria-label={`${t("confirmDeleteAria")} ${exercise.title}`}
               aria-busy={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? t("deleting") : t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
