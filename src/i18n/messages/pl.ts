@@ -1,0 +1,16 @@
+export const plMessages = {
+  "nav.mainNavigation": "Główna nawigacja",
+  "nav.home": "Start",
+  "nav.exercises": "Ćwiczenia",
+  "nav.plans": "Plany",
+  "nav.sessions": "Sesje",
+  "nav.records": "Rekordy",
+  "nav.start": "Start",
+  "auth.signIn": "Zaloguj",
+  "auth.signOut": "Wyloguj",
+  "auth.signOutError": "Nie udało się wylogować. Spróbuj ponownie.",
+  "theme.toggleDarkMode": "Przełącz tryb ciemny",
+  "lang.switchAria": "Przełącz język",
+  "lang.polish": "Polski",
+  "lang.english": "Angielski",
+} as const;
