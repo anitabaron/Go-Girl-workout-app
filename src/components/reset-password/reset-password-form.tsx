@@ -30,7 +30,9 @@ export function ResetPasswordForm() {
 
       <ResetPasswordButton isLoading={isLoading} disabled={isLoading} />
 
-      <BackToLoginLink />
+      <div className="pt-2">
+        <BackToLoginLink />
+      </div>
     </form>
   );
 }
