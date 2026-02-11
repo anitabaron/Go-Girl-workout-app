@@ -2,28 +2,31 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { History } from "lucide-react";
-import type { SessionSummaryDTO } from "@/types";
-import { EmptyState } from "./EmptyState";
-import { M3WorkoutSessionCard } from "./M3WorkoutSessionCard";
+import { Calendar } from "lucide-react";
+import type { WorkoutPlanDTO } from "@/types";
+import { EmptyState } from "@/components/layout/EmptyState";
+import { M3WorkoutPlanCard } from "./M3WorkoutPlanCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslations } from "@/i18n/client";
 
-type WorkoutSessionsListM3Props = {
-  initialSessions: SessionSummaryDTO[];
+type WorkoutPlansListM3Props = {
+  initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & {
+    exercise_count?: number;
+    has_missing_exercises?: boolean;
+  })[];
   initialNextCursor?: string | null;
   initialHasMore: boolean;
 };
 
-export function WorkoutSessionsListM3({
-  initialSessions,
+export function WorkoutPlansListM3({
+  initialPlans,
   initialNextCursor,
   initialHasMore,
-}: Readonly<WorkoutSessionsListM3Props>) {
-  const t = useTranslations("workoutSessionsList");
+}: Readonly<WorkoutPlansListM3Props>) {
+  const t = useTranslations("workoutPlansList");
   const searchParams = useSearchParams();
-  const [sessions, setSessions] = useState(initialSessions);
+  const [plans, setPlans] = useState(initialPlans);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -31,24 +34,22 @@ export function WorkoutSessionsListM3({
 
   useEffect(() => {
     if (!searchParams.get("cursor")) {
-      setSessions(initialSessions);
+      setPlans(initialPlans);
       setNextCursor(initialNextCursor);
       setHasMore(initialHasMore);
     }
-  }, [searchParams, initialSessions, initialNextCursor, initialHasMore]);
+  }, [searchParams, initialPlans, initialNextCursor, initialHasMore]);
 
   const handleLoadMore = async (cursor: string) => {
     setIsLoadingMore(true);
     try {
       const params = new URLSearchParams(searchParams.toString());
       params.set("cursor", cursor);
-      const response = await fetch(
-        `/api/workout-sessions?${params.toString()}`,
-      );
+      const response = await fetch(`/api/workout-plans?${params.toString()}`);
       if (!response.ok) throw new Error(t("loadMoreError"));
       const data = await response.json();
       startTransition(() => {
-        setSessions((prev) => [...prev, ...data.items]);
+        setPlans((prev) => [...prev, ...data.items]);
         setNextCursor(data.nextCursor);
         setHasMore(data.nextCursor != null);
       });
@@ -60,21 +61,38 @@ export function WorkoutSessionsListM3({
     }
   };
 
-  if (sessions.length === 0) {
+  const handleDelete = async (planId: string) => {
+    const response = await fetch(`/api/workout-plans/${planId}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete plan");
+    startTransition(() => {
+      setPlans((prev) => prev.filter((p) => p.id !== planId));
+    });
+  };
+
+  if (plans.length === 0) {
     return (
-      <EmptyState
-        icon={<History className="size-12 text-muted-foreground" />}
-        title={t("emptyTitle")}
-        description={t("emptyDescription")}
-      />
+      <div data-test-id="workout-plans-empty-state">
+        <EmptyState
+          icon={<Calendar className="size-12 text-muted-foreground" />}
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-test-id="workout-plans-list">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {sessions.map((session) => (
-          <M3WorkoutSessionCard key={session.id} session={session} />
+        {plans.map((plan) => (
+          <M3WorkoutPlanCard
+            key={plan.id}
+            plan={plan}
+            exerciseCount={plan.exercise_count}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
       {hasMore && nextCursor && !isLoadingMore && (

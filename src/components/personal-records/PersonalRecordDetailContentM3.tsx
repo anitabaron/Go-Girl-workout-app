@@ -3,7 +3,7 @@
 import { Trophy } from "lucide-react";
 import type { PersonalRecordMetricViewModel } from "@/lib/personal-records/view-model";
 import { useTranslations } from "@/i18n/client";
-import { EmptyState } from "./EmptyState";
+import { EmptyState } from "@/components/layout/EmptyState";
 import { PersonalRecordMetricCardM3 } from "./PersonalRecordMetricCardM3";
 
 type PersonalRecordDetailContentM3Props = {

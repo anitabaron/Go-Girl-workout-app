@@ -11,9 +11,12 @@ import {
 } from "@/services/workout-sessions";
 import { listWorkoutPlansService } from "@/services/workout-plans";
 import type { SessionDetailDTO } from "@/types";
-import { EmptyState, Surface } from "@/components";
-import { ResumeSessionCardM3 } from "@/components/ResumeSessionCardM3";
-import { WorkoutPlansStartListM3 } from "@/components/WorkoutPlansStartListM3";
+import {
+  EmptyState,
+  ResumeSessionCardM3,
+  Surface,
+  WorkoutPlansStartListM3,
+} from "@/components";
 import { getTranslations } from "@/i18n/server";
 
 export const metadata: Metadata = {

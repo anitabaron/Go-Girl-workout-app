@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Toolbar } from "./Toolbar";
+import { Toolbar } from "@/components/layout/Toolbar";
 import type { PlanQueryParams } from "@/types";
 import { exercisePartValues } from "@/lib/validation/exercises";
 import {

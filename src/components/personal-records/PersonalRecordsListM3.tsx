@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import type { PersonalRecordsPageResponse } from "@/lib/personal-records/view-model";
 import { mapPersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
-import { EmptyState } from "./EmptyState";
+import { EmptyState } from "@/components/layout/EmptyState";
 import { Trophy } from "lucide-react";
 import { M3PersonalRecordCard } from "./M3PersonalRecordCard";
 import { Button } from "@/components/ui/button";

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Toolbar } from "./Toolbar";
+import { Toolbar } from "@/components/layout/Toolbar";
 import type { PersonalRecordQueryParams, PRMetricType } from "@/types";
 import { prMetricTypeValues } from "@/lib/validation/personal-records";
 import { useTranslations } from "@/i18n/client";

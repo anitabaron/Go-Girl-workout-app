@@ -4,8 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService } from "@/services/workout-plans";
-import { Surface } from "@/components";
-import { WorkoutPlanFormM3 } from "@/components/WorkoutPlanFormM3";
+import { Surface, WorkoutPlanFormM3 } from "@/components";
 import { getTranslations } from "@/i18n/server";
 
 export default async function NewWorkoutPlanPage({

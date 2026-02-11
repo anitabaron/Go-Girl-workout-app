@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Layers } from "lucide-react";
 import type { ExerciseDTO, ExerciseType } from "@/types";
-import { ExerciseSelectorM3 } from "./ExerciseSelectorM3";
+import { ExerciseSelectorM3 } from "@/components/exercises/ExerciseSelectorM3";
 import { useTranslations } from "@/i18n/client";
 
 const SECTION_TYPES: { value: ExerciseType; key: string }[] = [

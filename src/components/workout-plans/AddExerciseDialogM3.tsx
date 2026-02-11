@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import type { ExerciseDTO } from "@/types";
-import { ExerciseSelectorM3 } from "./ExerciseSelectorM3";
+import { ExerciseSelectorM3 } from "@/components/exercises/ExerciseSelectorM3";
 import { useTranslations } from "@/i18n/client";
 
 type AddExerciseDialogM3Props = {

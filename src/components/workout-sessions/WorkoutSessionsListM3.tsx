@@ -2,31 +2,28 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { Calendar } from "lucide-react";
-import type { WorkoutPlanDTO } from "@/types";
-import { EmptyState } from "./EmptyState";
-import { M3WorkoutPlanCard } from "./M3WorkoutPlanCard";
+import { History } from "lucide-react";
+import type { SessionSummaryDTO } from "@/types";
+import { EmptyState } from "@/components/layout/EmptyState";
+import { M3WorkoutSessionCard } from "./M3WorkoutSessionCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslations } from "@/i18n/client";
 
-type WorkoutPlansListM3Props = {
-  initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & {
-    exercise_count?: number;
-    has_missing_exercises?: boolean;
-  })[];
+type WorkoutSessionsListM3Props = {
+  initialSessions: SessionSummaryDTO[];
   initialNextCursor?: string | null;
   initialHasMore: boolean;
 };
 
-export function WorkoutPlansListM3({
-  initialPlans,
+export function WorkoutSessionsListM3({
+  initialSessions,
   initialNextCursor,
   initialHasMore,
-}: Readonly<WorkoutPlansListM3Props>) {
-  const t = useTranslations("workoutPlansList");
+}: Readonly<WorkoutSessionsListM3Props>) {
+  const t = useTranslations("workoutSessionsList");
   const searchParams = useSearchParams();
-  const [plans, setPlans] = useState(initialPlans);
+  const [sessions, setSessions] = useState(initialSessions);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -34,22 +31,24 @@ export function WorkoutPlansListM3({
 
   useEffect(() => {
     if (!searchParams.get("cursor")) {
-      setPlans(initialPlans);
+      setSessions(initialSessions);
       setNextCursor(initialNextCursor);
       setHasMore(initialHasMore);
     }
-  }, [searchParams, initialPlans, initialNextCursor, initialHasMore]);
+  }, [searchParams, initialSessions, initialNextCursor, initialHasMore]);
 
   const handleLoadMore = async (cursor: string) => {
     setIsLoadingMore(true);
     try {
       const params = new URLSearchParams(searchParams.toString());
       params.set("cursor", cursor);
-      const response = await fetch(`/api/workout-plans?${params.toString()}`);
+      const response = await fetch(
+        `/api/workout-sessions?${params.toString()}`,
+      );
       if (!response.ok) throw new Error(t("loadMoreError"));
       const data = await response.json();
       startTransition(() => {
-        setPlans((prev) => [...prev, ...data.items]);
+        setSessions((prev) => [...prev, ...data.items]);
         setNextCursor(data.nextCursor);
         setHasMore(data.nextCursor != null);
       });
@@ -61,38 +60,21 @@ export function WorkoutPlansListM3({
     }
   };
 
-  const handleDelete = async (planId: string) => {
-    const response = await fetch(`/api/workout-plans/${planId}`, {
-      method: "DELETE",
-    });
-    if (!response.ok) throw new Error("Failed to delete plan");
-    startTransition(() => {
-      setPlans((prev) => prev.filter((p) => p.id !== planId));
-    });
-  };
-
-  if (plans.length === 0) {
+  if (sessions.length === 0) {
     return (
-      <div data-test-id="workout-plans-empty-state">
-        <EmptyState
-          icon={<Calendar className="size-12 text-muted-foreground" />}
-          title={t("emptyTitle")}
-          description={t("emptyDescription")}
-        />
-      </div>
+      <EmptyState
+        icon={<History className="size-12 text-muted-foreground" />}
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
+      />
     );
   }
 
   return (
-    <div className="space-y-6" data-test-id="workout-plans-list">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {plans.map((plan) => (
-          <M3WorkoutPlanCard
-            key={plan.id}
-            plan={plan}
-            exerciseCount={plan.exercise_count}
-            onDelete={handleDelete}
-          />
+        {sessions.map((session) => (
+          <M3WorkoutSessionCard key={session.id} session={session} />
         ))}
       </div>
       {hasMore && nextCursor && !isLoadingMore && (
