@@ -5,6 +5,7 @@ import {
   formatRepsOrDuration,
   formatDuration,
 } from "@/lib/utils/time-format";
+import { useTranslations } from "@/i18n/client";
 
 export type AssistantExerciseListM3Props = {
   readonly exercises: SessionExerciseDTO[];
@@ -19,6 +20,8 @@ export function AssistantExerciseListM3({
   exercises,
   currentExerciseIndex,
 }: Readonly<AssistantExerciseListM3Props>) {
+  const t = useTranslations("assistantExerciseList");
+
   if (!exercises.length) return null;
 
   return (
@@ -27,19 +30,19 @@ export function AssistantExerciseListM3({
           <thead>
             <tr className="border-b border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] text-foreground">
               <th className="w-5 py-1.5 pr-1 text-left" aria-hidden="true" />
-              <th className="py-1.5 pr-3 text-left font-medium">Exercise</th>
+              <th className="py-1.5 pr-3 text-left font-medium">{t("exercise")}</th>
               <th className="py-1.5 pr-3 text-left font-medium">
-                Reps/time
+                {t("repsTime")}
               </th>
-              <th className="py-1.5 pr-3 text-left font-medium">Sets</th>
-              <th className="py-1.5 text-left font-medium">Rest</th>
+              <th className="py-1.5 pr-3 text-left font-medium">{t("sets")}</th>
+              <th className="py-1.5 text-left font-medium">{t("rest")}</th>
             </tr>
           </thead>
           <tbody>
             {exercises.map((ex, i) => {
               const isCurrent = i === currentExerciseIndex;
               const title =
-                ex.exercise_title_at_time ?? `Exercise ${i + 1}`;
+                ex.exercise_title_at_time ?? `${t("exercise")} ${i + 1}`;
               const repsOrDuration = formatRepsOrDuration(
                 ex.planned_reps,
                 ex.planned_duration_seconds,
