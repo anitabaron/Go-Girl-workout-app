@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "@/i18n/client";
 import type { Locale } from "@/i18n";
+import { useRouter } from "next/navigation";
 
 type LanguageToggleProps = {
   className?: string;
@@ -14,6 +15,7 @@ const LOCALE_OPTIONS: ReadonlyArray<{ locale: Locale; label: string }> = [
 ];
 
 export function LanguageToggle({ className }: Readonly<LanguageToggleProps>) {
+  const router = useRouter();
   const { locale, setLocale } = useLocale();
   const t = useTranslations("lang");
 
@@ -33,7 +35,11 @@ export function LanguageToggle({ className }: Readonly<LanguageToggleProps>) {
           <button
             key={option.locale}
             type="button"
-            onClick={() => setLocale(option.locale)}
+            onClick={() => {
+              if (option.locale === locale) return;
+              setLocale(option.locale);
+              router.refresh();
+            }}
             className={cn(
               "rounded-[var(--m3-radius-sm)] px-2 py-1 text-xs font-semibold transition-colors",
               isActive

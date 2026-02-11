@@ -1,12 +1,17 @@
+"use client";
+
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslations } from "@/i18n/client";
 import { PageHeader, Surface, Toolbar } from "../_components";
 
 export default function ExercisesLoading() {
+  const t = useTranslations("exercisesPage");
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Exercises"
-        description="Browse and manage your exercise library."
+        title={t("title")}
+        description={t("description")}
         actions={<Skeleton className="h-9 w-28" />}
       />
 
