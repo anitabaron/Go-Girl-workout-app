@@ -57,8 +57,8 @@ function groupSummariesIntoSlots(
 }
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import {
+  formatDuration,
   formatTotalDuration,
-  formatRepsOrDuration,
 } from "@/lib/utils/time-format";
 import { formatDateTime } from "@/lib/utils/date-format";
 import { toast } from "sonner";
@@ -81,6 +81,16 @@ function M3WorkoutPlanCardComponent({
   onDelete,
 }: Readonly<M3WorkoutPlanCardProps>) {
   const t = useTranslations("workoutPlanCard");
+  const formatRepsOrDurationLabel = (
+    reps: number | null | undefined,
+    durationSeconds: number | null | undefined,
+  ): string => {
+    if (reps != null && reps > 0) return `${reps} ${t("repsUnit")}`;
+    if (durationSeconds != null && durationSeconds > 0) {
+      return formatDuration(durationSeconds);
+    }
+    return "-";
+  };
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -297,7 +307,7 @@ function M3WorkoutPlanCardComponent({
                                     {slot.items[0].title}
                                   </td>
                                   <td className="py-1 pr-2">
-                                    {formatRepsOrDuration(
+                                    {formatRepsOrDurationLabel(
                                       slot.items[0].planned_reps,
                                       slot.items[0].planned_duration_seconds
                                     )}
@@ -333,7 +343,7 @@ function M3WorkoutPlanCardComponent({
                                       {ex.title}
                                     </td>
                                     <td className="py-1 pr-2">
-                                      {formatRepsOrDuration(
+                                      {formatRepsOrDurationLabel(
                                         ex.planned_reps,
                                         ex.planned_duration_seconds
                                       )}

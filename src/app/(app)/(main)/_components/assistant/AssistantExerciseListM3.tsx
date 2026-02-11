@@ -2,7 +2,6 @@
 
 import type { SessionExerciseDTO } from "@/types";
 import {
-  formatRepsOrDuration,
   formatDuration,
 } from "@/lib/utils/time-format";
 import { useTranslations } from "@/i18n/client";
@@ -43,10 +42,13 @@ export function AssistantExerciseListM3({
               const isCurrent = i === currentExerciseIndex;
               const title =
                 ex.exercise_title_at_time ?? `${t("exercise")} ${i + 1}`;
-              const repsOrDuration = formatRepsOrDuration(
-                ex.planned_reps,
-                ex.planned_duration_seconds,
-              );
+              const repsOrDuration =
+                ex.planned_reps != null && ex.planned_reps > 0
+                  ? `${ex.planned_reps} ${t("repsUnit")}`
+                  : ex.planned_duration_seconds != null &&
+                      ex.planned_duration_seconds > 0
+                    ? formatDuration(ex.planned_duration_seconds)
+                    : "-";
               const sets =
                 ex.planned_sets != null && ex.planned_sets > 0
                   ? `${ex.planned_sets}`
