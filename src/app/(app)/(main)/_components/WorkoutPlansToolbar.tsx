@@ -14,6 +14,7 @@ import { Toolbar } from "./Toolbar";
 import type { PlanQueryParams } from "@/types";
 import { exercisePartValues } from "@/lib/validation/exercises";
 import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import { useTranslations } from "@/i18n/client";
 
 type SortField = NonNullable<PlanQueryParams["sort"]>;
 type SortOrder = NonNullable<PlanQueryParams["order"]>;
@@ -21,25 +22,25 @@ type SortOrder = NonNullable<PlanQueryParams["order"]>;
 const SORT_OPTIONS = [
   {
     value: "created_at-desc",
-    label: "Newest first",
+    labelKey: "sortNewest",
     sort: "created_at" as SortField,
     order: "desc" as SortOrder,
   },
   {
     value: "created_at-asc",
-    label: "Oldest first",
+    labelKey: "sortOldest",
     sort: "created_at" as SortField,
     order: "asc" as SortOrder,
   },
   {
     value: "name-asc",
-    label: "Name (A–Z)",
+    labelKey: "sortNameAsc",
     sort: "name" as SortField,
     order: "asc" as SortOrder,
   },
   {
     value: "name-desc",
-    label: "Name (Z–A)",
+    labelKey: "sortNameDesc",
     sort: "name" as SortField,
     order: "desc" as SortOrder,
   },
@@ -64,6 +65,7 @@ export function WorkoutPlansToolbar({
   sort = "created_at",
   order = "desc",
 }: WorkoutPlansToolbarProps) {
+  const t = useTranslations("workoutPlansToolbar");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -105,7 +107,7 @@ export function WorkoutPlansToolbar({
       <div className="flex flex-nowrap items-center gap-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="part-filter" className="sr-only">
-            Filter by body part
+            {t("partFilterLabel")}
           </label>
           <Select
             value={part ?? "all"}
@@ -115,12 +117,12 @@ export function WorkoutPlansToolbar({
             <SelectTrigger
               id="part-filter"
               className="w-[180px]"
-              aria-label="Filter workout plans by body part"
+              aria-label={t("partFilterAria")}
             >
-              <SelectValue placeholder="Body part" />
+              <SelectValue placeholder={t("partPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All parts</SelectItem>
+              <SelectItem value="all">{t("allParts")}</SelectItem>
               {exercisePartValues.map((p) => (
                 <SelectItem key={p} value={p}>
                   {EXERCISE_PART_LABELS[p]}
@@ -131,7 +133,7 @@ export function WorkoutPlansToolbar({
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="sort-select" className="sr-only">
-            Sort workout plans
+            {t("sortLabel")}
           </label>
           <Select
             value={sortValue}
@@ -141,14 +143,14 @@ export function WorkoutPlansToolbar({
             <SelectTrigger
               id="sort-select"
               className="w-[180px]"
-              aria-label="Sort workout plans"
+              aria-label={t("sortAria")}
             >
-              <SelectValue placeholder="Sort by" />
+              <SelectValue placeholder={t("sortPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {SORT_OPTIONS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -160,9 +162,9 @@ export function WorkoutPlansToolbar({
           variant="outline"
           onClick={() => updateParams({ part: null })}
           disabled={isPending}
-          aria-label="Clear filters"
+          aria-label={t("clearFiltersAria")}
         >
-          Clear filters
+          {t("clearFilters")}
         </Button>
       )}
     </Toolbar>

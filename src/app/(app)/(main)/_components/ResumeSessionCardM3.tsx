@@ -29,12 +29,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useLocale, useTranslations } from "@/i18n/client";
 
 type ResumeSessionCardM3Props = {
   readonly session: SessionDetailDTO;
 };
 
 export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
+  const t = useTranslations("resumeSessionCard");
+  const { locale } = useLocale();
   const {
     handleResume,
     handleCancel,
@@ -54,7 +57,7 @@ export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
       : 0;
 
   const formattedDate = new Date(session.started_at).toLocaleDateString(
-    "en-US",
+    locale,
     {
       day: "numeric",
       month: "long",
@@ -74,32 +77,30 @@ export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="size-5" />
-          Active workout session
+          {t("title")}
         </CardTitle>
         <CardDescription>
-          You have an ongoing session that you can resume
+          {t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            Workout plan
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">{t("planLabel")}</p>
           <p className="text-lg font-semibold">{session.plan_name_at_time}</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Started</p>
+          <p className="text-sm font-medium text-muted-foreground">{t("startedLabel")}</p>
           <p className="text-base">{formattedDate}</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Progress</p>
+          <p className="text-sm font-medium text-muted-foreground">{t("progressLabel")}</p>
           <p className="text-base">
-            Exercise {currentExerciseNumber} of {totalExercises} (
+            {t("exerciseLabel")} {currentExerciseNumber} {t("of")} {totalExercises} (
             {progressPercentage}%)
           </p>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Duration</p>
+          <p className="text-sm font-medium text-muted-foreground">{t("durationLabel")}</p>
           <p className="flex items-center gap-2 text-base font-semibold">
             <Clock10 className="size-4" />
             {duration}
@@ -126,14 +127,14 @@ export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
           onClick={handleResume}
           disabled={isResuming}
           className="m3-cta w-full sm:w-auto"
-          aria-label="Resume workout"
+          aria-label={t("resumeAria")}
         >
           {isResuming ? (
-            <span className="mr-2">Resuming...</span>
+            <span className="mr-2">{t("resuming")}</span>
           ) : (
             <>
               <Play className="mr-2 size-4" />
-              Resume workout
+              {t("resumeCta")}
             </>
           )}
         </Button>
@@ -146,30 +147,29 @@ export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
               variant="outline"
               size="lg"
               className="w-full sm:w-auto"
-              aria-label="Cancel"
+              aria-label={t("cancelAria")}
             >
               <X className="mr-2 size-4" />
-              Cancel
+              {t("cancel")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Cancel workout session?</AlertDialogTitle>
+              <AlertDialogTitle>{t("cancelDialogTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to cancel this session? Progress will be
-                saved, but the session will be marked as completed.
+                {t("cancelDialogDescription")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isCancelling}>
-                Cancel
+                {t("cancel")}
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleCancel}
                 disabled={isCancelling}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {isCancelling ? "Cancelling..." : "Confirm"}
+                {isCancelling ? t("cancelling") : t("confirm")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

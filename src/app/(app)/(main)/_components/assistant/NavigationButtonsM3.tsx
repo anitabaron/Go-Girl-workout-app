@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Pause, Play, RedoDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type NavigationButtonsM3Props = {
   onPrevious: () => void;
@@ -26,6 +27,7 @@ export function NavigationButtonsM3({
   canGoNext,
   isLoading = false,
 }: Readonly<NavigationButtonsM3Props>) {
+  const t = useTranslations("assistantNavigation");
   return (
     <div
       className="grid grid-cols-[1fr_1fr_0.5fr_1fr] gap-2 sm:gap-3 sm:grid-cols-[1fr_1fr_0.5fr_1fr]"
@@ -38,10 +40,10 @@ export function NavigationButtonsM3({
         onClick={onPrevious}
         disabled={!canGoPrevious || isLoading}
         className="h-12 text-base font-semibold px-2 sm:h-16 sm:px-4"
-        aria-label="Previous exercise"
+        aria-label={t("previousAria")}
       >
         <ChevronLeft className="size-5 shrink-0 sm:mr-2" />
-        <span className="hidden sm:inline">Previous</span>
+        <span className="hidden sm:inline">{t("previous")}</span>
       </Button>
 
       <Button
@@ -51,17 +53,17 @@ export function NavigationButtonsM3({
         onClick={isPaused ? onResume : onPause}
         disabled={isLoading}
         className="h-12 text-base font-semibold px-2 sm:h-16 sm:px-4"
-        aria-label={isPaused ? "Resume session" : "Pause session"}
+        aria-label={isPaused ? t("resumeAria") : t("pauseAria")}
       >
         {isPaused ? (
           <>
             <Play className="size-5 shrink-0 sm:mr-2" />
-            <span className="hidden sm:inline">Resume</span>
+            <span className="hidden sm:inline">{t("resume")}</span>
           </>
         ) : (
           <>
             <Pause className="size-5 shrink-0 sm:mr-2" />
-            <span className="hidden sm:inline">Pause</span>
+            <span className="hidden sm:inline">{t("pause")}</span>
           </>
         )}
       </Button>
@@ -73,7 +75,7 @@ export function NavigationButtonsM3({
         onClick={onSkip}
         disabled={isLoading}
         className="m3-skip-btn h-12 text-base font-semibold px-2 sm:h-16 sm:px-4"
-        aria-label="Skip exercise"
+        aria-label={t("skipAria")}
         data-test-id="workout-assistant-skip-button"
       >
         <RedoDot className="size-5 shrink-0" />
@@ -85,10 +87,10 @@ export function NavigationButtonsM3({
         onClick={onNext}
         disabled={!canGoNext || isLoading}
         className="m3-cta h-12 text-base font-semibold px-2 sm:h-16 sm:px-4"
-        aria-label="Next exercise"
+        aria-label={t("nextAria")}
         data-test-id="workout-assistant-next-button"
       >
-        <span className="hidden sm:inline">Next</span>
+        <span className="hidden sm:inline">{t("next")}</span>
         <ChevronRight className="size-5 shrink-0 sm:ml-2" />
       </Button>
     </div>

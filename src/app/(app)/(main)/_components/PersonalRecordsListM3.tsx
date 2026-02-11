@@ -9,6 +9,7 @@ import { EmptyState } from "./EmptyState";
 import { Trophy } from "lucide-react";
 import { M3PersonalRecordCard } from "../_ui/M3PersonalRecordCard";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type PersonalRecordsListM3Props = {
   initialData: PersonalRecordsPageResponse;
@@ -19,6 +20,7 @@ export function PersonalRecordsListM3({
   initialData,
   errorMessage,
 }: Readonly<PersonalRecordsListM3Props>) {
+  const t = useTranslations("personalRecordsList");
   const searchParams = useSearchParams();
   const [records, setRecords] = useState(initialData.items);
   const [nextCursor, setNextCursor] = useState(initialData.nextCursor);
@@ -43,7 +45,7 @@ export function PersonalRecordsListM3({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to load more records");
+        throw new Error(t("loadMoreError"));
       }
 
       const data = await response.json();
@@ -59,7 +61,7 @@ export function PersonalRecordsListM3({
       });
     } catch (error) {
       console.error("Error loading more:", error);
-      toast.error("Nie udało się załadować więcej rekordów. Spróbuj ponownie.");
+      toast.error(t("loadMoreToast"));
       throw error;
     } finally {
       setIsLoadingMore(false);
@@ -84,10 +86,10 @@ export function PersonalRecordsListM3({
     return (
       <EmptyState
         icon={<Trophy className="size-12 text-muted-foreground" />}
-        title="Brak rekordów osobistych"
-        description="Śledź swoje postępy i osiągnięcia. Rozpocznij trening, aby ustanowić pierwszy rekord!"
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
         actionHref="/workout-plans"
-        actionLabel="Rozpocznij trening"
+        actionLabel={t("emptyAction")}
       />
     );
   }
@@ -109,9 +111,9 @@ export function PersonalRecordsListM3({
             variant="outline"
             onClick={() => handleLoadMore(nextCursor)}
             disabled={isLoadingMore}
-            aria-label="Załaduj więcej rekordów"
+            aria-label={t("loadMoreAria")}
           >
-            {isLoadingMore ? "Ładowanie..." : "Załaduj więcej"}
+            {isLoadingMore ? t("loading") : t("loadMore")}
           </Button>
         </div>
       )}

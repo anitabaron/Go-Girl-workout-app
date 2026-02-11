@@ -8,6 +8,7 @@ import { EmptyState } from "./EmptyState";
 import { M3WorkoutPlanCard } from "../_ui/M3WorkoutPlanCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutPlansListM3Props = {
   initialPlans: (Omit<WorkoutPlanDTO, "exercises"> & {
@@ -23,6 +24,7 @@ export function WorkoutPlansListM3({
   initialNextCursor,
   initialHasMore,
 }: Readonly<WorkoutPlansListM3Props>) {
+  const t = useTranslations("workoutPlansList");
   const searchParams = useSearchParams();
   const [plans, setPlans] = useState(initialPlans);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
@@ -44,7 +46,7 @@ export function WorkoutPlansListM3({
       const params = new URLSearchParams(searchParams.toString());
       params.set("cursor", cursor);
       const response = await fetch(`/api/workout-plans?${params.toString()}`);
-      if (!response.ok) throw new Error("Failed to load more plans");
+      if (!response.ok) throw new Error(t("loadMoreError"));
       const data = await response.json();
       startTransition(() => {
         setPlans((prev) => [...prev, ...data.items]);
@@ -53,7 +55,7 @@ export function WorkoutPlansListM3({
       });
     } catch (error) {
       console.error("Error loading more:", error);
-      toast.error("Failed to load more plans. Try again.");
+      toast.error(t("loadMoreToast"));
     } finally {
       setIsLoadingMore(false);
     }
@@ -74,8 +76,8 @@ export function WorkoutPlansListM3({
       <div data-test-id="workout-plans-empty-state">
         <EmptyState
           icon={<Calendar className="size-12 text-muted-foreground" />}
-          title="No workout plans yet"
-          description="Create your first plan to get started."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       </div>
     );
@@ -99,9 +101,9 @@ export function WorkoutPlansListM3({
             variant="outline"
             onClick={() => handleLoadMore(nextCursor)}
             disabled={isLoadingMore}
-            aria-label="Load more workout plans"
+            aria-label={t("loadMoreAria")}
           >
-            {isLoadingMore ? "Loading..." : "Load more"}
+            {isLoadingMore ? t("loading") : t("loadMore")}
           </Button>
         </div>
       )}
