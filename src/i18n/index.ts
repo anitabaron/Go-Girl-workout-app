@@ -4,3 +4,5 @@ export { getRequestLocale, resolveLocale } from "./get-locale";
 export { getTranslator } from "./get-translator";
 export { I18nProvider, useI18n, useLocale, useT } from "./i18n-provider";
 export type { MessageKey } from "./messages";
+export { getLocale, getTranslations } from "./server";
+export { useTranslations } from "./client";

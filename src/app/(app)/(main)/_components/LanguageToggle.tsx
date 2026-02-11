@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useLocale, useT } from "@/i18n";
+import { useLocale, useTranslations } from "@/i18n/client";
 import type { Locale } from "@/i18n";
 
 type LanguageToggleProps = {
@@ -15,7 +15,7 @@ const LOCALE_OPTIONS: ReadonlyArray<{ locale: Locale; label: string }> = [
 
 export function LanguageToggle({ className }: Readonly<LanguageToggleProps>) {
   const { locale, setLocale } = useLocale();
-  const t = useT();
+  const t = useTranslations("lang");
 
   return (
     <div
@@ -24,7 +24,7 @@ export function LanguageToggle({ className }: Readonly<LanguageToggleProps>) {
         className,
       )}
       role="group"
-      aria-label={t("lang.switchAria")}
+      aria-label={t("switchAria")}
     >
       {LOCALE_OPTIONS.map((option) => {
         const isActive = option.locale === locale;
@@ -42,7 +42,7 @@ export function LanguageToggle({ className }: Readonly<LanguageToggleProps>) {
             )}
             aria-pressed={isActive}
             aria-label={
-              option.locale === "pl" ? t("lang.polish") : t("lang.english")
+              option.locale === "pl" ? t("polish") : t("english")
             }
           >
             {option.label}

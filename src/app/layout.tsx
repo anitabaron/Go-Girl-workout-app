@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { I18nProvider, getRequestLocale } from "@/i18n";
+import { I18nProvider } from "@/i18n";
+import { getLocale } from "@/i18n/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,7 +25,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getRequestLocale();
+  const locale = await getLocale();
 
   return (
     <html lang={locale}>

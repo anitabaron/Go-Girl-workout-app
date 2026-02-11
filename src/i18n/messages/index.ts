@@ -10,6 +10,12 @@ export const MESSAGES = {
 
 export type MessageKey = keyof typeof plMessages;
 
-export function getMessage(locale: Locale, key: MessageKey): string {
-  return MESSAGES[locale][key] ?? MESSAGES[DEFAULT_LOCALE][key] ?? key;
+export function getMessage(locale: Locale, key: string): string {
+  const localeValue = MESSAGES[locale][key as MessageKey];
+  if (localeValue) return localeValue;
+
+  const fallbackValue = MESSAGES[DEFAULT_LOCALE][key as MessageKey];
+  if (fallbackValue) return fallbackValue;
+
+  return key;
 }
