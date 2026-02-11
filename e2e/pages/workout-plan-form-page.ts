@@ -1,4 +1,5 @@
 import { Page, Locator } from "@playwright/test";
+import { getExercisePartLabelMatcher } from "./i18n-labels";
 
 /**
  * Page Object Model for Workout Plan Form Page (Create/Edit)
@@ -95,16 +96,18 @@ export class WorkoutPlanFormPage {
     // Wait for dropdown to open and use getByRole for better reliability
     if (part === "none" || part === "") {
       await this.page
-        .getByRole("option", { name: "Brak", exact: true })
+        .getByRole("option", { name: getExercisePartLabelMatcher(part) })
         .waitFor({ state: "visible", timeout: 5000 });
       await this.page
-        .getByRole("option", { name: "Brak", exact: true })
+        .getByRole("option", { name: getExercisePartLabelMatcher(part) })
         .click();
     } else {
       await this.page
-        .getByRole("option", { name: part, exact: true })
+        .getByRole("option", { name: getExercisePartLabelMatcher(part) })
         .waitFor({ state: "visible", timeout: 5000 });
-      await this.page.getByRole("option", { name: part, exact: true }).click();
+      await this.page
+        .getByRole("option", { name: getExercisePartLabelMatcher(part) })
+        .click();
     }
   }
 

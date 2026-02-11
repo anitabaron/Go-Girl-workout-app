@@ -34,6 +34,7 @@ export function WorkoutSessionExerciseItemEditableM3({
   sessionId,
   onSaved,
 }: WorkoutSessionExerciseItemEditableM3Props) {
+  const t = useTranslations("workoutSessionExerciseItemEditable");
   const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -53,7 +54,8 @@ export function WorkoutSessionExerciseItemEditableM3({
   const showReps = exercise.planned_reps !== null && exercise.planned_reps > 0;
 
   const title =
-    exercise.exercise_title_at_time ?? `Exercise ${exerciseIndex + 1}`;
+    exercise.exercise_title_at_time ??
+    `${t("exerciseLabel")} ${exerciseIndex + 1}`;
   const order = exercise.exercise_order;
 
   const handleSave = async () => {
@@ -65,11 +67,11 @@ export function WorkoutSessionExerciseItemEditableM3({
         order,
         command,
       );
-      toast.success("Exercise saved");
+      toast.success(t("savedSuccess"));
       onSaved?.(response.data);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to save exercise";
+        error instanceof Error ? error.message : t("saveFailed");
       toast.error(message);
     } finally {
       setIsSaving(false);
@@ -82,7 +84,7 @@ export function WorkoutSessionExerciseItemEditableM3({
         <div className="mb-3 flex items-start justify-between">
           <h3 className="m3-title">{title}</h3>
           <span className="text-sm text-muted-foreground">
-            {exerciseIndex + 1} of {totalExercises}
+            {exerciseIndex + 1} {t("of")} {totalExercises}
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -95,13 +97,13 @@ export function WorkoutSessionExerciseItemEditableM3({
             </Badge>
           )}
           {exercise.exercise_is_unilateral_at_time && (
-            <Badge variant="secondary">Unilateral</Badge>
+            <Badge variant="secondary">{t("unilateral")}</Badge>
           )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-4 shadow-sm">
-          <h4 className="mb-3 m3-label">Edit execution</h4>
+          <h4 className="mb-3 m3-label">{t("editExecution")}</h4>
 
           <SetLogsListM3
             sets={formData.sets}
@@ -118,13 +120,13 @@ export function WorkoutSessionExerciseItemEditableM3({
               id={`is_skipped_${exercise.id}`}
               checked={formData.is_skipped}
               onCheckedChange={(checked) => handleSkipToggle(checked === true)}
-              aria-label="Skip exercise"
+              aria-label={t("skipExercise")}
             />
             <Label
               htmlFor={`is_skipped_${exercise.id}`}
               className="cursor-pointer text-sm font-medium text-foreground"
             >
-              Skip exercise
+              {t("skipExercise")}
             </Label>
           </div>
         </div>
@@ -135,7 +137,7 @@ export function WorkoutSessionExerciseItemEditableM3({
           className="m3-cta"
           aria-busy={isSaving}
         >
-          {isSaving ? "Saving..." : "Save exercise"}
+          {isSaving ? t("saving") : t("saveExercise")}
         </Button>
       </CardContent>
     </Card>

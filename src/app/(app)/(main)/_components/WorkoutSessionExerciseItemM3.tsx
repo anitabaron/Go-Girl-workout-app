@@ -50,9 +50,11 @@ export function WorkoutSessionExerciseItemM3({
   exerciseIndex,
   totalExercises,
 }: WorkoutSessionExerciseItemM3Props) {
+  const t = useTranslations("workoutSessionExerciseItem");
   const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const title =
-    exercise.exercise_title_at_time ?? `Exercise ${exerciseIndex + 1}`;
+    exercise.exercise_title_at_time ??
+    `${t("exerciseLabel")} ${exerciseIndex + 1}`;
 
   const plannedRepsTotal =
     exercise.planned_reps != null && exercise.planned_sets != null
@@ -84,7 +86,7 @@ export function WorkoutSessionExerciseItemM3({
         <div className="mb-3 flex items-start justify-between">
           <h3 className="m3-title">{title}</h3>
           <span className="text-sm text-muted-foreground">
-            {exerciseIndex + 1} of {totalExercises}
+            {exerciseIndex + 1} {t("of")} {totalExercises}
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -97,7 +99,7 @@ export function WorkoutSessionExerciseItemM3({
             </Badge>
           )}
           {exercise.exercise_is_unilateral_at_time && (
-            <Badge variant="secondary">Unilateral</Badge>
+            <Badge variant="secondary">{t("unilateral")}</Badge>
           )}
         </div>
       </CardHeader>
@@ -105,11 +107,11 @@ export function WorkoutSessionExerciseItemM3({
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-lg border border-[var(--m3-outline-variant)] p-4">
             <h4 className="mb-3 text-sm font-medium text-muted-foreground">
-              Planned
+              {t("planned")}
             </h4>
             <dl className="space-y-2">
               <div>
-                <dt className="text-xs text-muted-foreground">Sets</dt>
+                <dt className="text-xs text-muted-foreground">{t("sets")}</dt>
                 <dd className="font-semibold">
                   {exercise.planned_sets ?? "-"}
                 </dd>
@@ -118,12 +120,14 @@ export function WorkoutSessionExerciseItemM3({
                 exercise.planned_sets != null && (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <dt className="text-xs text-muted-foreground">Reps</dt>
+                      <dt className="text-xs text-muted-foreground">
+                        {t("reps")}
+                      </dt>
                       <dd className="font-semibold">{exercise.planned_reps}</dd>
                     </div>
                     <div>
                       <dt className="text-xs text-muted-foreground">
-                        Total reps
+                        {t("totalReps")}
                       </dt>
                       <dd className="font-semibold">
                         {exercise.planned_reps * exercise.planned_sets}
@@ -134,14 +138,16 @@ export function WorkoutSessionExerciseItemM3({
               {exercise.planned_duration_seconds != null &&
                 exercise.planned_reps == null && (
                   <div>
-                    <dt className="text-xs text-muted-foreground">Duration</dt>
+                    <dt className="text-xs text-muted-foreground">
+                      {t("duration")}
+                    </dt>
                     <dd className="font-semibold">
                       {formatDuration(exercise.planned_duration_seconds)}
                     </dd>
                   </div>
                 )}
               <div>
-                <dt className="text-xs text-muted-foreground">Rest</dt>
+                <dt className="text-xs text-muted-foreground">{t("rest")}</dt>
                 <dd className="font-semibold">
                   {formatDuration(exercise.planned_rest_seconds)}
                 </dd>
@@ -154,14 +160,14 @@ export function WorkoutSessionExerciseItemM3({
             }`}
           >
             <h4 className="mb-3 text-sm font-medium text-muted-foreground">
-              Actual
+              {t("actual")}
             </h4>
             {exercise.is_skipped ? (
-              <p className="text-sm text-muted-foreground">Skipped</p>
+              <p className="text-sm text-muted-foreground">{t("skipped")}</p>
             ) : (
               <dl className="space-y-2">
                 <div>
-                  <dt className="text-xs text-muted-foreground">Sets</dt>
+                  <dt className="text-xs text-muted-foreground">{t("sets")}</dt>
                   <dd
                     className={`flex items-center font-semibold ${getComparisonClass(
                       setsComparison,
@@ -174,7 +180,7 @@ export function WorkoutSessionExerciseItemM3({
                 {exercise.planned_reps != null && (
                   <div>
                     <dt className="text-xs text-muted-foreground">
-                      Total reps
+                      {t("totalReps")}
                     </dt>
                     <dd
                       className={`flex items-center font-semibold ${getComparisonClass(
@@ -190,7 +196,7 @@ export function WorkoutSessionExerciseItemM3({
                   exercise.planned_reps == null && (
                     <div>
                       <dt className="text-xs text-muted-foreground">
-                        Duration
+                        {t("duration")}
                       </dt>
                       <dd
                         className={`flex items-center font-semibold ${getComparisonClass(
@@ -212,14 +218,22 @@ export function WorkoutSessionExerciseItemM3({
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-[var(--m3-outline-variant)]">
-                  <th className="px-3 py-2 text-left font-medium">Set</th>
+                  <th className="px-3 py-2 text-left font-medium">
+                    {t("set")}
+                  </th>
                   {showReps && (
-                    <th className="px-3 py-2 text-center font-medium">Reps</th>
+                    <th className="px-3 py-2 text-center font-medium">
+                      {t("reps")}
+                    </th>
                   )}
                   {showDuration && (
-                    <th className="px-3 py-2 text-center font-medium">Time</th>
+                    <th className="px-3 py-2 text-center font-medium">
+                      {t("time")}
+                    </th>
                   )}
-                  <th className="px-3 py-2 text-center font-medium">Weight</th>
+                  <th className="px-3 py-2 text-center font-medium">
+                    {t("weight")}
+                  </th>
                 </tr>
               </thead>
               <tbody>

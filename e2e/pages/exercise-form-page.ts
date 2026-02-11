@@ -1,4 +1,8 @@
 import { Page, Locator } from '@playwright/test';
+import {
+  getExercisePartLabelMatcher,
+  getExerciseTypeLabelMatcher,
+} from "./i18n-labels";
 
 /**
  * Page Object Model for Exercise Form Page (Create/Edit)
@@ -74,7 +78,9 @@ export class ExerciseFormPage {
   async selectType(type: string | string[]) {
     const types = Array.isArray(type) ? type : [type];
     for (const t of types) {
-      const checkbox = this.page.getByRole('checkbox', { name: t, exact: true });
+      const checkbox = this.page.getByRole("checkbox", {
+        name: getExerciseTypeLabelMatcher(t),
+      });
       await checkbox.waitFor({ state: 'visible', timeout: 5000 });
       if (!(await checkbox.isChecked())) {
         await checkbox.click();
@@ -88,7 +94,9 @@ export class ExerciseFormPage {
   async selectPart(part: string | string[]) {
     const parts = Array.isArray(part) ? part : [part];
     for (const p of parts) {
-      const checkbox = this.page.getByRole('checkbox', { name: p, exact: true });
+      const checkbox = this.page.getByRole("checkbox", {
+        name: getExercisePartLabelMatcher(p),
+      });
       await checkbox.waitFor({ state: 'visible', timeout: 5000 });
       if (!(await checkbox.isChecked())) {
         await checkbox.click();

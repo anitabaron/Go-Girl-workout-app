@@ -26,38 +26,32 @@ type PlannedParamsEditorM3Props = {
 
 const PLANNED_PARAMS_CONFIG: Array<{
   key: keyof PlannedParamsState;
-  label: string;
   labelFn?: (params: PlannedParamsState, isUnilateral?: boolean) => string;
   min: number;
   /** Klucz do sprawdzenia widoczności przez props (showRepsField / showDurationField). */
   visibilityKey?: "reps" | "duration";
 }> = [
-  { key: "planned_sets", label: "Sets", min: 1 },
+  { key: "planned_sets", min: 1 },
   {
     key: "planned_reps",
-    label: "Reps",
     min: 1,
     visibilityKey: "reps",
   },
   {
     key: "planned_duration_seconds",
-    label: "Duration (s)",
     min: 1,
     visibilityKey: "duration",
   },
   {
     key: "planned_rest_seconds",
-    label: "Rest between sets (s)",
     min: 0,
   },
   {
     key: "planned_rest_after_series_seconds",
-    label: "Rest after sets (s)",
     min: 0,
   },
   {
     key: "estimated_set_time_seconds",
-    label: "Estimated set time (s)",
     labelFn: (p, isUnilateral) =>
       getEstimatedSetTimeLabel(
         calculateEstimatedSetTimeSeconds({
@@ -199,16 +193,16 @@ export function PlannedParamsEditorM3({
     const dataTestId = testIdPrefix ? `${testIdPrefix}-${keyKebab}` : undefined;
     const rawLabel = config.labelFn
       ? config.labelFn(params, isUnilateral)
-      : config.label;
-    const labelMap: Record<string, string> = {
-      Sets: t("sets"),
-      Reps: t("reps"),
-      "Duration (s)": t("duration"),
-      "Rest between sets (s)": t("restBetween"),
-      "Rest after sets (s)": t("restAfter"),
-      "Estimated set time (s)": t("estimatedSetTime"),
+      : null;
+    const labelKeyMap: Record<keyof PlannedParamsState, string> = {
+      planned_sets: t("sets"),
+      planned_reps: t("reps"),
+      planned_duration_seconds: t("duration"),
+      planned_rest_seconds: t("restBetween"),
+      planned_rest_after_series_seconds: t("restAfter"),
+      estimated_set_time_seconds: t("estimatedSetTime"),
     };
-    const label = labelMap[rawLabel] ?? rawLabel;
+    const label = rawLabel ?? labelKeyMap[config.key];
 
     const suggestedValue =
       config.key === "estimated_set_time_seconds"
