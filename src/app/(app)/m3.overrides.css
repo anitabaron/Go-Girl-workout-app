@@ -1,0 +1,211 @@
+/* ============================================
+     BUTTONS - full M3 override (no legacy styles)
+     ============================================ */
+
+/* Base: reset legacy scale/shadow/ring, M3 radius, cross-browser reset */
+.ui-m3 [data-slot="button"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border-radius: var(--m3-radius-lg) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s,
+    transform 0.15s;
+}
+
+/* Firefox: remove default focus-inner padding that affects button shape */
+.ui-m3 [data-slot="button"]::-moz-focus-inner {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.ui-m3 [data-slot="button"]:hover {
+  transform: none !important;
+}
+
+.ui-m3 [data-slot="button"]:active {
+  transform: none !important;
+}
+
+.ui-m3 [data-slot="button"][data-size="sm"] {
+  border-radius: var(--m3-radius-md) !important;
+}
+
+/* Default (filled primary) – hover/active use --m3-button-* (overridden in dark) */
+.ui-m3 [data-slot="button"][data-variant="default"] {
+  background: var(--m3-primary) !important;
+  color: var(--m3-on-primary) !important;
+  border: none !important;
+}
+
+.ui-m3 [data-slot="button"][data-variant="default"]:hover {
+  background: var(--m3-button-default-hover) !important;
+  box-shadow: var(--m3-shadow-1);
+}
+
+.ui-m3 [data-slot="button"][data-variant="default"]:active {
+  background: var(--m3-button-default-active) !important;
+}
+
+/* Secondary (tonal) */
+.ui-m3 [data-slot="button"][data-variant="secondary"] {
+  background: var(--m3-primary-container) !important;
+  color: var(--m3-on-primary-container) !important;
+  border: none !important;
+}
+
+.ui-m3 [data-slot="button"][data-variant="secondary"]:hover {
+  background: var(--m3-button-secondary-hover) !important;
+}
+
+.ui-m3 [data-slot="button"][data-variant="secondary"]:active {
+  background: var(--m3-button-secondary-active) !important;
+}
+
+.ui-m3 [data-slot="button"].m3-skip-btn {
+  background: var(--m3-raw-primary-container) !important;
+  color: var(--destructive) !important;
+  border: none !important;
+}
+
+.ui-m3 [data-slot="button"].m3-skip-btn:hover {
+  background: var(--m3-button-secondary-hover) !important;
+}
+
+.ui-m3 [data-slot="button"].m3-skip-btn:active {
+  background: var(--m3-button-secondary-active) !important;
+}
+
+/* Outline - M3 surface, no legacy dark: classes */
+.ui-m3 [data-slot="button"][data-variant="outline"] {
+  background: transparent !important;
+  color: var(--m3-on-surface) !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+  box-shadow: none !important;
+}
+
+.ui-m3 [data-slot="button"][data-variant="outline"]:hover {
+  background: var(--m3-surface-container-high) !important;
+  border-color: var(--m3-outline) !important;
+}
+
+.ui-m3 [data-slot="button"][data-variant="outline"]:active {
+  background: var(--m3-surface-container) !important;
+}
+
+/* Ghost - M3 tonal hover */
+.ui-m3 [data-slot="button"][data-variant="ghost"] {
+  background: transparent !important;
+  color: var(--m3-on-surface) !important;
+  border: none !important;
+}
+
+.ui-m3 [data-slot="button"][data-variant="ghost"]:hover {
+  background: var(--m3-surface-container-high) !important;
+}
+
+/* Destructive - M3 error/delete styling */
+.ui-m3 [data-slot="button"][data-variant="destructive"] {
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
+  border: none !important;
+}
+
+.ui-m3 [data-slot="button"][data-variant="destructive"]:hover {
+  background: color-mix(in srgb, var(--destructive) 85%, black) !important;
+  box-shadow: var(--m3-shadow-1);
+}
+
+.ui-m3 [data-slot="button"][data-variant="destructive"]:active {
+  background: color-mix(in srgb, var(--destructive) 75%, black) !important;
+}
+
+/* Focus – single token --m3-focus-ring */
+.ui-m3 [data-slot="button"]:focus-visible {
+  outline: none !important;
+  box-shadow: var(--m3-focus-ring) !important;
+}
+
+/* ============================================
+     CARD - full M3 override (no legacy rounded-xl, shadow-sm)
+     ============================================ */
+.ui-m3 [data-slot="card"] {
+  background: var(--m3-surface-container) !important;
+  color: var(--m3-on-surface) !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+  border-radius: var(--m3-radius-large) !important;
+  box-shadow: var(--m3-shadow-1) !important;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    border-color 0.2s;
+}
+
+.ui-m3 [data-slot="card"]:hover {
+  box-shadow: var(--m3-shadow-2) !important;
+  transform: translateY(-2px);
+  border-color: var(--m3-outline) !important;
+}
+
+.ui-m3 [data-slot="card"]:focus-within {
+  box-shadow: var(--m3-focus-ring) !important;
+}
+
+.ui-m3 [data-slot="card-header"],
+.ui-m3 [data-slot="card-content"],
+.ui-m3 [data-slot="card-footer"] {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+/* ============================================
+     INPUT - full M3 override (no legacy rounded-md, dark:bg-input)
+     ============================================ */
+.ui-m3 [data-slot="input"] {
+  background: transparent !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+  border-radius: var(--m3-radius-md) !important;
+  color: var(--m3-on-surface) !important;
+  box-shadow: none !important;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.ui-m3 [data-slot="input"]::placeholder {
+  color: var(--m3-on-surface-variant);
+}
+
+.ui-m3 [data-slot="input"]:focus-visible {
+  outline: none !important;
+  border-color: var(--m3-primary) !important;
+  box-shadow: var(--m3-focus-ring) !important;
+}
+
+/* ============================================
+     SELECT - full M3 override (trigger + content via portal)
+     ============================================ */
+.ui-m3 [data-slot="select-trigger"] {
+  background: transparent !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+  border-radius: var(--m3-radius-md) !important;
+  color: var(--m3-on-surface) !important;
+  box-shadow: none !important;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+}
+
+.ui-m3 [data-slot="select-trigger"]:hover {
+  background: var(--m3-surface-container-high) !important;
+}
+
+.ui-m3 [data-slot="select-trigger"]:focus {
+  outline: none !important;
+  box-shadow: var(--m3-focus-ring) !important;
+}
