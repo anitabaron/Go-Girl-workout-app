@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { WorkoutPlanDTO } from "@/types";
 import { WorkoutPlanStartCardM3 } from "./WorkoutPlanStartCardM3";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutPlansStartListM3Props = {
   plans: Array<
@@ -21,6 +22,7 @@ export function WorkoutPlansStartListM3({
   plans: initialPlans,
   nextCursor: initialNextCursor,
 }: Readonly<WorkoutPlansStartListM3Props>) {
+  const t = useTranslations("workoutPlansStartList");
   const searchParams = useSearchParams();
   const [plans, setPlans] = useState(initialPlans);
   const [nextCursor, setNextCursor] = useState(initialNextCursor ?? null);
@@ -35,7 +37,7 @@ export function WorkoutPlansStartListM3({
       const params = new URLSearchParams(searchParams.toString());
       params.set("cursor", nextCursor);
       const response = await fetch(`/api/workout-plans?${params.toString()}`);
-      if (!response.ok) throw new Error("Failed to load more plans");
+      if (!response.ok) throw new Error(t("loadMoreError"));
       const data = await response.json();
       startTransition(() => {
         setPlans((prev) => [...prev, ...data.items]);
@@ -43,7 +45,7 @@ export function WorkoutPlansStartListM3({
       });
     } catch (error) {
       console.error("Error loading more:", error);
-      toast.error("Failed to load more plans. Try again.");
+      toast.error(t("loadMoreToast"));
     } finally {
       setIsLoadingMore(false);
     }
@@ -67,7 +69,7 @@ export function WorkoutPlansStartListM3({
             onClick={handleLoadMore}
             disabled={isLoadingMore}
           >
-            {isLoadingMore ? "Loading..." : "Load more"}
+            {isLoadingMore ? t("loading") : t("loadMore")}
           </Button>
         </div>
       )}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "../_components";
+import { getTranslations } from "@/i18n/server";
 
 export const metadata = {
   title: "Privacy Policy | Go Girl Workout App",
@@ -7,12 +8,13 @@ export const metadata = {
     "Privacy policy for Go Girl Workout App. Learn how we collect, use, and protect your data.",
 };
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const t = await getTranslations("privacyPolicyPage");
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Privacy Policy"
-        description="Last updated: February 2026"
+        title={t("title")}
+        description={t("lastUpdated")}
       />
 
       <article className="prose prose-neutral dark:prose-invert max-w-none space-y-6 text-sm">
@@ -201,7 +203,7 @@ export default function PrivacyPolicyPage() {
           href="/"
           className="text-primary hover:underline underline-offset-4"
         >
-          ← Back to home
+          ← {t("backToHome")}
         </Link>
       </p>
     </div>

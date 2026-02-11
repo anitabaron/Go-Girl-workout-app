@@ -340,4 +340,48 @@ export const plMessages = {
   "workoutSessionDetailContent.durationLabel": "Czas trwania",
   "workoutSessionDetailContent.resumeWorkout": "Wznów trening",
   "workoutSessionDetailContent.exercisesInSession": "Ćwiczenia w sesji",
+  "workoutPlanStartCard.exerciseSingular": "ćwiczenie",
+  "workoutPlanStartCard.exercisePlural": "ćwiczeń",
+  "workoutPlanStartCard.invalidInput":
+    "Nieprawidłowe dane wejściowe. Sprawdź wybrany plan.",
+  "workoutPlanStartCard.planNotFound":
+    "Nie znaleziono planu treningowego lub nie należy do Ciebie.",
+  "workoutPlanStartCard.activeSessionExists":
+    "Masz już aktywną sesję. Wznów ją.",
+  "workoutPlanStartCard.unauthorized":
+    "Brak autoryzacji. Zaloguj się ponownie.",
+  "workoutPlanStartCard.startFailed":
+    "Nie udało się rozpocząć sesji treningowej",
+  "workoutPlanStartCard.startSuccess": "Sesja treningowa rozpoczęta",
+  "workoutPlanStartCard.sessionIdMissing":
+    "Nie udało się pobrać ID sesji treningowej",
+  "workoutPlanStartCard.startGenericError":
+    "Wystąpił błąd podczas rozpoczynania treningu",
+  "workoutPlanStartCard.durationLabel": "Czas trwania:",
+  "workoutPlanStartCard.startAria": "Rozpocznij trening z planem",
+  "workoutPlanStartCard.starting": "Uruchamianie...",
+  "workoutPlanStartCard.start": "Start",
+  "workoutPlansStartList.loadMoreError":
+    "Nie udało się pobrać kolejnych planów",
+  "workoutPlansStartList.loadMoreToast":
+    "Nie udało się załadować więcej planów. Spróbuj ponownie.",
+  "workoutPlansStartList.loading": "Ładowanie...",
+  "workoutPlansStartList.loadMore": "Załaduj więcej",
+  "workoutSessionExercisesList.empty": "Brak ćwiczeń w sesji.",
+  "statisticsPage.comingSoon": "Wkrótce...",
+  "importInstructionPage.backToPlans": "Powrót do planów",
+  "importInstructionPage.title": "Instrukcja importu planów treningowych",
+  "importInstructionPage.description":
+    "Utwórz plik JSON zgodny z poniższym schematem, aby zaimportować plan treningowy do aplikacji.",
+  "importInstructionPage.requiredLabel": "Wymagane:",
+  "importInstructionPage.optionalLabel": "Opcjonalne:",
+  "importInstructionPage.step1Title": "Informacje ogólne o planie treningowym",
+  "importInstructionPage.step2Title": "Struktura ćwiczeń",
+  "importInstructionPage.step3Title": "Opcje dodawania ćwiczeń",
+  "importInstructionPage.step3OptionA": "Opcja A: Istniejące ćwiczenie",
+  "importInstructionPage.step3OptionB": "Opcja B: Nowe ćwiczenie (snapshot)",
+  "importInstructionPage.step4Title": "Przykładowy plik JSON",
+  "privacyPolicyPage.title": "Polityka prywatności",
+  "privacyPolicyPage.lastUpdated": "Ostatnia aktualizacja: luty 2026",
+  "privacyPolicyPage.backToHome": "Powrót do strony głównej",
 } as const;

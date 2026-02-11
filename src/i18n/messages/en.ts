@@ -340,4 +340,48 @@ export const enMessages = {
   "workoutSessionDetailContent.durationLabel": "Duration",
   "workoutSessionDetailContent.resumeWorkout": "Resume workout",
   "workoutSessionDetailContent.exercisesInSession": "Exercises in session",
+  "workoutPlanStartCard.exerciseSingular": "exercise",
+  "workoutPlanStartCard.exercisePlural": "exercises",
+  "workoutPlanStartCard.invalidInput":
+    "Invalid input. Check plan selection.",
+  "workoutPlanStartCard.planNotFound":
+    "Workout plan not found or does not belong to you.",
+  "workoutPlanStartCard.activeSessionExists":
+    "You already have an active session. Resume it.",
+  "workoutPlanStartCard.unauthorized":
+    "Unauthorized. Please log in again.",
+  "workoutPlanStartCard.startFailed":
+    "Failed to start workout session",
+  "workoutPlanStartCard.startSuccess": "Workout session started",
+  "workoutPlanStartCard.sessionIdMissing":
+    "Failed to get session ID",
+  "workoutPlanStartCard.startGenericError":
+    "An error occurred while starting the workout",
+  "workoutPlanStartCard.durationLabel": "Duration:",
+  "workoutPlanStartCard.startAria": "Start workout with plan",
+  "workoutPlanStartCard.starting": "Starting...",
+  "workoutPlanStartCard.start": "Start",
+  "workoutPlansStartList.loadMoreError": "Failed to fetch more plans",
+  "workoutPlansStartList.loadMoreToast":
+    "Failed to load more plans. Try again.",
+  "workoutPlansStartList.loading": "Loading...",
+  "workoutPlansStartList.loadMore": "Load more",
+  "workoutSessionExercisesList.empty": "No exercises in session.",
+  "statisticsPage.comingSoon": "Coming soon...",
+  "importInstructionPage.backToPlans": "Back to plans",
+  "importInstructionPage.title": "Workout plan import guide",
+  "importInstructionPage.description":
+    "Create a JSON file matching the schema below to import a workout plan into the app.",
+  "importInstructionPage.requiredLabel": "Required:",
+  "importInstructionPage.optionalLabel": "Optional:",
+  "importInstructionPage.step1Title": "General workout plan information",
+  "importInstructionPage.step2Title": "Exercise structure",
+  "importInstructionPage.step3Title": "Exercise adding options",
+  "importInstructionPage.step3OptionA": "Option A: Existing exercise",
+  "importInstructionPage.step3OptionB":
+    "Option B: New exercise (snapshot)",
+  "importInstructionPage.step4Title": "Example JSON file",
+  "privacyPolicyPage.title": "Privacy Policy",
+  "privacyPolicyPage.lastUpdated": "Last updated: February 2026",
+  "privacyPolicyPage.backToHome": "Back to home",
 } as const satisfies MessageSchema;
