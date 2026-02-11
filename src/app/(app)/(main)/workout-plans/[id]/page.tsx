@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
+import { getTranslations } from "@/i18n/server";
 import { Surface } from "../../_components";
 import { WorkoutPlanDetailContent } from "../../_components/WorkoutPlanDetailContent";
 
@@ -17,6 +18,7 @@ const UUID_REGEX =
 export default async function WorkoutPlanDetailPage({
   params,
 }: WorkoutPlanDetailPageProps) {
+  const t = await getTranslations("workoutPlanDetailPage");
   const { id } = await params;
 
   if (!UUID_REGEX.test(id)) {
@@ -44,10 +46,10 @@ export default async function WorkoutPlanDetailPage({
           <Button variant="ghost" size="sm" asChild className="-ml-2">
             <Link href="/workout-plans" className="flex items-center gap-2">
               <ArrowLeft className="size-4" />
-              Back to plans
+              {t("backToPlans")}
             </Link>
           </Button>
-          <h1 className="m3-hero-sm">Workout plan details</h1>
+          <h1 className="m3-hero-sm">{t("title")}</h1>
           <p className="m3-body m3-prose text-muted-foreground">
             {workoutPlan.name}
           </p>

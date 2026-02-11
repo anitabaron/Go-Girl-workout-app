@@ -6,12 +6,14 @@ import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService } from "@/services/workout-plans";
 import { Surface } from "../../_components";
 import { WorkoutPlanFormM3 } from "../../_components/WorkoutPlanFormM3";
+import { getTranslations } from "@/i18n/server";
 
 export default async function NewWorkoutPlanPage({
   searchParams,
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
+  const t = await getTranslations("workoutPlanNewPage");
   const userId = await requireAuth();
   const params = await searchParams;
   const duplicateId =
@@ -23,7 +25,7 @@ export default async function NewWorkoutPlanPage({
       const plan = await getWorkoutPlanService(userId, duplicateId);
       initialData = {
         ...plan,
-        name: `Copy of ${plan.name}`,
+        name: `${t("copyOfPrefix")} ${plan.name}`,
       };
     } catch {
       redirect("/workout-plans");
@@ -37,16 +39,16 @@ export default async function NewWorkoutPlanPage({
           <Button variant="ghost" size="sm" asChild className="-ml-2">
             <Link href="/workout-plans" className="flex items-center gap-2">
               <ArrowLeft className="size-4" />
-              Back to plans
+              {t("backToPlans")}
             </Link>
           </Button>
           <h1 className="m3-hero-sm">
-            {initialData ? "Duplicate workout plan" : "Create workout plan"}
+            {initialData ? t("duplicateTitle") : t("createTitle")}
           </h1>
           <p className="m3-body m3-prose text-muted-foreground">
             {initialData
-              ? "Edit the duplicated plan and save as a new item."
-              : "Create a new workout plan with exercises from your library."}
+              ? t("duplicateDescription")
+              : t("createDescription")}
           </p>
         </div>
       </header>

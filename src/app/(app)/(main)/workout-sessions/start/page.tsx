@@ -14,6 +14,7 @@ import type { SessionDetailDTO } from "@/types";
 import { EmptyState, Surface } from "../../_components";
 import { ResumeSessionCardM3 } from "../../_components/ResumeSessionCardM3";
 import { WorkoutPlansStartListM3 } from "../../_components/WorkoutPlansStartListM3";
+import { getTranslations } from "@/i18n/server";
 
 export const metadata: Metadata = {
   title: "Start workout | Go Girl Workout",
@@ -64,6 +65,7 @@ async function fetchWorkoutPlansForStart(
 }
 
 export default async function StartWorkoutSessionPage() {
+  const t = await getTranslations("startWorkoutPage");
   const userId = await requireAuth();
   const inProgressSession = await fetchInProgressSession(userId);
 
@@ -77,12 +79,12 @@ export default async function StartWorkoutSessionPage() {
               className="flex items-center gap-2"
             >
               <ArrowLeft className="size-4" />
-              Back to sessions
+              {t("backToSessions")}
             </Link>
           </Button>
-          <h1 className="m3-hero-sm mt-4">Start workout</h1>
+          <h1 className="m3-hero-sm mt-4">{t("title")}</h1>
           <p className="m3-body m3-prose mt-2 text-muted-foreground">
-            Resume your active session or start a new one
+            {t("resumeOrStartDescription")}
           </p>
         </header>
 
@@ -105,20 +107,20 @@ export default async function StartWorkoutSessionPage() {
               className="flex items-center gap-2"
             >
               <ArrowLeft className="size-4" />
-              Back to sessions
+              {t("backToSessions")}
             </Link>
           </Button>
-          <h1 className="m3-hero-sm mt-4">Start workout</h1>
+          <h1 className="m3-hero-sm mt-4">{t("title")}</h1>
           <p className="m3-body m3-prose mt-2 text-muted-foreground">
-            Create your first workout plan to get started
+            {t("createFirstPlanDescription")}
           </p>
         </header>
 
         <Surface variant="high">
           <EmptyState
             icon={<Calendar className="size-12 text-muted-foreground" />}
-            title="No workout plans"
-            description="Create your first workout plan to start training"
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
           />
           <div className="mt-6">
             <Button
@@ -128,7 +130,7 @@ export default async function StartWorkoutSessionPage() {
             >
               <Link href="/workout-plans/new">
                 <Plus className="mr-2 size-4" />
-                Create plan
+                {t("createPlanCta")}
               </Link>
             </Button>
           </div>
@@ -143,17 +145,17 @@ export default async function StartWorkoutSessionPage() {
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href="/workout-sessions" className="flex items-center gap-2">
             <ArrowLeft className="size-4" />
-            Back to sessions
+            {t("backToSessions")}
           </Link>
         </Button>
-        <h1 className="m3-hero-sm mt-4">Start workout</h1>
+        <h1 className="m3-hero-sm mt-4">{t("title")}</h1>
         <p className="m3-body m3-prose mt-2 text-muted-foreground">
-          Select a workout plan to begin
+          {t("selectPlanDescription")}
         </p>
       </header>
 
       <Surface variant="high">
-        <h2 className="m3-title mb-6">Select workout plan</h2>
+        <h2 className="m3-title mb-6">{t("selectPlanHeading")}</h2>
         <WorkoutPlansStartListM3
           plans={plansResult.items}
           nextCursor={plansResult.nextCursor}

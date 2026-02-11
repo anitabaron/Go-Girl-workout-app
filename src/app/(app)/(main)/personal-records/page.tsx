@@ -5,6 +5,7 @@ import { listPersonalRecordsService } from "@/services/personal-records";
 import { listExerciseTitlesService } from "@/services/exercises";
 import type { PersonalRecordQueryParams } from "@/types";
 import { mapPersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
+import { getTranslations } from "@/i18n/server";
 import {
   PageHeader,
   Surface,
@@ -17,6 +18,7 @@ export default async function PersonalRecordsPage({
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
+  const t = await getTranslations("personalRecordsPage");
   const params = await searchParams;
 
   const parseResult = personalRecordQuerySchema.safeParse({
@@ -46,7 +48,7 @@ export default async function PersonalRecordsPage({
   } catch (error) {
     console.error("Error loading personal records:", error);
     errorMessage =
-      error instanceof Error ? error.message : "Nie udało się pobrać rekordów.";
+      error instanceof Error ? error.message : t("fetchError");
     personalRecords = { items: [], nextCursor: null };
   }
 
@@ -58,8 +60,8 @@ export default async function PersonalRecordsPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Rekordy osobiste"
-        description="Śledź swoje postępy i osiągnięcia"
+        title={t("title")}
+        description={t("description")}
       />
 
       <Surface variant="high">
