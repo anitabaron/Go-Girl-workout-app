@@ -225,7 +225,7 @@ export function RegisterForm() {
 
       <SubmitButton isLoading={isLoading} disabled={isLoading} />
 
-      <div className="text-center">
+      <div className="pt-2 text-center">
         <LoginLink />
       </div>
     </form>
