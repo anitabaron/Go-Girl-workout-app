@@ -112,7 +112,7 @@ export function RegisterForm() {
     try {
       // Wywołanie Supabase Auth API
       const { data, error } = await supabase.auth.signUp({
-        email: formState.email.trim(),
+        email: formState.email.trim().toLowerCase(),
         password: formState.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
