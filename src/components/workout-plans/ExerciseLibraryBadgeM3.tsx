@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
 import type { WorkoutPlanExerciseDTO } from "@/types";
+import { useTranslations } from "@/i18n/client";
 
 type ExerciseLibraryBadgeM3Props = {
   readonly exercise: WorkoutPlanExerciseDTO;
@@ -12,6 +13,8 @@ type ExerciseLibraryBadgeM3Props = {
 export function ExerciseLibraryBadgeM3({
   exercise,
 }: ExerciseLibraryBadgeM3Props) {
+  const t = useTranslations("workoutPlanDetailContent");
+
   const synchronousResult = useMemo(() => {
     if (exercise.is_exercise_in_library !== false) return false;
     if (!exercise.exercise_title) return true;
@@ -48,9 +51,14 @@ export function ExerciseLibraryBadgeM3({
   if (shouldShow !== true) return null;
 
   return (
-    <Badge variant="outline" className="ml-2 border-amber-500 text-amber-600">
-      <AlertCircle className="mr-1 size-3" />
-      Not in library
-    </Badge>
+    <div className="ml-2 flex items-center gap-2">
+      <Badge variant="outline" className="border-amber-500 text-amber-600">
+        <AlertCircle className="mr-1 size-3" />
+        {t("notInLibrary")}
+      </Badge>
+      <span className="text-xs text-amber-700">
+        {t("snapshotPrHint")}
+      </span>
+    </div>
   );
 }

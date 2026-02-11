@@ -157,43 +157,13 @@ export class WorkoutPlanFormPage {
     // Additional wait for exercises to fully render
     await this.page.waitForTimeout(300);
 
-    // Find the exercise by title text
-    // The exercise selector shows cards with checkboxes - clicking the card toggles selection
-    const titleLocator = this.page
-      .getByText(exerciseTitle, { exact: false })
+    // Select by card to avoid false matches in other parts of dialog.
+    const targetCard = this.page
+      .locator('[data-test-id="exercise-selector-card"]')
+      .filter({ hasText: exerciseTitle })
       .first();
-
-    // Wait for the title to be visible
-    await titleLocator.waitFor({ state: "visible", timeout: 30000 }); // Increased for CI pipeline
-
-    // Try to find the checkbox first (more reliable)
-    // The checkbox should be near the title in the same card
-    const allCheckboxes = this.page.locator('input[type="checkbox"]');
-    const checkboxCount = await allCheckboxes.count();
-
-    // Find checkbox that's in the same card as the title
-    let selectedCheckbox: Locator | null = null;
-    for (let i = 0; i < checkboxCount; i++) {
-      const checkbox = allCheckboxes.nth(i);
-      // Get the card containing this checkbox
-      const card = checkbox.locator("..").locator("..");
-      const cardText = await card.textContent();
-      if (cardText?.includes(exerciseTitle)) {
-        selectedCheckbox = checkbox;
-        break;
-      }
-    }
-
-    if (selectedCheckbox) {
-      // Check if already selected
-      const isChecked = await selectedCheckbox.isChecked().catch(() => false);
-      if (!isChecked) {
-        await selectedCheckbox.click();
-      }
-    } else {
-      // Fallback: click on the title text - the card has onClick handler
-      await titleLocator.click();
-    }
+    await targetCard.waitFor({ state: "visible", timeout: 30000 });
+    await targetCard.click();
 
     // Wait a bit for the selection to register
     await this.page.waitForTimeout(300);
@@ -240,6 +210,13 @@ export class WorkoutPlanFormPage {
     await this.confirmAddExercises();
     // Wait for exercises to appear in the list
     await this.page.waitForTimeout(500); // Small delay for state update
+
+    const count = await this.getExerciseCount();
+    if (count < exerciseTitles.length) {
+      throw new Error(
+        `Expected ${exerciseTitles.length} exercises in plan form, but got ${count}.`,
+      );
+    }
   }
 
   /**

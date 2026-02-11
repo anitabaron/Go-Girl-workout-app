@@ -722,6 +722,9 @@ export const enMessages = {
   "workoutPlanDetailContent.delete": "Delete",
   "workoutPlanDetailContent.exerciseLabel": "Exercise",
   "workoutPlanDetailContent.orderLabel": "Order",
+  "workoutPlanDetailContent.notInLibrary": "Not in library",
+  "workoutPlanDetailContent.snapshotPrHint":
+    "To track PRs, add this exercise to the library.",
   "workoutPlanDetailContent.unilateral": "Unilateral",
   "workoutPlanDetailContent.sets": "Sets",
   "workoutPlanDetailContent.reps": "Reps",

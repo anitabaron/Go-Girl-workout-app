@@ -725,6 +725,9 @@ export const plMessages = {
   "workoutPlanDetailContent.delete": "Usuń",
   "workoutPlanDetailContent.exerciseLabel": "Ćwiczenie",
   "workoutPlanDetailContent.orderLabel": "Kolejność",
+  "workoutPlanDetailContent.notInLibrary": "Poza biblioteką",
+  "workoutPlanDetailContent.snapshotPrHint":
+    "Aby śledzić PR, dodaj to ćwiczenie do biblioteki.",
   "workoutPlanDetailContent.unilateral": "Jednostronne",
   "workoutPlanDetailContent.sets": "Serie",
   "workoutPlanDetailContent.reps": "Powtórzenia",
