@@ -110,11 +110,20 @@
   body:has(.ui-m3):not(:has(.ui-m3.light)) {
     --m3-surface: var(--m3-raw-surface-dark);
     --m3-primary: var(--m3-raw-primary-dark);
+    --m3-on-primary: var(--m3-raw-on-primary-dark);
     --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
     --m3-on-surface: var(--m3-raw-on-surface-dark);
     --m3-outline-variant: var(--m3-raw-outline-variant-dark);
     --m3-primary-container: var(--m3-raw-primary-container-dark);
     --m3-on-primary-container: var(--m3-on-primary-container-from-root);
+    --destructive: var(--m3-raw-destructive-dark);
+    --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
+    --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
+    --m3-button-default-active: color-mix(
+      in srgb,
+      var(--m3-primary) 80%,
+      white
+    );
     --m3-shadow-2:
       0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
     --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
@@ -221,11 +230,16 @@
 body:has(.ui-m3.dark) {
   --m3-surface: var(--m3-raw-surface-dark);
   --m3-primary: var(--m3-raw-primary-dark);
+  --m3-on-primary: var(--m3-raw-on-primary-dark);
   --m3-surface-container-high: var(--m3-raw-surface-container-high-dark);
   --m3-on-surface: var(--m3-raw-on-surface-dark);
   --m3-outline-variant: var(--m3-raw-outline-variant-dark);
   --m3-primary-container: var(--m3-raw-primary-container-dark);
   --m3-on-primary-container: var(--m3-on-primary-container-from-root);
+  --destructive: var(--m3-raw-destructive-dark);
+  --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 80%, white);
   --m3-shadow-2:
     0 2px 6px -1px rgb(0 0 0 / 0.35), 0 4px 12px -2px rgb(0 0 0 / 0.25);
   --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);

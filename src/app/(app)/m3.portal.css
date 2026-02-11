@@ -7,8 +7,11 @@ body:has(.ui-m3) {
   --m3-outline: var(--m3-raw-outline);
   --m3-outline-variant: var(--m3-raw-outline-variant);
   --m3-primary: var(--m3-raw-primary-override);
-  --m3-primary-container: var(--m3-primary-container);
+  --m3-on-primary: var(--m3-raw-on-primary);
+  --m3-primary-container: var(--m3-raw-primary-container);
   --m3-on-primary-container: var(--m3-raw-on-primary-container);
+  --destructive: var(--m3-raw-destructive);
+  --destructive-foreground: var(--m3-raw-destructive-foreground);
   --m3-radius-md: 1rem;
   --m3-radius-sm: 0.75rem;
   --m3-radius-lg: 1.25rem;
@@ -19,6 +22,8 @@ body:has(.ui-m3) {
   --m3-shadow-2:
     0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
     0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 85%, black);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 75%, black);
   --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
 }
 
@@ -86,7 +91,7 @@ body:has(.ui-m3)
 body:has(.ui-m3)
   :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="default"]:hover {
-  background: color-mix(in srgb, var(--m3-primary) 85%, black) !important;
+  background: var(--m3-button-default-hover) !important;
   box-shadow: var(--m3-shadow-1);
 }
 
