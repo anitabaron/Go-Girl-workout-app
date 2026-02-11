@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-const M3_ROOT = ".ui-m3";
 const STORAGE_KEY = "m3-theme-store";
 
 /** null = follow system (prefers-color-scheme), true = dark, false = light */
@@ -22,13 +21,11 @@ function applyTheme(root: Element | null, isDark: M3ThemeMode) {
 
 function applyThemeToDom(isDark: M3ThemeMode) {
   applyTheme(document.documentElement, isDark);
-  const roots = document.querySelectorAll(M3_ROOT);
-  roots.forEach((root) => applyTheme(root, isDark));
 }
 
 /**
  * M3 theme store – dark/light mode for M3 UI.
- * Persists to localStorage. Applies .dark/.light on :root and .ui-m3 roots.
+ * Persists to localStorage. Applies .dark/.light on :root.
  *
  * @example
  * const isDark = useM3ThemeStore((s) => s.isDark);

@@ -21,19 +21,19 @@ body {
    Use lighter surfaces to highlight areas of primary focus
    ============================================ */
 
-/* Focus states for non-M3 views only. M3 uses its own scoped focus styles in m3.css. */
-body:not(:has(.ui-m3)) *:focus-visible {
+/* Global focus states. */
+body *:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-/* Selection for non-M3 views only. */
-body:not(:has(.ui-m3)) ::selection {
+/* Global text selection. */
+body ::selection {
   background-color: var(--brand-pink);
   color: var(--primary-foreground);
 }
 
-body:not(:has(.ui-m3)) ::-moz-selection {
+body ::-moz-selection {
   background-color: var(--brand-pink);
   color: var(--primary-foreground);
 }

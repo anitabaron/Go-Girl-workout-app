@@ -16,7 +16,7 @@ export default async function M3Layout({
 
   return (
     <AuthProvider user={user}>
-      <div className="ui-m3 min-h-dvh w-full text-foreground flex flex-col overflow-visible">
+      <div className="min-h-dvh w-full text-foreground flex flex-col overflow-visible">
         <NavigationRail />
         <div className="fixed right-4 top-4 z-50">
           <LanguageToggle />

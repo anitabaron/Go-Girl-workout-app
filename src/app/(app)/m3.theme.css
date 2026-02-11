@@ -3,7 +3,7 @@
 /* ============================================
    DARK MODE
    ============================================ */
-/* Dark mode – only token overrides; shadcn mapping inherits from .ui-m3 */
+/* Dark mode – token overrides on :root */
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not(.dark) {
     color-scheme: dark;
@@ -52,49 +52,49 @@
     );
   }
 
-  :root:not(.light):not(.dark) .ui-m3 section.m3-surface-hero {
+  :root:not(.light):not(.dark) section.m3-surface-hero {
     background: var(--m3-raw-primary-container-dark) !important;
     background-color: var(--m3-raw-primary-container-dark) !important;
     color: var(--m3-raw-on-surface-dark);
   }
 
-  :root:not(.light):not(.dark) .ui-m3 section.m3-surface-hero .text-foreground {
+  :root:not(.light):not(.dark) section.m3-surface-hero .text-foreground {
     color: var(--m3-raw-on-surface-dark);
   }
 
-  :root:not(.light):not(.dark) .ui-m3 section.m3-surface-hero .text-muted-foreground {
+  :root:not(.light):not(.dark) section.m3-surface-hero .text-muted-foreground {
     color: var(--m3-raw-on-surface-dark);
     opacity: 0.9;
   }
 
-  :root:not(.light):not(.dark) .ui-m3 .m3-cta:hover {
+  :root:not(.light):not(.dark) .m3-cta:hover {
     background: var(--m3-button-default-hover) !important;
   }
 
-  :root:not(.light):not(.dark) .ui-m3 .m3-cta:active {
+  :root:not(.light):not(.dark) .m3-cta:active {
     background: var(--m3-button-default-active) !important;
   }
 
-  :root:not(.light):not(.dark) .ui-m3 .m3-chip {
+  :root:not(.light):not(.dark) .m3-chip {
     background: var(--m3-surface-container-high);
     color: var(--m3-on-surface);
     border-color: var(--m3-outline-variant);
   }
 
-  :root:not(.light):not(.dark) .ui-m3 section.m3-surface-hero .m3-chip {
+  :root:not(.light):not(.dark) section.m3-surface-hero .m3-chip {
     background: transparent;
     color: var(--m3-on-primary-container);
     border-color: var(--m3-on-primary-container);
   }
 
-  :root:not(.light):not(.dark) .ui-m3 [data-slot="badge"][data-variant="secondary"] {
+  :root:not(.light):not(.dark) [data-slot="badge"][data-variant="secondary"] {
     background: var(--m3-raw-primary-container-dark) !important;
     background-color: var(--m3-raw-primary-container-dark) !important;
     color: var(--m3-on-primary-container-from-root) !important;
     border-color: transparent !important;
   }
 
-  :root:not(.light):not(.dark) .ui-m3 [data-slot="badge"][data-variant="secondary"]:hover {
+  :root:not(.light):not(.dark) [data-slot="badge"][data-variant="secondary"]:hover {
     background: color-mix(
       in srgb,
       var(--m3-raw-primary-container-dark) 85%,
@@ -205,22 +205,22 @@
 }
 
 /* Hero surface in manual dark – same as prefers-color-scheme dark so headline is visible */
-:root.dark .ui-m3 section.m3-surface-hero {
+:root.dark section.m3-surface-hero {
   background: var(--m3-raw-primary-container-dark) !important;
   background-color: var(--m3-raw-primary-container-dark) !important;
   color: var(--m3-raw-on-surface-dark);
 }
 
-:root.dark .ui-m3 section.m3-surface-hero .text-foreground {
+:root.dark section.m3-surface-hero .text-foreground {
   color: var(--m3-raw-on-surface-dark);
 }
 
-:root.dark .ui-m3 section.m3-surface-hero .text-muted-foreground {
+:root.dark section.m3-surface-hero .text-muted-foreground {
   color: var(--m3-raw-on-surface-dark);
   opacity: 0.9;
 }
 
-:root.dark .ui-m3 section.m3-surface-hero .m3-chip {
+:root.dark section.m3-surface-hero .m3-chip {
   background: transparent;
   color: var(--m3-on-primary-container);
   border-color: var(--m3-on-primary-container);

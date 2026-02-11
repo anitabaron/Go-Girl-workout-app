@@ -15,14 +15,14 @@
 - [x] Align portal button tokens with core M3 token behavior.
 - [x] Move base M3 tokens from `.ui-m3` scope to `:root`.
 - [x] Switch M3 mode selectors from `.ui-m3.dark/.ui-m3.light` to `:root.dark/:root.light`.
-- [x] Apply theme classes to both `:root` and `.ui-m3` roots in `m3-theme-store`.
+- [x] Apply theme classes on `:root` in `m3-theme-store` (no `.ui-m3` dependency).
 - [x] Remove `body:has(.ui-m3)` dependency from `m3.portal.css` selectors.
 
 ### Remaining CSS migration tasks
 
-- [ ] Remove `.ui-m3` scope from component style selectors (`m3.typography.css`, `m3.surfaces.css`, `m3.overrides.css`, `m3.layout.css`).
-- [ ] Remove `body:not(:has(.ui-m3))` guards in `globals.css` after M3 selector globalization.
-- [ ] Simplify app/auth layout wrappers so `.ui-m3` is optional (or removable).
+- [x] Remove `.ui-m3` scope from component style selectors (`m3.typography.css`, `m3.surfaces.css`, `m3.overrides.css`, `m3.layout.css`).
+- [x] Remove `body:not(:has(.ui-m3))` guards in `globals.css` after M3 selector globalization.
+- [x] Simplify app/auth layout wrappers so `.ui-m3` is removable.
 - [ ] Run final visual smoke test for light/dark across dialogs, forms, cards, select, sheets.
 
 ## Enforceability

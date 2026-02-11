@@ -1,6 +1,6 @@
 /**
  * Material 3 Expressive UI foundation.
- * Tokens are defined globally; component styles are progressively decoupled from .ui-m3.
+ * Tokens are defined globally for the whole app.
  * Bold typography, tonal surfaces, confident spacing.
  * Aligned with m3.material.io color system.
  */
@@ -23,7 +23,7 @@
   --m3-raw-on-primary: #ffffff;
   --m3-raw-primary-container: #fcdce0;
   --m3-raw-on-primary-container: #5c282c;
-  --m3-raw-primary-override: #df6671; /* portal / .ui-m3.light primary */
+  --m3-raw-primary-override: #df6671; /* light primary override */
   --m3-raw-destructive: #b3261e;
   --m3-raw-destructive-foreground: #ffffff;
   --m3-raw-chart-2: #7d5260;
@@ -46,7 +46,7 @@
   --m3-raw-destructive-dark: #f2b8b5;
   --m3-raw-destructive-foreground-dark: #601410;
 
-  /* Alias for dark mode (body/portals need this; they don't inherit from .ui-m3) */
+  /* Alias for dark mode used by portal/body mappings */
   --m3-on-primary-container-from-root: var(--m3-raw-primary-container);
 }
 
@@ -165,25 +165,6 @@
 
   /* Mobile bottom nav height (h-16 + safe-area) – for sticky/fixed elements above it */
   --m3-mobile-nav-height: calc(4rem + max(0.5rem, env(safe-area-inset-bottom)));
-}
-
-/* Root wrapper behavior for app shells still using .ui-m3 */
-.ui-m3 {
-  color-scheme: light;
-  background-color: var(--m3-surface);
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease,
-    border-color 0.35s ease,
-    box-shadow 0.35s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  flex: 1 1 auto;
-  align-self: stretch;
-  overflow-wrap: normal;
-  word-break: normal;
 }
 
 /* Auth pages: use project pink accents instead of deep bordo */

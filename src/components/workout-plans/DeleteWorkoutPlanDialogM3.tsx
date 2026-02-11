@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const M3_DIALOG_CONTENT =
-  "ui-m3 fixed top-[50%] left-[50%] z-50 grid w-full min-w-[320px] max-w-[calc(100%-2rem)] max-h-[calc(100vh-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-6 outline-none overflow-y-auto sm:max-w-lg " +
+  "fixed top-[50%] left-[50%] z-50 grid w-full min-w-[320px] max-w-[calc(100%-2rem)] max-h-[calc(100vh-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-6 outline-none overflow-y-auto sm:max-w-lg " +
   "bg-[var(--m3-surface-container-high)] border border-[var(--m3-outline-variant)] rounded-[var(--m3-radius-large)] shadow-[var(--m3-shadow-2)] " +
   "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-200";
 

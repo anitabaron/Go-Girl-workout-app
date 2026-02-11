@@ -91,18 +91,12 @@
 - First decoupling step from `.ui-m3` was done:
   - base M3 tokens moved from `.ui-m3` scope to `:root` (`m3.tokens.css`),
   - theme mode selectors switched from `.ui-m3.dark/.light` to `:root.dark/:root.light`,
-  - theme store applies mode classes on `document.documentElement` and `.ui-m3` roots.
+  - theme store applies mode classes on `document.documentElement` (`:root`).
 - Portal styles were detached from `body:has(.ui-m3)` and now target `body` + portal slots directly.
+- `.ui-m3` scope was fully removed from active app/auth wrappers and M3 component selectors.
 
 ### Remaining high-priority work
 
-- Continue removing `.ui-m3` dependency from component style selectors in:
-  - `src/app/(app)/m3.typography.css`
-  - `src/app/(app)/m3.surfaces.css`
-  - `src/app/(app)/m3.overrides.css`
-  - `src/app/(app)/m3.layout.css`
-- Remove `body:not(:has(.ui-m3))` conditionals from `src/app/globals.css` once M3 selectors are fully globalized.
-- Simplify app/auth layout wrappers to avoid relying on `.ui-m3` as a styling scope.
 - Final visual smoke pass after scope removal (dialogs, sheets, select, forms, cards, dark mode).
 
 ### 1) Define rules: “M3-ready” vs “legacy-only”

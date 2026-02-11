@@ -22,24 +22,18 @@
 
 ## Current technical state
 
-- `.ui-m3` is still present in many component selectors in:
-  - `src/app/(app)/m3.typography.css`
-  - `src/app/(app)/m3.surfaces.css`
-  - `src/app/(app)/m3.overrides.css`
-  - `src/app/(app)/m3.layout.css`
+- `.ui-m3` dependency is removed from active source selectors and layout wrappers.
 - Theme/tokens already work from `:root` and `:root.dark/:root.light`.
 - Portal styles are globally addressable from `body`.
 
 ## Next steps (recommended order)
 
-1. Remove `.ui-m3` prefix from M3 component selectors (module by module, no visual changes intended).
-2. Remove `body:not(:has(.ui-m3))` constraints from `src/app/globals.css` once step 1 is stable.
-3. Simplify `src/app/(app)/layout.tsx` and `src/app/(auth)/layout.tsx` wrappers so `.ui-m3` becomes optional/removable.
-4. Run visual smoke checks (light/dark):
+1. Run visual smoke checks (light/dark):
    - exercises list/new/edit/detail
    - workout plans list/new/edit/detail
    - personal records list/detail
    - dialog/sheet/select portal surfaces
+2. If visual regressions appear, patch component-level selectors, not root token mappings.
 
 ## Guardrails for continuation
 

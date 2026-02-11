@@ -1,5 +1,5 @@
 /* Theme transition – smooth switch for all color-using elements */
-.ui-m3 * {
+* {
   transition:
     background-color 0.35s ease,
     color 0.35s ease,
@@ -7,14 +7,14 @@
     box-shadow 0.35s ease;
 }
 
-.ui-m3 .m3-hero {
+.m3-hero {
   font-size: var(--m3-font-hero);
   font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.04em;
 }
 
-.ui-m3 .m3-hero-sm {
+.m3-hero-sm {
   font-size: var(--m3-font-hero-sm);
   font-weight: 700;
   line-height: 1.08;
@@ -22,7 +22,7 @@
 }
 
 /* Page header title - smaller on mobile, hero on desktop */
-.ui-m3 .m3-page-title {
+.m3-page-title {
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.15;
@@ -30,37 +30,37 @@
   text-wrap: balance;
 }
 @media (min-width: 768px) {
-  .ui-m3 .m3-page-title {
+  .m3-page-title {
     font-size: var(--m3-font-hero-sm);
     line-height: 1.08;
     letter-spacing: -0.03em;
   }
 }
 
-.ui-m3 .m3-headline {
+.m3-headline {
   font-size: var(--m3-font-headline);
   font-weight: 600;
   line-height: var(--m3-line-height-tight);
   letter-spacing: -0.02em;
 }
 
-.ui-m3 .m3-title {
+.m3-title {
   font-size: var(--m3-font-title);
   font-weight: 600;
   line-height: var(--m3-line-height-tight);
 }
 
-.ui-m3 .m3-body {
+.m3-body {
   font-size: var(--m3-font-body);
   line-height: var(--m3-line-height-normal);
 }
 
-.ui-m3 .m3-body-large {
+.m3-body-large {
   font-size: 1.125rem;
   line-height: var(--m3-line-height-relaxed);
 }
 
-.ui-m3 .m3-label {
+.m3-label {
   font-size: var(--m3-font-label);
   font-weight: 500;
   line-height: var(--m3-line-height-normal);
@@ -68,26 +68,26 @@
 }
 
 /* Compact typography for cards – dense info display */
-.ui-m3 .m3-card-title {
+.m3-card-title {
   font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
 
-.ui-m3 .m3-card-meta {
+.m3-card-meta {
   font-size: 0.75rem;
   font-weight: 500;
   line-height: 1.3;
   color: var(--m3-on-surface-variant);
 }
 
-.ui-m3 .m3-card-body {
+.m3-card-body {
   font-size: 0.8125rem;
   line-height: 1.35;
   color: var(--m3-on-surface-variant);
 }
 
-.ui-m3 .m3-prose {
+.m3-prose {
   max-width: 65ch;
 }

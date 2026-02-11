@@ -11,7 +11,7 @@ type DarkModeToggleProps = {
 
 /**
  * M3 dark mode toggle – switches between light/dark.
- * Uses .ui-m3.dark and m3.css tokens. Scoped to m3 only.
+ * Uses :root dark/light classes and m3.css tokens.
  */
 export function DarkModeToggle({
   className,
