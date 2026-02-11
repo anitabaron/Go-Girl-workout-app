@@ -186,6 +186,16 @@
   --m3-mobile-nav-height: calc(4rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
 
+/* Auth pages: use project pink accents instead of deep bordo */
+.ui-m3.ui-auth-pink {
+  --m3-primary: var(--brand-pink-dark);
+  --m3-on-primary: #1c1b1f;
+  --ring: var(--m3-primary);
+  --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, black);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 80%, black);
+}
+
 /* Theme transition – smooth switch for all color-using elements */
 .ui-m3 * {
   transition:

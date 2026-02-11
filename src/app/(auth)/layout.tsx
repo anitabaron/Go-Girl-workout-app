@@ -11,7 +11,7 @@ export default function AuthLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <AuthRedirectProvider basePath="">
-      <div className="ui-m3 min-h-dvh w-full bg-background text-foreground flex flex-col">
+      <div className="ui-m3 ui-auth-pink min-h-dvh w-full bg-background text-foreground flex flex-col">
         {children}
       </div>
     </AuthRedirectProvider>
