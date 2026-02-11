@@ -1,6 +1,6 @@
 /**
- * Material 3 Expressive UI foundation - SCOPED to .ui-m3 only.
- * All styles and tokens are scoped under .ui-m3.
+ * Material 3 Expressive UI foundation.
+ * Tokens are defined globally; component styles are progressively decoupled from .ui-m3.
  * Bold typography, tonal surfaces, confident spacing.
  * Aligned with m3.material.io color system.
  */
@@ -51,9 +51,9 @@
 }
 
 /* ============================================
-   M3 COLOR TOKENS (light + dark, peach/pink family) – scoped to .ui-m3
+   M3 COLOR TOKENS (light defaults)
    ============================================ */
-.ui-m3 {
+:root {
   /* Primary (from root for initial cascade; dark/light override below) */
   --m3-primary: var(--m3-raw-primary);
   --m3-on-primary: var(--m3-raw-on-primary);
@@ -163,16 +163,19 @@
   --m3-spacing-12: 3rem;
   --m3-spacing-16: 4rem;
 
+  /* Mobile bottom nav height (h-16 + safe-area) – for sticky/fixed elements above it */
+  --m3-mobile-nav-height: calc(4rem + max(0.5rem, env(safe-area-inset-bottom)));
+}
+
+/* Root wrapper behavior for app shells still using .ui-m3 */
+.ui-m3 {
   color-scheme: light;
   background-color: var(--m3-surface);
-
-  /* Smooth theme transition (light ↔ dark) */
   transition:
     background-color 0.35s ease,
     color 0.35s ease,
     border-color 0.35s ease,
     box-shadow 0.35s ease;
-
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -181,13 +184,10 @@
   align-self: stretch;
   overflow-wrap: normal;
   word-break: normal;
-
-  /* Mobile bottom nav height (h-16 + safe-area) – for sticky/fixed elements above it */
-  --m3-mobile-nav-height: calc(4rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
 
 /* Auth pages: use project pink accents instead of deep bordo */
-.ui-m3.ui-auth-pink {
+.ui-auth-pink {
   --m3-primary: var(--brand-pink-dark);
   --m3-on-primary: #1c1b1f;
   --ring: var(--m3-primary);
