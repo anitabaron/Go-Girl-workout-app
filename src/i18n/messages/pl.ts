@@ -41,7 +41,7 @@ export const plMessages = {
   "home.feature.importPlan.description":
     "Importuj plan treningowy z pliku JSON. Aplikacja przeanalizuje plik i wygeneruje plan treningowy dopasowany do Twoich potrzeb.",
   "home.heroHeadline": "Zaprojektowana, aby pomóc Ci realizować cele treningowe",
-  "home.getStarted": "Zacznij",
+  "home.getStarted": "Rozpocznij",
   "home.featuresHeading": "Odkryj wszystkie możliwości aplikacji",
   "home.goToFeature": "Przejdź do",
   "home.quote": "\"Strong today, unstoppable tomorrow.\"",
