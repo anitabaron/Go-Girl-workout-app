@@ -62,8 +62,9 @@ body:has(.ui-m3) [data-slot="alert-dialog-overlay"] {
 }
 
 /* Portal buttons - M3 style (Dialog/AlertDialog render outside .ui-m3) */
-body:has(.ui-m3) [data-slot="dialog-content"] [data-slot="button"],
-body:has(.ui-m3) [data-slot="alert-dialog-content"] [data-slot="button"] {
+body:has(.ui-m3)
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
+  [data-slot="button"] {
   appearance: none !important;
   border-radius: var(--m3-radius-lg) !important;
   transform: none !important;
@@ -75,10 +76,7 @@ body:has(.ui-m3) [data-slot="alert-dialog-content"] [data-slot="button"] {
 }
 
 body:has(.ui-m3)
-  [data-slot="dialog-content"]
-  [data-slot="button"][data-variant="default"],
-body:has(.ui-m3)
-  [data-slot="alert-dialog-content"]
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="default"] {
   background: var(--m3-primary) !important;
   color: var(--m3-on-primary) !important;
@@ -86,20 +84,14 @@ body:has(.ui-m3)
 }
 
 body:has(.ui-m3)
-  [data-slot="dialog-content"]
-  [data-slot="button"][data-variant="default"]:hover,
-body:has(.ui-m3)
-  [data-slot="alert-dialog-content"]
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="default"]:hover {
   background: color-mix(in srgb, var(--m3-primary) 85%, black) !important;
   box-shadow: var(--m3-shadow-1);
 }
 
 body:has(.ui-m3)
-  [data-slot="dialog-content"]
-  [data-slot="button"][data-variant="outline"],
-body:has(.ui-m3)
-  [data-slot="alert-dialog-content"]
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="outline"] {
   background: transparent !important;
   color: var(--m3-on-surface) !important;
@@ -107,20 +99,14 @@ body:has(.ui-m3)
 }
 
 body:has(.ui-m3)
-  [data-slot="dialog-content"]
-  [data-slot="button"][data-variant="outline"]:hover,
-body:has(.ui-m3)
-  [data-slot="alert-dialog-content"]
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="outline"]:hover {
   background: var(--m3-surface-container-high) !important;
   border-color: var(--m3-outline) !important;
 }
 
 body:has(.ui-m3)
-  [data-slot="dialog-content"]
-  [data-slot="button"][data-variant="destructive"],
-body:has(.ui-m3)
-  [data-slot="alert-dialog-content"]
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="destructive"] {
   background: var(--destructive) !important;
   color: var(--destructive-foreground) !important;
@@ -128,10 +114,7 @@ body:has(.ui-m3)
 }
 
 body:has(.ui-m3)
-  [data-slot="dialog-content"]
-  [data-slot="button"][data-variant="destructive"]:hover,
-body:has(.ui-m3)
-  [data-slot="alert-dialog-content"]
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
   [data-slot="button"][data-variant="destructive"]:hover {
   background: color-mix(in srgb, var(--destructive) 85%, black) !important;
   box-shadow: var(--m3-shadow-1);
