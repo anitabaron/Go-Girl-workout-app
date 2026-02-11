@@ -3,12 +3,14 @@
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { RestBetweenSetsTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 export function RestBetweenSetsTimerM3({
   restSeconds,
   isPaused,
   onComplete,
 }: Readonly<RestBetweenSetsTimerProps>) {
+  const t = useTranslations("assistantTimers");
   if (!restSeconds || restSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
 
@@ -32,7 +34,9 @@ export function RestBetweenSetsTimerM3({
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
               {remainingTime}
             </div>
-            <div className="text-sm text-muted-foreground">seconds rest</div>
+            <div className="text-sm text-muted-foreground">
+              {t("secondsRest")}
+            </div>
           </div>
         )}
       </CountdownCircleTimer>
@@ -42,7 +46,7 @@ export function RestBetweenSetsTimerM3({
         className="m3-cta min-w-[120px] text-md font-light"
         data-test-id="timer-skip-break-button"
       >
-        Skip break
+        {t("skipBreak")}
       </Button>
     </div>
   );

@@ -3,14 +3,7 @@
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { SetCountdownTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
-
-const SIDE_LABELS: Record<
-  NonNullable<SetCountdownTimerProps["sideLabel"]>,
-  string
-> = {
-  one_side: "first side",
-  other_side: "second side",
-};
+import { useTranslations } from "@/i18n/client";
 
 export function SetCountdownTimerM3({
   durationSeconds,
@@ -18,6 +11,7 @@ export function SetCountdownTimerM3({
   sideLabel,
   onComplete,
 }: Readonly<SetCountdownTimerProps>) {
+  const t = useTranslations("assistantTimers");
   if (!durationSeconds || durationSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
 
@@ -42,7 +36,14 @@ export function SetCountdownTimerM3({
               {remainingTime}
             </div>
             <div className="text-sm text-muted-foreground">
-              seconds{sideLabel ? ` (${SIDE_LABELS[sideLabel]})` : ""}
+              {t("seconds")}
+              {sideLabel
+                ? ` (${
+                    sideLabel === "one_side"
+                      ? t("firstSide")
+                      : t("secondSide")
+                  })`
+                : ""}
             </div>
           </div>
         )}
