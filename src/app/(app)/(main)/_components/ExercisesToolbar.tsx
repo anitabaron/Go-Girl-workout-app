@@ -17,8 +17,13 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
-import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+  getExerciseTypeLabel,
+} from "@/lib/exercises/labels";
 import type { ExercisePart, ExerciseType } from "@/types";
+import { useTranslations } from "@/i18n/client";
 
 type ExerciseTitle = { id: string; title: string };
 
@@ -40,6 +45,8 @@ export function ExercisesToolbar({
   type = null,
   exerciseId = null,
 }: ExercisesToolbarProps) {
+  const t = useTranslations("exercisesToolbar");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -130,9 +137,9 @@ export function ExercisesToolbar({
           <Input
             key={`search-${search}`}
             type="search"
-            placeholder="Search exercises..."
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
-            aria-label="Search exercises"
+            aria-label={t("searchAria")}
             defaultValue={search}
             onChange={handleSearchChange}
             disabled={isPending}
@@ -140,7 +147,7 @@ export function ExercisesToolbar({
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="exercise-filter" className="sr-only">
-            Filter by exercise
+            {t("exerciseFilterLabel")}
           </label>
           <Select
             value={exerciseId ?? "all"}
@@ -150,12 +157,12 @@ export function ExercisesToolbar({
             <SelectTrigger
               id="exercise-filter"
               className="w-[180px]"
-              aria-label="Filter by exercise"
+              aria-label={t("exerciseFilterAria")}
             >
-              <SelectValue placeholder="Exercise" />
+              <SelectValue placeholder={t("exercisePlaceholder")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All exercises</SelectItem>
+              <SelectItem value="all">{t("allExercises")}</SelectItem>
               {exercises.map((exercise) => (
                 <SelectItem key={exercise.id} value={exercise.id}>
                   {exercise.title}
@@ -166,7 +173,7 @@ export function ExercisesToolbar({
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="part-filter" className="sr-only">
-            Filter by body part
+            {t("partFilterLabel")}
           </label>
           <Select
             value={part ?? "all"}
@@ -176,15 +183,15 @@ export function ExercisesToolbar({
             <SelectTrigger
               id="part-filter"
               className="w-[140px]"
-              aria-label="Filter by body part"
+              aria-label={t("partFilterAria")}
             >
-              <SelectValue placeholder="Body part" />
+              <SelectValue placeholder={t("partPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All parts</SelectItem>
+              <SelectItem value="all">{t("allParts")}</SelectItem>
               {exercisePartValues.map((p) => (
                 <SelectItem key={p} value={p}>
-                  {EXERCISE_PART_LABELS[p]}
+                  {getExercisePartLabel(tExerciseLabel, p)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -192,7 +199,7 @@ export function ExercisesToolbar({
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="type-filter" className="sr-only">
-            Filter by exercise type
+            {t("typeFilterLabel")}
           </label>
           <Select
             value={type ?? "all"}
@@ -202,15 +209,15 @@ export function ExercisesToolbar({
             <SelectTrigger
               id="type-filter"
               className="w-[140px]"
-              aria-label="Filter by exercise type"
+              aria-label={t("typeFilterAria")}
             >
-              <SelectValue placeholder="Type" />
+              <SelectValue placeholder={t("typePlaceholder")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="all">{t("allTypes")}</SelectItem>
               {exerciseTypeValues.map((t) => (
                 <SelectItem key={t} value={t}>
-                  {EXERCISE_TYPE_LABELS[t]}
+                  {getExerciseTypeLabel(tExerciseLabel, t)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -222,9 +229,9 @@ export function ExercisesToolbar({
           variant="outline"
           onClick={handleClearFilters}
           disabled={isPending}
-          aria-label="Clear filters"
+          aria-label={t("clearFiltersAria")}
         >
-          Clear filters
+          {t("clearFilters")}
         </Button>
       )}
     </Toolbar>

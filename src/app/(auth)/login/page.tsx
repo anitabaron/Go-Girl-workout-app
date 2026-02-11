@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/db/supabase.server";
 import { LoginForm } from "@/components/auth/login/login-form";
+import { getTranslations } from "@/i18n/server";
 import {
   Card,
   CardContent,
@@ -10,13 +11,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const metadata: Metadata = {
-  title: "Logowanie | Go Girl Workout App",
-  description:
-    "Zaloguj się do swojego konta Go Girl Workout App, aby uzyskać dostęp do ćwiczeń, planów treningowych i sesji treningowych",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.loginPage");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 export default async function LoginPage() {
+  const t = await getTranslations("auth.loginPage");
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,10 +35,10 @@ export default async function LoginPage() {
       <Card className="w-full max-w-lg min-w-[320px] border-[var(--m3-outline-variant)] rounded-[var(--m3-radius-large)] shadow-[var(--m3-shadow-1)]">
         <CardHeader className="space-y-1">
           <CardTitle className="m3-headline text-[var(--m3-on-surface)]">
-            Zaloguj się
+            {t("title")}
           </CardTitle>
           <CardDescription className="m3-body text-[var(--m3-on-surface-variant)]">
-            Wprowadź swoje dane, aby uzyskać dostęp do konta
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -6,8 +6,10 @@ import { Info, Upload } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslations } from "@/i18n/client";
 
 export function ImportPlanButtonM3() {
+  const t = useTranslations("importPlanButton");
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -19,7 +21,7 @@ export function ImportPlanButtonM3() {
     if (!file) return;
 
     if (!file.name.endsWith(".json")) {
-      toast.error("File must be in JSON format");
+      toast.error(t("fileMustBeJson"));
       return;
     }
 
@@ -37,7 +39,7 @@ export function ImportPlanButtonM3() {
       if (!response.ok) {
         const result = await response.json();
         const errorMessage =
-          result.message ?? result.details ?? "Error during import";
+          result.message ?? result.details ?? t("importError");
         throw new Error(errorMessage);
       }
 
@@ -45,10 +47,13 @@ export function ImportPlanButtonM3() {
 
       if (result.warnings?.missing_exercises?.length > 0) {
         toast.warning(
-          `Plan imported. ${result.warnings.missing_exercises.length} exercises not found in library.`,
+          t("planImportedWithMissing").replace(
+            "{count}",
+            String(result.warnings.missing_exercises.length),
+          ),
         );
       } else {
-        toast.success("Plan imported successfully");
+        toast.success(t("planImportedSuccess"));
       }
 
       router.push(`/workout-plans/${result.id}`);
@@ -58,7 +63,7 @@ export function ImportPlanButtonM3() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "An error occurred during import",
+          : t("importGenericError"),
       );
     } finally {
       setIsImporting(false);
@@ -77,24 +82,24 @@ export function ImportPlanButtonM3() {
         onChange={handleFileSelect}
         className="hidden"
         disabled={isImporting}
-        aria-label="Select JSON file"
+        aria-label={t("selectJsonAria")}
       />
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           disabled={isImporting}
-          aria-label="Import workout plan from JSON file"
+          aria-label={t("importAria")}
         >
           <Upload className="mr-2 size-4" />
-          {isImporting ? "Importing..." : "Import JSON"}
+          {isImporting ? t("importing") : t("importJson")}
         </Button>
         <Link
           href="/import-instruction"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <Info className="size-4" />
-          Import instructions
+          {t("instructions")}
         </Link>
       </div>
     </>

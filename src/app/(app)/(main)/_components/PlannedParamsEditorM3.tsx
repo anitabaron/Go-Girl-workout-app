@@ -8,6 +8,7 @@ import {
   calculateEstimatedSetTimeSeconds,
   getEstimatedSetTimeLabel,
 } from "@/lib/exercises/estimated-set-time";
+import { useTranslations } from "@/i18n/client";
 
 type PlannedParamsEditorM3Props = {
   params: PlannedParamsState;
@@ -25,38 +26,32 @@ type PlannedParamsEditorM3Props = {
 
 const PLANNED_PARAMS_CONFIG: Array<{
   key: keyof PlannedParamsState;
-  label: string;
   labelFn?: (params: PlannedParamsState, isUnilateral?: boolean) => string;
   min: number;
   /** Klucz do sprawdzenia widoczności przez props (showRepsField / showDurationField). */
   visibilityKey?: "reps" | "duration";
 }> = [
-  { key: "planned_sets", label: "Sets", min: 1 },
+  { key: "planned_sets", min: 1 },
   {
     key: "planned_reps",
-    label: "Reps",
     min: 1,
     visibilityKey: "reps",
   },
   {
     key: "planned_duration_seconds",
-    label: "Duration (s)",
     min: 1,
     visibilityKey: "duration",
   },
   {
     key: "planned_rest_seconds",
-    label: "Rest between sets (s)",
     min: 0,
   },
   {
     key: "planned_rest_after_series_seconds",
-    label: "Rest after sets (s)",
     min: 0,
   },
   {
     key: "estimated_set_time_seconds",
-    label: "Estimated set time (s)",
     labelFn: (p, isUnilateral) =>
       getEstimatedSetTimeLabel(
         calculateEstimatedSetTimeSeconds({
@@ -85,6 +80,7 @@ function PlannedParamField({
   placeholder = "—",
   "data-test-id": dataTestId,
   suggestedValue,
+  useEstimatedLabel,
 }: {
   id: string;
   label: string;
@@ -97,6 +93,7 @@ function PlannedParamField({
   "data-test-id"?: string;
   /** Gdy liczba – pokazuje przycisk strzałki w dół do wklejenia tej wartości w pole. */
   suggestedValue?: number | null;
+  useEstimatedLabel: string;
 }) {
   const errorId = useId();
   const canApplySuggested =
@@ -133,8 +130,8 @@ function PlannedParamField({
             onClick={handleApplySuggested}
             disabled={disabled}
             className="cursor-pointer inline-flex shrink-0 items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-            title={`Użyj szacowanej wartości (${suggestedValue} s)`}
-            aria-label={`Użyj szacowanej wartości ${suggestedValue} s`}
+            title={`${useEstimatedLabel} (${suggestedValue} s)`}
+            aria-label={`${useEstimatedLabel} ${suggestedValue} s`}
           >
             <ArrowDown className="size-3.5" />
           </button>
@@ -173,10 +170,11 @@ export function PlannedParamsEditorM3({
   showRepsField = false,
   showDurationField = false,
 }: Readonly<PlannedParamsEditorM3Props>) {
+  const t = useTranslations("plannedParamsEditor");
   const firstRowFields = PLANNED_PARAMS_CONFIG.slice(0, 4);
   const secondRowFields = PLANNED_PARAMS_CONFIG.slice(4);
 
-  const MIN_GREATER_THAN_ONE_MSG = "Liczba musi być większa od 0";
+  const MIN_GREATER_THAN_ONE_MSG = t("minGreaterThanOne");
 
   const renderField = (config: (typeof PLANNED_PARAMS_CONFIG)[number]) => {
     if (config.visibilityKey === "reps" && !showRepsField) return null;
@@ -193,9 +191,18 @@ export function PlannedParamsEditorM3({
       serverError ?? (showMinWarning ? MIN_GREATER_THAN_ONE_MSG : undefined);
     const keyKebab = config.key.replaceAll("_", "-");
     const dataTestId = testIdPrefix ? `${testIdPrefix}-${keyKebab}` : undefined;
-    const label = config.labelFn
+    const rawLabel = config.labelFn
       ? config.labelFn(params, isUnilateral)
-      : config.label;
+      : null;
+    const labelKeyMap: Record<keyof PlannedParamsState, string> = {
+      planned_sets: t("sets"),
+      planned_reps: t("reps"),
+      planned_duration_seconds: t("duration"),
+      planned_rest_seconds: t("restBetween"),
+      planned_rest_after_series_seconds: t("restAfter"),
+      estimated_set_time_seconds: t("estimatedSetTime"),
+    };
+    const label = rawLabel ?? labelKeyMap[config.key];
 
     const suggestedValue =
       config.key === "estimated_set_time_seconds"
@@ -222,6 +229,7 @@ export function PlannedParamsEditorM3({
         min={config.min}
         data-test-id={dataTestId}
         suggestedValue={suggestedValue}
+        useEstimatedLabel={t("useEstimated")}
       />
     );
   };

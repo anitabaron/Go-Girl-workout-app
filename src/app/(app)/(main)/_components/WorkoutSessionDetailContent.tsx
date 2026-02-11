@@ -15,6 +15,7 @@ import {
   getExerciseNames,
 } from "@/lib/utils/session-format";
 import { WorkoutSessionExercisesListM3 } from "./WorkoutSessionExercisesListM3";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutSessionDetailContentProps = {
   readonly session: SessionDetailDTO;
@@ -50,6 +51,7 @@ function SessionDurationDisplay({
 export function WorkoutSessionDetailContent({
   session,
 }: WorkoutSessionDetailContentProps) {
+  const t = useTranslations("workoutSessionDetailContent");
   const router = useRouter();
   const searchParams = useSearchParams();
   const isEditFromUrl =
@@ -57,7 +59,7 @@ export function WorkoutSessionDetailContent({
   const [userToggledEdit, setUserToggledEdit] = useState(false);
   const isEditMode = isEditFromUrl || userToggledEdit;
 
-  const planName = session.plan_name_at_time ?? "Plan deleted";
+  const planName = session.plan_name_at_time ?? t("planDeleted");
   const formattedStartedAt = formatDateTime(session.started_at);
   const formattedCompletedAt = session.completed_at
     ? formatDateTime(session.completed_at)
@@ -78,17 +80,17 @@ export function WorkoutSessionDetailContent({
       <Card data-test-id="workout-session-details-metadata">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="m3-title">Session info</h2>
+            <h2 className="m3-title">{t("sessionInfoTitle")}</h2>
             <div className="flex items-center gap-2">
               {isEditMode && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleCancelEdit}
-                  aria-label="Cancel edit"
+                  aria-label={t("cancelEditAria")}
                 >
                   <X className="mr-2 size-4" />
-                  Cancel edit
+                  {t("cancelEdit")}
                 </Button>
               )}
               {isCompleted && !isEditMode && (
@@ -96,10 +98,10 @@ export function WorkoutSessionDetailContent({
                   variant="outline"
                   size="sm"
                   onClick={() => setUserToggledEdit(true)}
-                  aria-label="Edit session"
+                  aria-label={t("editSessionAria")}
                 >
                   <Pencil className="mr-2 size-4" />
-                  Edit session
+                  {t("editSession")}
                 </Button>
               )}
               {isInProgress ? (
@@ -107,14 +109,14 @@ export function WorkoutSessionDetailContent({
                   variant="default"
                   className="bg-primary text-primary-foreground"
                 >
-                  In progress
+                  {t("inProgress")}
                 </Badge>
               ) : (
                 <Badge
                   variant="secondary"
                   data-test-id="workout-session-status-completed"
                 >
-                  Completed
+                  {t("completed")}
                 </Badge>
               )}
             </div>
@@ -124,7 +126,7 @@ export function WorkoutSessionDetailContent({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Workout plan
+                {t("workoutPlanLabel")}
               </p>
               <p
                 className="mt-1 font-semibold"
@@ -135,21 +137,21 @@ export function WorkoutSessionDetailContent({
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Started
+                {t("startedLabel")}
               </p>
               <p className="mt-1 font-semibold">{formattedStartedAt}</p>
             </div>
             {formattedCompletedAt && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Completed
+                  {t("completedLabel")}
                 </p>
                 <p className="mt-1 font-semibold">{formattedCompletedAt}</p>
               </div>
             )}
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Duration
+                {t("durationLabel")}
               </p>
               <p className="mt-1 font-semibold">
                 <SessionDurationDisplay
@@ -179,7 +181,7 @@ export function WorkoutSessionDetailContent({
               <Button asChild className="m3-cta">
                 <Link href={`/workout-sessions/${session.id}/active`}>
                   <Play className="mr-2 size-4" />
-                  Resume workout
+                  {t("resumeWorkout")}
                 </Link>
               </Button>
             </div>
@@ -188,7 +190,7 @@ export function WorkoutSessionDetailContent({
       </Card>
 
       <div data-test-id="workout-session-details-exercises-list">
-        <h2 className="m3-headline mb-6">Exercises in session</h2>
+        <h2 className="m3-headline mb-6">{t("exercisesInSession")}</h2>
         <WorkoutSessionExercisesListM3
           exercises={session.exercises}
           sessionId={session.id}

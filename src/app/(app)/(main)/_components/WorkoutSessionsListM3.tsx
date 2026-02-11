@@ -8,6 +8,7 @@ import { EmptyState } from "./EmptyState";
 import { M3WorkoutSessionCard } from "../_ui/M3WorkoutSessionCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutSessionsListM3Props = {
   initialSessions: SessionSummaryDTO[];
@@ -20,6 +21,7 @@ export function WorkoutSessionsListM3({
   initialNextCursor,
   initialHasMore,
 }: Readonly<WorkoutSessionsListM3Props>) {
+  const t = useTranslations("workoutSessionsList");
   const searchParams = useSearchParams();
   const [sessions, setSessions] = useState(initialSessions);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
@@ -43,7 +45,7 @@ export function WorkoutSessionsListM3({
       const response = await fetch(
         `/api/workout-sessions?${params.toString()}`,
       );
-      if (!response.ok) throw new Error("Failed to load more sessions");
+      if (!response.ok) throw new Error(t("loadMoreError"));
       const data = await response.json();
       startTransition(() => {
         setSessions((prev) => [...prev, ...data.items]);
@@ -52,7 +54,7 @@ export function WorkoutSessionsListM3({
       });
     } catch (error) {
       console.error("Error loading more:", error);
-      toast.error("Failed to load more sessions. Try again.");
+      toast.error(t("loadMoreToast"));
     } finally {
       setIsLoadingMore(false);
     }
@@ -62,8 +64,8 @@ export function WorkoutSessionsListM3({
     return (
       <EmptyState
         icon={<History className="size-12 text-muted-foreground" />}
-        title="No workout sessions yet"
-        description="Start your first workout to see your session history."
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
       />
     );
   }
@@ -81,9 +83,9 @@ export function WorkoutSessionsListM3({
             variant="outline"
             onClick={() => handleLoadMore(nextCursor)}
             disabled={isLoadingMore}
-            aria-label="Load more workout sessions"
+            aria-label={t("loadMoreAria")}
           >
-            {isLoadingMore ? "Loading..." : "Load more"}
+            {isLoadingMore ? t("loading") : t("loadMore")}
           </Button>
         </div>
       )}

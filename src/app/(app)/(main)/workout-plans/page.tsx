@@ -13,12 +13,14 @@ import {
   WorkoutPlansListM3,
   ImportPlanButtonM3,
 } from "../_components";
+import { getTranslations } from "@/i18n/server";
 
 export default async function WorkoutPlansPage({
   searchParams,
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
+  const t = await getTranslations("workoutPlansPage");
   const params = await searchParams;
 
   const parseResult = workoutPlanQuerySchema.safeParse({
@@ -37,12 +39,14 @@ export default async function WorkoutPlansPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Workout plans"
-        description="Browse and manage your workout plans."
+        title={t("title")}
+        description={t("description")}
         actions={
           <div className="flex flex-col gap-3 items-end">
             <div className="flex flex-wrap items-center justify-end gap-3">
-              <span className="m3-chip">{plans.length} plans</span>
+              <span className="m3-chip">
+                {plans.length} {t("countLabel")}
+              </span>
               <Button
                 asChild
                 className="m3-cta"
@@ -50,7 +54,7 @@ export default async function WorkoutPlansPage({
               >
                 <Link href="/workout-plans/new">
                   <Plus className="mr-2 size-4" />
-                  Create plan
+                  {t("createCta")}
                 </Link>
               </Button>
             </div>

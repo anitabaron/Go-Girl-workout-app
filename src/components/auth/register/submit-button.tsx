@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type SubmitButtonProps = {
   isLoading: boolean;
@@ -12,6 +13,7 @@ type SubmitButtonProps = {
  * Przycisk submit formularza rejestracji z loading state i wyłączaniem podczas przetwarzania.
  */
 export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
+  const t = useTranslations("auth.registerForm");
   return (
     <Button
       type="submit"
@@ -22,10 +24,10 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
       {isLoading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-          Rejestrowanie...
+          {t("submitting")}
         </>
       ) : (
-        "Zarejestruj się"
+        t("submit")
       )}
     </Button>
   );

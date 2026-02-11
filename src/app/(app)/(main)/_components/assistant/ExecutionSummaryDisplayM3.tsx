@@ -1,6 +1,7 @@
 "use client";
 
 import type { SummaryValues } from "@/hooks/use-exercise-execution-form";
+import { useTranslations } from "@/i18n/client";
 
 function SummaryFieldM3({
   label,
@@ -27,15 +28,16 @@ export function ExecutionSummaryDisplayM3({
   values,
   showDuration,
 }: Readonly<ExecutionSummaryDisplayM3Props>) {
+  const t = useTranslations("executionSummaryDisplay");
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
-      <SummaryFieldM3 label="Number of sets" value={values.count_sets} />
+      <SummaryFieldM3 label={t("numberOfSets")} value={values.count_sets} />
       {!showDuration && (
-        <SummaryFieldM3 label="Total reps" value={values.sum_reps} />
+        <SummaryFieldM3 label={t("totalReps")} value={values.sum_reps} />
       )}
       {showDuration && (
         <SummaryFieldM3
-          label="Duration (seconds)"
+          label={t("durationSeconds")}
           value={values.duration_seconds}
         />
       )}

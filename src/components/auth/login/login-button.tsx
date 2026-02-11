@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type LoginButtonProps = {
   isLoading: boolean;
@@ -9,6 +10,7 @@ type LoginButtonProps = {
 };
 
 export function LoginButton({ isLoading, disabled }: LoginButtonProps) {
+  const t = useTranslations("auth.loginForm");
   return (
     <Button
       type="submit"
@@ -20,10 +22,10 @@ export function LoginButton({ isLoading, disabled }: LoginButtonProps) {
       {isLoading ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Logowanie...
+          {t("submitting")}
         </>
       ) : (
-        "Zaloguj się"
+        t("submit")
       )}
     </Button>
   );

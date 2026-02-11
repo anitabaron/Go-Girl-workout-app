@@ -16,16 +16,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { formatDuration } from "@/lib/utils/time-format";
 import { toast } from "sonner";
 import type { ExerciseDTO } from "@/types";
+import { useTranslations } from "@/i18n/client";
 
 type M3ExerciseCardProps = {
   readonly exercise: ExerciseDTO;
 };
 
 export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
+  const t = useTranslations("exerciseCard");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -57,32 +63,28 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
 
       if (!response.ok) {
         if (response.status === 409) {
-          toast.error(
-            "Cannot delete exercise because it is used in workout history",
-          );
+          toast.error(t("deleteConflict"));
         } else if (response.status === 404) {
-          toast.error("Exercise not found");
+          toast.error(t("deleteNotFound"));
         } else if (response.status === 401 || response.status === 403) {
-          toast.error("Unauthorized. Please log in again.");
+          toast.error(t("unauthorized"));
           router.push("/login");
         } else if (response.status >= 500) {
-          toast.error("Server error. Please try again later.");
+          toast.error(t("serverError"));
         } else {
-          toast.error("Failed to delete exercise");
+          toast.error(t("deleteFailed"));
         }
         return;
       }
 
-      toast.success("Exercise deleted");
+      toast.success(t("deleteSuccess"));
       setIsDeleteDialogOpen(false);
       router.refresh();
     } catch (error) {
       if (error instanceof TypeError) {
-        toast.error(
-          "No internet connection. Check your connection and try again.",
-        );
+        toast.error(t("offlineError"));
       } else {
-        toast.error("An error occurred while deleting the exercise");
+        toast.error(t("deleteGenericError"));
       }
     } finally {
       setIsDeleting(false);
@@ -101,7 +103,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
             size="icon"
             className="h-8 w-8"
             onClick={handleDuplicate}
-            aria-label={`Duplicate exercise: ${exercise.title}`}
+            aria-label={`${t("duplicateAria")} ${exercise.title}`}
           >
             <Copy className="size-4" />
           </Button>
@@ -110,7 +112,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
             size="icon"
             className="h-8 w-8"
             onClick={handleEdit}
-            aria-label={`Edit exercise: ${exercise.title}`}
+            aria-label={`${t("editAria")} ${exercise.title}`}
           >
             <Pencil className="size-4" />
           </Button>
@@ -119,7 +121,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={handleDeleteClick}
-            aria-label={`Delete exercise: ${exercise.title}`}
+            aria-label={`${t("deleteAria")} ${exercise.title}`}
           >
             <Trash2 className="size-4" />
           </Button>
@@ -128,7 +130,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
         <Link
           href={`/exercises/${exercise.id}`}
           className="block h-full"
-          aria-label={`View exercise details: ${exercise.title}`}
+          aria-label={`${t("detailsAria")} ${exercise.title}`}
         >
           <CardHeader className="pb-1.5 pt-3 px-4">
             <h3 className="m3-card-title line-clamp-2 pr-16">
@@ -144,14 +146,14 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
                   variant="outline"
                   className="border-primary text-primary"
                 >
-                  {EXERCISE_PART_LABELS[p]}
+                  {getExercisePartLabel(tExerciseLabel, p)}
                 </Badge>
               ))}
               {exercise.level && (
                 <Badge variant="outline">{exercise.level}</Badge>
               )}
               {exercise.is_unilateral && (
-                <Badge variant="secondary">Unilateral</Badge>
+                <Badge variant="secondary">{t("unilateral")}</Badge>
               )}
               {exercise.is_save_to_pr === true ? (
                 <Badge variant="secondary" className="bg-primary/15 text-primary">
@@ -161,7 +163,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
                 <Badge
                   variant="outline"
                   className="border-muted-foreground/50 text-muted-foreground line-through"
-                  title="Results not saved to personal records"
+                  title={t("prNotSavedTitle")}
                 >
                   PR
                 </Badge>
@@ -170,15 +172,15 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
           </CardHeader>
           <CardContent className="pt-0 px-4 pb-3 space-y-2.5">
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-              <span>
-                <span className="text-muted-foreground">Sets </span>
+                <span>
+                <span className="text-muted-foreground">{t("sets")} </span>
                 <span className="font-semibold text-foreground">
                   {exercise.series}
                 </span>
               </span>
               {exercise.reps != null && (
                 <span>
-                  <span className="text-muted-foreground">Reps </span>
+                  <span className="text-muted-foreground">{t("reps")} </span>
                   <span className="font-semibold text-foreground">
                     {exercise.reps}
                   </span>
@@ -186,7 +188,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               )}
               {exercise.duration_seconds != null && (
                 <span>
-                  <span className="text-muted-foreground">Duration </span>
+                  <span className="text-muted-foreground">{t("duration")} </span>
                   <span className="font-semibold text-foreground">
                     {exercise.duration_seconds}s
                   </span>
@@ -194,7 +196,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               )}
               {exercise.rest_in_between_seconds != null && (
                 <span>
-                  <span className="text-muted-foreground">Rest between </span>
+                  <span className="text-muted-foreground">{t("restBetween")} </span>
                   <span className="font-medium text-foreground">
                     {formatDuration(exercise.rest_in_between_seconds)}
                   </span>
@@ -202,7 +204,7 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               )}
               {exercise.rest_after_series_seconds != null && (
                 <span>
-                  <span className="text-muted-foreground">Rest after </span>
+                  <span className="text-muted-foreground">{t("restAfter")} </span>
                   <span className="font-medium text-foreground">
                     {formatDuration(exercise.rest_after_series_seconds)}
                   </span>
@@ -221,10 +223,10 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent aria-describedby="delete-exercise-description">
           <DialogHeader>
-            <DialogTitle>Delete exercise</DialogTitle>
+            <DialogTitle>{t("deleteDialogTitle")}</DialogTitle>
             <DialogDescription id="delete-exercise-description">
-              Are you sure you want to delete &quot;{exercise.title}&quot;? This
-              action cannot be undone.
+              {t("deleteDialogDescriptionStart")} &quot;{exercise.title}&quot;?{" "}
+              {t("deleteDialogDescriptionEnd")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -232,18 +234,18 @@ export function M3ExerciseCard({ exercise }: M3ExerciseCardProps) {
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={isDeleting}
-              aria-label="Cancel deletion"
+              aria-label={t("cancelAria")}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={isDeleting}
-              aria-label={`Confirm delete: ${exercise.title}`}
+              aria-label={`${t("confirmDeleteAria")} ${exercise.title}`}
               aria-busy={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? t("deleting") : t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

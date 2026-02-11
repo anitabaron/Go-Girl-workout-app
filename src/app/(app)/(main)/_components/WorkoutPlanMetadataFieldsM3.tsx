@@ -11,8 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { exercisePartValues } from "@/lib/validation/exercises";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import type { WorkoutPlanMetadataFieldsProps } from "@/types/workout-plan-form";
+import { useTranslations } from "@/i18n/client";
 
 export function WorkoutPlanMetadataFieldsM3({
   fields,
@@ -21,6 +21,7 @@ export function WorkoutPlanMetadataFieldsM3({
   onBlur,
   disabled,
 }: Readonly<WorkoutPlanMetadataFieldsProps>) {
+  const t = useTranslations("workoutPlanMetadata");
   const nameId = useId();
   const descriptionId = useId();
   const partId = useId();
@@ -32,7 +33,7 @@ export function WorkoutPlanMetadataFieldsM3({
           htmlFor={nameId}
           className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
-          Plan name <span className="text-destructive">*</span>
+          {t("planName")} <span className="text-destructive">*</span>
         </label>
         <Input
           id={nameId}
@@ -42,7 +43,7 @@ export function WorkoutPlanMetadataFieldsM3({
           onBlur={() => onBlur("name")}
           disabled={disabled}
           aria-invalid={!!errors.name}
-          placeholder="e.g. Upper body strength"
+          placeholder={t("planNamePlaceholder")}
           className="mt-2"
         />
         {errors.name && (
@@ -57,7 +58,7 @@ export function WorkoutPlanMetadataFieldsM3({
           htmlFor={descriptionId}
           className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
-          Description (optional)
+          {t("descriptionOptional")}
         </label>
         <Textarea
           id={descriptionId}
@@ -67,7 +68,7 @@ export function WorkoutPlanMetadataFieldsM3({
           onBlur={() => onBlur("description")}
           disabled={disabled}
           aria-invalid={!!errors.description}
-          placeholder="Additional info about the plan..."
+          placeholder={t("descriptionPlaceholder")}
           className="mt-2 min-h-[100px] resize-y"
         />
         {errors.description && (
@@ -82,7 +83,7 @@ export function WorkoutPlanMetadataFieldsM3({
           htmlFor={partId}
           className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
-          Body part (optional)
+          {t("bodyPartOptional")}
         </label>
         <Select
           value={fields.part ?? "none"}
@@ -96,13 +97,13 @@ export function WorkoutPlanMetadataFieldsM3({
             className="mt-2"
             data-test-id="workout-plan-form-part"
           >
-            <SelectValue placeholder="Select body part" />
+            <SelectValue placeholder={t("selectBodyPart")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">None</SelectItem>
+            <SelectItem value="none">{t("none")}</SelectItem>
             {exercisePartValues.map((part) => (
               <SelectItem key={part} value={part}>
-                {EXERCISE_PART_LABELS[part]}
+                {t(`partOption.${part.toLowerCase()}`)}
               </SelectItem>
             ))}
           </SelectContent>

@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Play, Clock10, Dumbbell } from "lucide-react";
-import type { WorkoutPlanDTO, ExercisePart } from "@/types";
+import type { WorkoutPlanDTO } from "@/types";
 import {
   Card,
   CardContent,
@@ -15,8 +15,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { formatTotalDuration } from "@/lib/utils/time-format";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutPlanStartCardM3Props = {
   plan: Omit<WorkoutPlanDTO, "exercises"> & {
@@ -26,25 +30,22 @@ type WorkoutPlanStartCardM3Props = {
   exerciseCount?: number;
 };
 
-function getPartLabel(part: ExercisePart | null): string | null {
-  if (!part) return null;
-  return EXERCISE_PART_LABELS[part] ?? part;
-}
-
 export function WorkoutPlanStartCardM3({
   plan,
   exerciseCount,
 }: WorkoutPlanStartCardM3Props) {
+  const t = useTranslations("workoutPlanStartCard");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const [isStarting, setIsStarting] = useState(false);
 
-  const partLabel = getPartLabel(plan.part);
+  const partLabel = getExercisePartLabel(tExerciseLabel, plan.part);
   const finalExerciseCount = exerciseCount ?? plan.exercise_count ?? 0;
   const exerciseCountText = useMemo(() => {
     if (finalExerciseCount === 0) return "";
-    if (finalExerciseCount === 1) return "exercise";
-    return "exercises";
-  }, [finalExerciseCount]);
+    if (finalExerciseCount === 1) return t("exerciseSingular");
+    return t("exercisePlural");
+  }, [finalExerciseCount, t]);
 
   const handleStart = async () => {
     setIsStarting(true);
@@ -60,17 +61,17 @@ export function WorkoutPlanStartCardM3({
         const msg = (errorData as { message?: string }).message;
 
         if (response.status === 400) {
-          toast.error(msg ?? "Invalid input. Check plan selection.");
+          toast.error(msg ?? t("invalidInput"));
         } else if (response.status === 404) {
-          toast.error("Workout plan not found or does not belong to you.");
+          toast.error(t("planNotFound"));
         } else if (response.status === 409) {
-          toast.error("You already have an active session. Resume it.");
+          toast.error(t("activeSessionExists"));
           router.refresh();
         } else if (response.status === 401 || response.status === 403) {
-          toast.error("Unauthorized. Please log in again.");
+          toast.error(t("unauthorized"));
           router.push("/login");
         } else {
-          toast.error(msg ?? "Failed to start workout session");
+          toast.error(msg ?? t("startFailed"));
         }
         return;
       }
@@ -79,14 +80,14 @@ export function WorkoutPlanStartCardM3({
       const sessionId = data.id ?? (data.data as { id?: string })?.id;
 
       if (sessionId) {
-        toast.success("Workout session started");
+        toast.success(t("startSuccess"));
         router.push(`/workout-sessions/${sessionId}/active`);
       } else {
-        toast.error("Failed to get session ID");
+        toast.error(t("sessionIdMissing"));
       }
     } catch (error) {
       console.error("Error starting workout:", error);
-      toast.error("An error occurred while starting the workout");
+      toast.error(t("startGenericError"));
     } finally {
       setIsStarting(false);
     }
@@ -114,7 +115,7 @@ export function WorkoutPlanStartCardM3({
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Clock10 className="size-4" />
               <span>
-                Duration:{" "}
+                {t("durationLabel")}{" "}
                 {formatTotalDuration(plan.estimated_total_time_seconds)}
               </span>
             </div>
@@ -141,14 +142,14 @@ export function WorkoutPlanStartCardM3({
           onClick={handleStart}
           disabled={isStarting}
           className="m3-cta w-full"
-          aria-label={`Start workout with plan ${plan.name}`}
+          aria-label={`${t("startAria")} ${plan.name}`}
         >
           {isStarting ? (
-            "Starting..."
+            t("starting")
           ) : (
             <>
               <Play className="mr-2 size-4" />
-              Start
+              {t("start")}
             </>
           )}
         </Button>

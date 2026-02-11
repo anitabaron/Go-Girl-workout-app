@@ -9,8 +9,12 @@ import {
 } from "@/services/personal-records";
 import { getExerciseService } from "@/services/exercises";
 import { mapExercisePersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
-import type { ExerciseType, ExercisePart } from "@/types";
-import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
+import { getTranslations } from "@/i18n/server";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+  getExerciseTypeLabel,
+} from "@/lib/exercises/labels";
 import { Surface } from "../../_components";
 import {
   ExerciseInfoM3,
@@ -27,6 +31,8 @@ const UUID_REGEX =
 export default async function ExercisePersonalRecordsPage({
   params,
 }: ExercisePersonalRecordsPageProps) {
+  const t = await getTranslations("personalRecordsExercisePage");
+  const tExerciseLabel = await getTranslations(EXERCISE_LABELS_NAMESPACE);
   const { exercise_id } = await params;
 
   if (!UUID_REGEX.test(exercise_id)) {
@@ -49,10 +55,19 @@ export default async function ExercisePersonalRecordsPage({
         exercise: {
           id: exercise.id,
           title: exercise.title,
-          type: EXERCISE_TYPE_LABELS[exercise.type as ExerciseType],
-          part: EXERCISE_PART_LABELS[exercise.part as ExercisePart],
+          type: getExerciseTypeLabel(tExerciseLabel, exercise.type),
+          part: getExercisePartLabel(tExerciseLabel, exercise.part),
         },
         records: [],
+      };
+    } else {
+      viewModel = {
+        ...viewModel,
+        exercise: {
+          ...viewModel.exercise,
+          type: getExerciseTypeLabel(tExerciseLabel, viewModel.exercise.type),
+          part: getExercisePartLabel(tExerciseLabel, viewModel.exercise.part),
+        },
       };
     }
   } catch (error) {
@@ -78,7 +93,7 @@ export default async function ExercisePersonalRecordsPage({
               className="flex items-center gap-2"
             >
               <ArrowLeft className="size-4" />
-              Powrót do rekordów
+              {t("backToRecords")}
             </Link>
           </Button>
         </div>

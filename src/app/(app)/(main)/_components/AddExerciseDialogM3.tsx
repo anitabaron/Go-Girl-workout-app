@@ -14,6 +14,7 @@ import {
 import { Plus } from "lucide-react";
 import type { ExerciseDTO } from "@/types";
 import { ExerciseSelectorM3 } from "./ExerciseSelectorM3";
+import { useTranslations } from "@/i18n/client";
 
 type AddExerciseDialogM3Props = {
   onAddExercise: (exercises: ExerciseDTO | ExerciseDTO[]) => void;
@@ -26,6 +27,7 @@ export function AddExerciseDialogM3({
   disabled,
   existingExerciseIds = [],
 }: Readonly<AddExerciseDialogM3Props>) {
+  const t = useTranslations("addExerciseDialog");
   const [open, setOpen] = useState(false);
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [exercisesMap, setExercisesMap] = useState<Map<string, ExerciseDTO>>(
@@ -78,10 +80,10 @@ export function AddExerciseDialogM3({
 
   const countLabel =
     selectedExercises.length === 0
-      ? "Add"
+      ? t("add")
       : selectedExercises.length === 1
-        ? "Add 1 exercise"
-        : `Add ${selectedExercises.length} exercises`;
+        ? t("addOne")
+        : t("addMany").replace("{count}", String(selectedExercises.length));
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -93,7 +95,7 @@ export function AddExerciseDialogM3({
           data-test-id="workout-plan-form-add-exercise-button"
         >
           <Plus className="size-4" />
-          Add exercise
+          {t("trigger")}
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -101,9 +103,9 @@ export function AddExerciseDialogM3({
         data-test-id="workout-plan-form-add-exercise-dialog"
       >
         <DialogHeader>
-          <DialogTitle>Select exercises</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Choose one or more exercises from your library to add to the plan.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -122,7 +124,7 @@ export function AddExerciseDialogM3({
             onClick={() => setOpen(false)}
             data-test-id="workout-plan-form-add-exercise-dialog-cancel"
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             type="button"

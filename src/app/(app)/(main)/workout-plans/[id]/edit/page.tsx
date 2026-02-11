@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
+import { getTranslations } from "@/i18n/server";
 import { Surface } from "../../../_components";
 import { WorkoutPlanFormM3 } from "../../../_components/WorkoutPlanFormM3";
 
@@ -17,6 +18,7 @@ const UUID_REGEX =
 export default async function EditWorkoutPlanPage({
   params,
 }: EditWorkoutPlanPageProps) {
+  const t = await getTranslations("workoutPlanEditPage");
   const { id } = await params;
 
   if (!id || !UUID_REGEX.test(id)) {
@@ -47,10 +49,10 @@ export default async function EditWorkoutPlanPage({
               className="flex items-center gap-2"
             >
               <ArrowLeft className="size-4" />
-              Back to plan
+              {t("backToPlan")}
             </Link>
           </Button>
-          <h1 className="m3-hero-sm">Edit workout plan</h1>
+          <h1 className="m3-hero-sm">{t("title")}</h1>
           <p className="m3-body m3-prose text-muted-foreground">
             {workoutPlan.name}
           </p>

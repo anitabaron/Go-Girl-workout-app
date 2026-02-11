@@ -25,3 +25,4 @@ export { ExerciseFormM3 } from "./ExerciseFormM3";
 export { NavigationRail } from "./NavigationRail";
 export { HeroReveal } from "./HeroReveal";
 export { ScrollReveal } from "./ScrollReveal";
+export { LanguageToggle } from "./LanguageToggle";

@@ -3,6 +3,7 @@
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { RestAfterSeriesTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 export function RestAfterSeriesTimerM3({
   restSeconds,
@@ -11,20 +12,21 @@ export function RestAfterSeriesTimerM3({
   nextExerciseName,
   isLastExercise,
 }: Readonly<RestAfterSeriesTimerProps>) {
+  const t = useTranslations("assistantTimers");
   if (!restSeconds || restSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
 
   let messageContent: React.ReactNode;
   if (isLastExercise) {
-    messageContent = "End of workout";
+    messageContent = t("endWorkout");
   } else if (nextExerciseName?.trim()) {
     messageContent = (
       <>
-        Get ready: <span className="font-bold">{nextExerciseName}</span>
+        {t("getReadyPrefix")} <span className="font-bold">{nextExerciseName}</span>
       </>
     );
   } else {
-    messageContent = "Get ready for the next exercise";
+    messageContent = t("getReadyNext");
   }
 
   return (
@@ -47,7 +49,9 @@ export function RestAfterSeriesTimerM3({
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
               {remainingTime}
             </div>
-            <div className="text-sm text-muted-foreground">seconds rest</div>
+            <div className="text-sm text-muted-foreground">
+              {t("secondsRest")}
+            </div>
           </div>
         )}
       </CountdownCircleTimer>
@@ -57,7 +61,7 @@ export function RestAfterSeriesTimerM3({
         className="m3-cta min-w-[120px] text-md font-light"
         data-test-id="timer-skip-break-button"
       >
-        Skip break
+        {t("skipBreak")}
       </Button>
       <div className="text-center">
         <p className="text-sm text-muted-foreground">{messageContent}</p>

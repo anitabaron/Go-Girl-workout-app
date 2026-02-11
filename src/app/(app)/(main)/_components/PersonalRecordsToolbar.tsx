@@ -13,12 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Toolbar } from "./Toolbar";
 import type { PersonalRecordQueryParams, PRMetricType } from "@/types";
 import { prMetricTypeValues } from "@/lib/validation/personal-records";
-
-const METRIC_TYPE_LABELS: Record<PRMetricType, string> = {
-  total_reps: "Maks. powtórzenia",
-  max_duration: "Maks. czas",
-  max_weight: "Maks. ciężar",
-};
+import { useTranslations } from "@/i18n/client";
 
 type SortField = NonNullable<PersonalRecordQueryParams["sort"]>;
 type SortOrder = NonNullable<PersonalRecordQueryParams["order"]>;
@@ -76,6 +71,7 @@ export function PersonalRecordsToolbar({
   sort = "achieved_at",
   order = "desc",
 }: PersonalRecordsToolbarProps) {
+  const t = useTranslations("personalRecordsToolbar");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -141,9 +137,9 @@ export function PersonalRecordsToolbar({
   return (
     <Toolbar className="flex flex-wrap items-center gap-4">
       <div className="flex flex-col gap-1">
-        <label htmlFor="exercise-filter" className="sr-only">
-          Filtruj po ćwiczeniu
-        </label>
+          <label htmlFor="exercise-filter" className="sr-only">
+            {t("exerciseFilterLabel")}
+          </label>
         <Select
           value={exerciseId ?? "all"}
           onValueChange={handleExerciseChange}
@@ -152,12 +148,12 @@ export function PersonalRecordsToolbar({
           <SelectTrigger
             id="exercise-filter"
             className="w-[200px]"
-            aria-label="Filtruj po ćwiczeniu"
+            aria-label={t("exerciseFilterAria")}
           >
-            <SelectValue placeholder="Ćwiczenie" />
+            <SelectValue placeholder={t("exercisePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Wszystkie ćwiczenia</SelectItem>
+            <SelectItem value="all">{t("allExercises")}</SelectItem>
             {exercises.map((exercise) => (
               <SelectItem key={exercise.id} value={exercise.id}>
                 {exercise.title}
@@ -168,7 +164,7 @@ export function PersonalRecordsToolbar({
       </div>
       <div className="flex flex-col gap-1">
         <label htmlFor="metric-type-filter" className="sr-only">
-          Filtruj po typie metryki
+          {t("metricTypeFilterLabel")}
         </label>
         <Select
           value={metricType ?? "all"}
@@ -178,15 +174,15 @@ export function PersonalRecordsToolbar({
           <SelectTrigger
             id="metric-type-filter"
             className="w-[200px]"
-            aria-label="Filtruj po typie metryki"
+            aria-label={t("metricTypeFilterAria")}
           >
-            <SelectValue placeholder="Typ metryki" />
+            <SelectValue placeholder={t("metricTypePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Wszystkie typy</SelectItem>
+            <SelectItem value="all">{t("allTypes")}</SelectItem>
             {prMetricTypeValues.map((mt) => (
               <SelectItem key={mt} value={mt}>
-                {METRIC_TYPE_LABELS[mt]}
+                {t(`metric.${mt}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -194,7 +190,7 @@ export function PersonalRecordsToolbar({
       </div>
       <div className="flex flex-col gap-1">
         <label htmlFor="sort-select" className="sr-only">
-          Sortuj rekordy
+          {t("sortLabel")}
         </label>
         <Select
           value={sortValue}
@@ -204,9 +200,9 @@ export function PersonalRecordsToolbar({
           <SelectTrigger
             id="sort-select"
             className="w-[200px]"
-            aria-label="Sortuj rekordy"
+            aria-label={t("sortAria")}
           >
-            <SelectValue placeholder="Sortuj według" />
+            <SelectValue placeholder={t("sortPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {SORT_OPTIONS.map((opt) => (
@@ -222,9 +218,9 @@ export function PersonalRecordsToolbar({
           variant="outline"
           onClick={handleClearFilters}
           disabled={isPending}
-          aria-label="Wyczyść filtry"
+          aria-label={t("clearFiltersAria")}
         >
-          Wyczyść filtry
+          {t("clearFilters")}
         </Button>
       )}
     </Toolbar>

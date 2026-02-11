@@ -7,6 +7,7 @@ import {
   getWorkoutSessionService,
   ServiceError,
 } from "@/services/workout-sessions";
+import { getTranslations } from "@/i18n/server";
 import { Surface } from "../../_components";
 import { WorkoutSessionDetailContent } from "../../_components/WorkoutSessionDetailContent";
 
@@ -20,6 +21,7 @@ const UUID_REGEX =
 export default async function WorkoutSessionDetailPage({
   params,
 }: WorkoutSessionDetailPageProps) {
+  const t = await getTranslations("workoutSessionDetailPage");
   const { id } = await params;
 
   if (!UUID_REGEX.test(id)) {
@@ -40,7 +42,7 @@ export default async function WorkoutSessionDetailPage({
     redirect("/workout-sessions");
   }
 
-  const planName = session.plan_name_at_time ?? "Plan deleted";
+  const planName = session.plan_name_at_time ?? t("planDeletedFallback");
 
   return (
     <div className="space-y-8">
@@ -52,12 +54,12 @@ export default async function WorkoutSessionDetailPage({
               className="flex items-center gap-2"
             >
               <ArrowLeft className="size-4" />
-              Back to sessions
+              {t("backToSessions")}
             </Link>
           </Button>
           <h1 className="m3-hero-sm">{planName}</h1>
           <p className="m3-body m3-prose text-muted-foreground">
-            Workout session details
+            {t("description")}
           </p>
         </div>
       </header>

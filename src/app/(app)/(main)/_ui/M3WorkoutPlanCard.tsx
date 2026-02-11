@@ -17,6 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteWorkoutPlanDialogM3 } from "../_components/DeleteWorkoutPlanDialogM3";
 import type { PlanExerciseSummary, WorkoutPlanDTO } from "@/types";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 
 type ExerciseSlot =
   | { type: "single"; items: PlanExerciseSummary[] }
@@ -55,13 +59,13 @@ function groupSummariesIntoSlots(
   }
   return slots;
 }
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
 import {
+  formatDuration,
   formatTotalDuration,
-  formatRepsOrDuration,
 } from "@/lib/utils/time-format";
 import { formatDateTime } from "@/lib/utils/date-format";
 import { toast } from "sonner";
+import { useTranslations } from "@/i18n/client";
 
 type M3WorkoutPlanCardProps = {
   readonly plan: Omit<WorkoutPlanDTO, "exercises"> & {
@@ -79,6 +83,18 @@ function M3WorkoutPlanCardComponent({
   exerciseCount,
   onDelete,
 }: Readonly<M3WorkoutPlanCardProps>) {
+  const t = useTranslations("workoutPlanCard");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
+  const formatRepsOrDurationLabel = (
+    reps: number | null | undefined,
+    durationSeconds: number | null | undefined,
+  ): string => {
+    if (reps != null && reps > 0) return `${reps} ${t("repsUnit")}`;
+    if (durationSeconds != null && durationSeconds > 0) {
+      return formatDuration(durationSeconds);
+    }
+    return "-";
+  };
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -94,9 +110,9 @@ function M3WorkoutPlanCardComponent({
   const exerciseCountText = useMemo(() => {
     const count = exerciseCount ?? plan.exercise_count ?? 0;
     if (count === 0) return "";
-    if (count === 1) return "exercise";
-    return "exercises";
-  }, [exerciseCount, plan.exercise_count]);
+    if (count === 1) return t("exerciseSingular");
+    return t("exercisePlural");
+  }, [exerciseCount, plan.exercise_count, t]);
   const finalExerciseCount = exerciseCount ?? plan.exercise_count ?? 0;
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -121,7 +137,7 @@ function M3WorkoutPlanCardComponent({
     e.preventDefault();
     e.stopPropagation();
     if (finalExerciseCount === 0) {
-      toast.error("Add exercises to the plan before starting");
+      toast.error(t("emptyPlanError"));
       return;
     }
     setIsStarting(true);
@@ -137,17 +153,17 @@ function M3WorkoutPlanCardComponent({
         const msg = (errorData as { message?: string }).message;
 
         if (response.status === 400) {
-          toast.error(msg ?? "Invalid input. Check plan selection.");
+          toast.error(msg ?? t("invalidInput"));
         } else if (response.status === 404) {
-          toast.error("Workout plan not found or does not belong to you.");
+          toast.error(t("planNotFound"));
         } else if (response.status === 409) {
-          toast.error("You already have an active session. Resume it.");
+          toast.error(t("activeSessionExists"));
           router.refresh();
         } else if (response.status === 401 || response.status === 403) {
-          toast.error("Unauthorized. Please log in again.");
+          toast.error(t("unauthorized"));
           router.push("/login");
         } else {
-          toast.error(msg ?? "Failed to start workout session");
+          toast.error(msg ?? t("startFailed"));
         }
         return;
       }
@@ -156,14 +172,14 @@ function M3WorkoutPlanCardComponent({
       const sessionId = data.id ?? (data.data as { id?: string })?.id;
 
       if (sessionId) {
-        toast.success("Workout session started");
+        toast.success(t("startSuccess"));
         router.push(`/workout-sessions/${sessionId}/active`);
       } else {
-        toast.error("Failed to get session ID");
+        toast.error(t("sessionIdMissing"));
       }
     } catch (error) {
       console.error("Error starting workout:", error);
-      toast.error("An error occurred while starting the workout");
+      toast.error(t("startGenericError"));
     } finally {
       setIsStarting(false);
     }
@@ -182,7 +198,7 @@ function M3WorkoutPlanCardComponent({
             className="h-8 w-8 rounded-full !bg-[var(--m3-primary)] !text-[var(--m3-on-primary)] hover:!bg-[var(--m3-primary)] hover:!opacity-90"
             onClick={handleStart}
             disabled={isStarting || finalExerciseCount === 0}
-            aria-label={`Start workout: ${plan.name}`}
+            aria-label={`${t("startAria")} ${plan.name}`}
           >
             <Play className="size-4" />
           </Button>
@@ -191,7 +207,7 @@ function M3WorkoutPlanCardComponent({
             size="icon"
             className="h-8 w-8"
             onClick={handleEdit}
-            aria-label={`Edit plan: ${plan.name}`}
+            aria-label={`${t("editAria")} ${plan.name}`}
           >
             <Pencil className="size-4" />
           </Button>
@@ -200,7 +216,7 @@ function M3WorkoutPlanCardComponent({
             size="icon"
             className="h-8 w-8"
             onClick={handleDuplicate}
-            aria-label={`Duplicate plan: ${plan.name}`}
+            aria-label={`${t("duplicateAria")} ${plan.name}`}
           >
             <Copy className="size-4" />
           </Button>
@@ -209,7 +225,7 @@ function M3WorkoutPlanCardComponent({
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={handleDeleteClick}
-            aria-label={`Delete plan: ${plan.name}`}
+            aria-label={`${t("deleteAria")} ${plan.name}`}
           >
             <Trash2 className="size-4" />
           </Button>
@@ -218,7 +234,7 @@ function M3WorkoutPlanCardComponent({
         <Link
           href={`/workout-plans/${plan.id}`}
           className="block h-full"
-          aria-label={`View plan details: ${plan.name}`}
+          aria-label={`${t("detailsAria")} ${plan.name}`}
         >
           <CardHeader>
             <h3 className="m3-headline line-clamp-2 pr-28">{plan.name}</h3>
@@ -231,7 +247,7 @@ function M3WorkoutPlanCardComponent({
                     variant="outline"
                     className="border-primary text-primary"
                   >
-                    {EXERCISE_PART_LABELS[plan.part]}
+                    {getExercisePartLabel(tExerciseLabel, plan.part)}
                   </Badge>
                 )}
                 {plan.has_missing_exercises && (
@@ -240,7 +256,7 @@ function M3WorkoutPlanCardComponent({
                     className="border-amber-500 text-amber-600"
                   >
                     <AlertCircle className="mr-1 size-3" />
-                    Contains exercises outside library
+                    {t("missingExercises")}
                   </Badge>
                 )}
               </div>
@@ -248,7 +264,7 @@ function M3WorkoutPlanCardComponent({
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <Clock10 className="size-4" />
                   <span>
-                    Duration:{" "}
+                    {t("durationLabel")}{" "}
                     {formatTotalDuration(plan.estimated_total_time_seconds)}
                   </span>
                 </div>
@@ -267,18 +283,18 @@ function M3WorkoutPlanCardComponent({
                       <table className="w-full min-w-[280px] text-xs text-muted-foreground">
                         <thead>
                           <tr className="border-b border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] text-foreground">
-                            <th className="w-8 shrink-0 py-1 pr-1" aria-label="Scope repeats" />
+                            <th className="w-8 shrink-0 py-1 pr-1" aria-label={t("scopeRepeatsAria")} />
                             <th className="py-1 pr-2 text-left font-medium">
-                              Exercise
+                              {t("tableExercise")}
                             </th>
                             <th className="py-1 pr-2 text-left font-medium">
-                              Reps/time
+                              {t("tableRepsTime")}
                             </th>
                             <th className="py-1 pr-2 text-left font-medium">
                               S
                             </th>
                             <th className="py-1 text-left font-medium">
-                              Rest
+                              {t("tableRest")}
                             </th>
                           </tr>
                         </thead>
@@ -295,7 +311,7 @@ function M3WorkoutPlanCardComponent({
                                     {slot.items[0].title}
                                   </td>
                                   <td className="py-1 pr-2">
-                                    {formatRepsOrDuration(
+                                    {formatRepsOrDurationLabel(
                                       slot.items[0].planned_reps,
                                       slot.items[0].planned_duration_seconds
                                     )}
@@ -331,7 +347,7 @@ function M3WorkoutPlanCardComponent({
                                       {ex.title}
                                     </td>
                                     <td className="py-1 pr-2">
-                                      {formatRepsOrDuration(
+                                      {formatRepsOrDurationLabel(
                                         ex.planned_reps,
                                         ex.planned_duration_seconds
                                       )}
@@ -367,10 +383,10 @@ function M3WorkoutPlanCardComponent({
               )}
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">
-                  Created: {formattedDate}
+                  {t("createdLabel")} {formattedDate}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Updated: {formattedUpdatedDate}
+                  {t("updatedLabel")} {formattedUpdatedDate}
                 </p>
               </div>
               {plan.description && (

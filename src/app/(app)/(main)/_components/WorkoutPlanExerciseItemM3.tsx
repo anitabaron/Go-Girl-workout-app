@@ -15,8 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { exerciseTypeValues } from "@/lib/validation/exercises";
 import type { WorkoutPlanExerciseItemProps } from "@/types/workout-plan-form";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
 import { PlannedParamsEditorM3 } from "./PlannedParamsEditorM3";
+import { useTranslations } from "@/i18n/client";
 
 export function WorkoutPlanExerciseItemM3({
   exercise,
@@ -30,6 +30,22 @@ export function WorkoutPlanExerciseItemM3({
   errors,
   disabled,
 }: Readonly<WorkoutPlanExerciseItemProps>) {
+  const t = useTranslations("workoutPlanExerciseItem");
+  const getTypeLabel = (value: string) => {
+    if (value === "Warm-up") return t("typeOption.warmup");
+    if (value === "Main Workout") return t("typeOption.mainworkout");
+    if (value === "Cool-down") return t("typeOption.cooldown");
+    return value;
+  };
+  const getPartLabel = (value: string) => {
+    if (value === "Legs") return t("partOption.legs");
+    if (value === "Core") return t("partOption.core");
+    if (value === "Back") return t("partOption.back");
+    if (value === "Arms") return t("partOption.arms");
+    if (value === "Chest") return t("partOption.chest");
+    if (value === "Glutes") return t("partOption.glutes");
+    return value;
+  };
   const exerciseKey = `exercise_${index}`;
   const exerciseErrors: Partial<{
     section_type: string;
@@ -123,7 +139,9 @@ export function WorkoutPlanExerciseItemM3({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h3 className="m3-title">{exercise.exercise_title ?? "No name"}</h3>
+            <h3 className="m3-title">
+              {exercise.exercise_title ?? t("noName")}
+            </h3>
             <div className="mt-2 flex flex-wrap gap-2">
               {exercise.exercise_type && (
                 <ExerciseTypeBadge
@@ -133,13 +151,12 @@ export function WorkoutPlanExerciseItemM3({
               )}
               {exercise.exercise_part && (
                 <Badge variant="outline" className="text-xs">
-                  {EXERCISE_PART_LABELS[exercise.exercise_part] ??
-                    exercise.exercise_part}
+                  {getPartLabel(exercise.exercise_part)}
                 </Badge>
               )}
               {exercise.exercise_is_unilateral && (
                 <Badge variant="secondary" className="text-xs">
-                  Unilateral
+                  {t("unilateral")}
                 </Badge>
               )}
             </div>
@@ -151,7 +168,7 @@ export function WorkoutPlanExerciseItemM3({
             onClick={onRemove}
             disabled={disabled}
             className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-            aria-label="Remove exercise from plan"
+            aria-label={t("removeAria")}
             data-test-id={`${exerciseTestId}-remove-button`}
           >
             <Trash2 className="size-4" />
@@ -165,7 +182,7 @@ export function WorkoutPlanExerciseItemM3({
               htmlFor={`${exerciseTestId}-section-type`}
               className="block text-xs font-medium text-muted-foreground"
             >
-              Section type
+              {t("sectionType")}
             </label>
             <Select
               value={exercise.section_type}
@@ -183,10 +200,10 @@ export function WorkoutPlanExerciseItemM3({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {exerciseTypeValues.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {EXERCISE_TYPE_LABELS[t] ?? t}
-                  </SelectItem>
+                {exerciseTypeValues.map((typeValue) => (
+                  <SelectItem key={typeValue} value={typeValue}>
+                    {getTypeLabel(typeValue)}
+                    </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -200,8 +217,8 @@ export function WorkoutPlanExerciseItemM3({
           <div>
             <span className="block text-xs font-medium text-muted-foreground">
               {exercise.in_scope_nr != null
-                ? "Order in scope"
-                : "Order in section"}
+                ? t("orderInScope")
+                : t("orderInSection")}
             </span>
             <div className="mt-1 flex items-center gap-1.5">
               <div
@@ -228,7 +245,7 @@ export function WorkoutPlanExerciseItemM3({
                   }
                   disabled={disabled || !canMoveUp}
                   className="h-8 w-8 shrink-0"
-                  aria-label={inScope ? "Move up within scope" : "Move up"}
+                  aria-label={inScope ? t("moveUpInScope") : t("moveUp")}
                 >
                   <ChevronUp className="size-4" />
                 </Button>
@@ -243,7 +260,7 @@ export function WorkoutPlanExerciseItemM3({
                   }
                   disabled={disabled || !canMoveDown}
                   className="h-8 w-8 shrink-0"
-                  aria-label={inScope ? "Move down within scope" : "Move down"}
+                  aria-label={inScope ? t("moveDownInScope") : t("moveDown")}
                 >
                   <ChevronDown className="size-4" />
                 </Button>
@@ -259,7 +276,7 @@ export function WorkoutPlanExerciseItemM3({
 
         <div>
           <span className="mb-2 block text-xs font-medium text-muted-foreground">
-            Planned parameters (optional)
+            {t("plannedParamsOptional")}
           </span>
           <PlannedParamsEditorM3
             params={{

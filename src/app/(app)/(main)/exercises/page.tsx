@@ -16,12 +16,14 @@ import {
   ExercisesToolbar,
 } from "../_components";
 import { M3ExerciseCard } from "../_ui";
+import { getTranslations } from "@/i18n/server";
 
 export default async function ExercisesPage({
   searchParams,
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
+  const t = await getTranslations("exercisesPage");
   const params = await searchParams;
 
   const parseResult = exerciseQuerySchema.safeParse({
@@ -49,11 +51,13 @@ export default async function ExercisesPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Exercises"
-        description="Browse and manage your exercise library."
+        title={t("title")}
+        description={t("description")}
         actions={
           <div className="flex items-center gap-3">
-            <span className="m3-chip">{exercises.length} exercises</span>
+            <span className="m3-chip">
+              {exercises.length} {t("countLabel")}
+            </span>
             <Button
               asChild
               className="m3-cta"
@@ -61,7 +65,7 @@ export default async function ExercisesPage({
             >
               <Link href="/exercises/new">
                 <Plus className="mr-2 size-4" />
-                Add exercise
+                {t("addCta")}
               </Link>
             </Button>
           </div>
@@ -85,8 +89,8 @@ export default async function ExercisesPage({
           {isEmpty ? (
             <div data-test-id="exercises-empty-state">
               <EmptyState
-                title="No exercises yet"
-                description="Add your first exercise to get started."
+                title={t("emptyTitle")}
+                description={t("emptyDescription")}
                 icon={<Plus className="text-muted-foreground" />}
               />
             </div>

@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth";
 import { getExerciseService } from "@/services/exercises";
+import { getTranslations } from "@/i18n/server";
 import { ExerciseFormM3, PageHeader, Surface } from "../../_components";
 
 export default async function NewExercisePage({
@@ -11,6 +12,7 @@ export default async function NewExercisePage({
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
+  const t = await getTranslations("exerciseNewPage");
   const userId = await requireAuth();
   const params = await searchParams;
   const duplicateId =
@@ -22,7 +24,7 @@ export default async function NewExercisePage({
       const exercise = await getExerciseService(userId, duplicateId);
       initialData = {
         ...exercise,
-        title: `Copy of ${exercise.title}`,
+        title: `${t("copyOfPrefix")} ${exercise.title}`,
       };
     } catch {
       redirect("/exercises");
@@ -32,17 +34,17 @@ export default async function NewExercisePage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title={initialData ? "Duplicate exercise" : "Add exercise"}
+        title={initialData ? t("duplicateTitle") : t("createTitle")}
         description={
           initialData
-            ? "Edit the duplicated exercise and save as a new item."
-            : "Create a new exercise for your library."
+            ? t("duplicateDescription")
+            : t("createDescription")
         }
         actions={
           <Button variant="ghost" size="sm" asChild>
             <Link href="/exercises">
               <ArrowLeft className="mr-2 size-4" />
-              Back to list
+              {t("backToList")}
             </Link>
           </Button>
         }

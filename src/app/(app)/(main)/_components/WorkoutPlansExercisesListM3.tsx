@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { WorkoutPlanExerciseItemState } from "@/types/workout-plan-form";
 import { WorkoutPlanExerciseItemM3 } from "./WorkoutPlanExerciseItemM3";
+import { useTranslations } from "@/i18n/client";
 
 const SECTION_TYPE_ORDER: Record<string, number> = {
   "Warm-up": 1,
@@ -92,6 +93,7 @@ export function WorkoutPlansExercisesListM3({
   errors,
   disabled,
 }: Readonly<WorkoutPlansExercisesListM3Props>) {
+  const t = useTranslations("workoutPlansExercisesList");
   const slots = useMemo(() => buildSlots(exercises), [exercises]);
 
   if (exercises.length === 0) return null;
@@ -128,7 +130,7 @@ export function WorkoutPlansExercisesListM3({
           >
             <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-[var(--m3-outline-variant)] pb-2">
               <span className="m3-title text-[var(--m3-on-surface-variant)]">
-                Scope ×
+                {t("scope")} ×
               </span>
               <Input
                 type="number"
@@ -146,16 +148,22 @@ export function WorkoutPlansExercisesListM3({
                 }}
                 disabled={disabled}
                 className="h-9 w-14 text-center text-sm font-medium"
-                aria-label="Scope repeat count (how many times this block is repeated)"
+                aria-label={t("scopeRepeatAria")}
                 data-test-id={`scope-${slot.scopeId}-repeat-count`}
               />
               <span className="text-sm text-muted-foreground">
-                ({slot.items.length} exercise
-                {slot.items.length === 1 ? "" : "s"})
+                {t("count")
+                  .replace("{count}", String(slot.items.length))
+                  .replace(
+                    "{label}",
+                    slot.items.length === 1
+                      ? t("exerciseSingular")
+                      : t("exercisePlural"),
+                  )}
               </span>
               <div className="ml-auto flex items-center gap-1.5">
                 <span className="text-xs font-medium text-muted-foreground">
-                  Order in section
+                  {t("orderInSection")}
                 </span>
                 {onUpdateScopeSectionOrder ? (
                   <Input
@@ -173,7 +181,7 @@ export function WorkoutPlansExercisesListM3({
                     }}
                     disabled={disabled}
                     className="h-9 w-14 text-center text-sm font-medium"
-                    aria-label="Order in section"
+                    aria-label={t("orderInSection")}
                   />
                 ) : (
                   <div className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium">
@@ -190,7 +198,7 @@ export function WorkoutPlansExercisesListM3({
                     }
                     disabled={disabled || slotIndex === 0}
                     className="h-8 w-8 shrink-0"
-                    aria-label="Move scope up"
+                    aria-label={t("moveScopeUp")}
                   >
                     <ChevronUp className="size-4" />
                   </Button>
@@ -203,7 +211,7 @@ export function WorkoutPlansExercisesListM3({
                     }
                     disabled={disabled || slotIndex === slots.length - 1}
                     className="h-8 w-8 shrink-0"
-                    aria-label="Move scope down"
+                    aria-label={t("moveScopeDown")}
                   >
                     <ChevronDown className="size-4" />
                   </Button>

@@ -1,6 +1,7 @@
 import type { SessionExerciseDTO } from "@/types";
 import { WorkoutSessionExerciseItemM3 } from "./WorkoutSessionExerciseItemM3";
 import { WorkoutSessionExerciseItemEditableM3 } from "./WorkoutSessionExerciseItemEditableM3";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutSessionExercisesListM3Props = {
   readonly exercises: SessionExerciseDTO[];
@@ -15,10 +16,11 @@ export function WorkoutSessionExercisesListM3({
   isEditMode = false,
   onExerciseSaved,
 }: WorkoutSessionExercisesListM3Props) {
+  const t = useTranslations("workoutSessionExercisesList");
   if (exercises.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
-        <p className="text-muted-foreground">No exercises in session.</p>
+        <p className="text-muted-foreground">{t("empty")}</p>
       </div>
     );
   }

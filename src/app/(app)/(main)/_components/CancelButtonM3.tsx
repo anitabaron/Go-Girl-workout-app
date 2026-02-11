@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type CancelButtonM3Props = {
   hasUnsavedChanges: boolean;
@@ -22,6 +23,7 @@ export function CancelButtonM3({
   hasUnsavedChanges,
   onConfirmLeave,
 }: Readonly<CancelButtonM3Props>) {
+  const t = useTranslations("cancelButton");
   const [showDialog, setShowDialog] = useState(false);
 
   const handleClick = () => {
@@ -45,24 +47,23 @@ export function CancelButtonM3({
         onClick={handleClick}
         data-test-id="workout-plan-form-cancel-button"
       >
-        Cancel
+        {t("cancel")}
       </Button>
       <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogTitle>{t("unsavedTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              You have unsaved changes. Are you sure you want to leave? All
-              unsaved changes will be lost.
+              {t("unsavedDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Stay</AlertDialogCancel>
+            <AlertDialogCancel>{t("stay")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Leave
+              {t("leave")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

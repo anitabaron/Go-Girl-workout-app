@@ -17,7 +17,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
-import { EXERCISE_PART_LABELS } from "@/lib/constants";
+import {
+  EXERCISE_LABELS_NAMESPACE,
+  getExercisePartLabel,
+} from "@/lib/exercises/labels";
 import { formatDuration, formatTotalDuration } from "@/lib/utils/time-format";
 import {
   calculateEstimatedSetTimeSeconds,
@@ -28,6 +31,7 @@ import { workoutPlanToImportFormat } from "@/lib/workout-plans/plan-to-import-fo
 import type { WorkoutPlanDTO, WorkoutPlanExerciseDTO } from "@/types";
 import { AddSnapshotExerciseButtonM3 } from "./AddSnapshotExerciseButtonM3";
 import { ExerciseLibraryBadgeM3 } from "./ExerciseLibraryBadgeM3";
+import { useTranslations } from "@/i18n/client";
 
 type WorkoutPlanDetailContentProps = {
   readonly plan: WorkoutPlanDTO;
@@ -42,6 +46,8 @@ const SECTION_TYPE_ORDER: Record<string, number> = {
 export function WorkoutPlanDetailContent({
   plan,
 }: WorkoutPlanDetailContentProps) {
+  const t = useTranslations("workoutPlanDetailContent");
+  const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -116,7 +122,7 @@ export function WorkoutPlanDetailContent({
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    toast.success("Plan exported to JSON");
+    toast.success(t("exportSuccess"));
   };
 
   const handleStartWorkout = async () => {
@@ -131,14 +137,14 @@ export function WorkoutPlanDetailContent({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         if (response.status === 404) {
-          toast.error("Workout plan not found");
+          toast.error(t("planNotFound"));
         } else if (response.status === 401 || response.status === 403) {
-          toast.error("Unauthorized. Please log in again.");
+          toast.error(t("unauthorized"));
           router.push("/login");
         } else {
           toast.error(
             (errorData as { message?: string }).message ??
-              "Failed to start workout session",
+              t("startFailed"),
           );
         }
         return;
@@ -148,14 +154,14 @@ export function WorkoutPlanDetailContent({
       const sessionId = data.id ?? (data.data as { id?: string })?.id;
 
       if (sessionId) {
-        toast.success("Workout session started");
+        toast.success(t("startSuccess"));
         router.push(`/workout-sessions/${sessionId}/active`);
       } else {
-        toast.error("Failed to get session ID");
+        toast.error(t("sessionIdMissing"));
       }
     } catch (error) {
       console.error("Error starting workout:", error);
-      toast.error("An error occurred while starting the workout");
+      toast.error(t("startGenericError"));
     } finally {
       setIsStarting(false);
     }
@@ -170,22 +176,22 @@ export function WorkoutPlanDetailContent({
 
       if (!response.ok) {
         if (response.status === 404) {
-          toast.error("Workout plan not found");
+          toast.error(t("planNotFound"));
         } else if (response.status === 401 || response.status === 403) {
-          toast.error("Unauthorized. Please log in again.");
+          toast.error(t("unauthorized"));
           router.push("/login");
         } else {
-          toast.error("Failed to delete workout plan");
+          toast.error(t("deleteFailed"));
         }
         return;
       }
 
-      toast.success("Workout plan deleted");
+      toast.success(t("deleteSuccess"));
       setIsDeleteDialogOpen(false);
       router.push("/workout-plans");
     } catch (error) {
       console.error("Error deleting plan:", error);
-      toast.error("An error occurred while deleting the plan");
+      toast.error(t("deleteGenericError"));
     } finally {
       setIsDeleting(false);
     }
@@ -202,7 +208,7 @@ export function WorkoutPlanDetailContent({
             onClick={handleStartWorkout}
             disabled={isStarting}
             className="h-8 w-8 rounded-full !bg-[var(--m3-primary)] !text-[var(--m3-on-primary)] hover:!bg-[var(--m3-primary)] hover:!opacity-90"
-            aria-label="Start workout with this plan"
+            aria-label={t("startAria")}
             aria-busy={isStarting}
           >
             {isStarting ? (
@@ -216,7 +222,7 @@ export function WorkoutPlanDetailContent({
             size="icon"
             className="h-8 w-8"
             onClick={handleEdit}
-            aria-label={`Edit plan: ${plan.name}`}
+            aria-label={`${t("editAria")} ${plan.name}`}
           >
             <Edit className="size-4" />
           </Button>
@@ -225,7 +231,7 @@ export function WorkoutPlanDetailContent({
             size="icon"
             className="h-8 w-8"
             onClick={handleDuplicate}
-            aria-label={`Duplicate plan: ${plan.name}`}
+            aria-label={`${t("duplicateAria")} ${plan.name}`}
           >
             <Copy className="size-4" />
           </Button>
@@ -234,7 +240,7 @@ export function WorkoutPlanDetailContent({
             size="icon"
             className="h-8 w-8"
             onClick={handleExportJson}
-            aria-label="Export plan to JSON"
+            aria-label={t("exportAria")}
           >
             <Download className="size-4" />
           </Button>
@@ -243,20 +249,20 @@ export function WorkoutPlanDetailContent({
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={() => setIsDeleteDialogOpen(true)}
-            aria-label={`Delete plan: ${plan.name}`}
+            aria-label={`${t("deleteAria")} ${plan.name}`}
           >
             <Trash2 className="size-4" />
           </Button>
         </div>
         <div className="space-y-4">
           <div>
-            <p className="m3-label text-muted-foreground mb-1">Plan name</p>
+            <p className="m3-label text-muted-foreground mb-1">{t("planName")}</p>
             <p className="m3-body">{plan.name}</p>
           </div>
           {plan.description && (
             <div>
               <p className="m3-label text-muted-foreground mb-1">
-                Description (optional)
+                {t("descriptionOptional")}
               </p>
               <p className="m3-body m3-prose whitespace-pre-wrap text-muted-foreground">
                 {plan.description}
@@ -265,11 +271,15 @@ export function WorkoutPlanDetailContent({
           )}
           <div className="flex flex-wrap items-center gap-2">
             {plan.part && (
-              <Badge variant="outline">{EXERCISE_PART_LABELS[plan.part]}</Badge>
+              <Badge variant="outline">
+                {getExercisePartLabel(tExerciseLabel, plan.part)}
+              </Badge>
             )}
             <Badge variant="secondary">
               {plan.exercises.length}{" "}
-              {plan.exercises.length === 1 ? "exercise" : "exercises"}
+              {plan.exercises.length === 1
+                ? t("exerciseSingular")
+                : t("exercisePlural")}
             </Badge>
             {estimatedTotalTime > 0 && (
               <Badge variant="secondary">
@@ -282,11 +292,11 @@ export function WorkoutPlanDetailContent({
 
       {/* Exercises list - compact like edit form */}
       <section className="space-y-4">
-        <h2 className="m3-title">Exercises in plan</h2>
+        <h2 className="m3-title">{t("exercisesInPlan")}</h2>
 
         {slots.length === 0 ? (
           <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-6 text-center">
-            <p className="text-muted-foreground">No exercises in plan.</p>
+            <p className="text-muted-foreground">{t("emptyExercises")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -297,6 +307,7 @@ export function WorkoutPlanDetailContent({
                   exercise={slot.exercise}
                   index={slotIndex}
                   planId={plan.id}
+                  t={t}
                 />
               ) : (
                 <div
@@ -305,11 +316,14 @@ export function WorkoutPlanDetailContent({
                 >
                   <div className="mb-3 flex items-center gap-2 border-b border-[var(--m3-outline-variant)] pb-2">
                     <span className="m3-title text-[var(--m3-on-surface-variant)]">
-                      Scope × {slot.repeatCount}
+                      {t("scope")} x {slot.repeatCount}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      ({slot.exercises.length} exercise
-                      {slot.exercises.length === 1 ? "" : "s"})
+                      ({slot.exercises.length}{" "}
+                      {slot.exercises.length === 1
+                        ? t("exerciseSingular")
+                        : t("exercisePlural")}
+                      )
                     </span>
                   </div>
                   <div className="space-y-3">
@@ -319,6 +333,7 @@ export function WorkoutPlanDetailContent({
                         exercise={exercise}
                         index={slotIndex * 10 + idx}
                         planId={plan.id}
+                        t={t}
                       />
                     ))}
                   </div>
@@ -335,20 +350,21 @@ export function WorkoutPlanDetailContent({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete workout plan</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteDialogTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{plan.name}&quot;? This
-              action cannot be undone.
+              {t("deleteDialogDescription")} &quot;{plan.name}&quot;?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              {t("cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? t("deleting") : t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -361,10 +377,12 @@ function ExerciseCard({
   exercise,
   index,
   planId,
+  t,
 }: {
   exercise: WorkoutPlanExerciseDTO;
   index: number;
   planId: string;
+  t: (key: string) => string;
 }) {
   const estimatedSetTimeHint = calculateEstimatedSetTimeSeconds({
     series: exercise.planned_sets ?? "",
@@ -386,17 +404,17 @@ function ExerciseCard({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h3 className="m3-title">
-              {exercise.exercise_title ?? `Exercise #${index + 1}`}
+              {exercise.exercise_title ?? `${t("exerciseLabel")} #${index + 1}`}
             </h3>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <ExerciseTypeBadge type={exercise.section_type} />
               <span className="text-xs text-muted-foreground">
-                Order: {exercise.section_order}
+                {t("orderLabel")}: {exercise.section_order}
               </span>
               <ExerciseLibraryBadgeM3 exercise={exercise} />
               {exercise.exercise_is_unilateral && (
                 <Badge variant="secondary" className="text-xs">
-                  Unilateral
+                  {t("unilateral")}
                 </Badge>
               )}
             </div>
@@ -407,20 +425,24 @@ function ExerciseCard({
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {exercise.planned_sets != null && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Sets</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("sets")}
+              </p>
               <p className="m3-body mt-1">{exercise.planned_sets}</p>
             </div>
           )}
           {exercise.planned_reps != null && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Reps</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("reps")}
+              </p>
               <p className="m3-body mt-1">{exercise.planned_reps}</p>
             </div>
           )}
           {exercise.planned_duration_seconds != null && (
             <div>
               <p className="text-xs font-medium text-muted-foreground">
-                Duration (s)
+                {t("duration")}
               </p>
               <p className="m3-body mt-1">
                 {formatDuration(exercise.planned_duration_seconds)}
@@ -429,7 +451,7 @@ function ExerciseCard({
           )}
           <div>
             <p className="text-xs font-medium text-muted-foreground">
-              Rest between sets (s)
+              {t("restBetween")}
             </p>
             <p className="m3-body mt-1">
               {exercise.planned_rest_seconds == null
@@ -439,7 +461,7 @@ function ExerciseCard({
           </div>
           <div>
             <p className="text-xs font-medium text-muted-foreground">
-              Rest after sets (s)
+              {t("restAfter")}
             </p>
             <p className="m3-body mt-1">
               {exercise.planned_rest_after_series_seconds == null
@@ -462,7 +484,7 @@ function ExerciseCard({
         {exercise.exercise_details && (
           <div>
             <p className="text-xs font-medium text-muted-foreground mb-1">
-              Details
+              {t("details")}
             </p>
             <p className="m3-body whitespace-pre-wrap text-sm">
               {exercise.exercise_details}

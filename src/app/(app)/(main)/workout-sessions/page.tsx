@@ -6,12 +6,14 @@ import { listWorkoutSessionsService } from "@/services/workout-sessions";
 import { sessionListQuerySchema } from "@/lib/validation/workout-sessions";
 import type { SessionListQueryParams } from "@/types";
 import { PageHeader, Surface, WorkoutSessionsListM3 } from "../_components";
+import { getTranslations } from "@/i18n/server";
 
 export default async function WorkoutSessionsPage({
   searchParams,
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
+  const t = await getTranslations("workoutSessionsPage");
   const params = await searchParams;
 
   const parseResult = sessionListQuerySchema.safeParse({
@@ -43,15 +45,17 @@ export default async function WorkoutSessionsPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Workout sessions"
-        description="Browse your workout history."
+        title={t("title")}
+        description={t("description")}
         actions={
           <div className="flex items-center gap-3">
-            <span className="m3-chip">{sessions.length} sessions</span>
+            <span className="m3-chip">
+              {sessions.length} {t("countLabel")}
+            </span>
             <Button asChild className="m3-cta">
               <Link href="/workout-sessions/start">
                 <Play className="mr-2 size-4" />
-                Start workout
+                {t("startCta")}
               </Link>
             </Button>
           </div>

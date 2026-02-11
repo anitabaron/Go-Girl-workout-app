@@ -6,6 +6,7 @@ import { createClient } from "@/db/supabase.server";
 import { getExerciseRelations } from "@/repositories/exercises";
 import { requireAuth } from "@/lib/auth";
 import { getExerciseService } from "@/services/exercises";
+import { getTranslations } from "@/i18n/server";
 import { ExerciseDetailContent, PageHeader, Surface } from "../../_components";
 
 export default async function ExerciseDetailPage({
@@ -13,6 +14,7 @@ export default async function ExerciseDetailPage({
 }: Readonly<{
   params: Promise<{ id: string }>;
 }>) {
+  const t = await getTranslations("exerciseDetailPage");
   const { id } = await params;
   const userId = await requireAuth();
 
@@ -40,13 +42,13 @@ export default async function ExerciseDetailPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Exercise details"
+        title={t("title")}
         description={exercise.title}
         actions={
           <Button variant="ghost" size="sm" asChild>
             <Link href="/exercises">
               <ArrowLeft className="mr-2 size-4" />
-              Back to list
+              {t("backToList")}
             </Link>
           </Button>
         }

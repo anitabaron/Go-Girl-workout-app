@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type ConfirmPasswordInputProps = {
   value: string;
@@ -31,13 +32,14 @@ export function ConfirmPasswordInput({
   isVisible,
   onToggleVisibility,
 }: ConfirmPasswordInputProps) {
+  const t = useTranslations("auth");
   const id = useId();
   const errorId = `${id}-error`;
   const toggleId = `${id}-toggle`;
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>Potwierdź hasło</Label>
+      <Label htmlFor={id}>{t("registerForm.confirmPassword")}</Label>
       <div className="relative">
         <Input
           id={id}
@@ -59,7 +61,9 @@ export function ConfirmPasswordInput({
           className="absolute right-1 top-1/2 -translate-y-1/2"
           onClick={onToggleVisibility}
           disabled={disabled}
-          aria-label={isVisible ? "Ukryj hasło" : "Pokaż hasło"}
+          aria-label={
+            isVisible ? t("common.hidePassword") : t("common.showPassword")
+          }
           aria-pressed={isVisible}
         >
           {isVisible ? (

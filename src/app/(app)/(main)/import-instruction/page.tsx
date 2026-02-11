@@ -3,20 +3,22 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import workoutPlanImportExample from "@/lib/json/workout-plan-import-example.json";
 import { PageHeader, Surface } from "../_components";
+import { getTranslations } from "@/i18n/server";
 
-export default function ImportInstructionPage() {
+export default async function ImportInstructionPage() {
+  const t = await getTranslations("importInstructionPage");
   return (
     <div className="space-y-8">
       <header className="flex flex-col gap-4">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href="/workout-plans" className="flex items-center gap-2">
             <ArrowLeft className="size-4" />
-            Powrót do planów
+            {t("backToPlans")}
           </Link>
         </Button>
         <PageHeader
-          title="Instrukcja importu planów treningowych"
-          description="Utwórz plik JSON zgodny z poniższym schematem, aby zaimportować plan treningowy do aplikacji."
+          title={t("title")}
+          description={t("description")}
         />
       </header>
 
@@ -28,15 +30,13 @@ export default function ImportInstructionPage() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-semibold">
                 1
               </div>
-              <h2 className="m3-headline">
-                Informacje ogólne o planie treningowym
-              </h2>
+              <h2 className="m3-headline">{t("step1Title")}</h2>
             </div>
             <div className="ml-11 space-y-6">
               <div className="space-y-2">
                 <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-3 text-xs">
                   <div>
-                    <p className="m3-label text-xs mb-2">Wymagane:</p>
+                    <p className="m3-label text-xs mb-2">{t("requiredLabel")}</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
@@ -53,7 +53,7 @@ export default function ImportInstructionPage() {
                     </ul>
                   </div>
                   <div>
-                    <p className="m3-label text-xs mb-2">Opcjonalne:</p>
+                    <p className="m3-label text-xs mb-2">{t("optionalLabel")}</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
@@ -84,7 +84,7 @@ export default function ImportInstructionPage() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-semibold">
                 2
               </div>
-              <h2 className="m3-headline">Struktura ćwiczeń</h2>
+              <h2 className="m3-headline">{t("step2Title")}</h2>
             </div>
             <div className="ml-11 space-y-2">
               <p className="m3-body text-muted-foreground text-xs">
@@ -136,12 +136,12 @@ export default function ImportInstructionPage() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-semibold">
                 3
               </div>
-              <h2 className="m3-headline">Opcje dodawania ćwiczeń</h2>
+              <h2 className="m3-headline">{t("step3Title")}</h2>
             </div>
             <div className="ml-11 space-y-6">
               {/* Option A: Existing Exercise */}
               <div className="space-y-2">
-                <h3 className="m3-title">Opcja A: Istniejące ćwiczenie</h3>
+                <h3 className="m3-title">{t("step3OptionA")}</h3>
                 <p className="m3-body text-muted-foreground text-xs">
                   Gdy ćwiczenie jest w bibliotece, wskaż je przez{" "}
                   <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
@@ -156,7 +156,7 @@ export default function ImportInstructionPage() {
                 </p>
                 <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-3 text-xs">
                   <div>
-                    <p className="m3-label text-xs mb-2">Wymagane:</p>
+                    <p className="m3-label text-xs mb-2">{t("requiredLabel")}</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <strong>Jedno z:</strong>{" "}
@@ -172,7 +172,7 @@ export default function ImportInstructionPage() {
                     </ul>
                   </div>
                   <div>
-                    <p className="m3-label text-xs mb-2">Opcjonalne:</p>
+                    <p className="m3-label text-xs mb-2">{t("optionalLabel")}</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
@@ -253,14 +253,14 @@ export default function ImportInstructionPage() {
 
               {/* Option B: New Exercise (Snapshot) */}
               <div className="space-y-2">
-                <h3 className="m3-title">Opcja B: Nowe ćwiczenie (snapshot)</h3>
+                <h3 className="m3-title">{t("step3OptionB")}</h3>
                 <p className="m3-body text-muted-foreground text-xs">
                   Użyj, gdy chcesz dodać nowe ćwiczenie, które nie istnieje w
                   bibliotece.
                 </p>
                 <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-3 text-xs">
                   <div>
-                    <p className="m3-label text-xs mb-2">Wymagane:</p>
+                    <p className="m3-label text-xs mb-2">{t("requiredLabel")}</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
@@ -271,7 +271,7 @@ export default function ImportInstructionPage() {
                     </ul>
                   </div>
                   <div>
-                    <p className="m3-label text-xs mb-2">Opcjonalne:</p>
+                    <p className="m3-label text-xs mb-2">{t("optionalLabel")}</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
                       <li>
                         <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
@@ -368,7 +368,7 @@ export default function ImportInstructionPage() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-semibold">
                 4
               </div>
-              <h2 className="m3-headline">Przykładowy plik JSON</h2>
+              <h2 className="m3-headline">{t("step4Title")}</h2>
             </div>
             <div className="ml-11">
               <p className="m3-body text-muted-foreground text-xs mb-3">

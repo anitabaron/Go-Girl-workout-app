@@ -22,11 +22,12 @@ import {
 import { Layers } from "lucide-react";
 import type { ExerciseDTO, ExerciseType } from "@/types";
 import { ExerciseSelectorM3 } from "./ExerciseSelectorM3";
+import { useTranslations } from "@/i18n/client";
 
-const SECTION_TYPES: { value: ExerciseType; label: string }[] = [
-  { value: "Warm-up", label: "Warm-up" },
-  { value: "Main Workout", label: "Main Workout" },
-  { value: "Cool-down", label: "Cool-down" },
+const SECTION_TYPES: { value: ExerciseType; key: string }[] = [
+  { value: "Warm-up", key: "warmup" },
+  { value: "Main Workout", key: "mainworkout" },
+  { value: "Cool-down", key: "cooldown" },
 ];
 
 const DEFAULT_REPEAT_COUNT = 3;
@@ -46,6 +47,7 @@ export function AddScopeDialogM3({
   disabled,
   existingExerciseIds = [],
 }: Readonly<AddScopeDialogM3Props>) {
+  const t = useTranslations("addScopeDialog");
   const [open, setOpen] = useState(false);
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [exercisesMap, setExercisesMap] = useState<Map<string, ExerciseDTO>>(
@@ -116,11 +118,12 @@ export function AddScopeDialogM3({
       : repeatCount;
   const isValidRepeat = !Number.isNaN(repeatCountNum) && repeatCountNum >= 1;
   const canConfirm = selectedExercises.length > 0 && isValidRepeat;
-  const exerciseSuffix = selectedExercises.length === 1 ? "" : "s";
   const confirmLabel =
     selectedExercises.length === 0
-      ? "Add scope"
-      : `Add scope (${selectedExercises.length} exercise${exerciseSuffix} × ${repeatCountNum})`;
+      ? t("addScope")
+      : t("addScopeCount")
+          .replace("{count}", String(selectedExercises.length))
+          .replace("{repeat}", String(repeatCountNum));
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -133,7 +136,7 @@ export function AddScopeDialogM3({
           data-test-id="workout-plan-form-add-scope-button"
         >
           <Layers className="size-4" />
-          Add scope
+          {t("addScope")}
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -141,10 +144,9 @@ export function AddScopeDialogM3({
         data-test-id="workout-plan-form-add-scope-dialog"
       >
         <DialogHeader>
-          <DialogTitle>Add scope</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Choose multiple exercises to run one after another, then repeat the
-            block. Example: Exercise A → B → C, repeated 3 times.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -152,7 +154,7 @@ export function AddScopeDialogM3({
           <div className="flex gap-2 items-end">
             <div className="min-w-0 space-y-2">
               <label htmlFor="scope-section-type" className="text-sm">
-                Section
+                {t("section")}
               </label>
               <Select
                 value={sectionType}
@@ -162,9 +164,9 @@ export function AddScopeDialogM3({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {SECTION_TYPES.map(({ value, label }) => (
+                  {SECTION_TYPES.map(({ value, key }) => (
                     <SelectItem key={value} value={value}>
-                      {label}
+                      {t(`typeOption.${key}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -175,7 +177,7 @@ export function AddScopeDialogM3({
                 htmlFor="scope-repeat-count"
                 className="text-sm whitespace-nowrap"
               >
-                Repeat (times)
+                {t("repeatTimes")}
               </label>
               <Input
                 id="scope-repeat-count"
@@ -196,7 +198,7 @@ export function AddScopeDialogM3({
           </div>
 
           <div>
-            <p className="text-sm mb-2">Exercises in scope (order)</p>
+            <p className="text-sm mb-2">{t("exercisesInScopeOrder")}</p>
             <ExerciseSelectorM3
               selectedExerciseIds={selectedExerciseIds}
               onToggleExercise={handleToggleExercise}
@@ -212,7 +214,7 @@ export function AddScopeDialogM3({
             onClick={handleCancel}
             data-test-id="workout-plan-form-add-scope-dialog-cancel"
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             type="button"
