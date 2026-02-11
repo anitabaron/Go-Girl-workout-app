@@ -625,6 +625,8 @@ body:has(.ui-m3) {
   --m3-radius-md: 1rem;
   --m3-radius-sm: 0.75rem;
   --m3-radius-lg: 1.25rem;
+  --m3-radius-large: 1.5rem;
+  --m3-radius-hero: 1.75rem;
   --m3-shadow-1:
     0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
   --m3-shadow-2:
@@ -662,7 +664,8 @@ body:has(.ui-m3) [data-slot="dialog-content"],
 body:has(.ui-m3) [data-slot="alert-dialog-content"] {
   background: var(--m3-surface-container-high) !important;
   border: 1px solid var(--m3-outline-variant) !important;
-  border-radius: var(--m3-radius-large) !important;
+  border-radius: var(--m3-radius-large, 1.5rem) !important;
+  overflow: hidden;
   box-shadow: var(--m3-shadow-2) !important;
 }
 
