@@ -2,15 +2,27 @@ import { test, expect, type Page } from "@playwright/test";
 import { authenticateUser, createWorkoutPlan } from "../fixtures";
 
 async function createCompletedSessionFromPlan(page: Page, planId: string) {
-  const startResponse = await page.request.post("/api/workout-sessions", {
-    data: { workout_plan_id: planId },
-  });
-  expect(startResponse.ok()).toBe(true);
-  const started = (await startResponse.json()) as { id?: string };
-  expect(started.id).toBeTruthy();
+  let startedId: string | undefined;
+  let startOk = false;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const startResponse = await page.request.post("/api/workout-sessions", {
+      data: { workout_plan_id: planId },
+    });
+    if (startResponse.ok()) {
+      const started = (await startResponse.json()) as { id?: string };
+      if (started.id) {
+        startedId = started.id;
+        startOk = true;
+        break;
+      }
+    }
+    await page.waitForTimeout(500 + attempt * 500);
+  }
+  expect(startOk).toBe(true);
+  expect(startedId).toBeTruthy();
 
   const completeResponse = await page.request.patch(
-    `/api/workout-sessions/${started.id}/status`,
+    `/api/workout-sessions/${startedId}/status`,
     {
       data: { status: "completed" },
     },
@@ -91,10 +103,11 @@ test.describe("Statistics", () => {
 
     await page.goto("/statistics");
     await page.waitForLoadState("networkidle", { timeout: 30000 });
-    await page
+    const planButton = page
       .getByRole("button", { name: new RegExp(planName, "i") })
-      .first()
-      .click();
+      .first();
+    await expect(planButton).toBeVisible({ timeout: 30000 });
+    await planButton.click();
 
     await expect(
       page.getByText(/Data treningu|Workout date/i),
@@ -127,10 +140,11 @@ test.describe("Statistics", () => {
 
     await page.goto("/statistics");
     await page.waitForLoadState("networkidle", { timeout: 30000 });
-    await page
+    const planButton = page
       .getByRole("button", { name: new RegExp(planName, "i") })
-      .first()
-      .click();
+      .first();
+    await expect(planButton).toBeVisible({ timeout: 30000 });
+    await planButton.click();
 
     await page
       .getByRole("button", {

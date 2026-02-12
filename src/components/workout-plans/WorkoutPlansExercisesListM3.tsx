@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import type { WorkoutPlanExerciseItemState } from "@/types/workout-plan-form";
 import { WorkoutPlanExerciseItemM3 } from "./WorkoutPlanExerciseItemM3";
 import { useTranslations } from "@/i18n/client";
+import { formatTotalDuration } from "@/lib/utils/time-format";
+import { calculateScopeEstimatedTimeSeconds } from "@/lib/workout-plans/estimated-time";
 
 const SECTION_TYPE_ORDER: Record<string, number> = {
   "Warm-up": 1,
@@ -100,30 +102,38 @@ export function WorkoutPlansExercisesListM3({
 
   return (
     <div className="space-y-4" data-test-id="workout-plan-form-exercises-list">
-      {slots.map((slot, slotIndex) =>
-        slot.kind === "single" ? (
-          <div
-            key={
-              slot.exercise.id
-                ? `single-${slot.exercise.id}`
-                : `single-${slot.originalIndex}`
-            }
-          >
-            <WorkoutPlanExerciseItemM3
-              exercise={slot.exercise}
-              index={slot.originalIndex}
-              exercises={exercises}
-              onChange={(updates) =>
-                onUpdateExercise(slot.originalIndex, updates)
+      {slots.map((slot, slotIndex) => {
+        if (slot.kind === "single") {
+          return (
+            <div
+              key={
+                slot.exercise.id
+                  ? `single-${slot.exercise.id}`
+                  : `single-${slot.originalIndex}`
               }
-              onRemove={() => onRemoveExercise(slot.originalIndex)}
-              onMoveUp={() => onMoveExercise(slot.originalIndex, "up")}
-              onMoveDown={() => onMoveExercise(slot.originalIndex, "down")}
-              errors={errors}
-              disabled={disabled}
-            />
-          </div>
-        ) : (
+            >
+              <WorkoutPlanExerciseItemM3
+                exercise={slot.exercise}
+                index={slot.originalIndex}
+                exercises={exercises}
+                onChange={(updates) =>
+                  onUpdateExercise(slot.originalIndex, updates)
+                }
+                onRemove={() => onRemoveExercise(slot.originalIndex)}
+                onMoveUp={() => onMoveExercise(slot.originalIndex, "up")}
+                onMoveDown={() => onMoveExercise(slot.originalIndex, "down")}
+                errors={errors}
+                disabled={disabled}
+              />
+            </div>
+          );
+        }
+
+        const scopeEstimatedTime = calculateScopeEstimatedTimeSeconds(
+          slot.items.map(({ exercise }) => exercise),
+          slot.repeatCount,
+        );
+        return (
           <div
             key={`scope-${slot.scopeId}`}
             className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-raw-primary-container)] p-4"
@@ -151,6 +161,12 @@ export function WorkoutPlansExercisesListM3({
                 aria-label={t("scopeRepeatAria")}
                 data-test-id={`scope-${slot.scopeId}-repeat-count`}
               />
+              {scopeEstimatedTime != null && (
+                <span className="text-sm font-medium text-[var(--m3-on-surface-variant)]">
+                  • {t("estimatedScopeTimeLabel")}: ~
+                  {formatTotalDuration(scopeEstimatedTime)}
+                </span>
+              )}
               <span className="text-sm text-muted-foreground">
                 {t("count")
                   .replace("{count}", String(slot.items.length))
@@ -249,8 +265,8 @@ export function WorkoutPlansExercisesListM3({
               ))}
             </div>
           </div>
-        ),
-      )}
+        );
+      })}
     </div>
   );
 }

@@ -163,36 +163,40 @@ export class WorkoutPlanFormPage {
    * Select exercise in the dialog by title
    */
   async selectExerciseInDialog(exerciseTitle: string) {
-    // Wait for exercise selector to load
     await this.page.waitForLoadState("networkidle");
-
-    // Wait for loader to disappear (exercises are loading)
-    const loader = this.page.locator('svg[class*="animate-spin"]').first();
-    try {
-      await loader.waitFor({ state: "hidden", timeout: 5000 });
-    } catch {
-      // Loader might not be visible if exercises loaded quickly
-    }
-
-    // Wait for at least one exercise card to appear (indicates exercises are loaded)
-    // Cards are rendered as Card components with data-test-id
-    const exerciseCard = this.page
-      .locator('[data-test-id="exercise-selector-card"]')
+    const searchInput = this.page
+      .locator('[data-test-id="workout-plan-form-add-exercise-dialog"] input')
       .first();
-    await exerciseCard.waitFor({ state: "visible", timeout: 30000 }); // Increased for CI pipeline
 
-    // Additional wait for exercises to fully render
-    await this.page.waitForTimeout(300);
-
-    // Select by card to avoid false matches in other parts of dialog.
     const targetCard = this.page
       .locator('[data-test-id="exercise-selector-card"]')
       .filter({ hasText: exerciseTitle })
       .first();
+
+    // Retry to handle eventual consistency after creating exercise right before opening dialog.
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const loader = this.page.locator('svg[class*="animate-spin"]').first();
+      try {
+        await loader.waitFor({ state: "hidden", timeout: 5000 });
+      } catch {
+        // loader may not be visible
+      }
+
+      if (await targetCard.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await targetCard.click();
+        await this.page.waitForTimeout(300);
+        return;
+      }
+
+      // Force refetch in selector by changing search query.
+      await searchInput.fill(exerciseTitle);
+      await this.page.waitForTimeout(400);
+      await searchInput.fill("");
+      await this.page.waitForTimeout(400 + attempt * 200);
+    }
+
     await targetCard.waitFor({ state: "visible", timeout: 30000 });
     await targetCard.click();
-
-    // Wait a bit for the selection to register
     await this.page.waitForTimeout(300);
   }
 

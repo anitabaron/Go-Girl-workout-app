@@ -23,9 +23,12 @@ import {
 } from "@/lib/exercises/labels";
 import { formatDuration, formatTotalDuration } from "@/lib/utils/time-format";
 import {
-  calculateEstimatedSetTimeSeconds,
   getEstimatedSetTimeLabel,
 } from "@/lib/exercises/estimated-set-time";
+import {
+  calculateScopeEstimatedTimeSeconds,
+  getExerciseEstimatedTimeSeconds,
+} from "@/lib/workout-plans/estimated-time";
 import { toast } from "sonner";
 import { workoutPlanToImportFormat } from "@/lib/workout-plans/plan-to-import-format";
 import type { WorkoutPlanDTO, WorkoutPlanExerciseDTO } from "@/types";
@@ -300,24 +303,38 @@ export function WorkoutPlanDetailContent({
           </div>
         ) : (
           <div className="space-y-4">
-            {slots.map((slot, slotIndex) =>
-              slot.kind === "single" ? (
-                <ExerciseCard
-                  key={slot.exercise.id}
-                  exercise={slot.exercise}
-                  index={slotIndex}
-                  planId={plan.id}
-                  t={t}
-                />
-              ) : (
+            {slots.map((slot, slotIndex) => {
+              if (slot.kind === "single") {
+                return (
+                  <ExerciseCard
+                    key={slot.exercise.id}
+                    exercise={slot.exercise}
+                    index={slotIndex}
+                    planId={plan.id}
+                    t={t}
+                  />
+                );
+              }
+
+              const scopeEstimatedTime = calculateScopeEstimatedTimeSeconds(
+                slot.exercises,
+                slot.repeatCount,
+              );
+              return (
                 <div
                   key={`scope-${slot.scopeId}`}
                   className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-raw-primary-container)] p-4"
                 >
                   <div className="mb-3 flex items-center gap-2 border-b border-[var(--m3-outline-variant)] pb-2">
                     <span className="m3-title text-[var(--m3-on-surface-variant)]">
-                      {t("scope")} x {slot.repeatCount}
+                      {t("scope")} × {slot.repeatCount}
                     </span>
+                    {scopeEstimatedTime != null && (
+                      <span className="text-sm font-medium text-[var(--m3-on-surface-variant)]">
+                        • {t("estimatedScopeTimeLabel")}: ~
+                        {formatTotalDuration(scopeEstimatedTime)}
+                      </span>
+                    )}
                     <span className="text-sm text-muted-foreground">
                       ({slot.exercises.length}{" "}
                       {slot.exercises.length === 1
@@ -338,8 +355,8 @@ export function WorkoutPlanDetailContent({
                     ))}
                   </div>
                 </div>
-              ),
-            )}
+              );
+            })}
           </div>
         )}
       </section>
@@ -384,15 +401,7 @@ function ExerciseCard({
   planId: string;
   t: (key: string) => string;
 }) {
-  const estimatedSetTimeHint = calculateEstimatedSetTimeSeconds({
-    series: exercise.planned_sets ?? "",
-    reps: exercise.planned_reps ?? null,
-    duration_seconds: exercise.planned_duration_seconds ?? null,
-    rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
-    rest_after_series_seconds:
-      exercise.planned_rest_after_series_seconds ?? null,
-    exercise_is_unilateral: exercise.exercise_is_unilateral ?? undefined,
-  });
+  const estimatedSetTimeHint = getExerciseEstimatedTimeSeconds(exercise);
   const estimatedSetTimeLabel = getEstimatedSetTimeLabel(
     estimatedSetTimeHint,
     "s",
@@ -475,9 +484,9 @@ function ExerciseCard({
               {estimatedSetTimeLabel}
             </p>
             <p className="m3-body mt-1">
-              {exercise.exercise_estimated_set_time_seconds == null
+              {estimatedSetTimeHint == null
                 ? "—"
-                : formatDuration(exercise.exercise_estimated_set_time_seconds)}
+                : formatDuration(estimatedSetTimeHint)}
             </p>
           </div>
         </div>
