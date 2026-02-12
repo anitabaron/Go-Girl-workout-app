@@ -39,6 +39,7 @@ import { findByNormalizedTitle } from "@/repositories/exercises";
 import { normalizeTitleForDbLookup } from "@/lib/validation/exercises";
 import { mapExerciseUpdateToDb } from "@/lib/workout-plans/map-exercise-update-to-db";
 import { createSnapshotIdFactory } from "@/lib/workout-plan-snapshot-id";
+import { calculatePlanEstimatedTotalTimeSeconds } from "@/lib/workout-plans/estimated-time";
 
 export { ServiceError } from "@/lib/service-utils";
 
@@ -64,15 +65,7 @@ function mapDbError(error: Parameters<typeof mapDbErrorBase>[0]) {
 function calculateEstimatedTotalTime(
   exercises: WorkoutPlanExerciseDTO[],
 ): number | null {
-  const total = exercises.reduce((sum, exercise) => {
-    const estimatedSetTime = exercise.exercise_estimated_set_time_seconds;
-    if (estimatedSetTime !== null && estimatedSetTime !== undefined) {
-      return sum + estimatedSetTime;
-    }
-    return sum;
-  }, 0);
-
-  return total > 0 ? total : null;
+  return calculatePlanEstimatedTotalTimeSeconds(exercises);
 }
 
 const SECTION_TYPE_ORDER: Record<string, number> = {
