@@ -87,11 +87,15 @@ export class ExercisesPage {
    */
   async clickAddExercise() {
     // Primary: data-test-id (works for both M3 and legacy)
-    const addButton = this.page.locator('[data-test-id="add-exercise-button"]');
-    if (await addButton.isVisible().catch(() => false)) {
-      await addButton.click();
-      await this.page.waitForURL("**/exercises/new", { timeout: 10000 });
-      return;
+    const addButtons = this.page.locator('[data-test-id="add-exercise-button"]');
+    const addButtonCount = await addButtons.count();
+    for (let i = 0; i < addButtonCount; i++) {
+      const button = addButtons.nth(i);
+      if (await button.isVisible().catch(() => false)) {
+        await button.click();
+        await this.page.waitForURL("**/exercises/new", { timeout: 20000 });
+        return;
+      }
     }
 
     // Fallback: href (main app uses /exercises/new)
@@ -101,7 +105,7 @@ export class ExercisesPage {
       const link = allLinks.nth(i);
       if (await link.isVisible().catch(() => false)) {
         await link.click();
-        await this.page.waitForURL("**/exercises/new", { timeout: 10000 });
+        await this.page.waitForURL("**/exercises/new", { timeout: 20000 });
         return;
       }
     }
@@ -112,7 +116,7 @@ export class ExercisesPage {
     });
     if (await linkByRole.isVisible().catch(() => false)) {
       await linkByRole.first().click();
-      await this.page.waitForURL("**/exercises/new", { timeout: 10000 });
+      await this.page.waitForURL("**/exercises/new", { timeout: 20000 });
       return;
     }
 

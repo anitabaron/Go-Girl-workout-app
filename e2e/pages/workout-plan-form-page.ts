@@ -1,5 +1,8 @@
 import { Page, Locator } from "@playwright/test";
-import { getExercisePartLabelMatcher } from "./i18n-labels";
+import {
+  getExercisePartLabelMatcher,
+  getExerciseTypeLabelMatcher,
+} from "./i18n-labels";
 
 /**
  * Page Object Model for Workout Plan Form Page (Create/Edit)
@@ -13,6 +16,7 @@ export class WorkoutPlanFormPage {
   readonly descriptionTextarea: Locator;
   readonly partSelect: Locator;
   readonly addExerciseButton: Locator;
+  readonly addScopeButton: Locator;
   readonly exercisesList: Locator;
   readonly exercisesEmpty: Locator;
   readonly saveButton: Locator;
@@ -28,6 +32,9 @@ export class WorkoutPlanFormPage {
     this.partSelect = page.locator('[data-test-id="workout-plan-form-part"]');
     this.addExerciseButton = page.locator(
       '[data-test-id="workout-plan-form-add-exercise-button"]',
+    );
+    this.addScopeButton = page.locator(
+      '[data-test-id="workout-plan-form-add-scope-button"]',
     );
     this.exercisesList = page.locator(
       '[data-test-id="workout-plan-form-exercises-list"]',
@@ -124,11 +131,31 @@ export class WorkoutPlanFormPage {
   }
 
   /**
+   * Click add scope button
+   */
+  async clickAddScope() {
+    await this.addScopeButton.waitFor({ state: "visible", timeout: 10000 });
+    await this.addScopeButton.click();
+    await this.page
+      .locator('[data-test-id="workout-plan-form-add-scope-dialog"]')
+      .waitFor({ state: "visible", timeout: 5000 });
+  }
+
+  /**
    * Wait for add exercise dialog to be visible
    */
   async waitForAddExerciseDialog() {
     await this.page
       .locator('[data-test-id="workout-plan-form-add-exercise-dialog"]')
+      .waitFor({ state: "visible" });
+  }
+
+  /**
+   * Wait for add scope dialog to be visible
+   */
+  async waitForAddScopeDialog() {
+    await this.page
+      .locator('[data-test-id="workout-plan-form-add-scope-dialog"]')
       .waitFor({ state: "visible" });
   }
 
@@ -185,6 +212,20 @@ export class WorkoutPlanFormPage {
   }
 
   /**
+   * Confirm adding scope in the dialog
+   */
+  async confirmAddScope() {
+    const confirmButton = this.page.locator(
+      '[data-test-id="workout-plan-form-add-scope-dialog-confirm"]',
+    );
+    await confirmButton.waitFor({ state: "visible", timeout: 5000 });
+    await confirmButton.click();
+    await this.page
+      .locator('[data-test-id="workout-plan-form-add-scope-dialog"]')
+      .waitFor({ state: "hidden", timeout: 5000 });
+  }
+
+  /**
    * Add exercise to plan (opens dialog, selects exercise, confirms)
    */
   async addExercise(exerciseTitle: string) {
@@ -194,6 +235,116 @@ export class WorkoutPlanFormPage {
     await this.confirmAddExercises();
     // Wait for exercise to appear in the list
     await this.page.waitForTimeout(500); // Small delay for state update
+  }
+
+  /**
+   * Add scope to plan (opens dialog, selects exercises, confirms)
+   */
+  async addScope(exerciseTitles: string[], repeatCount = 3) {
+    await this.clickAddScope();
+    await this.waitForAddScopeDialog();
+
+    const repeatInput = this.page.locator(
+      '[data-test-id="workout-plan-form-add-scope-repeat"]',
+    );
+    await repeatInput.fill(String(repeatCount));
+
+    for (const title of exerciseTitles) {
+      await this.selectExerciseInDialog(title);
+    }
+
+    await this.confirmAddScope();
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Change order of the first scope slot in section.
+   * Uses scope header number inputs: [repeat, order].
+   */
+  async updateFirstScopeOrder(newOrder: number) {
+    const repeatInput = this.exercisesList
+      .locator('[data-test-id^="scope-"][data-test-id$="-repeat-count"]')
+      .first();
+    await repeatInput.waitFor({ state: "visible", timeout: 10000 });
+
+    const headerRow = repeatInput.locator(
+      "xpath=ancestor::div[contains(@class,'flex')][1]",
+    );
+    const numericInputs = headerRow.locator('input[type="number"]');
+    const numericInputsCount = await numericInputs.count();
+    if (numericInputsCount < 2) {
+      throw new Error("Scope order input not found");
+    }
+
+    const orderInput = numericInputs.nth(1);
+    await orderInput.fill(String(newOrder));
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Move exercise up by clicking the first visible up-arrow button in its card.
+   */
+  async moveExerciseUp(exerciseTitle: string) {
+    const exerciseItem = await this.getExerciseItemByTitle(exerciseTitle);
+    if (!exerciseItem) {
+      throw new Error(
+        `Exercise with title "${exerciseTitle}" not found in plan`,
+      );
+    }
+
+    const moveUpButton = exerciseItem
+      .locator('button:has(svg.lucide-chevron-up)')
+      .first();
+    await moveUpButton.waitFor({ state: "visible", timeout: 5000 });
+    await moveUpButton.click();
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Move first scope block down in section order.
+   */
+  async moveFirstScopeDown() {
+    const button = this.page
+      .getByRole("button", { name: /Przesuń obwód w dół|Move scope down/i })
+      .first();
+    await button.waitFor({ state: "visible", timeout: 10000 });
+    await button.click();
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Move first scope block up in section order.
+   */
+  async moveFirstScopeUp() {
+    const button = this.page
+      .getByRole("button", { name: /Przesuń obwód w górę|Move scope up/i })
+      .first();
+    await button.waitFor({ state: "visible", timeout: 10000 });
+    await button.click();
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Update section type for exercise card found by title.
+   */
+  async updateExerciseSectionType(exerciseTitle: string, sectionType: string) {
+    const exerciseItem = await this.getExerciseItemByTitle(exerciseTitle);
+    if (!exerciseItem) {
+      throw new Error(
+        `Exercise with title "${exerciseTitle}" not found in plan`,
+      );
+    }
+
+    const sectionTypeCombobox = exerciseItem.getByRole("combobox").first();
+    await sectionTypeCombobox.waitFor({ state: "visible", timeout: 5000 });
+    await sectionTypeCombobox.click();
+    await this.page
+      .getByRole("option", {
+        name: getExerciseTypeLabelMatcher(sectionType),
+      })
+      .first()
+      .click();
+    await this.page.waitForTimeout(300);
   }
 
   /**
