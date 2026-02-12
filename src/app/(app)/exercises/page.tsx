@@ -11,9 +11,8 @@ import {
 import type { ExerciseQueryParams } from "@/types";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
-import { EmptyState } from "@/components/layout/EmptyState";
 import { ExercisesToolbar } from "@/components/exercises/ExercisesToolbar";
-import { M3ExerciseCard } from "@/components/exercises/M3ExerciseCard";
+import { ExercisesList } from "@/components/exercises/exercises-list";
 import { getTranslations } from "@/i18n/server";
 
 export default async function ExercisesPage({
@@ -44,7 +43,6 @@ export default async function ExercisesPage({
 
   const result = await listExercisesService(userId, parsedQuery);
   const exercises = result.items;
-  const isEmpty = exercises.length === 0;
 
   return (
     <div className="space-y-8">
@@ -84,24 +82,11 @@ export default async function ExercisesPage({
         </Suspense>
 
         <div className="mt-8">
-          {isEmpty ? (
-            <div data-test-id="exercises-empty-state">
-              <EmptyState
-                title={t("emptyTitle")}
-                description={t("emptyDescription")}
-                icon={<Plus className="text-muted-foreground" />}
-              />
-            </div>
-          ) : (
-            <div
-              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2"
-              data-test-id="exercises-list"
-            >
-              {exercises.map((ex) => (
-                <M3ExerciseCard key={ex.id} exercise={ex} />
-              ))}
-            </div>
-          )}
+          <ExercisesList
+            initialExercises={exercises}
+            initialNextCursor={result.nextCursor}
+            initialHasMore={result.nextCursor !== null}
+          />
         </div>
       </Surface>
     </div>
