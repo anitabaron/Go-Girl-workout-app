@@ -3,6 +3,7 @@ import {
   Calendar,
   History,
   Trophy,
+  BarChart3,
   Play,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -14,7 +15,8 @@ export type NavigationSection =
   | "exercises" // Biblioteka ćwiczeń
   | "workout-plans" // Plany treningowe
   | "workout-sessions" // Historia sesji
-  | "personal-records"; // Rekordy
+  | "personal-records" // Rekordy
+  | "statistics"; // Statystyki
 
 /**
  * Typ elementu nawigacji
@@ -58,6 +60,13 @@ export const navigationItems: NavigationItem[] = [
     href: "/personal-records",
     icon: Trophy,
     mobileLabel: "Rekordy",
+  },
+  {
+    id: "statistics",
+    label: "Statystyki",
+    href: "/statistics",
+    icon: BarChart3,
+    mobileLabel: "Statystyki",
   },
 ];
 
