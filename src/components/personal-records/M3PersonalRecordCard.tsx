@@ -11,7 +11,6 @@ import { DeletePersonalRecordsDialogM3 } from "./DeletePersonalRecordsDialogM3";
 import { EditPersonalRecordDialogM3 } from "./EditPersonalRecordDialogM3";
 import { EditPersonalRecordsModalM3 } from "./EditPersonalRecordsModalM3";
 import { PersonalRecordMetricItemM3 } from "./PersonalRecordMetricItemM3";
-import { useTranslations } from "@/i18n/client";
 
 type M3PersonalRecordCardProps = {
   readonly recordGroup: PersonalRecordGroupVM;
@@ -22,7 +21,6 @@ export function M3PersonalRecordCard({
   recordGroup,
   onDeleted,
 }: Readonly<M3PersonalRecordCardProps>) {
-  const t = useTranslations("m3PersonalRecordCard");
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -78,7 +76,7 @@ export function M3PersonalRecordCard({
             </h2>
             {hasNewRecords && (
               <Badge variant="default" className="shrink-0 text-xs">
-                {t("new")}
+                Nowy
               </Badge>
             )}
           </div>
@@ -89,7 +87,7 @@ export function M3PersonalRecordCard({
               size="icon"
               className="size-7 text-muted-foreground hover:text-primary"
               onClick={handleEditClick}
-              aria-label={t("editAria").replace("{title}", recordGroup.title)}
+              aria-label={`Edytuj rekordy dla: ${recordGroup.title}`}
             >
               <Pencil className="size-4" />
             </Button>
@@ -98,7 +96,7 @@ export function M3PersonalRecordCard({
               size="icon"
               className="size-7 text-muted-foreground hover:text-destructive"
               onClick={handleDeleteClick}
-              aria-label={t("deleteAria").replace("{title}", recordGroup.title)}
+              aria-label={`Usuń rekordy dla: ${recordGroup.title}`}
             >
               <Trash2 className="size-4" />
             </Button>
@@ -113,7 +111,7 @@ export function M3PersonalRecordCard({
             </div>
           ) : (
             <p className="m3-body text-muted-foreground py-2 text-center text-xs">
-              {t("emptyMetrics")}
+              Brak dostępnych rekordów dla tego ćwiczenia
             </p>
           )}
         </CardContent>

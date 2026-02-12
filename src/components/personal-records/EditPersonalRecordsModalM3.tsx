@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import type { PersonalRecordGroupVM } from "@/lib/personal-records/view-model";
 import { EditPersonalRecordDialogM3 } from "./EditPersonalRecordDialogM3";
-import { useTranslations } from "@/i18n/client";
 
 type EditPersonalRecordsModalM3Props = {
   readonly recordGroup: PersonalRecordGroupVM;
@@ -25,7 +24,6 @@ export function EditPersonalRecordsModalM3({
   open,
   onOpenChange,
 }: EditPersonalRecordsModalM3Props) {
-  const t = useTranslations("editPersonalRecordsModal");
   const router = useRouter();
   const [editingMetricId, setEditingMetricId] = useState<string | null>(null);
 
@@ -43,7 +41,7 @@ export function EditPersonalRecordsModalM3({
         >
           <DialogHeader>
             <DialogTitle className="m3-title">
-              {t("title").replace("{title}", recordGroup.title)}
+              Edytuj rekordy: {recordGroup.title}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
@@ -77,10 +75,7 @@ export function EditPersonalRecordsModalM3({
                   size="icon"
                   className="size-8 shrink-0 text-muted-foreground hover:text-primary"
                   onClick={() => setEditingMetricId(metric.id)}
-                  aria-label={t("editMetricAria").replace(
-                    "{metricLabel}",
-                    metric.label,
-                  )}
+                  aria-label={`Edytuj ${metric.label}`}
                 >
                   <Pencil className="size-4" />
                 </Button>

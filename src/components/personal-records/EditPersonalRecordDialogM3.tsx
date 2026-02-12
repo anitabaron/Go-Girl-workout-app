@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTranslations } from "@/i18n/client";
 import type {
   PersonalRecordMetricVM,
   PersonalRecordMetricViewModel,
@@ -90,7 +89,6 @@ export function EditPersonalRecordDialogM3({
   onOpenChange,
   onSaved,
 }: EditPersonalRecordDialogM3Props) {
-  const t = useTranslations("editPersonalRecordDialog");
   const router = useRouter();
   const [value, setValue] = useState(metric.value);
   const [series, setSeries] = useState<{ key: string; value: number }[]>(() =>
@@ -152,7 +150,7 @@ export function EditPersonalRecordDialogM3({
           : Math.round(Number(value));
 
     if (Number.isNaN(finalValue) || finalValue < 0) {
-      toast.error(t("toast.invalidValue"));
+      toast.error("Wprowadź prawidłową wartość");
       return;
     }
 
@@ -170,19 +168,19 @@ export function EditPersonalRecordDialogM3({
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        toast.error(data.message || t("toast.saveFailed"));
+        toast.error(data.message || "Nie udało się zapisać rekordu");
         return;
       }
 
-      toast.success(t("toast.saved"));
+      toast.success("Rekord zapisany");
       onSaved?.();
       onOpenChange(false);
       router.refresh();
     } catch (error) {
       if (error instanceof TypeError) {
-        toast.error(t("toast.offline"));
+        toast.error("Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.");
       } else {
-        toast.error(t("toast.generic"));
+        toast.error("Wystąpił błąd podczas zapisywania rekordu");
       }
     } finally {
       setIsSaving(false);
@@ -196,7 +194,7 @@ export function EditPersonalRecordDialogM3({
         aria-describedby={undefined}
       >
         <DialogHeader>
-          <DialogTitle className="m3-title">{t("title")}</DialogTitle>
+          <DialogTitle className="m3-title">Edytuj rekord</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -223,12 +221,12 @@ export function EditPersonalRecordDialogM3({
             </div>
             {series.length > 0 && (
               <p className="m3-body text-muted-foreground text-xs">
-                {t("valueComputedFromSeries")}
+                Wartość obliczona z serii
               </p>
             )}
           </div>
           <div className="space-y-2">
-            <Label className="m3-label">{t("series")}</Label>
+            <Label className="m3-label">Serie</Label>
             {series.length === 0 ? (
               <Button
                 type="button"
@@ -238,7 +236,7 @@ export function EditPersonalRecordDialogM3({
                 className="w-full"
               >
                 <Plus className="size-4 mr-2" />
-                {t("addSeries")}
+                Dodaj serię
               </Button>
             ) : (
               <div className="space-y-2">
@@ -274,10 +272,7 @@ export function EditPersonalRecordDialogM3({
                       size="icon"
                       className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={() => handleSeriesRemove(index)}
-                      aria-label={t("removeSeriesAria").replace(
-                        "{seriesKey}",
-                        s.key,
-                      )}
+                      aria-label={`Usuń ${s.key}`}
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -290,14 +285,14 @@ export function EditPersonalRecordDialogM3({
                   onClick={handleSeriesAdd}
                 >
                   <Plus className="size-4 mr-2" />
-                  {t("addSeries")}
+                  Dodaj serię
                 </Button>
               </div>
             )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-pr-date" className="m3-label">
-              {t("achievedAt")}
+              Data osiągnięcia
             </Label>
             <Input
               id="edit-pr-date"
@@ -315,10 +310,10 @@ export function EditPersonalRecordDialogM3({
               onClick={() => onOpenChange(false)}
               disabled={isSaving}
             >
-              {t("cancel")}
+              Anuluj
             </Button>
             <Button type="submit" disabled={isSaving} className="m3-cta" aria-busy={isSaving}>
-              {isSaving ? t("saving") : t("save")}
+              {isSaving ? "Zapisywanie..." : "Zapisz"}
             </Button>
           </DialogFooter>
         </form>

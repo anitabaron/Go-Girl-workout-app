@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
-import { useTranslations } from "@/i18n/client";
 import type {
   PersonalRecordMetricViewModel,
   SeriesValues,
@@ -52,7 +51,6 @@ type PersonalRecordMetricCardM3Props = {
 export function PersonalRecordMetricCardM3({
   record,
 }: Readonly<PersonalRecordMetricCardM3Props>) {
-  const t = useTranslations("personalRecordMetricCard");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const hasSeriesValues =
     record.seriesValues && Object.keys(record.seriesValues).length > 0;
@@ -78,17 +76,17 @@ export function PersonalRecordMetricCardM3({
             size="sm"
             className="m3-label inline-flex items-center gap-1.5 text-primary hover:underline shrink-0 h-auto py-1"
             onClick={handleEditClick}
-            aria-label={t("editAria")}
+            aria-label="Edytuj rekord w miejscu"
           >
             <Pencil className="size-4" />
-            {t("edit")}
+            Edytuj
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="m3-hero-sm text-primary">{record.valueDisplay}</p>
           {hasSeriesValues && (
             <div className="m3-body text-muted-foreground text-sm">
-              <span className="font-medium">{t("series")} </span>
+              <span className="font-medium">Serie: </span>
               {sortedKeys.map((key, index) => {
                 const value = record.seriesValues![key] ?? 0;
                 const formatted = formatSeriesValue(record.metricType, value);
@@ -111,15 +109,15 @@ export function PersonalRecordMetricCardM3({
             </div>
           )}
           <p className="m3-body text-muted-foreground text-sm">
-            {t("achievedAt")} {record.achievedAt}
+            Osiągnięto: {record.achievedAt}
           </p>
           {record.sessionId && (
             <Link
               href={`/workout-sessions/${record.sessionId}`}
               className="m3-label inline-flex items-center gap-2 text-primary hover:underline"
-              aria-label={t("viewSessionAria")}
+              aria-label="Zobacz szczegóły sesji treningowej, w której osiągnięto ten rekord"
             >
-              {t("viewSession")}
+              Zobacz sesję
             </Link>
           )}
         </CardContent>

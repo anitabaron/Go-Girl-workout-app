@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useTranslations } from "@/i18n/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +29,6 @@ export function DeletePersonalRecordsDialogM3({
   onOpenChange,
   onDeleted,
 }: DeletePersonalRecordsDialogM3Props) {
-  const t = useTranslations("deletePersonalRecordsDialog");
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -44,28 +42,30 @@ export function DeletePersonalRecordsDialogM3({
 
       if (!response.ok) {
         if (response.status === 404) {
-          toast.error(t("toast.notFound"));
+          toast.error("Rekordy nie zostały znalezione");
         } else if (response.status === 401 || response.status === 403) {
-          toast.error(t("toast.unauthorized"));
+          toast.error("Brak autoryzacji. Zaloguj się ponownie.");
           router.push("/login");
         } else if (response.status >= 500) {
-          toast.error(t("toast.server"));
+          toast.error("Wystąpił błąd serwera. Spróbuj ponownie później.");
         } else {
           const data = await response.json().catch(() => ({}));
-          toast.error(data.message || t("toast.failed"));
+          toast.error(data.message || "Nie udało się usunąć rekordów");
         }
         return;
       }
 
-      toast.success(t("toast.success"));
+      toast.success("Rekordy zostały usunięte");
       onDeleted?.();
       onOpenChange(false);
       router.refresh();
     } catch (error) {
       if (error instanceof TypeError) {
-        toast.error(t("toast.offline"));
+        toast.error(
+          "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+        );
       } else {
-        toast.error(t("toast.generic"));
+        toast.error("Wystąpił błąd podczas usuwania rekordów");
       }
     } finally {
       setIsDeleting(false);
@@ -76,16 +76,14 @@ export function DeletePersonalRecordsDialogM3({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent aria-describedby="delete-dialog-description">
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("title")}</AlertDialogTitle>
+          <AlertDialogTitle>Usuń rekordy osobiste</AlertDialogTitle>
           <AlertDialogDescription id="delete-dialog-description">
-            {t("descriptionStart")} &quot;{exerciseTitle}&quot;?{" "}
-            {t("descriptionEnd")}
+            Czy na pewno chcesz usunąć wszystkie rekordy osobiste dla ćwiczenia
+            &quot;{exerciseTitle}&quot;? Tej operacji nie można cofnąć.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>
-            {t("cancel")}
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
@@ -93,13 +91,10 @@ export function DeletePersonalRecordsDialogM3({
             }}
             disabled={isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            aria-label={t("confirmDeleteAria").replace(
-              "{exerciseTitle}",
-              exerciseTitle,
-            )}
+            aria-label={`Potwierdź usunięcie rekordów dla: ${exerciseTitle}`}
             aria-busy={isDeleting}
           >
-            {isDeleting ? t("deleting") : t("delete")}
+            {isDeleting ? "Usuwanie..." : "Usuń"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
