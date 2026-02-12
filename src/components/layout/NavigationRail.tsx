@@ -10,6 +10,7 @@ import {
   Calendar,
   History,
   Trophy,
+  BarChart3,
   LogIn,
   LogOut,
   Menu,
@@ -34,6 +35,7 @@ const NAV_ITEMS: ReadonlyArray<{
   { href: "/workout-plans", labelKey: "plans", icon: Calendar },
   { href: "/workout-sessions", labelKey: "sessions", icon: History },
   { href: "/personal-records", labelKey: "records", icon: Trophy },
+  { href: "/statistics", labelKey: "statistics", icon: BarChart3 },
   { href: "/workout-sessions/start", labelKey: "start", icon: Play },
 ] as const;
 
@@ -80,7 +82,7 @@ const MobileNavContent = ({
       <button
         type="button"
         className={cn(
-          "sm:hidden fixed inset-0 z-40 bg-black/45 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "md:hidden fixed inset-0 z-40 bg-black/45 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
           isMobileSettingsOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none",
@@ -96,7 +98,7 @@ const MobileNavContent = ({
         <div
           id="mobile-nav-settings"
           className={cn(
-            "sm:hidden absolute bottom-full left-0 right-0 border-t border-border bg-[var(--m3-surface-container)] px-3 py-3 will-change-transform transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "md:hidden absolute bottom-full left-0 right-0 border-t border-border bg-[var(--m3-surface-container)] px-3 py-3 will-change-transform transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
             isMobileSettingsOpen
               ? "translate-y-0 opacity-100 pointer-events-auto"
               : "translate-y-6 opacity-0 pointer-events-none",
@@ -142,14 +144,14 @@ const MobileNavContent = ({
                 aria-current={isActive ? "page" : undefined}
                 onClick={() => setIsMobileSettingsOpen(false)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
+                  "flex flex-col items-center justify-center gap-0 xs:gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
                   isActive
                     ? "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]"
                     : "text-muted-foreground",
                 )}
               >
                 <Icon className="size-6 shrink-0" aria-hidden />
-                <span className="text-[11px] font-medium truncate max-w-full">
+                <span className="hidden xs:block text-[11px] font-medium truncate max-w-full">
                   {tNav(labelKey)}
                 </span>
               </Link>
@@ -163,7 +165,7 @@ const MobileNavContent = ({
             aria-controls="mobile-nav-settings"
             aria-expanded={isMobileSettingsOpen}
             className={cn(
-              "sm:hidden flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
+              "md:hidden flex flex-col items-center justify-center gap-0 xs:gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
               isMobileSettingsOpen &&
                 "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]",
             )}
@@ -173,7 +175,7 @@ const MobileNavContent = ({
             ) : (
               <Menu className="size-6 shrink-0" aria-hidden />
             )}
-            <span className="text-[11px] font-medium truncate max-w-full">
+            <span className="hidden xs:block text-[11px] font-medium truncate max-w-full">
               {tNav("menu")}
             </span>
           </button>
@@ -184,7 +186,7 @@ const MobileNavContent = ({
               onClick={onSignOut}
               aria-label={tAuth("signOut")}
               className={cn(
-                "hidden sm:flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
+                "hidden md:flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
               )}
             >
               <LogOut className="size-6 shrink-0" aria-hidden />
@@ -199,7 +201,7 @@ const MobileNavContent = ({
               aria-label={tAuth("signIn")}
               onClick={() => setIsMobileSettingsOpen(false)}
               className={cn(
-                "hidden sm:flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
+                "hidden md:flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
               )}
             >
               <LogIn className="size-6 shrink-0" aria-hidden />
@@ -210,7 +212,7 @@ const MobileNavContent = ({
           )}
         </div>
 
-        <div className="hidden sm:flex w-full px-3 pb-1 items-center justify-center gap-2">
+        <div className="hidden md:flex w-full px-3 pb-1 items-center justify-center gap-2">
           <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
         </div>
       </nav>
