@@ -10,8 +10,6 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Clock3,
-  Dumbbell,
   Flame,
   RefreshCcw,
   Send,
@@ -98,23 +96,6 @@ function getSessionDurationSeconds(session: StatisticsSession): number {
   return 0;
 }
 
-function formatTime(dateString: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(dateString));
-}
-
-function formatDateLong(dateKey: string, locale: string): string {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  return new Intl.DateTimeFormat(locale, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(date);
-}
-
 function formatMonthLabel(date: Date, locale: string): string {
   return new Intl.DateTimeFormat(locale, {
     month: "long",
@@ -132,6 +113,10 @@ function formatMinutes(minutes: number, t: (key: string) => string): string {
   if (restMinutes === 0) return `${hours} ${t("hoursShort")}`;
 
   return `${hours} ${t("hoursShort")} ${restMinutes} ${t("minutesShort")}`;
+}
+
+function compactWorkoutLabel(name: string): string {
+  return name.trim();
 }
 
 export function StatisticsDashboardM3({
@@ -207,11 +192,6 @@ export function StatisticsDashboardM3({
     t("weekdaySat"),
     t("weekdaySun"),
   ];
-
-  const selectedDaySessions = useMemo(
-    () => sessionsByDate.get(selectedDateKey) ?? [],
-    [selectedDateKey, sessionsByDate],
-  );
 
   const currentWeekStart = startOfWeekMonday(now);
   const nextWeekStart = addDays(currentWeekStart, 7);
@@ -341,7 +321,7 @@ export function StatisticsDashboardM3({
     : 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-[calc(var(--m3-mobile-nav-height)+0.25rem)] md:pb-8">
       <PageHeader title={title} description={description} />
 
       <Surface variant="high" className="space-y-5">
@@ -385,13 +365,13 @@ export function StatisticsDashboardM3({
 
         <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {dayLabels.map((label) => (
-            <div key={label} className="py-1">
+            <div key={label} className="py-1 text-[10px] xs:text-xs">
               {label}
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {monthGrid.map((day) => {
             const dayKey = toDateKey(day);
             const daySessions = sessionsByDate.get(dayKey) ?? [];
@@ -403,7 +383,7 @@ export function StatisticsDashboardM3({
               <div
                 key={dayKey}
                 className={[
-                  "flex min-h-28 flex-col rounded-xl border p-2 transition-colors sm:min-h-36",
+                  "flex w-full aspect-[0.94] min-h-0 flex-col rounded-lg border p-0.5 transition-colors xs:aspect-[0.96] xs:p-1 sm:aspect-square sm:rounded-xl sm:p-1.5 xl:aspect-auto xl:min-h-32 xl:p-2",
                   isCurrentMonth ? "bg-card" : "bg-muted/30",
                   isSelected ? "border-primary ring-1 ring-primary/40" : "border-border",
                 ].join(" ")}
@@ -417,42 +397,50 @@ export function StatisticsDashboardM3({
                   }
                 }}
               >
-                <div className="mb-2 flex items-center justify-between">
+                <div className="mb-0 flex items-center justify-between sm:mb-0">
                   <span
                     className={[
-                      "inline-flex size-7 items-center justify-center rounded-full text-xs font-semibold",
+                      "inline-flex size-4 items-center justify-center rounded-full text-[10px] font-semibold xs:size-5 xs:text-xs sm:size-7 sm:text-xs",
                       isToday ? "bg-primary text-primary-foreground" : "",
                     ].join(" ")}
                   >
                     {day.getDate()}
                   </span>
-                  {daySessions.length > 0 && (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {daySessions.length}
-                    </Badge>
-                  )}
                 </div>
 
-                <div className="space-y-1">
-                  {daySessions.slice(0, 2).map((session) => (
+                <div className="space-y-0.5 overflow-hidden">
+                  {daySessions.length > 0 && (
                     <button
-                      key={session.id}
                       type="button"
-                      className="w-full rounded-md bg-primary/10 px-2 py-1 text-left text-[11px] font-medium text-primary hover:bg-primary/20"
+                      className="flex w-full cursor-pointer items-center rounded-md bg-primary/10 px-0.5 py-0 text-left text-[10px] font-medium leading-tight text-primary sm:hidden"
                       onClick={(event) => {
                         event.stopPropagation();
                         setSelectedDateKey(dayKey);
-                        setSelectedSession(session);
+                        setSelectedSession(daySessions[0]);
                       }}
-                      title={session.plan_name_at_time ?? t("deletedPlan")}
+                      title={t("openDayDetails")}
                     >
-                      {session.plan_name_at_time ?? t("deletedPlan")}
+                      <span className="block w-full overflow-hidden break-words text-[9px] leading-[1.05] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                        {compactWorkoutLabel(
+                          daySessions[0].plan_name_at_time ?? t("deletedPlan"),
+                        )}
+                      </span>
                     </button>
-                  ))}
-                  {daySessions.length > 2 && (
-                    <p className="px-1 text-[11px] text-muted-foreground">
-                      +{daySessions.length - 2} {t("moreWorkouts")}
-                    </p>
+                  )}
+                  {daySessions[0] && (
+                    <button
+                      key={`${daySessions[0].id}-desktop`}
+                      type="button"
+                      className="hidden w-full cursor-pointer rounded-md bg-primary/10 px-2 py-1 text-left text-[11px] font-medium text-primary hover:bg-primary/20 sm:block"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedDateKey(dayKey);
+                        setSelectedSession(daySessions[0]);
+                      }}
+                      title={daySessions[0].plan_name_at_time ?? t("deletedPlan")}
+                    >
+                      {daySessions[0].plan_name_at_time ?? t("deletedPlan")}
+                    </button>
                   )}
                 </div>
               </div>
@@ -460,70 +448,6 @@ export function StatisticsDashboardM3({
           })}
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h3 className="m3-title mb-1">{formatDateLong(selectedDateKey, locale)}</h3>
-          <p className="mb-4 text-sm text-muted-foreground">
-            {selectedDaySessions.length > 0
-              ? t("selectedDayWithWorkouts")
-              : t("selectedDayEmpty")}
-          </p>
-
-          {selectedDaySessions.length === 0 && (
-            <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              {t("selectedDayNoSessions")}
-            </p>
-          )}
-
-          <div className="space-y-3">
-            {selectedDaySessions.map((session) => {
-              const isStarting = startingPlanId === session.workout_plan_id;
-              return (
-                <div
-                  key={session.id}
-                  className="rounded-lg border border-border bg-background p-3"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-semibold">
-                      {session.plan_name_at_time ?? t("deletedPlan")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatTime(session.started_at, locale)}
-                    </p>
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <Dumbbell className="size-3.5" />
-                      {session.exercise_count ?? 0}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Clock3 className="size-3.5" />
-                      {formatMinutes(
-                        Math.round(getSessionDurationSeconds(session) / 60),
-                        t,
-                      )}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/workout-sessions/${session.id}`}>
-                        {t("openDetails")}
-                        <ArrowRight className="size-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => handleRepeatPlan(session.workout_plan_id)}
-                      disabled={!session.workout_plan_id || isStarting}
-                    >
-                      {isStarting ? t("startingPlan") : t("repeatPlan")}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </Surface>
 
       <Surface variant="high" className="space-y-5">
@@ -532,7 +456,7 @@ export function StatisticsDashboardM3({
           <h2 className="m3-title-large">{t("weeklyStatsTitle")}</h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               {t("metricWorkoutsWeek")}

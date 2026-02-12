@@ -880,6 +880,7 @@ export const plMessages = {
   "statisticsPage.selectedDayEmpty": "Brak treningów tego dnia.",
   "statisticsPage.selectedDayNoSessions":
     "Wybierz inny dzień lub rozpocznij nową sesję treningową.",
+  "statisticsPage.openDayDetails": "Pokaż treningi z tego dnia",
   "statisticsPage.deletedPlan": "Plan usunięty",
   "statisticsPage.openDetails": "Szczegóły sesji",
   "statisticsPage.repeatPlan": "Wykonaj ten plan jeszcze raz",

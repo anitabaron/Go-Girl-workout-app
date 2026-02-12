@@ -871,6 +871,7 @@ export const enMessages = {
   "statisticsPage.selectedDayEmpty": "No workouts for this day.",
   "statisticsPage.selectedDayNoSessions":
     "Pick another day or start a new workout session.",
+  "statisticsPage.openDayDetails": "Show workouts for this day",
   "statisticsPage.deletedPlan": "Deleted plan",
   "statisticsPage.openDetails": "Session details",
   "statisticsPage.repeatPlan": "Do this plan again",
