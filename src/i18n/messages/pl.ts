@@ -429,6 +429,66 @@ export const plMessages = {
   "personalRecordsList.loadMoreAria": "Załaduj więcej rekordów",
   "personalRecordsList.loading": "Ładowanie...",
   "personalRecordsList.loadMore": "Załaduj więcej",
+  "deletePersonalRecordsDialog.title": "Usuń rekordy osobiste",
+  "deletePersonalRecordsDialog.descriptionStart":
+    "Czy na pewno chcesz usunąć wszystkie rekordy osobiste dla ćwiczenia",
+  "deletePersonalRecordsDialog.descriptionEnd":
+    "Tej operacji nie można cofnąć.",
+  "deletePersonalRecordsDialog.cancel": "Anuluj",
+  "deletePersonalRecordsDialog.delete": "Usuń",
+  "deletePersonalRecordsDialog.deleting": "Usuwanie...",
+  "deletePersonalRecordsDialog.confirmDeleteAria":
+    "Potwierdź usunięcie rekordów dla: {exerciseTitle}",
+  "deletePersonalRecordsDialog.toast.notFound":
+    "Rekordy nie zostały znalezione",
+  "deletePersonalRecordsDialog.toast.unauthorized":
+    "Brak autoryzacji. Zaloguj się ponownie.",
+  "deletePersonalRecordsDialog.toast.server":
+    "Wystąpił błąd serwera. Spróbuj ponownie później.",
+  "deletePersonalRecordsDialog.toast.failed": "Nie udało się usunąć rekordów",
+  "deletePersonalRecordsDialog.toast.success": "Rekordy zostały usunięte",
+  "deletePersonalRecordsDialog.toast.offline":
+    "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+  "deletePersonalRecordsDialog.toast.generic":
+    "Wystąpił błąd podczas usuwania rekordów",
+  "editPersonalRecordDialog.title": "Edytuj rekord",
+  "editPersonalRecordDialog.valueComputedFromSeries":
+    "Wartość obliczona z serii",
+  "editPersonalRecordDialog.series": "Serie",
+  "editPersonalRecordDialog.addSeries": "Dodaj serię",
+  "editPersonalRecordDialog.removeSeriesAria": "Usuń {seriesKey}",
+  "editPersonalRecordDialog.achievedAt": "Data osiągnięcia",
+  "editPersonalRecordDialog.cancel": "Anuluj",
+  "editPersonalRecordDialog.save": "Zapisz",
+  "editPersonalRecordDialog.saving": "Zapisywanie...",
+  "editPersonalRecordDialog.toast.invalidValue":
+    "Wprowadź prawidłową wartość",
+  "editPersonalRecordDialog.toast.saveFailed":
+    "Nie udało się zapisać rekordu",
+  "editPersonalRecordDialog.toast.saved": "Rekord zapisany",
+  "editPersonalRecordDialog.toast.offline":
+    "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+  "editPersonalRecordDialog.toast.generic":
+    "Wystąpił błąd podczas zapisywania rekordu",
+  "editPersonalRecordsModal.title": "Edytuj rekordy: {title}",
+  "editPersonalRecordsModal.editMetricAria": "Edytuj {metricLabel}",
+  "m3PersonalRecordCard.new": "Nowy",
+  "m3PersonalRecordCard.editAria": "Edytuj rekordy dla: {title}",
+  "m3PersonalRecordCard.deleteAria": "Usuń rekordy dla: {title}",
+  "m3PersonalRecordCard.emptyMetrics":
+    "Brak dostępnych rekordów dla tego ćwiczenia",
+  "personalRecordMetricItem.series": "serie",
+  "personalRecordMetricItem.new": "Nowy",
+  "personalRecordMetricItem.viewSession": "Zobacz sesję",
+  "personalRecordMetricItem.viewSessionAria":
+    "Zobacz szczegóły sesji treningowej, w której osiągnięto ten rekord",
+  "personalRecordMetricCard.editAria": "Edytuj rekord w miejscu",
+  "personalRecordMetricCard.edit": "Edytuj",
+  "personalRecordMetricCard.series": "Serie:",
+  "personalRecordMetricCard.achievedAt": "Osiągnięto:",
+  "personalRecordMetricCard.viewSession": "Zobacz sesję",
+  "personalRecordMetricCard.viewSessionAria":
+    "Zobacz szczegóły sesji treningowej, w której osiągnięto ten rekord",
   "resumeSessionCard.title": "Aktywna sesja treningowa",
   "resumeSessionCard.description": "Masz aktywną sesję, którą możesz wznowić.",
   "resumeSessionCard.planLabel": "Plan treningowy",

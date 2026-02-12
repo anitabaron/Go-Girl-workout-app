@@ -432,6 +432,64 @@ export const enMessages = {
   "personalRecordsList.loadMoreAria": "Load more records",
   "personalRecordsList.loading": "Loading...",
   "personalRecordsList.loadMore": "Load more",
+  "deletePersonalRecordsDialog.title": "Delete personal records",
+  "deletePersonalRecordsDialog.descriptionStart":
+    "Are you sure you want to delete all personal records for exercise",
+  "deletePersonalRecordsDialog.descriptionEnd":
+    "This action cannot be undone.",
+  "deletePersonalRecordsDialog.cancel": "Cancel",
+  "deletePersonalRecordsDialog.delete": "Delete",
+  "deletePersonalRecordsDialog.deleting": "Deleting...",
+  "deletePersonalRecordsDialog.confirmDeleteAria":
+    "Confirm deletion of records for: {exerciseTitle}",
+  "deletePersonalRecordsDialog.toast.notFound": "Records not found",
+  "deletePersonalRecordsDialog.toast.unauthorized":
+    "Unauthorized. Please log in again.",
+  "deletePersonalRecordsDialog.toast.server":
+    "Server error. Please try again later.",
+  "deletePersonalRecordsDialog.toast.failed":
+    "Failed to delete records",
+  "deletePersonalRecordsDialog.toast.success": "Records deleted",
+  "deletePersonalRecordsDialog.toast.offline":
+    "No internet connection. Check your connection and try again.",
+  "deletePersonalRecordsDialog.toast.generic":
+    "An error occurred while deleting records",
+  "editPersonalRecordDialog.title": "Edit record",
+  "editPersonalRecordDialog.valueComputedFromSeries":
+    "Value computed from series",
+  "editPersonalRecordDialog.series": "Series",
+  "editPersonalRecordDialog.addSeries": "Add series",
+  "editPersonalRecordDialog.removeSeriesAria": "Remove {seriesKey}",
+  "editPersonalRecordDialog.achievedAt": "Achieved at",
+  "editPersonalRecordDialog.cancel": "Cancel",
+  "editPersonalRecordDialog.save": "Save",
+  "editPersonalRecordDialog.saving": "Saving...",
+  "editPersonalRecordDialog.toast.invalidValue": "Enter a valid value",
+  "editPersonalRecordDialog.toast.saveFailed": "Failed to save record",
+  "editPersonalRecordDialog.toast.saved": "Record saved",
+  "editPersonalRecordDialog.toast.offline":
+    "No internet connection. Check your connection and try again.",
+  "editPersonalRecordDialog.toast.generic":
+    "An error occurred while saving record",
+  "editPersonalRecordsModal.title": "Edit records: {title}",
+  "editPersonalRecordsModal.editMetricAria": "Edit {metricLabel}",
+  "m3PersonalRecordCard.new": "New",
+  "m3PersonalRecordCard.editAria": "Edit records for: {title}",
+  "m3PersonalRecordCard.deleteAria": "Delete records for: {title}",
+  "m3PersonalRecordCard.emptyMetrics":
+    "No records available for this exercise",
+  "personalRecordMetricItem.series": "series",
+  "personalRecordMetricItem.new": "New",
+  "personalRecordMetricItem.viewSession": "View session",
+  "personalRecordMetricItem.viewSessionAria":
+    "View workout session details where this record was achieved",
+  "personalRecordMetricCard.editAria": "Edit record inline",
+  "personalRecordMetricCard.edit": "Edit",
+  "personalRecordMetricCard.series": "Series:",
+  "personalRecordMetricCard.achievedAt": "Achieved:",
+  "personalRecordMetricCard.viewSession": "View session",
+  "personalRecordMetricCard.viewSessionAria":
+    "View workout session details where this record was achieved",
   "resumeSessionCard.title": "Active workout session",
   "resumeSessionCard.description":
     "You have an ongoing session that you can resume.",

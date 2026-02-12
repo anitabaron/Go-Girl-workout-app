@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "@/i18n/client";
 import type {
   PersonalRecordMetricVM,
   SeriesValues,
@@ -52,6 +53,7 @@ function getSortedSeriesKeys(seriesValues: SeriesValues): string[] {
 export function PersonalRecordMetricItemM3({
   metric,
 }: Readonly<PersonalRecordMetricItemM3Props>) {
+  const t = useTranslations("personalRecordMetricItem");
   const hasSeriesValues =
     metric.seriesValues && Object.keys(metric.seriesValues).length > 0;
 
@@ -73,7 +75,7 @@ export function PersonalRecordMetricItemM3({
             <>
               <span className="text-muted-foreground">·</span>
               <span className="m3-body text-muted-foreground text-xs">
-                serie{" "}
+                {t("series")}{" "}
                 {sortedKeys.map((key, index) => {
                   const value = metric.seriesValues![key] ?? 0;
                   const formatted = formatSeriesValue(metric.metricType, value);
@@ -103,7 +105,7 @@ export function PersonalRecordMetricItemM3({
           </span>
           {metric.isNew && (
             <Badge variant="default" className="shrink-0 text-[10px] px-1.5 py-0">
-              Nowy
+              {t("new")}
             </Badge>
           )}
         </div>
@@ -112,10 +114,10 @@ export function PersonalRecordMetricItemM3({
         <Link
           href={`/workout-sessions/${metric.sessionId}`}
           className="ml-2 shrink-0 m3-label text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded text-xs"
-          aria-label="Zobacz szczegóły sesji treningowej, w której osiągnięto ten rekord"
+          aria-label={t("viewSessionAria")}
           onClick={(e) => e.stopPropagation()}
         >
-          Zobacz sesję
+          {t("viewSession")}
         </Link>
       )}
     </div>
