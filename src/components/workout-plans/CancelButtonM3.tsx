@@ -1,18 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/client";
+import { ConfirmActionDialogM3 } from "@/components/shared/ConfirmActionDialogM3";
 
 type CancelButtonM3Props = {
   hasUnsavedChanges: boolean;
@@ -49,25 +40,16 @@ export function CancelButtonM3({
       >
         {t("cancel")}
       </Button>
-      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("unsavedTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("unsavedDescription")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("stay")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {t("leave")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialogM3
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title={t("unsavedTitle")}
+        description={t("unsavedDescription")}
+        cancelLabel={t("stay")}
+        confirmLabel={t("leave")}
+        onConfirm={handleConfirm}
+        confirmVariant="destructive"
+      />
     </>
   );
 }
