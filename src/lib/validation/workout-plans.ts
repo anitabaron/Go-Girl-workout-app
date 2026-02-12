@@ -301,6 +301,8 @@ function getDuplicateOrderErrors(
   const errors: string[] = [];
   const slotKey = (ex: WorkoutPlanExerciseInput) =>
     `${ex.section_type}:${ex.section_order}`;
+  const isScopeExercise = (ex: WorkoutPlanExerciseInput) =>
+    ex.scope_id != null;
   const groups = new Map<string, WorkoutPlanExerciseInput[]>();
   for (const ex of exercises) {
     const key = slotKey(ex);
@@ -309,10 +311,8 @@ function getDuplicateOrderErrors(
   }
   for (const [key, group] of groups) {
     if (group.length === 1) continue;
-    const withScope = group.filter(
-      (ex) => ex.in_scope_nr != null && ex.scope_id != null,
-    );
-    const withoutScope = group.filter((ex) => ex.in_scope_nr == null);
+    const withScope = group.filter(isScopeExercise);
+    const withoutScope = group.filter((ex) => !isScopeExercise(ex));
     if (withoutScope.length > 0 && withScope.length > 0) {
       errors.push(
         `W slocie ${key} może być albo jedno ćwiczenie, albo zestaw (scope); mieszanie niedozwolone.`,
