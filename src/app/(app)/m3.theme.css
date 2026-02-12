@@ -34,6 +34,33 @@
     --destructive: var(--m3-raw-destructive-dark);
     --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
 
+    /* Keep shadcn aliases aligned with M3 dark tokens (prevents too-dark text/bg from globals.dark.css). */
+    --background: var(--m3-surface);
+    --foreground: var(--m3-on-surface);
+    --card: var(--m3-surface-container);
+    --card-foreground: var(--m3-on-surface);
+    --popover: var(--m3-surface-container-high);
+    --popover-foreground: var(--m3-on-surface);
+    --primary: var(--m3-primary);
+    --primary-foreground: var(--m3-on-primary);
+    --secondary: var(--m3-primary-container);
+    --secondary-foreground: var(--m3-on-primary-container);
+    --muted: var(--m3-surface-container);
+    --muted-foreground: var(--m3-on-surface-variant);
+    --accent: var(--m3-primary-container);
+    --accent-foreground: var(--m3-on-primary-container);
+    --border: var(--m3-outline-variant);
+    --input: var(--m3-outline-variant);
+    --ring: var(--m3-primary);
+    --sidebar: var(--m3-surface-container);
+    --sidebar-foreground: var(--m3-on-surface);
+    --sidebar-primary: var(--m3-primary);
+    --sidebar-primary-foreground: var(--m3-on-primary);
+    --sidebar-accent: var(--m3-primary-container);
+    --sidebar-accent-foreground: var(--m3-on-primary-container);
+    --sidebar-border: var(--m3-outline-variant);
+    --sidebar-ring: var(--m3-primary);
+
     --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
     --m3-button-default-active: color-mix(
       in srgb,
@@ -189,6 +216,33 @@
 
   --destructive: var(--m3-raw-destructive-dark);
   --destructive-foreground: var(--m3-raw-destructive-foreground-dark);
+
+  /* Keep shadcn aliases aligned with M3 dark tokens (prevents too-dark text/bg from globals.dark.css). */
+  --background: var(--m3-surface);
+  --foreground: var(--m3-on-surface);
+  --card: var(--m3-surface-container);
+  --card-foreground: var(--m3-on-surface);
+  --popover: var(--m3-surface-container-high);
+  --popover-foreground: var(--m3-on-surface);
+  --primary: var(--m3-primary);
+  --primary-foreground: var(--m3-on-primary);
+  --secondary: var(--m3-primary-container);
+  --secondary-foreground: var(--m3-on-primary-container);
+  --muted: var(--m3-surface-container);
+  --muted-foreground: var(--m3-on-surface-variant);
+  --accent: var(--m3-primary-container);
+  --accent-foreground: var(--m3-on-primary-container);
+  --border: var(--m3-outline-variant);
+  --input: var(--m3-outline-variant);
+  --ring: var(--m3-primary);
+  --sidebar: var(--m3-surface-container);
+  --sidebar-foreground: var(--m3-on-surface);
+  --sidebar-primary: var(--m3-primary);
+  --sidebar-primary-foreground: var(--m3-on-primary);
+  --sidebar-accent: var(--m3-primary-container);
+  --sidebar-accent-foreground: var(--m3-on-primary-container);
+  --sidebar-border: var(--m3-outline-variant);
+  --sidebar-ring: var(--m3-primary);
 
   --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, white);
   --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 80%, white);
