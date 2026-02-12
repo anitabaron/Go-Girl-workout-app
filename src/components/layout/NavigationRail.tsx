@@ -80,7 +80,7 @@ const MobileNavContent = ({
       <button
         type="button"
         className={cn(
-          "sm:hidden fixed inset-0 z-40 bg-black/45 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "sm:hidden fixed inset-0 z-40 bg-black/45 transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
           isMobileSettingsOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none",
@@ -96,10 +96,10 @@ const MobileNavContent = ({
         <div
           id="mobile-nav-settings"
           className={cn(
-            "sm:hidden absolute bottom-full left-0 right-0 border-t border-border bg-[var(--m3-surface-container)] px-3 py-3 will-change-transform transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "sm:hidden absolute bottom-full left-0 right-0 border-t border-border bg-[var(--m3-surface-container)] px-3 py-3 transform-gpu will-change-transform transition-[transform,opacity] duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)]",
             isMobileSettingsOpen
               ? "translate-y-0 opacity-100 pointer-events-auto"
-              : "translate-y-6 opacity-0 pointer-events-none",
+              : "translate-y-full opacity-0 pointer-events-none",
           )}
           aria-hidden={!isMobileSettingsOpen}
         >
