@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import workoutPlanImportExample from "@/lib/json/workout-plan-import-example.json";
-import { PageHeader, Surface } from "@/components";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Surface } from "@/components/layout/Surface";
 import { getTranslations } from "@/i18n/server";
 
 export default async function ImportInstructionPage() {

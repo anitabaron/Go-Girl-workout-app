@@ -11,12 +11,10 @@ import {
 } from "@/services/workout-sessions";
 import { listWorkoutPlansService } from "@/services/workout-plans";
 import type { SessionDetailDTO } from "@/types";
-import {
-  EmptyState,
-  ResumeSessionCardM3,
-  Surface,
-  WorkoutPlansStartListM3,
-} from "@/components";
+import { EmptyState } from "@/components/layout/EmptyState";
+import { Surface } from "@/components/layout/Surface";
+import { ResumeSessionCardM3 } from "@/components/workout-sessions/ResumeSessionCardM3";
+import { WorkoutPlansStartListM3 } from "@/components/workout-plans/WorkoutPlansStartListM3";
 import { getTranslations } from "@/i18n/server";
 
 export const metadata: Metadata = {

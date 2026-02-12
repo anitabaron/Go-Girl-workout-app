@@ -6,12 +6,10 @@ import { listExerciseTitlesService } from "@/services/exercises";
 import type { PersonalRecordQueryParams } from "@/types";
 import { mapPersonalRecordsToViewModel } from "@/lib/personal-records/view-model";
 import { getTranslations } from "@/i18n/server";
-import {
-  PageHeader,
-  Surface,
-  PersonalRecordsToolbar,
-  PersonalRecordsListM3,
-} from "@/components";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Surface } from "@/components/layout/Surface";
+import { PersonalRecordsToolbar } from "@/components/personal-records/PersonalRecordsToolbar";
+import { PersonalRecordsListM3 } from "@/components/personal-records/PersonalRecordsListM3";
 
 export default async function PersonalRecordsPage({
   searchParams,

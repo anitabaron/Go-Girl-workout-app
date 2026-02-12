@@ -12,7 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/db/supabase.server";
 import { getTranslations } from "@/i18n/server";
-import { HeroReveal, ScrollReveal, Surface } from "@/components";
+import { HeroReveal } from "@/components/layout/HeroReveal";
+import { ScrollReveal } from "@/components/layout/ScrollReveal";
+import { Surface } from "@/components/layout/Surface";
 
 const FEATURES = [
   {

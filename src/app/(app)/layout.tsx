@@ -1,6 +1,6 @@
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { createClient } from "@/db/supabase.server";
-import { NavigationRail } from "@/components";
+import { NavigationRail } from "@/components/layout/NavigationRail";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import "./m3.css";
 /**

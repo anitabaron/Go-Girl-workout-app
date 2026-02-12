@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHeader } from "@/components";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { getLocale, getTranslations } from "@/i18n/server";
 
 type PolicySection = {

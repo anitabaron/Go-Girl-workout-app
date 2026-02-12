@@ -6,13 +6,11 @@ import { workoutPlanQuerySchema } from "@/lib/validation/workout-plans";
 import { requireAuth } from "@/lib/auth";
 import { listWorkoutPlansService } from "@/services/workout-plans";
 import type { PlanQueryParams } from "@/types";
-import {
-  PageHeader,
-  Surface,
-  WorkoutPlansToolbar,
-  WorkoutPlansListM3,
-  ImportPlanButtonM3,
-} from "@/components";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Surface } from "@/components/layout/Surface";
+import { WorkoutPlansToolbar } from "@/components/workout-plans/WorkoutPlansToolbar";
+import { WorkoutPlansListM3 } from "@/components/workout-plans/WorkoutPlansListM3";
+import { ImportPlanButtonM3 } from "@/components/workout-plans/ImportPlanButtonM3";
 import { getTranslations } from "@/i18n/server";
 
 export default async function WorkoutPlansPage({

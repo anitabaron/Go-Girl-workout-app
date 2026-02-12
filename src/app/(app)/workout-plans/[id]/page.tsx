@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth";
 import { getWorkoutPlanService, ServiceError } from "@/services/workout-plans";
 import { getTranslations } from "@/i18n/server";
-import { Surface, WorkoutPlanDetailContent } from "@/components";
+import { Surface } from "@/components/layout/Surface";
+import { WorkoutPlanDetailContent } from "@/components/workout-plans/WorkoutPlanDetailContent";
 
 type WorkoutPlanDetailPageProps = {
   params: Promise<{ id: string }>;

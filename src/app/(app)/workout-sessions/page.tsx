@@ -5,7 +5,9 @@ import { requireAuth } from "@/lib/auth";
 import { listWorkoutSessionsService } from "@/services/workout-sessions";
 import { sessionListQuerySchema } from "@/lib/validation/workout-sessions";
 import type { SessionListQueryParams } from "@/types";
-import { PageHeader, Surface, WorkoutSessionsListM3 } from "@/components";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Surface } from "@/components/layout/Surface";
+import { WorkoutSessionsListM3 } from "@/components/workout-sessions/WorkoutSessionsListM3";
 import { getTranslations } from "@/i18n/server";
 
 export default async function WorkoutSessionsPage({
