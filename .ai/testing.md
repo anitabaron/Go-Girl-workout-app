@@ -55,6 +55,9 @@ pnpm test:e2e e2e/statistics/statistics.spec.ts
 # Workout sessions
 pnpm test:e2e e2e/workout-sessions/workout-session-flow.spec.ts
 
+# Run single complex assistant scenario (skip/back/timer/manual override)
+pnpm test:e2e e2e/workout-sessions/workout-session-flow.spec.ts -g "should preserve manually entered actual values across skip/back/timer-driven flow"
+
 # Run all tests from a directory (wszystkie specy w katalogu)
 # Auth – logowanie
 pnpm test:e2e e2e/auth

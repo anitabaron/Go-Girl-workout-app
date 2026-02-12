@@ -23,7 +23,6 @@ export const defaultExerciseData: Partial<ExerciseTestData> = {
   type: "Main Workout",
   part: "Arms",
   series: 3,
-  reps: 10,
   restBetween: 60,
 };
 
@@ -74,6 +73,13 @@ export async function createExercise(
     ...defaultExerciseData,
     ...exerciseData,
   } as ExerciseTestData;
+
+  // Form validation requires exactly one metric: reps or duration.
+  // Do not enforce default reps; if caller did not specify any metric,
+  // use a neutral duration fallback for fixture compatibility.
+  if (finalData.reps === undefined && finalData.duration === undefined) {
+    finalData.duration = 30;
+  }
 
   await formPage.fillRequiredFields({
     title: finalData.title,
