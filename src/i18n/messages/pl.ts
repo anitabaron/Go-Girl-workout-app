@@ -243,6 +243,7 @@ export const plMessages = {
   "workoutPlansExercisesList.count": "({count} {label})",
   "workoutPlansExercisesList.exerciseSingular": "ćwiczenie",
   "workoutPlansExercisesList.exercisePlural": "ćwiczeń",
+  "workoutPlansExercisesList.estimatedScopeTimeLabel": "Szacowany czas obwodu",
   "workoutPlansExercisesList.orderInSection": "Kolejność w sekcji",
   "workoutPlansExercisesList.moveScopeUp": "Przesuń obwód w górę",
   "workoutPlansExercisesList.moveScopeDown": "Przesuń obwód w dół",
@@ -837,6 +838,8 @@ export const plMessages = {
   "workoutPlanDetailContent.exercisesInPlan": "Ćwiczenia w planie",
   "workoutPlanDetailContent.emptyExercises": "Brak ćwiczeń w planie.",
   "workoutPlanDetailContent.scope": "Obwód",
+  "workoutPlanDetailContent.estimatedScopeTimeLabel":
+    "Szacowany czas obwodu",
   "workoutPlanDetailContent.deleteDialogTitle":
     "Usuń plan treningowy",
   "workoutPlanDetailContent.deleteDialogDescription":

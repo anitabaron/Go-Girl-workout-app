@@ -331,7 +331,8 @@ export function WorkoutPlanDetailContent({
                     </span>
                     {scopeEstimatedTime != null && (
                       <span className="text-sm font-medium text-[var(--m3-on-surface-variant)]">
-                        • ~{formatTotalDuration(scopeEstimatedTime)}
+                        • {t("estimatedScopeTimeLabel")}: ~
+                        {formatTotalDuration(scopeEstimatedTime)}
                       </span>
                     )}
                     <span className="text-sm text-muted-foreground">

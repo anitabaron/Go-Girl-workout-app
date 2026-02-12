@@ -250,6 +250,7 @@ export const enMessages = {
   "workoutPlansExercisesList.count": "({count} {label})",
   "workoutPlansExercisesList.exerciseSingular": "exercise",
   "workoutPlansExercisesList.exercisePlural": "exercises",
+  "workoutPlansExercisesList.estimatedScopeTimeLabel": "Estimated scope time",
   "workoutPlansExercisesList.orderInSection": "Order in section",
   "workoutPlansExercisesList.moveScopeUp": "Move scope up",
   "workoutPlansExercisesList.moveScopeDown": "Move scope down",
@@ -829,6 +830,7 @@ export const enMessages = {
   "workoutPlanDetailContent.exercisesInPlan": "Exercises in plan",
   "workoutPlanDetailContent.emptyExercises": "No exercises in plan.",
   "workoutPlanDetailContent.scope": "Scope",
+  "workoutPlanDetailContent.estimatedScopeTimeLabel": "Estimated scope time",
   "workoutPlanDetailContent.deleteDialogTitle": "Delete workout plan",
   "workoutPlanDetailContent.deleteDialogDescription":
     "Are you sure you want to delete",
