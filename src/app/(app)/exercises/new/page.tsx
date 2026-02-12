@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth";
 import { getExerciseService } from "@/services/exercises";
 import { getTranslations } from "@/i18n/server";
-import { ExerciseFormM3, PageHeader, Surface } from "@/components";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Surface } from "@/components/layout/Surface";
+import { ExerciseFormM3 } from "@/components/exercises/ExerciseFormM3";
 
 export default async function NewExercisePage({
   searchParams,

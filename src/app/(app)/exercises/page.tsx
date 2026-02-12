@@ -9,13 +9,11 @@ import {
   listExerciseTitlesService,
 } from "@/services/exercises";
 import type { ExerciseQueryParams } from "@/types";
-import {
-  PageHeader,
-  Surface,
-  EmptyState,
-  ExercisesToolbar,
-} from "@/components";
-import { M3ExerciseCard } from "@/components";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Surface } from "@/components/layout/Surface";
+import { EmptyState } from "@/components/layout/EmptyState";
+import { ExercisesToolbar } from "@/components/exercises/ExercisesToolbar";
+import { M3ExerciseCard } from "@/components/exercises/M3ExerciseCard";
 import { getTranslations } from "@/i18n/server";
 
 export default async function ExercisesPage({

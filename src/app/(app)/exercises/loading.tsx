@@ -2,7 +2,9 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/client";
-import { PageHeader, Surface, Toolbar } from "@/components";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Surface } from "@/components/layout/Surface";
+import { Toolbar } from "@/components/layout/Toolbar";
 
 export default function ExercisesLoading() {
   const t = useTranslations("exercisesPage");
