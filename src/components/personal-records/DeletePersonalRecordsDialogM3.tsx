@@ -4,7 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useTranslations } from "@/i18n/client";
-import { ConfirmActionDialogM3 } from "@/components/shared/ConfirmActionDialogM3";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type DeletePersonalRecordsDialogM3Props = {
   readonly exerciseId: string;
@@ -64,27 +73,36 @@ export function DeletePersonalRecordsDialogM3({
   };
 
   return (
-    <ConfirmActionDialogM3
-      open={open}
-      onOpenChange={onOpenChange}
-      title={t("title")}
-      description={
-        <>
-          {t("descriptionStart")} &quot;{exerciseTitle}&quot;?{" "}
-          {t("descriptionEnd")}
-        </>
-      }
-      cancelLabel={t("cancel")}
-      confirmLabel={t("delete")}
-      confirmingLabel={t("deleting")}
-      onConfirm={handleDelete}
-      isConfirming={isDeleting}
-      confirmVariant="destructive"
-      confirmAriaLabel={t("confirmDeleteAria").replace(
-        "{exerciseTitle}",
-        exerciseTitle,
-      )}
-      descriptionId="delete-dialog-description"
-    />
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent aria-describedby="delete-dialog-description">
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("title")}</AlertDialogTitle>
+          <AlertDialogDescription id="delete-dialog-description">
+            {t("descriptionStart")} &quot;{exerciseTitle}&quot;?{" "}
+            {t("descriptionEnd")}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>
+            {t("cancel")}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              handleDelete();
+            }}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            aria-label={t("confirmDeleteAria").replace(
+              "{exerciseTitle}",
+              exerciseTitle,
+            )}
+            aria-busy={isDeleting}
+          >
+            {isDeleting ? t("deleting") : t("delete")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
