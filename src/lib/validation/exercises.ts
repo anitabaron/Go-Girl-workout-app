@@ -7,7 +7,7 @@ import type {
   ExerciseType,
 } from "@/types";
 
-export const EXERCISE_MAX_LIMIT = 50;
+export const EXERCISE_MAX_LIMIT = 100;
 export const EXERCISE_DEFAULT_LIMIT = 50;
 
 export { EXERCISE_PART_VALUES as exercisePartValues } from "@/lib/constants";
