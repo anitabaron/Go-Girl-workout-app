@@ -107,8 +107,8 @@ export function WorkoutPlansToolbar({
   const hasActiveFilters = part != null && part !== "";
 
   return (
-    <Toolbar className="flex flex-wrap items-center gap-4">
-      <div className="flex flex-nowrap items-center gap-4">
+    <Toolbar className="flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row sm:flex-nowrap sm:items-center">
         <div className="flex flex-col gap-1">
           <label htmlFor="part-filter" className="sr-only">
             {t("partFilterLabel")}
@@ -120,7 +120,7 @@ export function WorkoutPlansToolbar({
           >
             <SelectTrigger
               id="part-filter"
-              className="w-[180px]"
+              className="w-full sm:w-[180px]"
               aria-label={t("partFilterAria")}
             >
               <SelectValue placeholder={t("partPlaceholder")} />
@@ -146,7 +146,7 @@ export function WorkoutPlansToolbar({
           >
             <SelectTrigger
               id="sort-select"
-              className="w-[180px]"
+              className="w-full sm:w-[180px]"
               aria-label={t("sortAria")}
             >
               <SelectValue placeholder={t("sortPlaceholder")} />
@@ -167,6 +167,7 @@ export function WorkoutPlansToolbar({
           onClick={() => updateParams({ part: null })}
           disabled={isPending}
           aria-label={t("clearFiltersAria")}
+          className="w-full sm:w-auto"
         >
           {t("clearFilters")}
         </Button>
