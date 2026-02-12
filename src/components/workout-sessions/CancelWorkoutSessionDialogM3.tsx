@@ -3,6 +3,7 @@
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useCancelSession } from "@/hooks/use-cancel-session";
+import { useTranslations } from "@/i18n/client";
 
 const M3_ALERT_CONTENT =
   "fixed top-[50%] left-[50%] z-50 grid w-full min-w-[320px] max-w-[calc(100%-2rem)] max-h-[calc(100vh-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-6 outline-none overflow-y-auto sm:max-w-lg " +
@@ -22,6 +23,7 @@ export function CancelWorkoutSessionDialogM3({
   onOpenChange,
   onSuccess,
 }: CancelWorkoutSessionDialogM3Props) {
+  const t = useTranslations("cancelWorkoutSessionDialog");
   const { cancel, isCancelling } = useCancelSession(sessionId);
 
   const handleConfirm = async (e: React.MouseEvent) => {
@@ -39,17 +41,16 @@ export function CancelWorkoutSessionDialogM3({
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2 text-center sm:text-left">
               <AlertDialogPrimitive.Title className="m3-title">
-                Cancel workout session?
+                {t("title")}
               </AlertDialogPrimitive.Title>
               <AlertDialogPrimitive.Description className="m3-body text-[var(--m3-on-surface-variant)] break-words">
-                Are you sure you want to cancel this session? Progress will be
-                saved, but the session will be marked as completed.
+                {t("description")}
               </AlertDialogPrimitive.Description>
             </div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <AlertDialogPrimitive.Cancel asChild>
                 <Button variant="outline" disabled={isCancelling}>
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </AlertDialogPrimitive.Cancel>
               <AlertDialogPrimitive.Action asChild>
@@ -58,7 +59,7 @@ export function CancelWorkoutSessionDialogM3({
                   disabled={isCancelling}
                   aria-busy={isCancelling}
                 >
-                  {isCancelling ? "Cancelling..." : "Confirm"}
+                  {isCancelling ? t("cancelling") : t("confirm")}
                 </Button>
               </AlertDialogPrimitive.Action>
             </div>

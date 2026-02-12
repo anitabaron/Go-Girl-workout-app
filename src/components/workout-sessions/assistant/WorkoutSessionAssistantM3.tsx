@@ -73,7 +73,7 @@ export function WorkoutSessionAssistantM3({
           errorMessage={autosaveError}
         />
 
-        <div className="flex-1 overflow-y-auto pb-[10.5rem] md:pb-24 md:pt-4">
+        <div className="flex-1 overflow-y-auto pb-[6.25rem] md:pb-24 md:pt-4">
           <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6">
             <WorkoutTimerM3
               activeDurationSeconds={session.active_duration_seconds ?? 0}

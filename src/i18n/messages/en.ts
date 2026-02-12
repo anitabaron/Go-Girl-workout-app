@@ -12,6 +12,8 @@ export const enMessages = {
   "nav.sessions": "Sessions",
   "nav.records": "Records",
   "nav.start": "Start",
+  "nav.menu": "Menu",
+  "nav.menuClose": "Close menu",
   "auth.signIn": "Sign in",
   "auth.signOut": "Sign out",
   "auth.signOutError": "Could not sign out. Please try again.",
@@ -628,6 +630,52 @@ export const enMessages = {
   "assistantExerciseExecution.title": "Exercise execution",
   "assistantExerciseExecution.skipExercise": "Skip exercise",
   "assistantExerciseExecution.formErrors": "Form errors:",
+  "assistantExitDialog.triggerAria": "Exit workout session",
+  "assistantExitDialog.title": "Exit workout session?",
+  "assistantExitDialog.description":
+    "Are you sure you want to leave the workout session? Your progress will be saved, but the session will remain active and you can resume it later.",
+  "assistantExitDialog.cancel": "Cancel",
+  "assistantExitDialog.confirm": "Exit",
+  "deleteWorkoutPlanDialog.title": "Delete workout plan",
+  "deleteWorkoutPlanDialog.descriptionStart":
+    "Are you sure you want to delete",
+  "deleteWorkoutPlanDialog.descriptionEnd":
+    "This action cannot be undone.",
+  "deleteWorkoutPlanDialog.cancel": "Cancel",
+  "deleteWorkoutPlanDialog.delete": "Delete",
+  "deleteWorkoutPlanDialog.deleting": "Deleting...",
+  "deleteWorkoutPlanDialog.closeAria": "Close",
+  "deleteWorkoutPlanDialog.toast.notFound": "Workout plan not found.",
+  "deleteWorkoutPlanDialog.toast.unauthorized":
+    "Unauthorized. Please log in again.",
+  "deleteWorkoutPlanDialog.toast.failed": "Failed to delete workout plan.",
+  "deleteWorkoutPlanDialog.toast.success": "Workout plan deleted.",
+  "deleteWorkoutPlanDialog.toast.generic":
+    "An error occurred while deleting the workout plan.",
+  "deleteWorkoutSessionDialog.title": "Delete workout session",
+  "deleteWorkoutSessionDialog.descriptionStart":
+    "Are you sure you want to delete",
+  "deleteWorkoutSessionDialog.descriptionEnd":
+    "This action cannot be undone. All exercises and sets from this session will also be deleted.",
+  "deleteWorkoutSessionDialog.cancel": "Cancel",
+  "deleteWorkoutSessionDialog.delete": "Delete",
+  "deleteWorkoutSessionDialog.deleting": "Deleting...",
+  "deleteWorkoutSessionDialog.closeAria": "Close",
+  "deleteWorkoutSessionDialog.planDeleted": "Deleted plan",
+  "deleteWorkoutSessionDialog.toast.notFound": "Workout session not found.",
+  "deleteWorkoutSessionDialog.toast.unauthorized":
+    "Unauthorized. Please log in again.",
+  "deleteWorkoutSessionDialog.toast.failed":
+    "Failed to delete workout session.",
+  "deleteWorkoutSessionDialog.toast.success": "Workout session deleted.",
+  "deleteWorkoutSessionDialog.toast.generic":
+    "An error occurred while deleting the workout session.",
+  "cancelWorkoutSessionDialog.title": "Cancel workout session?",
+  "cancelWorkoutSessionDialog.description":
+    "Are you sure you want to cancel this session? Progress will be saved, but the session will be marked as completed.",
+  "cancelWorkoutSessionDialog.cancel": "Cancel",
+  "cancelWorkoutSessionDialog.confirm": "Confirm",
+  "cancelWorkoutSessionDialog.cancelling": "Cancelling...",
   "assistantCurrentExercise.noName": "No name",
   "assistantCurrentExercise.unilateral": "Unilateral",
   "assistantCurrentExercise.plannedSets": "Planned sets",

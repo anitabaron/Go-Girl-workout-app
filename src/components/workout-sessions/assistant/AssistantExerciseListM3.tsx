@@ -28,13 +28,18 @@ export function AssistantExerciseListM3({
         <table className="w-full min-w-[280px] text-xs text-muted-foreground">
           <thead>
             <tr className="border-b border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] text-foreground">
-              <th className="w-5 py-1.5 pr-1 text-left" aria-hidden="true" />
+              <th
+                className="w-5 py-1.5 pl-2 pr-1 text-left"
+                aria-hidden="true"
+              />
               <th className="py-1.5 pr-3 text-left font-medium">{t("exercise")}</th>
               <th className="py-1.5 pr-3 text-left font-medium">
                 {t("repsTime")}
               </th>
               <th className="py-1.5 pr-3 text-left font-medium">{t("sets")}</th>
-              <th className="py-1.5 text-left font-medium">{t("rest")}</th>
+              <th className="py-1.5 pr-2 text-left font-medium">
+                {t("rest")}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -67,7 +72,7 @@ export function AssistantExerciseListM3({
                       : ""
                   }`}
                 >
-                  <td className="w-5 py-1.5 pr-1 align-middle">
+                  <td className="w-5 py-1.5 pl-2 pr-1 align-middle">
                     {isCurrent ? (
                       <span
                         className="inline-block size-2.5 shrink-0 rounded-full bg-[var(--m3-primary)]"
@@ -80,7 +85,7 @@ export function AssistantExerciseListM3({
                   <td className="py-1.5 pr-3 font-medium">{title}</td>
                   <td className="py-1.5 pr-3">{repsOrDuration}</td>
                   <td className="py-1.5 pr-3">{sets}</td>
-                  <td className="py-1.5">{rest}</td>
+                  <td className="py-1.5 pr-2">{rest}</td>
                 </tr>
               );
             })}

@@ -6,6 +6,8 @@ export const plMessages = {
   "nav.sessions": "Sesje",
   "nav.records": "Rekordy",
   "nav.start": "Start",
+  "nav.menu": "Menu",
+  "nav.menuClose": "Zamknij menu",
   "auth.signIn": "Zaloguj",
   "auth.signOut": "Wyloguj",
   "auth.signOutError": "Nie udało się wylogować. Spróbuj ponownie.",
@@ -628,6 +630,56 @@ export const plMessages = {
   "assistantExerciseExecution.title": "Wykonanie ćwiczenia",
   "assistantExerciseExecution.skipExercise": "Pomiń ćwiczenie",
   "assistantExerciseExecution.formErrors": "Błędy formularza:",
+  "assistantExitDialog.triggerAria": "Wyjdź z sesji treningowej",
+  "assistantExitDialog.title": "Wyjść z sesji treningowej?",
+  "assistantExitDialog.description":
+    "Czy na pewno chcesz opuścić sesję treningową? Postęp zostanie zapisany, ale sesja pozostanie aktywna i będzie można ją wznowić później.",
+  "assistantExitDialog.cancel": "Anuluj",
+  "assistantExitDialog.confirm": "Wyjdź",
+  "deleteWorkoutPlanDialog.title": "Usuń plan treningowy",
+  "deleteWorkoutPlanDialog.descriptionStart":
+    "Czy na pewno chcesz usunąć",
+  "deleteWorkoutPlanDialog.descriptionEnd": "Tej operacji nie można cofnąć.",
+  "deleteWorkoutPlanDialog.cancel": "Anuluj",
+  "deleteWorkoutPlanDialog.delete": "Usuń",
+  "deleteWorkoutPlanDialog.deleting": "Usuwanie...",
+  "deleteWorkoutPlanDialog.closeAria": "Zamknij",
+  "deleteWorkoutPlanDialog.toast.notFound":
+    "Nie znaleziono planu treningowego.",
+  "deleteWorkoutPlanDialog.toast.unauthorized":
+    "Brak autoryzacji. Zaloguj się ponownie.",
+  "deleteWorkoutPlanDialog.toast.failed":
+    "Nie udało się usunąć planu treningowego.",
+  "deleteWorkoutPlanDialog.toast.success":
+    "Plan treningowy został usunięty.",
+  "deleteWorkoutPlanDialog.toast.generic":
+    "Wystąpił błąd podczas usuwania planu treningowego.",
+  "deleteWorkoutSessionDialog.title": "Usuń sesję treningową",
+  "deleteWorkoutSessionDialog.descriptionStart":
+    "Czy na pewno chcesz usunąć",
+  "deleteWorkoutSessionDialog.descriptionEnd":
+    "Tej operacji nie można cofnąć. Wszystkie ćwiczenia i serie z tej sesji również zostaną usunięte.",
+  "deleteWorkoutSessionDialog.cancel": "Anuluj",
+  "deleteWorkoutSessionDialog.delete": "Usuń",
+  "deleteWorkoutSessionDialog.deleting": "Usuwanie...",
+  "deleteWorkoutSessionDialog.closeAria": "Zamknij",
+  "deleteWorkoutSessionDialog.planDeleted": "Usunięty plan",
+  "deleteWorkoutSessionDialog.toast.notFound":
+    "Nie znaleziono sesji treningowej.",
+  "deleteWorkoutSessionDialog.toast.unauthorized":
+    "Brak autoryzacji. Zaloguj się ponownie.",
+  "deleteWorkoutSessionDialog.toast.failed":
+    "Nie udało się usunąć sesji treningowej.",
+  "deleteWorkoutSessionDialog.toast.success":
+    "Sesja treningowa została usunięta.",
+  "deleteWorkoutSessionDialog.toast.generic":
+    "Wystąpił błąd podczas usuwania sesji treningowej.",
+  "cancelWorkoutSessionDialog.title": "Anulować sesję treningową?",
+  "cancelWorkoutSessionDialog.description":
+    "Czy na pewno chcesz anulować tę sesję? Postęp zostanie zapisany, ale sesja zostanie oznaczona jako ukończona.",
+  "cancelWorkoutSessionDialog.cancel": "Anuluj",
+  "cancelWorkoutSessionDialog.confirm": "Potwierdź",
+  "cancelWorkoutSessionDialog.cancelling": "Anulowanie...",
   "assistantCurrentExercise.noName": "Bez nazwy",
   "assistantCurrentExercise.unilateral": "Jednostronne",
   "assistantCurrentExercise.plannedSets": "Planowane serie",

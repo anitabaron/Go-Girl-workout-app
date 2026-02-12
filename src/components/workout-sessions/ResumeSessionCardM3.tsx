@@ -146,7 +146,7 @@ export function ResumeSessionCardM3({ session }: ResumeSessionCardM3Props) {
             <Button
               variant="outline"
               size="lg"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto rounded-[var(--m3-radius-lg)] border-[var(--m3-outline-variant)] bg-transparent text-[var(--m3-on-surface)] hover:bg-[var(--m3-surface-container-high)]"
               aria-label={t("cancelAria")}
             >
               <X className="mr-2 size-4" />

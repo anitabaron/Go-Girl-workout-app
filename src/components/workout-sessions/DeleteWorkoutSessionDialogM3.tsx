@@ -7,6 +7,7 @@ import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { SessionSummaryDTO } from "@/types";
+import { useTranslations } from "@/i18n/client";
 
 const M3_DIALOG_CONTENT =
   "fixed top-[50%] left-[50%] z-50 grid w-full min-w-[320px] max-w-[calc(100%-2rem)] max-h-[calc(100vh-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-6 outline-none overflow-y-auto sm:max-w-lg " +
@@ -24,9 +25,10 @@ export function DeleteWorkoutSessionDialogM3({
   open,
   onOpenChange,
 }: DeleteWorkoutSessionDialogM3Props) {
+  const t = useTranslations("deleteWorkoutSessionDialog");
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
-  const planName = session.plan_name_at_time ?? "Plan deleted";
+  const planName = session.plan_name_at_time ?? t("planDeleted");
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -35,18 +37,18 @@ export function DeleteWorkoutSessionDialogM3({
         method: "DELETE",
       });
       if (!response.ok) {
-        if (response.status === 404) toast.error("Session not found");
+        if (response.status === 404) toast.error(t("toast.notFound"));
         else if (response.status === 401 || response.status === 403) {
-          toast.error("Unauthorized. Please log in again.");
+          toast.error(t("toast.unauthorized"));
           router.push("/login");
-        } else toast.error("Failed to delete session");
+        } else toast.error(t("toast.failed"));
         return;
       }
-      toast.success("Session deleted");
+      toast.success(t("toast.success"));
       onOpenChange(false);
       router.refresh();
     } catch {
-      toast.error("An error occurred while deleting the session");
+      toast.error(t("toast.generic"));
     } finally {
       setIsDeleting(false);
     }
@@ -63,15 +65,14 @@ export function DeleteWorkoutSessionDialogM3({
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2 text-center sm:text-left">
               <DialogPrimitive.Title className="m3-title">
-                Delete workout session
+                {t("title")}
               </DialogPrimitive.Title>
               <DialogPrimitive.Description
                 id="delete-session-description"
                 className="m3-body text-[var(--m3-on-surface-variant)] break-words"
               >
-                Are you sure you want to delete &quot;{planName}&quot;? This
-                action cannot be undone. All exercises and sets from this
-                session will also be deleted.
+                {t("descriptionStart")} &quot;{planName}&quot;?{" "}
+                {t("descriptionEnd")}
               </DialogPrimitive.Description>
             </div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -80,7 +81,7 @@ export function DeleteWorkoutSessionDialogM3({
                 onClick={() => onOpenChange(false)}
                 disabled={isDeleting}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 variant="destructive"
@@ -88,13 +89,13 @@ export function DeleteWorkoutSessionDialogM3({
                 disabled={isDeleting}
                 aria-busy={isDeleting}
               >
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? t("deleting") : t("delete")}
               </Button>
             </div>
           </div>
           <DialogPrimitive.Close
             className="absolute right-4 top-4 rounded-[var(--m3-radius-sm)] opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[var(--m3-primary)] focus:ring-offset-2 disabled:pointer-events-none [&_svg]:size-4"
-            aria-label="Close"
+            aria-label={t("closeAria")}
           >
             <XIcon />
           </DialogPrimitive.Close>

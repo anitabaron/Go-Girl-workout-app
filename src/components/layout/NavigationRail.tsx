@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Home,
   Play,
@@ -11,9 +12,12 @@ import {
   Trophy,
   LogIn,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "./DarkModeToggle";
+import { LanguageToggle } from "./LanguageToggle";
 import { useAuthStore } from "@/stores/auth-store";
 import { supabase } from "@/db/supabase.client";
 import { toast } from "sonner";
@@ -57,70 +61,162 @@ const MobileNavContent = ({
   tNav: (key: string) => string;
   tAuth: (key: string) => string;
   tTheme: (key: string) => string;
-}) => (
-  <nav
-    aria-label={tNav("mainNavigation")}
-    className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center justify-center border-t border-border bg-[var(--m3-surface-container)] shadow-[0_-2px_10px_rgb(0_0_0/0.08)] py-2 safe-area-pb"
-  >
-    <div className="flex w-full items-center justify-around h-16 px-2 py-2">
-      {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
-        const isActive = isNavItemActive(href, pathname);
-        return (
-          <Link
-            key={href}
-            href={href}
-            prefetch={false}
-            aria-current={isActive ? "page" : undefined}
+}) => {
+  const [isMobileSettingsOpen, setIsMobileSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMobileSettingsOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMobileSettingsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isMobileSettingsOpen]);
+
+  return (
+    <>
+      <button
+        type="button"
+        className={cn(
+          "sm:hidden fixed inset-0 z-40 bg-black/45 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          isMobileSettingsOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none",
+        )}
+        onClick={() => setIsMobileSettingsOpen(false)}
+        aria-label={tNav("menuClose")}
+      />
+
+      <nav
+        aria-label={tNav("mainNavigation")}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center justify-center border-t border-border bg-[var(--m3-surface-container)] shadow-[0_-2px_10px_rgb(0_0_0/0.08)] py-2 safe-area-pb"
+      >
+        <div
+          id="mobile-nav-settings"
+          className={cn(
+            "sm:hidden absolute bottom-full left-0 right-0 border-t border-border bg-[var(--m3-surface-container)] px-3 py-3 will-change-transform transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            isMobileSettingsOpen
+              ? "translate-y-0 opacity-100 pointer-events-auto"
+              : "translate-y-6 opacity-0 pointer-events-none",
+          )}
+          aria-hidden={!isMobileSettingsOpen}
+        >
+          <div className="flex items-center justify-center gap-2">
+            <LanguageToggle />
+            <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
+            {user ? (
+              <button
+                type="button"
+                onClick={onSignOut}
+                aria-label={tAuth("signOut")}
+                className="inline-flex items-center gap-1 rounded-[var(--m3-radius-lg)] border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                <LogOut className="size-4 shrink-0" aria-hidden />
+                {tAuth("signOut")}
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                prefetch={false}
+                aria-label={tAuth("signIn")}
+                onClick={() => setIsMobileSettingsOpen(false)}
+                className="inline-flex items-center gap-1 rounded-[var(--m3-radius-lg)] border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                <LogIn className="size-4 shrink-0" aria-hidden />
+                {tAuth("signIn")}
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <div className="flex w-full items-center justify-around h-16 px-2 py-2">
+          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
+            const isActive = isNavItemActive(href, pathname);
+            return (
+              <Link
+                key={href}
+                href={href}
+                prefetch={false}
+                aria-current={isActive ? "page" : undefined}
+                onClick={() => setIsMobileSettingsOpen(false)}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
+                  isActive
+                    ? "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]"
+                    : "text-muted-foreground",
+                )}
+              >
+                <Icon className="size-6 shrink-0" aria-hidden />
+                <span className="text-[11px] font-medium truncate max-w-full">
+                  {tNav(labelKey)}
+                </span>
+              </Link>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() => setIsMobileSettingsOpen((prev) => !prev)}
+            aria-label={tNav("menu")}
+            aria-controls="mobile-nav-settings"
+            aria-expanded={isMobileSettingsOpen}
             className={cn(
-              "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
-              isActive
-                ? "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]"
-                : "text-muted-foreground",
+              "sm:hidden flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
+              isMobileSettingsOpen &&
+                "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]",
             )}
           >
-            <Icon className="size-6 shrink-0" aria-hidden />
+            {isMobileSettingsOpen ? (
+              <X className="size-6 shrink-0" aria-hidden />
+            ) : (
+              <Menu className="size-6 shrink-0" aria-hidden />
+            )}
             <span className="text-[11px] font-medium truncate max-w-full">
-              {tNav(labelKey)}
+              {tNav("menu")}
             </span>
-          </Link>
-        );
-      })}
-      {user ? (
-        <button
-          type="button"
-          onClick={onSignOut}
-          aria-label={tAuth("signOut")}
-          className={cn(
-            "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
-          )}
-        >
-          <LogOut className="size-6 shrink-0" aria-hidden />
-          <span className="text-[11px] font-medium truncate max-w-full">
-            {tAuth("signOut")}
-          </span>
-        </button>
-      ) : (
-        <Link
-          href="/login"
-          prefetch={false}
-          aria-label={tAuth("signIn")}
-          className={cn(
-            "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
-          )}
-        >
-          <LogIn className="size-6 shrink-0" aria-hidden />
-          <span className="text-[11px] font-medium truncate max-w-full">
-            {tAuth("signIn")}
-          </span>
-        </Link>
-      )}
-    </div>
+          </button>
 
-    <div className="w-full px-3 pb-1 flex items-center justify-center gap-2">
-      <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
-    </div>
-  </nav>
-);
+          {user ? (
+            <button
+              type="button"
+              onClick={onSignOut}
+              aria-label={tAuth("signOut")}
+              className={cn(
+                "hidden sm:flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
+              )}
+            >
+              <LogOut className="size-6 shrink-0" aria-hidden />
+              <span className="text-[11px] font-medium truncate max-w-full">
+                {tAuth("signOut")}
+              </span>
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              prefetch={false}
+              aria-label={tAuth("signIn")}
+              onClick={() => setIsMobileSettingsOpen(false)}
+              className={cn(
+                "hidden sm:flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-2 rounded-[var(--m3-radius-lg)] transition-colors text-muted-foreground active:bg-[color-mix(in_srgb,var(--m3-primary-container)_40%,var(--m3-surface-container))]",
+              )}
+            >
+              <LogIn className="size-6 shrink-0" aria-hidden />
+              <span className="text-[11px] font-medium truncate max-w-full">
+                {tAuth("signIn")}
+              </span>
+            </Link>
+          )}
+        </div>
+
+        <div className="hidden sm:flex w-full px-3 pb-1 items-center justify-center gap-2">
+          <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
+        </div>
+      </nav>
+    </>
+  );
+};
 
 export function NavigationRail() {
   const pathname = usePathname();

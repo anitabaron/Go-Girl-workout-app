@@ -13,12 +13,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { useTranslations } from "@/i18n/client";
 
 type ExitSessionButtonM3Props = {
   onExit: () => void;
 };
 
 export function ExitSessionButtonM3({ onExit }: ExitSessionButtonM3Props) {
+  const t = useTranslations("assistantExitDialog");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleConfirm = () => {
@@ -33,8 +35,8 @@ export function ExitSessionButtonM3({ onExit }: ExitSessionButtonM3Props) {
         variant="ghost"
         size="icon"
         onClick={() => setIsDialogOpen(true)}
-        className="fixed left-4 top-4 z-50 h-10 w-10 rounded-full bg-[var(--m3-surface-container-high)] shadow-sm hover:bg-[var(--m3-surface-container-highest)] md:left-[104px] lg:left-[112px]"
-        aria-label="Exit workout session"
+        className="fixed left-4 top-4 z-50 h-10 w-10 rounded-full border border-[var(--m3-outline-variant)] bg-[color-mix(in_srgb,var(--m3-surface-container-high)_50%,transparent)] backdrop-blur-sm shadow-sm hover:bg-[color-mix(in_srgb,var(--m3-surface-container-highest)_62%,transparent)] md:left-[104px] lg:left-[112px]"
+        aria-label={t("triggerAria")}
       >
         <X className="size-5" />
       </Button>
@@ -42,20 +44,18 @@ export function ExitSessionButtonM3({ onExit }: ExitSessionButtonM3Props) {
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Exit workout session?</AlertDialogTitle>
+            <AlertDialogTitle>{t("title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to leave the workout session? Your progress
-              will be saved, but the session will remain active and you can
-              resume it later.
+              {t("description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Exit
+              {t("confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
