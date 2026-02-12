@@ -225,7 +225,8 @@ test.describe("Workout Session Flow E2E", () => {
 
     await assistantPage.clickPrevious();
     await assistantPage.waitForExerciseTitle(skippedThenDoneTitle);
-    await assistantPage.setExerciseSkipped(false);
+    await assistantPage.toggleExerciseSkipped();
+    await expect(page.locator("#reps-1")).toBeEnabled();
     await assistantPage.setRepsForSet(1, 9);
     await assistantPage.clickNext();
 

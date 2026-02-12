@@ -121,7 +121,11 @@ export function useSessionForm() {
   }, [currentExercise]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateSetInForm = useCallback(
-    (setNumber: number, updates: Partial<SetLogFormData>) => {
+    (
+      setNumber: number,
+      updates: Partial<SetLogFormData>,
+      preserveExistingValues = false,
+    ) => {
       if (!currentExercise) return;
 
       setFormDataWithRef((prev) => {
@@ -145,7 +149,29 @@ export function useSessionForm() {
           newFormData = { ...prev, sets: newSets };
         } else {
           const newSets = [...prev.sets];
-          newSets[setIndex] = { ...newSets[setIndex], ...updates };
+          const currentSet = newSets[setIndex];
+          const mergedUpdates = preserveExistingValues
+            ? {
+                reps:
+                  updates.reps !== undefined &&
+                  (currentSet.reps === null || currentSet.reps === undefined)
+                    ? updates.reps
+                    : currentSet.reps,
+                duration_seconds:
+                  updates.duration_seconds !== undefined &&
+                  (currentSet.duration_seconds === null ||
+                    currentSet.duration_seconds === undefined)
+                    ? updates.duration_seconds
+                    : currentSet.duration_seconds,
+                weight_kg:
+                  updates.weight_kg !== undefined &&
+                  (currentSet.weight_kg === null ||
+                    currentSet.weight_kg === undefined)
+                    ? updates.weight_kg
+                    : currentSet.weight_kg,
+              }
+            : updates;
+          newSets[setIndex] = { ...currentSet, ...mergedUpdates };
           newFormData = { ...prev, sets: newSets };
         }
 
@@ -163,7 +189,7 @@ export function useSessionForm() {
     ) {
       updateSetInForm(currentSetNumber, {
         duration_seconds: currentExercise.planned_duration_seconds,
-      });
+      }, true);
     }
   }, [currentSetNumber, currentExercise, updateSetInForm]);
 
@@ -183,7 +209,7 @@ export function useSessionForm() {
     if (currentExercise.planned_reps && currentExercise.planned_reps > 0) {
       updateSetInForm(currentSetNumber, {
         reps: currentExercise.planned_reps,
-      });
+      }, true);
     }
   }, [currentSetNumber, currentExercise, updateSetInForm]);
 

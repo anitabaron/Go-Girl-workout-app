@@ -14,6 +14,8 @@ export class WorkoutSessionAssistantPage {
   readonly timerOkButton: Locator;
   readonly timerSkipBreakButton: Locator;
   readonly skipExerciseCheckbox: Locator;
+  readonly skipExerciseLabel: Locator;
+  readonly currentExerciseTitle: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -32,6 +34,10 @@ export class WorkoutSessionAssistantPage {
       '[data-test-id="timer-skip-break-button"]',
     );
     this.skipExerciseCheckbox = page.locator("#is_skipped");
+    this.skipExerciseLabel = page.locator('label[for="is_skipped"]');
+    this.currentExerciseTitle = page
+      .locator('[data-page="workout-active"] h2')
+      .first();
   }
 
   async waitForAssistant(timeout = 30000) {
@@ -79,36 +85,69 @@ export class WorkoutSessionAssistantPage {
   }
 
   async waitForExerciseTitle(title: string, timeout = 10000) {
-    await this.page
-      .getByRole("heading", { level: 2, name: title })
-      .waitFor({ state: "visible", timeout });
+    await this.currentExerciseTitle.waitFor({ state: "visible", timeout });
+    await this.page.waitForFunction(
+      ({ selector, expected }) => {
+        const el = document.querySelector(selector);
+        return (el?.textContent ?? "").trim() === expected;
+      },
+      {
+        selector: '[data-page="workout-active"] h2',
+        expected: title,
+      },
+      { timeout },
+    );
   }
 
   async setRepsForSet(setNumber: number, reps: number) {
-    const repsInput = this.page.locator(`#reps-${setNumber}`);
-    await repsInput.waitFor({ state: "visible", timeout: 10000 });
+    const repsInput = await this.getEditableInput(`#reps-${setNumber}`);
     await repsInput.fill(String(reps));
   }
 
   async getRepsForSet(setNumber: number): Promise<string> {
-    const repsInput = this.page.locator(`#reps-${setNumber}`);
-    await repsInput.waitFor({ state: "visible", timeout: 10000 });
+    const repsInput = await this.getEditableInput(`#reps-${setNumber}`);
     return await repsInput.inputValue();
   }
 
   async setDurationForSet(setNumber: number, durationSeconds: number) {
-    const durationInput = this.page.locator(`#duration-${setNumber}`);
-    await durationInput.waitFor({ state: "visible", timeout: 10000 });
+    const durationInput = await this.getEditableInput(`#duration-${setNumber}`);
     await durationInput.fill(String(durationSeconds));
   }
 
   async setExerciseSkipped(skipped: boolean) {
     await this.skipExerciseCheckbox.waitFor({ state: "visible", timeout: 10000 });
-    const currentState =
-      (await this.skipExerciseCheckbox.getAttribute("data-state")) ===
-      "checked";
-    if (currentState !== skipped) {
-      await this.skipExerciseCheckbox.click();
+    const currentState = await this.skipExerciseCheckbox.isChecked();
+    if (currentState === skipped) return;
+
+    await this.skipExerciseLabel.click();
+    await this.page.waitForFunction(
+      ({ expected }) => {
+        const el = document.querySelector("#is_skipped") as
+          | HTMLInputElement
+          | null;
+        return Boolean(el && el.checked === expected);
+      },
+      { expected: skipped },
+    );
+  }
+
+  async toggleExerciseSkipped() {
+    await this.skipExerciseLabel.waitFor({ state: "visible", timeout: 10000 });
+    await this.skipExerciseLabel.click();
+  }
+
+  private async getEditableInput(selector: string): Promise<Locator> {
+    const candidates = this.page.locator(selector);
+    await candidates.first().waitFor({ state: "visible", timeout: 10000 });
+
+    const count = await candidates.count();
+    for (let i = 0; i < count; i++) {
+      const input = candidates.nth(i);
+      if ((await input.isVisible()) && (await input.isEnabled())) {
+        return input;
+      }
     }
+
+    return candidates.first();
   }
 }
