@@ -1,5 +1,30 @@
 # M3 Migration Backlog (Actionable)
 
+## Current Status (2026-02-11)
+
+### Refactor stream completed
+
+- [x] Split `src/app/(app)/m3.css` into modular files (tokens/theme/portal/core).
+- [x] Split `src/app/(app)/m3.core.css` into focused modules (typography/surfaces/overrides/layout).
+- [x] Split `src/app/globals.css` into modular files (tokens/dark/theme + thin root file).
+- [x] Remove duplicate light-equivalent vars from global dark theme.
+- [x] Clarify dark-mode precedence in global token layer.
+- [x] Localize personal-records sort labels (EN/PL) and remove hardcoded Polish labels.
+- [x] Localize estimated-set-time labels in exercise and workout-plan contexts.
+- [x] Deduplicate portal button selectors in `m3.portal.css`.
+- [x] Align portal button tokens with core M3 token behavior.
+- [x] Move base M3 tokens from `.ui-m3` scope to `:root`.
+- [x] Switch M3 mode selectors from `.ui-m3.dark/.ui-m3.light` to `:root.dark/:root.light`.
+- [x] Apply theme classes on `:root` in `m3-theme-store` (no `.ui-m3` dependency).
+- [x] Remove `body:has(.ui-m3)` dependency from `m3.portal.css` selectors.
+
+### Remaining CSS migration tasks
+
+- [x] Remove `.ui-m3` scope from component style selectors (`m3.typography.css`, `m3.surfaces.css`, `m3.overrides.css`, `m3.layout.css`).
+- [x] Remove `body:not(:has(.ui-m3))` guards in `globals.css` after M3 selector globalization.
+- [x] Simplify app/auth layout wrappers so `.ui-m3` is removable.
+- [ ] Run final visual smoke test for light/dark across dialogs, forms, cards, select, sheets.
+
 ## Enforceability
 
 ### Import boundaries

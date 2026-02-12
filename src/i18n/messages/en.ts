@@ -12,6 +12,8 @@ export const enMessages = {
   "nav.sessions": "Sessions",
   "nav.records": "Records",
   "nav.start": "Start",
+  "nav.menu": "Menu",
+  "nav.menuClose": "Close menu",
   "auth.signIn": "Sign in",
   "auth.signOut": "Sign out",
   "auth.signOutError": "Could not sign out. Please try again.",
@@ -349,6 +351,7 @@ export const enMessages = {
   "exerciseForm.restBetweenSecLabel": "Rest between sets (sec)",
   "exerciseForm.restHint": "Provide at least one rest field",
   "exerciseForm.restAfterSecLabel": "Rest after series (sec)",
+  "exerciseForm.estimatedSetTimeLabel": "Estimated set time (sec)",
   "exerciseForm.estimatedUse": "Use estimated value",
   "exerciseEditPage.title": "Edit exercise",
   "exerciseEditPage.editingPrefix": "Editing:",
@@ -397,6 +400,10 @@ export const enMessages = {
   "personalRecordsToolbar.sortLabel": "Sort records",
   "personalRecordsToolbar.sortAria": "Sort records",
   "personalRecordsToolbar.sortPlaceholder": "Sort by",
+  "personalRecordsToolbar.sortNewestFirst": "Newest first",
+  "personalRecordsToolbar.sortOldestFirst": "Oldest first",
+  "personalRecordsToolbar.sortHighestValue": "Highest value",
+  "personalRecordsToolbar.sortLowestValue": "Lowest value",
   "personalRecordsToolbar.clearFiltersAria": "Clear filters",
   "personalRecordsToolbar.clearFilters": "Clear filters",
   "workoutPlansList.loadMoreError": "Failed to fetch more plans",
@@ -425,6 +432,64 @@ export const enMessages = {
   "personalRecordsList.loadMoreAria": "Load more records",
   "personalRecordsList.loading": "Loading...",
   "personalRecordsList.loadMore": "Load more",
+  "deletePersonalRecordsDialog.title": "Delete personal records",
+  "deletePersonalRecordsDialog.descriptionStart":
+    "Are you sure you want to delete all personal records for exercise",
+  "deletePersonalRecordsDialog.descriptionEnd":
+    "This action cannot be undone.",
+  "deletePersonalRecordsDialog.cancel": "Cancel",
+  "deletePersonalRecordsDialog.delete": "Delete",
+  "deletePersonalRecordsDialog.deleting": "Deleting...",
+  "deletePersonalRecordsDialog.confirmDeleteAria":
+    "Confirm deletion of records for: {exerciseTitle}",
+  "deletePersonalRecordsDialog.toast.notFound": "Records not found",
+  "deletePersonalRecordsDialog.toast.unauthorized":
+    "Unauthorized. Please log in again.",
+  "deletePersonalRecordsDialog.toast.server":
+    "Server error. Please try again later.",
+  "deletePersonalRecordsDialog.toast.failed":
+    "Failed to delete records",
+  "deletePersonalRecordsDialog.toast.success": "Records deleted",
+  "deletePersonalRecordsDialog.toast.offline":
+    "No internet connection. Check your connection and try again.",
+  "deletePersonalRecordsDialog.toast.generic":
+    "An error occurred while deleting records",
+  "editPersonalRecordDialog.title": "Edit record",
+  "editPersonalRecordDialog.valueComputedFromSeries":
+    "Value computed from series",
+  "editPersonalRecordDialog.series": "Series",
+  "editPersonalRecordDialog.addSeries": "Add series",
+  "editPersonalRecordDialog.removeSeriesAria": "Remove {seriesKey}",
+  "editPersonalRecordDialog.achievedAt": "Achieved at",
+  "editPersonalRecordDialog.cancel": "Cancel",
+  "editPersonalRecordDialog.save": "Save",
+  "editPersonalRecordDialog.saving": "Saving...",
+  "editPersonalRecordDialog.toast.invalidValue": "Enter a valid value",
+  "editPersonalRecordDialog.toast.saveFailed": "Failed to save record",
+  "editPersonalRecordDialog.toast.saved": "Record saved",
+  "editPersonalRecordDialog.toast.offline":
+    "No internet connection. Check your connection and try again.",
+  "editPersonalRecordDialog.toast.generic":
+    "An error occurred while saving record",
+  "editPersonalRecordsModal.title": "Edit records: {title}",
+  "editPersonalRecordsModal.editMetricAria": "Edit {metricLabel}",
+  "m3PersonalRecordCard.new": "New",
+  "m3PersonalRecordCard.editAria": "Edit records for: {title}",
+  "m3PersonalRecordCard.deleteAria": "Delete records for: {title}",
+  "m3PersonalRecordCard.emptyMetrics":
+    "No records available for this exercise",
+  "personalRecordMetricItem.series": "series",
+  "personalRecordMetricItem.new": "New",
+  "personalRecordMetricItem.viewSession": "View session",
+  "personalRecordMetricItem.viewSessionAria":
+    "View workout session details where this record was achieved",
+  "personalRecordMetricCard.editAria": "Edit record inline",
+  "personalRecordMetricCard.edit": "Edit",
+  "personalRecordMetricCard.series": "Series:",
+  "personalRecordMetricCard.achievedAt": "Achieved:",
+  "personalRecordMetricCard.viewSession": "View session",
+  "personalRecordMetricCard.viewSessionAria":
+    "View workout session details where this record was achieved",
   "resumeSessionCard.title": "Active workout session",
   "resumeSessionCard.description":
     "You have an ongoing session that you can resume.",
@@ -623,6 +688,52 @@ export const enMessages = {
   "assistantExerciseExecution.title": "Exercise execution",
   "assistantExerciseExecution.skipExercise": "Skip exercise",
   "assistantExerciseExecution.formErrors": "Form errors:",
+  "assistantExitDialog.triggerAria": "Exit workout session",
+  "assistantExitDialog.title": "Exit workout session?",
+  "assistantExitDialog.description":
+    "Are you sure you want to leave the workout session? Your progress will be saved, but the session will remain active and you can resume it later.",
+  "assistantExitDialog.cancel": "Cancel",
+  "assistantExitDialog.confirm": "Exit",
+  "deleteWorkoutPlanDialog.title": "Delete workout plan",
+  "deleteWorkoutPlanDialog.descriptionStart":
+    "Are you sure you want to delete",
+  "deleteWorkoutPlanDialog.descriptionEnd":
+    "This action cannot be undone.",
+  "deleteWorkoutPlanDialog.cancel": "Cancel",
+  "deleteWorkoutPlanDialog.delete": "Delete",
+  "deleteWorkoutPlanDialog.deleting": "Deleting...",
+  "deleteWorkoutPlanDialog.closeAria": "Close",
+  "deleteWorkoutPlanDialog.toast.notFound": "Workout plan not found.",
+  "deleteWorkoutPlanDialog.toast.unauthorized":
+    "Unauthorized. Please log in again.",
+  "deleteWorkoutPlanDialog.toast.failed": "Failed to delete workout plan.",
+  "deleteWorkoutPlanDialog.toast.success": "Workout plan deleted.",
+  "deleteWorkoutPlanDialog.toast.generic":
+    "An error occurred while deleting the workout plan.",
+  "deleteWorkoutSessionDialog.title": "Delete workout session",
+  "deleteWorkoutSessionDialog.descriptionStart":
+    "Are you sure you want to delete",
+  "deleteWorkoutSessionDialog.descriptionEnd":
+    "This action cannot be undone. All exercises and sets from this session will also be deleted.",
+  "deleteWorkoutSessionDialog.cancel": "Cancel",
+  "deleteWorkoutSessionDialog.delete": "Delete",
+  "deleteWorkoutSessionDialog.deleting": "Deleting...",
+  "deleteWorkoutSessionDialog.closeAria": "Close",
+  "deleteWorkoutSessionDialog.planDeleted": "Deleted plan",
+  "deleteWorkoutSessionDialog.toast.notFound": "Workout session not found.",
+  "deleteWorkoutSessionDialog.toast.unauthorized":
+    "Unauthorized. Please log in again.",
+  "deleteWorkoutSessionDialog.toast.failed":
+    "Failed to delete workout session.",
+  "deleteWorkoutSessionDialog.toast.success": "Workout session deleted.",
+  "deleteWorkoutSessionDialog.toast.generic":
+    "An error occurred while deleting the workout session.",
+  "cancelWorkoutSessionDialog.title": "Cancel workout session?",
+  "cancelWorkoutSessionDialog.description":
+    "Are you sure you want to cancel this session? Progress will be saved, but the session will be marked as completed.",
+  "cancelWorkoutSessionDialog.cancel": "Cancel",
+  "cancelWorkoutSessionDialog.confirm": "Confirm",
+  "cancelWorkoutSessionDialog.cancelling": "Cancelling...",
   "assistantCurrentExercise.noName": "No name",
   "assistantCurrentExercise.unilateral": "Unilateral",
   "assistantCurrentExercise.plannedSets": "Planned sets",
@@ -717,12 +828,16 @@ export const enMessages = {
   "workoutPlanDetailContent.delete": "Delete",
   "workoutPlanDetailContent.exerciseLabel": "Exercise",
   "workoutPlanDetailContent.orderLabel": "Order",
+  "workoutPlanDetailContent.notInLibrary": "Not in library",
+  "workoutPlanDetailContent.snapshotPrHint":
+    "To track PRs, add this exercise to the library.",
   "workoutPlanDetailContent.unilateral": "Unilateral",
   "workoutPlanDetailContent.sets": "Sets",
   "workoutPlanDetailContent.reps": "Reps",
   "workoutPlanDetailContent.duration": "Duration (s)",
   "workoutPlanDetailContent.restBetween": "Rest between sets (s)",
   "workoutPlanDetailContent.restAfter": "Rest after sets (s)",
+  "workoutPlanDetailContent.estimatedSetTime": "Estimated set time (s)",
   "workoutPlanDetailContent.details": "Details",
   "workoutTimer.secondsRest": "seconds rest",
   "workoutTimer.setLabel": "Set",

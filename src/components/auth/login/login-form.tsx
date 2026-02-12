@@ -31,7 +31,9 @@ export function LoginForm() {
 
       <LoginButton isLoading={isLoading} />
 
-      <LoginLinks />
+      <div className="pt-2">
+        <LoginLinks />
+      </div>
     </form>
   );
 }

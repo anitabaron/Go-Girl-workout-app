@@ -1,0 +1,136 @@
+/* Portal-scoped M3 overrides (Radix Dialog/Select/Sheet rendered outside normal flow) */
+
+body {
+  --m3-surface: var(--m3-raw-surface);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high);
+  --m3-on-surface: var(--m3-raw-on-surface);
+  --m3-outline: var(--m3-raw-outline);
+  --m3-outline-variant: var(--m3-raw-outline-variant);
+  --m3-primary: var(--m3-raw-primary-override);
+  --m3-on-primary: var(--m3-raw-on-primary);
+  --m3-primary-container: var(--m3-raw-primary-container);
+  --m3-on-primary-container: var(--m3-raw-on-primary-container);
+  --destructive: var(--m3-raw-destructive);
+  --destructive-foreground: var(--m3-raw-destructive-foreground);
+  --m3-radius-md: 1rem;
+  --m3-radius-sm: 0.75rem;
+  --m3-radius-lg: 1.25rem;
+  --m3-radius-large: 1.5rem;
+  --m3-radius-hero: 1.75rem;
+  --m3-shadow-1:
+    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2:
+    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
+    0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 85%, black);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 75%, black);
+  --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
+}
+
+/* SelectContent renders in portal */
+body [data-slot="select-content"] {
+  background: var(--m3-surface-container-high) !important;
+  color: var(--m3-on-surface) !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+  border-radius: var(--m3-radius-md) !important;
+  box-shadow: var(--m3-shadow-2) !important;
+}
+
+body [data-slot="select-item"] {
+  border-radius: var(--m3-radius-sm) !important;
+}
+
+body [data-slot="select-item"]:focus {
+  background: var(--m3-surface-container-high) !important;
+  color: var(--m3-on-surface) !important;
+  outline: none !important;
+}
+
+body [data-slot="select-item"][data-highlighted] {
+  background: var(--m3-primary-container) !important;
+  color: var(--m3-on-primary-container) !important;
+}
+
+/* Dialog/AlertDialog/Sheet render in portal */
+body [data-slot="dialog-content"],
+body [data-slot="alert-dialog-content"] {
+  background: var(--m3-surface-container-high) !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+  border-radius: var(--m3-radius-large, 1.5rem) !important;
+  overflow: hidden;
+  box-shadow: var(--m3-shadow-2) !important;
+}
+
+body [data-slot="dialog-overlay"],
+body [data-slot="alert-dialog-overlay"] {
+  background: rgb(0 0 0 / 0.5) !important;
+}
+
+/* Portal buttons - M3 style (Dialog/AlertDialog render in portal) */
+body
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
+  [data-slot="button"] {
+  appearance: none !important;
+  border-radius: var(--m3-radius-lg) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+body
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
+  [data-slot="button"][data-variant="default"] {
+  background: var(--m3-primary) !important;
+  color: var(--m3-on-primary) !important;
+  border: none !important;
+}
+
+body
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
+  [data-slot="button"][data-variant="default"]:hover {
+  background: var(--m3-button-default-hover) !important;
+  box-shadow: var(--m3-shadow-1);
+}
+
+body
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
+  [data-slot="button"][data-variant="outline"] {
+  background: transparent !important;
+  color: var(--m3-on-surface) !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+}
+
+body
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
+  [data-slot="button"][data-variant="outline"]:hover {
+  background: var(--m3-surface-container-high) !important;
+  border-color: var(--m3-outline) !important;
+}
+
+body
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
+  [data-slot="button"][data-variant="destructive"] {
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
+  border: none !important;
+}
+
+body
+  :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])
+  [data-slot="button"][data-variant="destructive"]:hover {
+  background: color-mix(in srgb, var(--destructive) 85%, black) !important;
+  box-shadow: var(--m3-shadow-1);
+}
+
+body [data-slot="sheet-content"] {
+  background: var(--m3-surface-container-high) !important;
+  border: 1px solid var(--m3-outline-variant) !important;
+  box-shadow: var(--m3-shadow-2) !important;
+}
+
+body [data-slot="sheet-overlay"] {
+  background: rgb(0 0 0 / 0.5) !important;
+}

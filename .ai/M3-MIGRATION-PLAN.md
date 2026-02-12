@@ -68,6 +68,37 @@
 
 ## Migration Plan (Points 1–7)
 
+## Status Update (2026-02-11)
+
+### Completed in current refactor stream
+
+- Legacy route split has been removed from runtime structure; app now works on main M3-first paths under `src/app/(app)`.
+- M3 styles were modularized:
+  - `src/app/(app)/m3.css` is now an import aggregator.
+  - `src/app/(app)/m3.tokens.css`, `src/app/(app)/m3.theme.css`, `src/app/(app)/m3.portal.css`, `src/app/(app)/m3.core.css`.
+  - `src/app/(app)/m3.core.css` was further split into:
+    - `src/app/(app)/m3.typography.css`
+    - `src/app/(app)/m3.surfaces.css`
+    - `src/app/(app)/m3.overrides.css`
+    - `src/app/(app)/m3.layout.css`
+- Global CSS was modularized:
+  - `src/app/globals.css` is now mostly imports + base/focus/selection.
+  - `src/app/globals.tokens.css`, `src/app/globals.dark.css`, `src/app/globals.theme.css`.
+- Dark-mode precedence was clarified in global tokens and then aligned with M3 direction.
+- Personal records sorting labels were fully localized (EN/PL), removing hardcoded Polish strings from toolbar/sort controls.
+- Estimated set time labels were localized in exercise edit/details and workout plan contexts (no hardcoded English fallback in PL).
+- M3 portal selectors were deduplicated and aligned with core button token behavior.
+- First decoupling step from `.ui-m3` was done:
+  - base M3 tokens moved from `.ui-m3` scope to `:root` (`m3.tokens.css`),
+  - theme mode selectors switched from `.ui-m3.dark/.light` to `:root.dark/:root.light`,
+  - theme store applies mode classes on `document.documentElement` (`:root`).
+- Portal styles were detached from `body:has(.ui-m3)` and now target `body` + portal slots directly.
+- `.ui-m3` scope was fully removed from active app/auth wrappers and M3 component selectors.
+
+### Remaining high-priority work
+
+- Final visual smoke pass after scope removal (dialogs, sheets, select, forms, cards, dark mode).
+
 ### 1) Define rules: “M3-ready” vs “legacy-only”
 
 **Purpose**: Clear boundaries so M3 routes never depend on legacy styles or components.

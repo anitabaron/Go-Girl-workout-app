@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { PersonalRecordQueryParams } from "@/types";
+import { useTranslations } from "@/i18n/client";
 
 type SortField = NonNullable<PersonalRecordQueryParams["sort"]>;
 type SortOrder = NonNullable<PersonalRecordQueryParams["order"]>;
@@ -16,31 +17,32 @@ type SortOrder = NonNullable<PersonalRecordQueryParams["order"]>;
 const sortOptions = [
   {
     value: "achieved_at_desc",
-    label: "Najnowsze pierwsze",
+    labelKey: "sortNewestFirst",
     sort: "achieved_at" as SortField,
     order: "desc" as SortOrder,
   },
   {
     value: "achieved_at_asc",
-    label: "Najstarsze pierwsze",
+    labelKey: "sortOldestFirst",
     sort: "achieved_at" as SortField,
     order: "asc" as SortOrder,
   },
   {
     value: "value_desc",
-    label: "Największa wartość",
+    labelKey: "sortHighestValue",
     sort: "value" as SortField,
     order: "desc" as SortOrder,
   },
   {
     value: "value_asc",
-    label: "Najmniejsza wartość",
+    labelKey: "sortLowestValue",
     sort: "value" as SortField,
     order: "asc" as SortOrder,
   },
 ] as const;
 
 export function PersonalRecordSort() {
+  const t = useTranslations("personalRecordsToolbar");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -73,20 +75,20 @@ export function PersonalRecordSort() {
     <div className="flex items-center gap-2">
       <div className="flex flex-col gap-1">
         <label htmlFor="sort-select" className="sr-only">
-          Sortuj rekordy osobiste
+          {t("sortAria")}
         </label>
         <Select value={currentOption.value} onValueChange={handleSortChange}>
           <SelectTrigger
             id="sort-select"
             className="w-[200px]"
-            aria-label="Sortuj rekordy osobiste"
+            aria-label={t("sortAria")}
           >
-            <SelectValue placeholder="Sortuj według" />
+            <SelectValue placeholder={t("sortPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {sortOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                {t(option.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>

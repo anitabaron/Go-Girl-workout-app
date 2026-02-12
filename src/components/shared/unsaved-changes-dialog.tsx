@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialogM3 } from "@/components/shared/ConfirmActionDialogM3";
 
 export type UnsavedChangesDialogProps = {
   hasUnsavedChanges: boolean;
@@ -56,25 +47,16 @@ export function UnsavedChangesDialog({
         {children}
       </div>
 
-      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{title}</AlertDialogTitle>
-            <AlertDialogDescription>{description}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDialog(false)}>
-              {cancelLabel}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {confirmLabel}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialogM3
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title={title}
+        description={description}
+        cancelLabel={cancelLabel}
+        confirmLabel={confirmLabel}
+        onConfirm={handleConfirm}
+        confirmVariant="destructive"
+      />
     </>
   );
 }

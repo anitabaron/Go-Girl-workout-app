@@ -1,0 +1,160 @@
+:root {
+  /* ============================================
+     NEUTRAL COLORS - Grounding the interface
+     Black, white, and grays for surfaces, text, and layout
+     ============================================ */
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+  --neutral-950: #0a0a0a;
+
+  /* ============================================
+     BRAND COLORS - Pink/Red palette
+     Makes the design unique and defines the app
+     ============================================ */
+  --brand-pink-light: #ffe3e7; /* Lightest pink - secondary surfaces */
+  --brand-pink: #ffbdc8; /* Primary brand pink */
+  --brand-pink-dark: #ff9fb0; /* Darker pink for hover states */
+  --brand-red-mid: #f9444f; /* Mid red - accent */
+  --brand-red: #f00b0d; /* Primary red - destructive/urgent */
+
+  /* ============================================
+     SEMANTIC COLORS - Feedback, status, urgency
+     Always convey important information
+     ============================================ */
+  --semantic-success: #10b981; /* Green for success states */
+  --semantic-success-foreground: #ffffff;
+  --semantic-success-light: #d1fae5;
+  --semantic-warning: #f59e0b; /* Amber for warnings */
+  --semantic-warning-foreground: #000000;
+  --semantic-warning-light: #fef3c7;
+  --semantic-info: #3b82f6; /* Blue for informational messages */
+  --semantic-info-foreground: #ffffff;
+  --semantic-info-light: #dbeafe;
+  --semantic-error: #f00b0d; /* Red for errors (uses brand red) */
+  --semantic-error-foreground: #ffffff;
+  --semantic-error-light: #ffe3e7;
+
+  /* ============================================
+     SHADCN UI COLORS - Light theme
+     Mapped to design system principles
+     ============================================ */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: var(--brand-pink);
+  --primary-foreground: #000000;
+  --secondary: var(--brand-pink-light);
+  --secondary-foreground: #000000;
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-600);
+  --accent: var(--brand-red-mid);
+  --accent-foreground: #ffffff;
+  --destructive: var(--brand-red);
+  --destructive-foreground: #ffffff;
+  --border: var(--neutral-200);
+  --input: var(--neutral-200);
+  --ring: var(--brand-pink);
+  --chart-1: var(--brand-pink);
+  --chart-2: var(--brand-pink-light);
+  --chart-3: var(--brand-red-mid);
+  --chart-4: var(--brand-red);
+  --chart-5: var(--neutral-500);
+  --sidebar: var(--brand-pink);
+  --sidebar-foreground: #000000;
+  --sidebar-primary: var(--brand-pink-light);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: var(--brand-red-mid);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: var(--neutral-200);
+  --sidebar-ring: var(--brand-pink);
+
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-mono:
+    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
+    monospace;
+
+  /* Geist fonts - compatibility with existing layout */
+  --font-geist-sans: var(--font-sans);
+  --font-geist-mono: var(--font-mono);
+
+  /* ============================================
+     BORDER RADIUS
+     ============================================ */
+  --radius: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* ============================================
+     SHADOW SYSTEM - Elevation and depth
+     Increasing blur values indicate distance
+     ============================================ */
+  /* Level 0 - No elevation */
+  --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+
+  /* Level 1 - Subtle elevation (cards, inputs) */
+  --shadow-xs:
+    0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+
+  /* Level 2 - Low elevation (hover states, dropdowns) */
+  --shadow-sm:
+    0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
+
+  /* Level 3 - Medium elevation (modals, popovers) */
+  --shadow-md:
+    0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
+
+  /* Level 4 - High elevation (dialogs, sheets) */
+  --shadow-lg:
+    0 20px 25px -5px hsl(0 0% 0% / 0.1), 0 8px 10px -6px hsl(0 0% 0% / 0.1);
+
+  /* Level 5 - Very high elevation (toasts, tooltips) */
+  --shadow-xl: 0 25px 50px -12px hsl(0 0% 0% / 0.25);
+
+  /* Level 6 - Maximum elevation (full-screen overlays) */
+  --shadow-2xl: 0 35px 60px -12px hsl(0 0% 0% / 0.3);
+
+  /* Default shadow */
+  --shadow: var(--shadow-sm);
+
+  /* ============================================
+     LETTER SPACING
+     ============================================ */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* ============================================
+     SPACING SCALE
+     ============================================ */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 1rem; /* 16px */
+  --spacing-lg: 1.5rem; /* 24px */
+  --spacing-xl: 2rem; /* 32px */
+  --spacing-2xl: 3rem; /* 48px */
+  --spacing-3xl: 4rem; /* 64px */
+  --spacing: var(--spacing-xs);
+
+}
