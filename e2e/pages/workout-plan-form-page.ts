@@ -1,5 +1,8 @@
 import { Page, Locator } from "@playwright/test";
-import { getExercisePartLabelMatcher } from "./i18n-labels";
+import {
+  getExercisePartLabelMatcher,
+  getExerciseTypeLabelMatcher,
+} from "./i18n-labels";
 
 /**
  * Page Object Model for Workout Plan Form Page (Create/Edit)
@@ -294,6 +297,53 @@ export class WorkoutPlanFormPage {
       .first();
     await moveUpButton.waitFor({ state: "visible", timeout: 5000 });
     await moveUpButton.click();
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Move first scope block down in section order.
+   */
+  async moveFirstScopeDown() {
+    const button = this.page
+      .getByRole("button", { name: /Przesuń obwód w dół|Move scope down/i })
+      .first();
+    await button.waitFor({ state: "visible", timeout: 10000 });
+    await button.click();
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Move first scope block up in section order.
+   */
+  async moveFirstScopeUp() {
+    const button = this.page
+      .getByRole("button", { name: /Przesuń obwód w górę|Move scope up/i })
+      .first();
+    await button.waitFor({ state: "visible", timeout: 10000 });
+    await button.click();
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Update section type for exercise card found by title.
+   */
+  async updateExerciseSectionType(exerciseTitle: string, sectionType: string) {
+    const exerciseItem = await this.getExerciseItemByTitle(exerciseTitle);
+    if (!exerciseItem) {
+      throw new Error(
+        `Exercise with title "${exerciseTitle}" not found in plan`,
+      );
+    }
+
+    const sectionTypeCombobox = exerciseItem.getByRole("combobox").first();
+    await sectionTypeCombobox.waitFor({ state: "visible", timeout: 5000 });
+    await sectionTypeCombobox.click();
+    await this.page
+      .getByRole("option", {
+        name: getExerciseTypeLabelMatcher(sectionType),
+      })
+      .first()
+      .click();
     await this.page.waitForTimeout(300);
   }
 
