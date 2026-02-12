@@ -59,15 +59,15 @@ Plik: `e2e/workout-plans/workout-plan.spec.ts`
 ## Scope (Workout Plan Edit)
 
 1. `E2E-SCOPE-001`  
-Regresja: zapis po zmianie kolejności scope i kolejności ćwiczeń w scope.  
+Test regresyjny: zapis po zmianie kolejności scope i kolejności ćwiczeń w scope.  
 Plik: `e2e/workout-plans/edit-workout-plan-scope.spec.ts`
 
 2. `E2E-SCOPE-002`  
-Regresja: układ `single + scope + single`, ruch scope `up/down`, reorder w scope, zapis.  
+Test regresyjny: układ `single + scope + single`, ruch scope `up/down`, reorder w scope, zapis.  
 Plik: `e2e/workout-plans/edit-workout-plan-scope.spec.ts`
 
 3. `E2E-SCOPE-003`  
-Regresja: zmiana `section_type` dla ćwiczeń scope i zapis planu.  
+Test regresyjny: zmiana `section_type` dla ćwiczeń scope i zapis planu.  
 Plik: `e2e/workout-plans/edit-workout-plan-scope.spec.ts`
 
 ## Workout Sessions
