@@ -49,6 +49,9 @@ pnpm test:e2e e2e/exercises/add-exercise.spec.ts
 # Workout plans
 pnpm test:e2e e2e/workout-plans/workout-plan.spec.ts
 pnpm test:e2e e2e/workout-plans/create-workout-plan.spec.ts
+pnpm test:e2e e2e/workout-plans/edit-workout-plan-scope.spec.ts
+# Statistics
+pnpm test:e2e e2e/statistics/statistics.spec.ts
 # Workout sessions
 pnpm test:e2e e2e/workout-sessions/workout-session-flow.spec.ts
 

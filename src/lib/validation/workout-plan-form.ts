@@ -286,7 +286,7 @@ const SECTION_TYPE_ORDER: Record<string, number> = {
 /**
  * Normalizuje section_order – sortuje ćwiczenia według sekcji i slotów,
  * przypisuje unikalne wartości 1, 2, 3… w ramach każdej sekcji.
- * Slot = jedno ćwiczenie (in_scope_nr null) albo cały scope (te same scope_id).
+ * Slot = jedno ćwiczenie (scope_id null) albo cały scope (te same scope_id).
  */
 function normalizeSectionOrders<
   T extends {
@@ -312,7 +312,7 @@ function normalizeSectionOrders<
   let prevSlotKey: string | null = null;
   return sorted.map((ex) => {
     const slotKey =
-      ex.in_scope_nr != null && ex.scope_id != null
+      ex.scope_id != null
         ? `${ex.section_type}:${ex.section_order}:${ex.scope_id}`
         : `${ex.section_type}:${ex.section_order}:single`;
     if (slotKey !== prevSlotKey) {
@@ -456,7 +456,14 @@ export function validateWorkoutPlanFormBusinessRules(
     return ["Plan treningowy musi zawierać co najmniej jedno ćwiczenie."];
   }
 
-  const errors = [...validateSectionOrderDuplicates(exercises)];
+  // Użytkownik może chwilowo ustawić kolidujące section_order podczas reorderu.
+  // Normalizacja nadaje finalną kolejność slotów tak jak przy wysyłce payloadu.
+  const normalizedForOrderValidation = normalizeSectionOrders(exercises);
+  const errors = [
+    ...validateSectionOrderDuplicates(
+      normalizedForOrderValidation as WorkoutPlanExerciseItemState[],
+    ),
+  ];
 
   for (const exercise of exercises) {
     errors.push(...validateExercisePlannedParams(exercise));
