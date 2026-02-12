@@ -11,6 +11,7 @@ export { ExercisesToolbar } from "./exercises/ExercisesToolbar";
 export { ExerciseDetailContent } from "./exercises/ExerciseDetailContent";
 export { ExerciseFormM3 } from "./exercises/ExerciseFormM3";
 export { M3ExerciseCard } from "./exercises/M3ExerciseCard";
+export { ExercisesList } from "./exercises/exercises-list";
 export { WorkoutPlansToolbar } from "./workout-plans/WorkoutPlansToolbar";
 export { WorkoutPlansListM3 } from "./workout-plans/WorkoutPlansListM3";
 export { WorkoutPlansStartListM3 } from "./workout-plans/WorkoutPlansStartListM3";

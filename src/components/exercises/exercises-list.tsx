@@ -1,62 +1,92 @@
-import type { ExerciseDTO } from "@/types";
-import { EmptyState } from "@/components/shared/empty-state";
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { Dumbbell } from "lucide-react";
-import { ExerciseCard } from "./exercise-card";
+import { toast } from "sonner";
+import type { ExerciseDTO } from "@/types";
+import { EmptyState } from "@/components/layout/EmptyState";
+import { M3ExerciseCard } from "./M3ExerciseCard";
+import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/client";
 
 type ExercisesListProps = {
-  readonly exercises: ExerciseDTO[];
-  readonly nextCursor?: string | null;
-  readonly hasMore: boolean;
-  readonly hasActiveFilters?: boolean;
+  initialExercises: ExerciseDTO[];
+  initialNextCursor?: string | null;
+  initialHasMore: boolean;
 };
 
 export function ExercisesList({
-  exercises,
-  nextCursor,
-  hasMore,
-  hasActiveFilters = false,
-}: ExercisesListProps) {
-  if (exercises.length === 0) {
-    if (hasActiveFilters) {
-      return (
-        <div
-          className="rounded-lg border border-dashed border-border p-8 text-center"
-          data-test-id="exercises-no-results"
-        >
-          <p className="text-muted-foreground">
-            Brak ćwiczeń spełniających kryteria
-          </p>
-        </div>
-      );
+  initialExercises,
+  initialNextCursor,
+  initialHasMore,
+}: Readonly<ExercisesListProps>) {
+  const t = useTranslations("exercisesList");
+  const searchParams = useSearchParams();
+  const [exercises, setExercises] = useState(initialExercises);
+  const [nextCursor, setNextCursor] = useState(initialNextCursor);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!searchParams.get("cursor")) {
+      setExercises(initialExercises);
+      setNextCursor(initialNextCursor);
+      setHasMore(initialHasMore);
     }
+  }, [searchParams, initialExercises, initialNextCursor, initialHasMore]);
+
+  const handleLoadMore = async (cursor: string) => {
+    setIsLoadingMore(true);
+    try {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("cursor", cursor);
+      const response = await fetch(`/api/exercises?${params.toString()}`);
+      if (!response.ok) throw new Error(t("loadMoreError"));
+      const data = await response.json();
+      startTransition(() => {
+        setExercises((prev) => [...prev, ...data.items]);
+        setNextCursor(data.nextCursor);
+        setHasMore(data.nextCursor != null);
+      });
+    } catch (error) {
+      console.error("Error loading more:", error);
+      toast.error(t("loadMoreToast"));
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  if (exercises.length === 0) {
     return (
-      <EmptyState
-        icon={
-          <Dumbbell className="h-8 w-8 text-destructive" aria-hidden="true" />
-        }
-        title="Nie masz jeszcze żadnych ćwiczeń"
-        description="Dodaj pierwsze ćwiczenie, aby rozpocząć budowanie swojej biblioteki treningowej"
-        actionHref="/exercises/new"
-        actionLabel="Dodaj pierwsze ćwiczenie"
-        testId="exercises-empty-state"
-      />
+      <div data-test-id="exercises-empty-state">
+        <EmptyState
+          icon={<Dumbbell className="size-12 text-muted-foreground" />}
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4" data-test-id="exercises-list">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+    <div className="space-y-6" data-test-id="exercises-list">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
         {exercises.map((exercise) => (
-          <ExerciseCard key={exercise.id} exercise={exercise} />
+          <M3ExerciseCard key={exercise.id} exercise={exercise} />
         ))}
       </div>
-
-      {hasMore && nextCursor && (
+      {hasMore && nextCursor && !isLoadingMore && (
         <div className="flex justify-center pt-4">
-          {/* TODO: Implementacja przycisku "Load more" w następnym kroku */}
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Więcej ćwiczeń dostępne (paginacja w przygotowaniu)
-          </p>
+          <Button
+            variant="outline"
+            onClick={() => handleLoadMore(nextCursor)}
+            disabled={isLoadingMore}
+            aria-label={t("loadMoreAria")}
+          >
+            {isLoadingMore ? t("loading") : t("loadMore")}
+          </Button>
         </div>
       )}
     </div>
