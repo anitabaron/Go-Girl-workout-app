@@ -32,17 +32,17 @@
   --m3-raw-chart-5: #938f99;
 
   /* Dark theme hex values (same hex in both themes = separate vars) */
-  --m3-raw-surface-dark: #5a4d49;
-  --m3-raw-on-surface-dark: #fff7f3;
-  --m3-raw-on-surface-variant-dark: #f7e7e1;
-  --m3-raw-surface-container-dark: #6b5954;
-  --m3-raw-surface-container-high-dark: #7a6560;
-  --m3-raw-surface-container-highest-dark: #8a736d;
-  --m3-raw-outline-dark: #e2c8c0;
-  --m3-raw-outline-variant-dark: #aa8f87;
+  --m3-raw-surface-dark: #32353c;
+  --m3-raw-on-surface-dark: #f1edf3;
+  --m3-raw-on-surface-variant-dark: #d4ced8;
+  --m3-raw-surface-container-dark: #3f434d;
+  --m3-raw-surface-container-high-dark: #4a4f5a;
+  --m3-raw-surface-container-highest-dark: #565c68;
+  --m3-raw-outline-dark: #c0b9c5;
+  --m3-raw-outline-variant-dark: #8a8390;
   --m3-raw-primary-dark: #e8a3bc;
   --m3-raw-on-primary-dark: #5c282c;
-  --m3-raw-primary-container-dark: #8b4a52;
+  --m3-raw-primary-container-dark: #5e3d4c;
   --m3-raw-destructive-dark: #f2b8b5;
   --m3-raw-destructive-foreground-dark: #601410;
 

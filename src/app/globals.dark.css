@@ -17,7 +17,7 @@
   --neutral-950: #fafafa;
 
   /* Brand colors - Reduced saturation, adjusted brightness */
-  --brand-pink-light: #4a1f2a;
+  --brand-pink-light: #2c2430;
   --brand-pink: #ff9fb0;
   --brand-pink-dark: #ffbdc8;
   --brand-red-mid: #ff5a66;
@@ -35,7 +35,7 @@
   --semantic-info-light: #1e3a8a;
   --semantic-error: #ff3d42;
   --semantic-error-foreground: #ffffff;
-  --semantic-error-light: #4a1f2a;
+  --semantic-error-light: #3a2430;
 
   /* Shadcn UI colors - Dark theme */
   --background: #0a0a0a;
@@ -105,7 +105,7 @@
     --neutral-900: #f5f5f5;
     --neutral-950: #fafafa;
 
-    --brand-pink-light: #4a1f2a;
+    --brand-pink-light: #2c2430;
     --brand-pink: #ff9fb0;
     --brand-pink-dark: #ffbdc8;
     --brand-red-mid: #ff5a66;
@@ -122,7 +122,7 @@
     --semantic-info-light: #1e3a8a;
     --semantic-error: #ff3d42;
     --semantic-error-foreground: #ffffff;
-    --semantic-error-light: #4a1f2a;
+    --semantic-error-light: #3a2430;
 
     --background: #0a0a0a;
     --foreground: #fafafa;

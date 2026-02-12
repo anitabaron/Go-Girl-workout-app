@@ -4,6 +4,10 @@
 @import "./globals.dark.css";
 @import "./globals.theme.css";
 
+@theme {
+  --breakpoint-xs: 400px;
+}
+
 /* ============================================
    BASE STYLES
    ============================================ */
