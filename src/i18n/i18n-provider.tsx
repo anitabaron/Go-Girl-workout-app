@@ -69,7 +69,11 @@ export function useI18n() {
   const context = useContext(I18nContext);
 
   if (!context) {
-    throw new Error("useI18n must be used within I18nProvider");
+    return {
+      locale: DEFAULT_LOCALE,
+      setLocale: () => {},
+      t: (key: MessageKey) => getMessage(DEFAULT_LOCALE, key),
+    };
   }
 
   return context;
