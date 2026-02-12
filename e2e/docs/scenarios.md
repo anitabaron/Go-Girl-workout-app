@@ -84,6 +84,10 @@ Plik: `e2e/workout-sessions/workout-session-flow.spec.ts`
 Flow sesji z użyciem przycisków timera (`OK` / `Pomiń przerwę`).  
 Plik: `e2e/workout-sessions/workout-session-flow.spec.ts`
 
+4. `E2E-WS-004`  
+Złożony flow asystenta: skip ćwiczenia, ręczna edycja wykonanych wartości, przejścia przez `OK`/`Pomiń przerwę`, powrót `Wstecz` i dokończenie; weryfikacja, że ręczne wartości nie powinny zostać nadpisane planowanymi.  
+Plik: `e2e/workout-sessions/workout-session-flow.spec.ts`
+
 ## Statistics + I18N
 
 1. `E2E-STAT-000`  
