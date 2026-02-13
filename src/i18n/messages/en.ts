@@ -246,6 +246,8 @@ export const enMessages = {
   "addScopeDialog.typeOption.warmup": "Warm-up",
   "addScopeDialog.typeOption.mainworkout": "Main Workout",
   "addScopeDialog.typeOption.cooldown": "Cool-down",
+  "addSnapshotExerciseButton.add": "Add to exercise library",
+  "addSnapshotExerciseButton.adding": "Adding...",
   "cancelButton.cancel": "Cancel",
   "cancelButton.unsavedTitle": "Unsaved changes",
   "cancelButton.unsavedDescription":

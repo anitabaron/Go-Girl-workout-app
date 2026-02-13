@@ -239,6 +239,8 @@ export const plMessages = {
   "addScopeDialog.typeOption.warmup": "Rozgrzewka",
   "addScopeDialog.typeOption.mainworkout": "Trening główny",
   "addScopeDialog.typeOption.cooldown": "Schłodzenie",
+  "addSnapshotExerciseButton.add": "Dodaj do biblioteki ćwiczeń",
+  "addSnapshotExerciseButton.adding": "Dodawanie...",
   "cancelButton.cancel": "Anuluj",
   "cancelButton.unsavedTitle": "Niezapisane zmiany",
   "cancelButton.unsavedDescription":
