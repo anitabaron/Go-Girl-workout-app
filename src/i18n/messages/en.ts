@@ -100,6 +100,9 @@ export const enMessages = {
   "auth.registerValidation.passwordsMismatch":
     "Passwords do not match",
   "theme.toggleDarkMode": "Toggle dark mode",
+  "theme.colorVariant": "Color variant",
+  "theme.colorVariantPink": "Pink",
+  "theme.colorVariantExpressiveTeal": "M3 Teal",
   "lang.switchAria": "Switch language",
   "lang.polish": "Polish",
   "lang.english": "English",

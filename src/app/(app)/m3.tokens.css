@@ -10,44 +10,153 @@
    Light/dark use separate vars when the same hex has different roles.
    ============================================ */
 :root {
-  /* Light theme hex values */
-  --m3-raw-surface: #fafafa;
-  --m3-raw-on-surface: #1c1b1f;
-  --m3-raw-on-surface-variant: #49454f;
-  --m3-raw-surface-container: #f5f0ef;
-  --m3-raw-surface-container-high: #f9f7f6;
-  --m3-raw-surface-container-highest: #ebe3e0;
-  --m3-raw-outline: #79747e;
-  --m3-raw-outline-variant: #cac4d0;
-  --m3-raw-primary: #df6671;
-  --m3-raw-on-primary: #ffffff;
-  --m3-raw-primary-container: #fcdce0;
-  --m3-raw-on-primary-container: #5c282c;
-  --m3-raw-primary-override: #df6671; /* light primary override */
+  /* Variant: Pink (current default) - light */
+  --m3v-pink-surface: #fafafa;
+  --m3v-pink-on-surface: #1c1b1f;
+  --m3v-pink-on-surface-variant: #49454f;
+  --m3v-pink-surface-container: #f5f0ef;
+  --m3v-pink-surface-container-high: #f9f7f6;
+  --m3v-pink-surface-container-highest: #ebe3e0;
+  --m3v-pink-outline: #79747e;
+  --m3v-pink-outline-variant: #cac4d0;
+  --m3v-pink-primary: #df6671;
+  --m3v-pink-on-primary: #ffffff;
+  --m3v-pink-primary-container: #fcdce0;
+  --m3v-pink-on-primary-container: #5c282c;
+  --m3v-pink-primary-override: #df6671;
+  --m3v-pink-chart-2: #7d5260;
+  --m3v-pink-chart-3: #79747e;
+  --m3v-pink-chart-4: #49454f;
+  --m3v-pink-chart-5: #938f99;
+
+  /* Variant: Pink (current default) - dark */
+  --m3v-pink-surface-dark: #32353c;
+  --m3v-pink-on-surface-dark: #f1edf3;
+  --m3v-pink-on-surface-variant-dark: #d4ced8;
+  --m3v-pink-surface-container-dark: #3f434d;
+  --m3v-pink-surface-container-high-dark: #4a4f5a;
+  --m3v-pink-surface-container-highest-dark: #565c68;
+  --m3v-pink-outline-dark: #c0b9c5;
+  --m3v-pink-outline-variant-dark: #8a8390;
+  --m3v-pink-primary-dark: #e8a3bc;
+  --m3v-pink-on-primary-dark: #5c282c;
+  --m3v-pink-primary-container-dark: #5e3d4c;
+
+  /* Variant: M3 Expressive Teal - light */
+  --m3v-teal-surface: #f4fbfa;
+  --m3v-teal-on-surface: #161d1d;
+  --m3v-teal-on-surface-variant: #3f4948;
+  --m3v-teal-surface-container: #e7f2f0;
+  --m3v-teal-surface-container-high: #edf7f5;
+  --m3v-teal-surface-container-highest: #dce8e6;
+  --m3v-teal-outline: #6f7978;
+  --m3v-teal-outline-variant: #bec9c7;
+  --m3v-teal-primary: #006a6a;
+  --m3v-teal-on-primary: #ffffff;
+  --m3v-teal-primary-container: #9cf1ef;
+  --m3v-teal-on-primary-container: #00201f;
+  --m3v-teal-primary-override: #006a6a;
+  --m3v-teal-chart-2: #406362;
+  --m3v-teal-chart-3: #4f5f5e;
+  --m3v-teal-chart-4: #314a49;
+  --m3v-teal-chart-5: #6c7f7e;
+
+  /* Variant: M3 Expressive Teal - dark */
+  --m3v-teal-surface-dark: #151d1d;
+  --m3v-teal-on-surface-dark: #dde4e3;
+  --m3v-teal-on-surface-variant-dark: #bfc9c8;
+  --m3v-teal-surface-container-dark: #1f2928;
+  --m3v-teal-surface-container-high-dark: #2a3534;
+  --m3v-teal-surface-container-highest-dark: #364140;
+  --m3v-teal-outline-dark: #899392;
+  --m3v-teal-outline-variant-dark: #3f4948;
+  --m3v-teal-primary-dark: #4fdad6;
+  --m3v-teal-on-primary-dark: #003736;
+  --m3v-teal-primary-container-dark: #00504f;
+
+  /* Shared semantic colors */
   --m3-raw-destructive: #b3261e;
   --m3-raw-destructive-foreground: #ffffff;
-  --m3-raw-chart-2: #7d5260;
-  --m3-raw-chart-3: #79747e;
-  --m3-raw-chart-4: #49454f;
-  --m3-raw-chart-5: #938f99;
-
-  /* Dark theme hex values (same hex in both themes = separate vars) */
-  --m3-raw-surface-dark: #32353c;
-  --m3-raw-on-surface-dark: #f1edf3;
-  --m3-raw-on-surface-variant-dark: #d4ced8;
-  --m3-raw-surface-container-dark: #3f434d;
-  --m3-raw-surface-container-high-dark: #4a4f5a;
-  --m3-raw-surface-container-highest-dark: #565c68;
-  --m3-raw-outline-dark: #c0b9c5;
-  --m3-raw-outline-variant-dark: #8a8390;
-  --m3-raw-primary-dark: #e8a3bc;
-  --m3-raw-on-primary-dark: #5c282c;
-  --m3-raw-primary-container-dark: #5e3d4c;
   --m3-raw-destructive-dark: #f2b8b5;
   --m3-raw-destructive-foreground-dark: #601410;
 
+  /* Active palette aliases (default = pink) */
+  --m3-raw-surface: var(--m3v-pink-surface);
+  --m3-raw-on-surface: var(--m3v-pink-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-pink-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-pink-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-pink-surface-container-high);
+  --m3-raw-surface-container-highest: var(
+    --m3v-pink-surface-container-highest
+  );
+  --m3-raw-outline: var(--m3v-pink-outline);
+  --m3-raw-outline-variant: var(--m3v-pink-outline-variant);
+  --m3-raw-primary: var(--m3v-pink-primary);
+  --m3-raw-on-primary: var(--m3v-pink-on-primary);
+  --m3-raw-primary-container: var(--m3v-pink-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-pink-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-pink-primary-override);
+  --m3-raw-chart-2: var(--m3v-pink-chart-2);
+  --m3-raw-chart-3: var(--m3v-pink-chart-3);
+  --m3-raw-chart-4: var(--m3v-pink-chart-4);
+  --m3-raw-chart-5: var(--m3v-pink-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-pink-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-pink-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(--m3v-pink-on-surface-variant-dark);
+  --m3-raw-surface-container-dark: var(--m3v-pink-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-pink-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-pink-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-pink-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-pink-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-pink-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-pink-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-pink-primary-container-dark);
+
   /* Alias for dark mode used by portal/body mappings */
   --m3-on-primary-container-from-root: var(--m3-raw-primary-container);
+}
+
+:root[data-m3-variant="expressive-teal"] {
+  --m3-raw-surface: var(--m3v-teal-surface);
+  --m3-raw-on-surface: var(--m3v-teal-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-teal-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-teal-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-teal-surface-container-high);
+  --m3-raw-surface-container-highest: var(
+    --m3v-teal-surface-container-highest
+  );
+  --m3-raw-outline: var(--m3v-teal-outline);
+  --m3-raw-outline-variant: var(--m3v-teal-outline-variant);
+  --m3-raw-primary: var(--m3v-teal-primary);
+  --m3-raw-on-primary: var(--m3v-teal-on-primary);
+  --m3-raw-primary-container: var(--m3v-teal-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-teal-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-teal-primary-override);
+  --m3-raw-chart-2: var(--m3v-teal-chart-2);
+  --m3-raw-chart-3: var(--m3v-teal-chart-3);
+  --m3-raw-chart-4: var(--m3v-teal-chart-4);
+  --m3-raw-chart-5: var(--m3v-teal-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-teal-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-teal-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(--m3v-teal-on-surface-variant-dark);
+  --m3-raw-surface-container-dark: var(--m3v-teal-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-teal-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-teal-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-teal-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-teal-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-teal-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-teal-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-teal-primary-container-dark);
 }
 
 /* ============================================
@@ -60,7 +169,7 @@
   --m3-primary-container: var(--m3-raw-primary-container);
   --m3-on-primary-container: var(--m3-raw-on-primary-container);
 
-  /* Surfaces - tonal hierarchy (slightly warmed) */
+  /* Surfaces - tonal hierarchy */
   --m3-surface: var(--m3-raw-surface);
   --m3-on-surface: var(--m3-raw-on-surface);
   --m3-on-surface-variant: var(--m3-raw-on-surface-variant);
@@ -77,8 +186,8 @@
   --m3-radius-md: 1rem;
   --m3-radius-lg: 1.25rem;
   --m3-radius-xl: 1.5rem;
-  --m3-radius-large: 1.5rem; /* 24px - big surfaces */
-  --m3-radius-hero: 1.75rem; /* 28px - hero, major containers */
+  --m3-radius-large: 1.5rem;
+  --m3-radius-hero: 1.75rem;
 
   /* Softer elevation - subtle, spread, not harsh */
   --m3-shadow-1:
@@ -167,7 +276,7 @@
   --m3-mobile-nav-height: calc(4rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
 
-/* Auth pages: use project pink accents instead of deep bordo */
+/* Auth pages: use project pink accents instead of selected variant */
 .ui-auth-pink {
   --m3-primary: var(--brand-pink-dark);
   --m3-on-primary: #1c1b1f;

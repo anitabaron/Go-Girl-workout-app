@@ -1,4 +1,5 @@
 export { DarkModeToggle } from "./layout/DarkModeToggle";
+export { ColorVariantToggle } from "./layout/ColorVariantToggle";
 export { PageHeader } from "./layout/PageHeader";
 export { Surface } from "./layout/Surface";
 export { Toolbar } from "./layout/Toolbar";
