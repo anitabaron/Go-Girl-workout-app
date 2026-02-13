@@ -5,7 +5,12 @@ const STORAGE_KEY = "m3-theme-store";
 
 /** null = follow system (prefers-color-scheme), true = dark, false = light */
 export type M3ThemeMode = boolean | null;
-export type M3ColorVariant = "pink" | "expressive-teal";
+export type M3ColorVariant =
+  | "pink"
+  | "green"
+  | "teal"
+  | "blue"
+  | "purple";
 
 interface M3ThemeStore {
   /** null = follow system, true = dark, false = light */

@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "./DarkModeToggle";
-import { ColorVariantToggle } from "./ColorVariantToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { useAuthStore } from "@/stores/auth-store";
 import { supabase } from "@/db/supabase.client";
@@ -108,7 +107,6 @@ const MobileNavContent = ({
         >
           <div className="flex items-center justify-center gap-2">
             <LanguageToggle />
-            <ColorVariantToggle />
             <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
             {user ? (
               <button
@@ -215,7 +213,6 @@ const MobileNavContent = ({
         </div>
 
         <div className="hidden md:flex w-full px-3 pb-1 items-center justify-center gap-2">
-          <ColorVariantToggle />
           <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
         </div>
       </nav>
@@ -298,7 +295,6 @@ export function NavigationRail() {
               </Link>
             )}
             <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
-            <ColorVariantToggle />
           </div>
         </div>
       </nav>

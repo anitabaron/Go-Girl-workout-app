@@ -23,11 +23,11 @@ describe("m3-theme-store", () => {
   });
 
   test("applies color variant data attribute on selection", () => {
-    useM3ThemeStore.getState().setColorVariant("expressive-teal");
+    useM3ThemeStore.getState().setColorVariant("teal");
 
-    expect(useM3ThemeStore.getState().colorVariant).toBe("expressive-teal");
+    expect(useM3ThemeStore.getState().colorVariant).toBe("teal");
     expect(document.documentElement.getAttribute("data-m3-variant")).toBe(
-      "expressive-teal",
+      "teal",
     );
   });
 });
