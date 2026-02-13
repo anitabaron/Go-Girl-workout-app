@@ -28,7 +28,7 @@ const VARIANT_OPTIONS: ReadonlyArray<{
     dotClass: "bg-[#6b7280]",
   },
   { value: "green", labelKey: "colorVariantGreen", dotClass: "bg-[#1f4a1f]" },
-  { value: "teal", labelKey: "colorVariantLime", dotClass: "bg-[#b8c82c]" },
+  { value: "teal", labelKey: "colorVariantTeal", dotClass: "bg-[#b8c82c]" },
   { value: "orange", labelKey: "colorVariantOrange", dotClass: "bg-[#f59e0b]" },
   { value: "blue", labelKey: "colorVariantBlue", dotClass: "bg-[#2563eb]" },
   { value: "violet", labelKey: "colorVariantViolet", dotClass: "bg-[#7c3aed]" },
