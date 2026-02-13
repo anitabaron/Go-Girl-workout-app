@@ -23,11 +23,20 @@ describe("m3-theme-store", () => {
   });
 
   test("applies color variant data attribute on selection", () => {
+    useM3ThemeStore.getState().setColorVariant("lime");
+
+    expect(useM3ThemeStore.getState().colorVariant).toBe("lime");
+    expect(document.documentElement.getAttribute("data-m3-variant")).toBe(
+      "lime",
+    );
+  });
+
+  test("maps legacy teal to lime attribute", () => {
     useM3ThemeStore.getState().setColorVariant("teal");
 
-    expect(useM3ThemeStore.getState().colorVariant).toBe("teal");
+    expect(useM3ThemeStore.getState().colorVariant).toBe("lime");
     expect(document.documentElement.getAttribute("data-m3-variant")).toBe(
-      "teal",
+      "lime",
     );
   });
 

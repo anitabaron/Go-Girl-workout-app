@@ -9,11 +9,13 @@ export type M3ColorVariant =
   | "pink"
   | "monochrome"
   | "green"
+  | "lime"
   | "teal"
   | "orange"
   | "blue"
   | "violet"
   | "purple";
+type M3NormalizedColorVariant = Exclude<M3ColorVariant, "purple" | "teal">;
 
 interface M3ThemeStore {
   /** null = follow system, true = dark, false = light */
@@ -26,9 +28,11 @@ interface M3ThemeStore {
 
 function normalizeColorVariant(
   variant: M3ColorVariant | undefined,
-): Exclude<M3ColorVariant, "purple"> {
+): M3NormalizedColorVariant {
   if (!variant) return "pink";
-  return variant === "purple" ? "violet" : variant;
+  if (variant === "purple") return "violet";
+  if (variant === "teal") return "lime";
+  return variant;
 }
 
 function applyTheme(root: Element | null, isDark: M3ThemeMode) {
