@@ -1,0 +1,126 @@
+/* ============================================
+   M3 COLOR TOKENS (light defaults)
+   ============================================ */
+:root {
+  /* Primary (from root for initial cascade; dark/light override below) */
+  --m3-primary: var(--m3-raw-primary);
+  --m3-on-primary: var(--m3-raw-on-primary);
+  --m3-primary-container: var(--m3-raw-primary-container);
+  --m3-on-primary-container: var(--m3-raw-on-primary-container);
+
+  /* Surfaces - tonal hierarchy */
+  --m3-surface: var(--m3-raw-surface);
+  --m3-on-surface: var(--m3-raw-on-surface);
+  --m3-on-surface-variant: var(--m3-raw-on-surface-variant);
+  --m3-surface-container: var(--m3-raw-surface-container);
+  --m3-surface-container-high: var(--m3-raw-surface-container-high);
+  --m3-surface-container-highest: var(--m3-raw-surface-container-highest);
+
+  /* Outline */
+  --m3-outline: var(--m3-raw-outline);
+  --m3-outline-variant: var(--m3-raw-outline-variant);
+
+  /* Large surface radius (24–28px) */
+  --m3-radius-sm: 0.75rem;
+  --m3-radius-md: 1rem;
+  --m3-radius-lg: 1.25rem;
+  --m3-radius-xl: 1.5rem;
+  --m3-radius-large: 1.5rem;
+  --m3-radius-hero: 1.75rem;
+
+  /* Softer elevation - subtle, spread, not harsh */
+  --m3-shadow-1:
+    0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+  --m3-shadow-2:
+    0 2px 4px -1px rgb(0 0 0 / 0.05), 0 4px 8px -2px rgb(0 0 0 / 0.05),
+    0 8px 16px -4px rgb(0 0 0 / 0.04);
+  --m3-shadow-hero:
+    0 4px 6px -2px rgb(0 0 0 / 0.05), 0 10px 20px -5px rgb(0 0 0 / 0.06),
+    0 20px 40px -10px rgb(0 0 0 / 0.05);
+
+  /* Focus ring - single source for button, card, input, select */
+  --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
+  /* Button hover/active (light: darken; dark: lighten) – overridden in dark mode */
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 85%, black);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 75%, black);
+  --m3-button-secondary-hover: color-mix(
+    in srgb,
+    var(--m3-primary-container) 80%,
+    black
+  );
+  --m3-button-secondary-active: color-mix(
+    in srgb,
+    var(--m3-primary-container) 70%,
+    black
+  );
+
+  /* Shadcn mapping – defined once; only --m3-* and --destructive overridden in dark/light */
+  --background: var(--m3-surface);
+  --foreground: var(--m3-on-surface);
+  --card: var(--m3-surface-container);
+  --card-foreground: var(--m3-on-surface);
+  --popover: var(--m3-surface-container-high);
+  --popover-foreground: var(--m3-on-surface);
+  --primary: var(--m3-primary);
+  --primary-foreground: var(--m3-on-primary);
+  --secondary: var(--m3-primary-container);
+  --secondary-foreground: var(--m3-on-primary-container);
+  --muted: var(--m3-surface-container);
+  --muted-foreground: var(--m3-on-surface-variant);
+  --accent: var(--m3-primary-container);
+  --accent-foreground: var(--m3-on-primary-container);
+  --destructive: var(--m3-raw-destructive);
+  --destructive-foreground: var(--m3-raw-destructive-foreground);
+  --border: var(--m3-outline-variant);
+  --input: var(--m3-outline-variant);
+  --ring: var(--m3-primary);
+  --chart-1: var(--m3-primary);
+  --chart-2: var(--m3-raw-chart-2);
+  --chart-3: var(--m3-raw-chart-3);
+  --chart-4: var(--m3-raw-chart-4);
+  --chart-5: var(--m3-raw-chart-5);
+  --sidebar: var(--m3-surface-container);
+  --sidebar-foreground: var(--m3-on-surface);
+  --sidebar-primary: var(--m3-primary);
+  --sidebar-primary-foreground: var(--m3-on-primary);
+  --sidebar-accent: var(--m3-primary-container);
+  --sidebar-accent-foreground: var(--m3-on-primary-container);
+  --sidebar-border: var(--m3-outline-variant);
+  --sidebar-ring: var(--m3-primary);
+
+  /* Typography - bigger hero, tighter tracking */
+  --m3-font-hero: clamp(2.75rem, 6vw + 2.25rem, 4.5rem);
+  --m3-font-hero-sm: clamp(2.25rem, 4.5vw + 1.75rem, 3.25rem);
+  --m3-font-headline: 1.75rem;
+  --m3-font-title: 1.25rem;
+  --m3-font-body: 1rem;
+  --m3-font-label: 0.875rem;
+  --m3-line-height-tight: 1.15;
+  --m3-line-height-normal: 1.5;
+  --m3-line-height-relaxed: 1.625;
+
+  /* Spacing */
+  --m3-spacing-1: 0.25rem;
+  --m3-spacing-2: 0.5rem;
+  --m3-spacing-3: 0.75rem;
+  --m3-spacing-4: 1rem;
+  --m3-spacing-5: 1.25rem;
+  --m3-spacing-6: 1.5rem;
+  --m3-spacing-8: 2rem;
+  --m3-spacing-10: 2.5rem;
+  --m3-spacing-12: 3rem;
+  --m3-spacing-16: 4rem;
+
+  /* Mobile bottom nav height (h-16 + safe-area) – for sticky/fixed elements above it */
+  --m3-mobile-nav-height: calc(4rem + max(0.5rem, env(safe-area-inset-bottom)));
+}
+
+/* Auth pages: use project pink accents instead of selected variant */
+.ui-auth-pink {
+  --m3-primary: var(--brand-pink-dark);
+  --m3-on-primary: #1c1b1f;
+  --ring: var(--m3-primary);
+  --m3-focus-ring: 0 0 0 2px var(--m3-surface), 0 0 0 4px var(--m3-primary);
+  --m3-button-default-hover: color-mix(in srgb, var(--m3-primary) 90%, black);
+  --m3-button-default-active: color-mix(in srgb, var(--m3-primary) 80%, black);
+}

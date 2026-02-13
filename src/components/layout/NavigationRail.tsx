@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DarkModeToggle } from "./DarkModeToggle";
+import { ColorVariantToggle } from "./ColorVariantToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { useAuthStore } from "@/stores/auth-store";
 import { supabase } from "@/db/supabase.client";
@@ -105,8 +106,9 @@ const MobileNavContent = ({
           )}
           aria-hidden={!isMobileSettingsOpen}
         >
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             <LanguageToggle />
+            <ColorVariantToggle className="size-10 md:hidden" />
             <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
             {user ? (
               <button
@@ -295,6 +297,7 @@ export function NavigationRail() {
               </Link>
             )}
             <DarkModeToggle aria-label={tTheme("toggleDarkMode")} />
+            <ColorVariantToggle className="size-10 hidden md:inline-flex" />
           </div>
         </div>
       </nav>

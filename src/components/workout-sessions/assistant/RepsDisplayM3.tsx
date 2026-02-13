@@ -19,7 +19,7 @@ export function RepsDisplayM3({
     <div className="flex flex-col items-center justify-center gap-3 pb-10">
       <div className="relative flex h-60 w-60 flex-col items-center justify-center">
         <div
-          className="absolute inset-0 rounded-full bg-[#ffbdc8] opacity-30"
+          className="absolute inset-0 rounded-full bg-[var(--m3-primary-container)] opacity-30"
           aria-hidden
         />
         <div className="relative z-10 flex flex-col items-center gap-1">

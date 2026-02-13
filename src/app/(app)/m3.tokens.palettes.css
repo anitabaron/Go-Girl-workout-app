@@ -1,0 +1,364 @@
+/* ============================================
+   M3 RAW HEX PALETTE – only on :root so body (portals) can use var(--m3-raw-*).
+   Light/dark use separate vars when the same hex has different roles.
+   ============================================ */
+:root {
+  /* Variant: Pink (current default) - light */
+  --m3v-pink-surface: #fafafa;
+  --m3v-pink-on-surface: #1c1b1f;
+  --m3v-pink-on-surface-variant: #49454f;
+  --m3v-pink-surface-container: #f5f0ef;
+  --m3v-pink-surface-container-high: #f9f7f6;
+  --m3v-pink-surface-container-highest: #ebe3e0;
+  --m3v-pink-outline: #79747e;
+  --m3v-pink-outline-variant: #cac4d0;
+  --m3v-pink-primary: #df6671;
+  --m3v-pink-on-primary: #ffffff;
+  --m3v-pink-primary-container: #fcdce0;
+  --m3v-pink-on-primary-container: #5c282c;
+  --m3v-pink-primary-override: #df6671;
+  --m3v-pink-chart-2: #7d5260;
+  --m3v-pink-chart-3: #79747e;
+  --m3v-pink-chart-4: #49454f;
+  --m3v-pink-chart-5: #938f99;
+
+  /* Variant: Pink (current default) - dark */
+  --m3v-pink-surface-dark: #32353c;
+  --m3v-pink-on-surface-dark: #f1edf3;
+  --m3v-pink-on-surface-variant-dark: #d4ced8;
+  --m3v-pink-surface-container-dark: #3f434d;
+  --m3v-pink-surface-container-high-dark: #4a4f5a;
+  --m3v-pink-surface-container-highest-dark: #565c68;
+  --m3v-pink-outline-dark: #c0b9c5;
+  --m3v-pink-outline-variant-dark: #8a8390;
+  --m3v-pink-primary-dark: #e8a3bc;
+  --m3v-pink-on-primary-dark: #5c282c;
+  --m3v-pink-primary-container-dark: #5e3d4c;
+
+  /* Variant: Monochrome - light */
+  --m3v-mono-surface: #ffffff;
+  --m3v-mono-on-surface: #0a0a0a;
+  --m3v-mono-on-surface-variant: #525252;
+  --m3v-mono-surface-container: #f5f5f5;
+  --m3v-mono-surface-container-high: #fafafa;
+  --m3v-mono-surface-container-highest: #e5e5e5;
+  --m3v-mono-outline: #737373;
+  --m3v-mono-outline-variant: #d4d4d4;
+  --m3v-mono-primary: #171717;
+  --m3v-mono-on-primary: #ffffff;
+  --m3v-mono-primary-container: #e5e5e5;
+  --m3v-mono-on-primary-container: #171717;
+  --m3v-mono-primary-override: #171717;
+  --m3v-mono-chart-2: #404040;
+  --m3v-mono-chart-3: #737373;
+  --m3v-mono-chart-4: #262626;
+  --m3v-mono-chart-5: #a3a3a3;
+
+  /* Variant: Monochrome - dark */
+  --m3v-mono-surface-dark: #0a0a0a;
+  --m3v-mono-on-surface-dark: #fafafa;
+  --m3v-mono-on-surface-variant-dark: #a3a3a3;
+  --m3v-mono-surface-container-dark: #171717;
+  --m3v-mono-surface-container-high-dark: #262626;
+  --m3v-mono-surface-container-highest-dark: #404040;
+  --m3v-mono-outline-dark: #a3a3a3;
+  --m3v-mono-outline-variant-dark: #525252;
+  --m3v-mono-primary-dark: #e5e5e5;
+  --m3v-mono-on-primary-dark: #0a0a0a;
+  --m3v-mono-primary-container-dark: #404040;
+
+  /* Variant: Orange - light */
+  --m3v-orange-surface: #fff8f4;
+  --m3v-orange-on-surface: #231a15;
+  --m3v-orange-on-surface-variant: #53433b;
+  --m3v-orange-surface-container: #f8ece5;
+  --m3v-orange-surface-container-high: #fdf1ea;
+  --m3v-orange-surface-container-highest: #ebdfd7;
+  --m3v-orange-outline: #85736a;
+  --m3v-orange-outline-variant: #d8c2b6;
+  --m3v-orange-primary: #9c4120;
+  --m3v-orange-on-primary: #ffffff;
+  --m3v-orange-primary-container: #ffdbcf;
+  --m3v-orange-on-primary-container: #3a0f00;
+  --m3v-orange-primary-override: #9c4120;
+  --m3v-orange-chart-2: #b65a36;
+  --m3v-orange-chart-3: #9b6d5a;
+  --m3v-orange-chart-4: #7f4b35;
+  --m3v-orange-chart-5: #b48975;
+
+  /* Variant: Orange - dark */
+  --m3v-orange-surface-dark: #1a120d;
+  --m3v-orange-on-surface-dark: #f1dfd7;
+  --m3v-orange-on-surface-variant-dark: #d8c2b6;
+  --m3v-orange-surface-container-dark: #261c16;
+  --m3v-orange-surface-container-high-dark: #312620;
+  --m3v-orange-surface-container-highest-dark: #3c312a;
+  --m3v-orange-outline-dark: #a08c81;
+  --m3v-orange-outline-variant-dark: #53433b;
+  --m3v-orange-primary-dark: #ffb59c;
+  --m3v-orange-on-primary-dark: #5f1a00;
+  --m3v-orange-primary-container-dark: #7d2d0d;
+
+  /* Variant: Blue - light */
+  --m3v-blue-surface: #f7f9ff;
+  --m3v-blue-on-surface: #171b24;
+  --m3v-blue-on-surface-variant: #414856;
+  --m3v-blue-surface-container: #eaf0fb;
+  --m3v-blue-surface-container-high: #f0f4ff;
+  --m3v-blue-surface-container-highest: #dbe5f6;
+  --m3v-blue-outline: #717886;
+  --m3v-blue-outline-variant: #c0c7d8;
+  --m3v-blue-primary: #005ac1;
+  --m3v-blue-on-primary: #ffffff;
+  --m3v-blue-primary-container: #d7e3ff;
+  --m3v-blue-on-primary-container: #001b3f;
+  --m3v-blue-primary-override: #005ac1;
+  --m3v-blue-chart-2: #2f7be7;
+  --m3v-blue-chart-3: #5a729d;
+  --m3v-blue-chart-4: #2d4f8b;
+  --m3v-blue-chart-5: #7f98c6;
+
+  /* Variant: Blue - dark */
+  --m3v-blue-surface-dark: #10141d;
+  --m3v-blue-on-surface-dark: #e0e6f2;
+  --m3v-blue-on-surface-variant-dark: #c0c7d8;
+  --m3v-blue-surface-container-dark: #1a2130;
+  --m3v-blue-surface-container-high-dark: #242b3a;
+  --m3v-blue-surface-container-highest-dark: #2f3646;
+  --m3v-blue-outline-dark: #8a92a3;
+  --m3v-blue-outline-variant-dark: #414856;
+  --m3v-blue-primary-dark: #a8c7ff;
+  --m3v-blue-on-primary-dark: #00306a;
+  --m3v-blue-primary-container-dark: #004792;
+
+  /* Variant: Purple - light */
+  --m3v-purple-surface: #fdf7ff;
+  --m3v-purple-on-surface: #1d1a20;
+  --m3v-purple-on-surface-variant: #49454e;
+  --m3v-purple-surface-container: #f1ebf5;
+  --m3v-purple-surface-container-high: #f7f0fb;
+  --m3v-purple-surface-container-highest: #e3dfea;
+  --m3v-purple-outline: #7a757f;
+  --m3v-purple-outline-variant: #cbc4cf;
+  --m3v-purple-primary: #70548f;
+  --m3v-purple-on-primary: #ffffff;
+  --m3v-purple-primary-container: #f1daff;
+  --m3v-purple-on-primary-container: #290d46;
+  --m3v-purple-primary-override: #70548f;
+  --m3v-purple-chart-2: #8d6aac;
+  --m3v-purple-chart-3: #7a6f86;
+  --m3v-purple-chart-4: #5d496f;
+  --m3v-purple-chart-5: #9a88aa;
+
+  /* Variant: Purple - dark */
+  --m3v-purple-surface-dark: #15121a;
+  --m3v-purple-on-surface-dark: #e8dfe8;
+  --m3v-purple-on-surface-variant-dark: #cbc4cf;
+  --m3v-purple-surface-container-dark: #201c26;
+  --m3v-purple-surface-container-high-dark: #2a2731;
+  --m3v-purple-surface-container-highest-dark: #35323d;
+  --m3v-purple-outline-dark: #948f99;
+  --m3v-purple-outline-variant-dark: #49454e;
+  --m3v-purple-primary-dark: #ddb8ff;
+  --m3v-purple-on-primary-dark: #40235d;
+  --m3v-purple-primary-container-dark: #573c76;
+
+  /* Shared semantic colors */
+  --m3-raw-destructive: #b3261e;
+  --m3-raw-destructive-foreground: #ffffff;
+  --m3-raw-destructive-dark: #f2b8b5;
+  --m3-raw-destructive-foreground-dark: #601410;
+
+  /* Active palette aliases (default = pink) */
+  --m3-raw-surface: var(--m3v-pink-surface);
+  --m3-raw-on-surface: var(--m3v-pink-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-pink-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-pink-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-pink-surface-container-high);
+  --m3-raw-surface-container-highest: var(
+    --m3v-pink-surface-container-highest
+  );
+  --m3-raw-outline: var(--m3v-pink-outline);
+  --m3-raw-outline-variant: var(--m3v-pink-outline-variant);
+  --m3-raw-primary: var(--m3v-pink-primary);
+  --m3-raw-on-primary: var(--m3v-pink-on-primary);
+  --m3-raw-primary-container: var(--m3v-pink-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-pink-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-pink-primary-override);
+  --m3-raw-chart-2: var(--m3v-pink-chart-2);
+  --m3-raw-chart-3: var(--m3v-pink-chart-3);
+  --m3-raw-chart-4: var(--m3v-pink-chart-4);
+  --m3-raw-chart-5: var(--m3v-pink-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-pink-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-pink-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(--m3v-pink-on-surface-variant-dark);
+  --m3-raw-surface-container-dark: var(--m3v-pink-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-pink-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-pink-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-pink-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-pink-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-pink-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-pink-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-pink-primary-container-dark);
+
+  /* Alias for dark mode used by portal/body mappings */
+  --m3-on-primary-container-from-root: var(--m3-raw-primary-container);
+}
+
+:root[data-m3-variant="monochrome"] {
+  --m3-raw-surface: var(--m3v-mono-surface);
+  --m3-raw-on-surface: var(--m3v-mono-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-mono-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-mono-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-mono-surface-container-high);
+  --m3-raw-surface-container-highest: var(--m3v-mono-surface-container-highest);
+  --m3-raw-outline: var(--m3v-mono-outline);
+  --m3-raw-outline-variant: var(--m3v-mono-outline-variant);
+  --m3-raw-primary: var(--m3v-mono-primary);
+  --m3-raw-on-primary: var(--m3v-mono-on-primary);
+  --m3-raw-primary-container: var(--m3v-mono-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-mono-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-mono-primary-override);
+  --m3-raw-chart-2: var(--m3v-mono-chart-2);
+  --m3-raw-chart-3: var(--m3v-mono-chart-3);
+  --m3-raw-chart-4: var(--m3v-mono-chart-4);
+  --m3-raw-chart-5: var(--m3v-mono-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-mono-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-mono-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(--m3v-mono-on-surface-variant-dark);
+  --m3-raw-surface-container-dark: var(--m3v-mono-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-mono-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-mono-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-mono-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-mono-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-mono-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-mono-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-mono-primary-container-dark);
+}
+
+:root[data-m3-variant="orange"] {
+  --m3-raw-surface: var(--m3v-orange-surface);
+  --m3-raw-on-surface: var(--m3v-orange-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-orange-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-orange-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-orange-surface-container-high);
+  --m3-raw-surface-container-highest: var(
+    --m3v-orange-surface-container-highest
+  );
+  --m3-raw-outline: var(--m3v-orange-outline);
+  --m3-raw-outline-variant: var(--m3v-orange-outline-variant);
+  --m3-raw-primary: var(--m3v-orange-primary);
+  --m3-raw-on-primary: var(--m3v-orange-on-primary);
+  --m3-raw-primary-container: var(--m3v-orange-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-orange-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-orange-primary-override);
+  --m3-raw-chart-2: var(--m3v-orange-chart-2);
+  --m3-raw-chart-3: var(--m3v-orange-chart-3);
+  --m3-raw-chart-4: var(--m3v-orange-chart-4);
+  --m3-raw-chart-5: var(--m3v-orange-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-orange-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-orange-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(
+    --m3v-orange-on-surface-variant-dark
+  );
+  --m3-raw-surface-container-dark: var(--m3v-orange-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-orange-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-orange-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-orange-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-orange-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-orange-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-orange-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-orange-primary-container-dark);
+}
+
+:root[data-m3-variant="blue"] {
+  --m3-raw-surface: var(--m3v-blue-surface);
+  --m3-raw-on-surface: var(--m3v-blue-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-blue-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-blue-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-blue-surface-container-high);
+  --m3-raw-surface-container-highest: var(--m3v-blue-surface-container-highest);
+  --m3-raw-outline: var(--m3v-blue-outline);
+  --m3-raw-outline-variant: var(--m3v-blue-outline-variant);
+  --m3-raw-primary: var(--m3v-blue-primary);
+  --m3-raw-on-primary: var(--m3v-blue-on-primary);
+  --m3-raw-primary-container: var(--m3v-blue-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-blue-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-blue-primary-override);
+  --m3-raw-chart-2: var(--m3v-blue-chart-2);
+  --m3-raw-chart-3: var(--m3v-blue-chart-3);
+  --m3-raw-chart-4: var(--m3v-blue-chart-4);
+  --m3-raw-chart-5: var(--m3v-blue-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-blue-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-blue-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(--m3v-blue-on-surface-variant-dark);
+  --m3-raw-surface-container-dark: var(--m3v-blue-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-blue-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-blue-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-blue-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-blue-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-blue-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-blue-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-blue-primary-container-dark);
+}
+
+:root[data-m3-variant="violet"],
+:root[data-m3-variant="purple"] {
+  --m3-raw-surface: var(--m3v-purple-surface);
+  --m3-raw-on-surface: var(--m3v-purple-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-purple-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-purple-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-purple-surface-container-high);
+  --m3-raw-surface-container-highest: var(
+    --m3v-purple-surface-container-highest
+  );
+  --m3-raw-outline: var(--m3v-purple-outline);
+  --m3-raw-outline-variant: var(--m3v-purple-outline-variant);
+  --m3-raw-primary: var(--m3v-purple-primary);
+  --m3-raw-on-primary: var(--m3v-purple-on-primary);
+  --m3-raw-primary-container: var(--m3v-purple-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-purple-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-purple-primary-override);
+  --m3-raw-chart-2: var(--m3v-purple-chart-2);
+  --m3-raw-chart-3: var(--m3v-purple-chart-3);
+  --m3-raw-chart-4: var(--m3v-purple-chart-4);
+  --m3-raw-chart-5: var(--m3v-purple-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-purple-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-purple-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(
+    --m3v-purple-on-surface-variant-dark
+  );
+  --m3-raw-surface-container-dark: var(--m3v-purple-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-purple-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-purple-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-purple-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-purple-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-purple-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-purple-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-purple-primary-container-dark);
+}
