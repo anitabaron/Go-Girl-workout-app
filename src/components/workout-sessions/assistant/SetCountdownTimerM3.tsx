@@ -13,7 +13,7 @@ export function SetCountdownTimerM3({
   onComplete,
 }: Readonly<SetCountdownTimerProps>) {
   const t = useTranslations("assistantTimers");
-  const timerPalette = useTimerPalette();
+  const timerPalette = useTimerPalette("exercise");
   if (!durationSeconds || durationSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
 

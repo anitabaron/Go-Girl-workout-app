@@ -33,7 +33,7 @@ export function WorkoutTimer({
   exerciseTimerContent,
   onTimerStop,
 }: Readonly<WorkoutTimerProps>) {
-  const timerPalette = useTimerPalette();
+  const timerPalette = useTimerPalette("break");
   // Oblicz bazowy czas (skumulowany czas aktywności z bazy)
   const baseSeconds = useMemo(
     () => activeDurationSeconds || 0,

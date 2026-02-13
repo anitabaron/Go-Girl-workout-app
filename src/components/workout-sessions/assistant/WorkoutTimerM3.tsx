@@ -33,7 +33,7 @@ export function WorkoutTimerM3({
 }: Readonly<WorkoutTimerM3Props>) {
   const t = useTranslations("workoutTimer");
   const unilateralDisplay = useUnilateralDisplay();
-  const timerPalette = useTimerPalette();
+  const timerPalette = useTimerPalette("break");
   const displaySetNumber =
     unilateralDisplay?.displayInfo?.displaySetNumber ?? currentSetNumber;
 

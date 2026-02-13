@@ -15,7 +15,7 @@ export function SetCountdownTimer({
   isPaused,
   onComplete,
 }: Readonly<SetCountdownTimerProps>) {
-  const timerPalette = useTimerPalette();
+  const timerPalette = useTimerPalette("exercise");
   // Walidacja: durationSeconds musi być > 0
   if (!durationSeconds || durationSeconds <= 0) {
     return null;

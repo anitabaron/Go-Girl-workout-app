@@ -67,37 +67,37 @@
   --m3v-mono-on-primary-dark: #0a0a0a;
   --m3v-mono-primary-container-dark: #404040;
 
-  /* Variant: M3 Expressive Teal - light */
-  --m3v-teal-surface: #f4fbfa;
-  --m3v-teal-on-surface: #161d1d;
-  --m3v-teal-on-surface-variant: #3f4948;
-  --m3v-teal-surface-container: #e7f2f0;
-  --m3v-teal-surface-container-high: #edf7f5;
-  --m3v-teal-surface-container-highest: #dce8e6;
-  --m3v-teal-outline: #6f7978;
-  --m3v-teal-outline-variant: #bec9c7;
-  --m3v-teal-primary: #006a6a;
+  /* Variant: Lime (was Teal) - light */
+  --m3v-teal-surface: #fcfbe9;
+  --m3v-teal-on-surface: #1f210f;
+  --m3v-teal-on-surface-variant: #4b4f34;
+  --m3v-teal-surface-container: #f1efdc;
+  --m3v-teal-surface-container-high: #f7f5e3;
+  --m3v-teal-surface-container-highest: #e4e2cf;
+  --m3v-teal-outline: #7a7f60;
+  --m3v-teal-outline-variant: #cbcfb0;
+  --m3v-teal-primary: #6a7300;
   --m3v-teal-on-primary: #ffffff;
-  --m3v-teal-primary-container: #9cf1ef;
-  --m3v-teal-on-primary-container: #00201f;
-  --m3v-teal-primary-override: #006a6a;
-  --m3v-teal-chart-2: #406362;
-  --m3v-teal-chart-3: #4f5f5e;
-  --m3v-teal-chart-4: #314a49;
-  --m3v-teal-chart-5: #6c7f7e;
+  --m3v-teal-primary-container: #e8f06f;
+  --m3v-teal-on-primary-container: #1f2300;
+  --m3v-teal-primary-override: #6a7300;
+  --m3v-teal-chart-2: #8a941e;
+  --m3v-teal-chart-3: #7b8054;
+  --m3v-teal-chart-4: #5f6522;
+  --m3v-teal-chart-5: #9aa162;
 
-  /* Variant: M3 Expressive Teal - dark */
-  --m3v-teal-surface-dark: #151d1d;
-  --m3v-teal-on-surface-dark: #dde4e3;
-  --m3v-teal-on-surface-variant-dark: #bfc9c8;
-  --m3v-teal-surface-container-dark: #1f2928;
-  --m3v-teal-surface-container-high-dark: #2a3534;
-  --m3v-teal-surface-container-highest-dark: #364140;
-  --m3v-teal-outline-dark: #899392;
-  --m3v-teal-outline-variant-dark: #3f4948;
-  --m3v-teal-primary-dark: #4fdad6;
-  --m3v-teal-on-primary-dark: #003736;
-  --m3v-teal-primary-container-dark: #00504f;
+  /* Variant: Lime (was Teal) - dark */
+  --m3v-teal-surface-dark: #151608;
+  --m3v-teal-on-surface-dark: #e7e4cb;
+  --m3v-teal-on-surface-variant-dark: #cbcfb0;
+  --m3v-teal-surface-container-dark: #1f2112;
+  --m3v-teal-surface-container-high-dark: #292c1b;
+  --m3v-teal-surface-container-highest-dark: #343826;
+  --m3v-teal-outline-dark: #95997a;
+  --m3v-teal-outline-variant-dark: #4b4f34;
+  --m3v-teal-primary-dark: #ccd357;
+  --m3v-teal-on-primary-dark: #373d00;
+  --m3v-teal-primary-container-dark: #505800;
 
   /* Variant: Orange - light */
   --m3v-orange-surface: #fff8f4;
@@ -140,14 +140,14 @@
   --m3v-green-surface-container-highest: #dfe8da;
   --m3v-green-outline: #717970;
   --m3v-green-outline-variant: #c0c9bd;
-  --m3v-green-primary: #3f6836;
+  --m3v-green-primary: #2f5d2d;
   --m3v-green-on-primary: #ffffff;
   --m3v-green-primary-container: #c0efb0;
   --m3v-green-on-primary-container: #012204;
-  --m3v-green-primary-override: #3f6836;
-  --m3v-green-chart-2: #5f7f58;
+  --m3v-green-primary-override: #2f5d2d;
+  --m3v-green-chart-2: #4e7246;
   --m3v-green-chart-3: #65715f;
-  --m3v-green-chart-4: #4b5c46;
+  --m3v-green-chart-4: #2f4f2d;
   --m3v-green-chart-5: #7b8973;
 
   /* Variant: Green - dark */
@@ -159,9 +159,9 @@
   --m3v-green-surface-container-highest-dark: #363e35;
   --m3v-green-outline-dark: #8b9389;
   --m3v-green-outline-variant-dark: #42493f;
-  --m3v-green-primary-dark: #a5d395;
-  --m3v-green-on-primary-dark: #10380f;
-  --m3v-green-primary-container-dark: #285024;
+  --m3v-green-primary-dark: #8fbe7e;
+  --m3v-green-on-primary-dark: #0b2f0c;
+  --m3v-green-primary-container-dark: #21471f;
 
   /* Variant: Blue - light */
   --m3v-blue-surface: #f7f9ff;

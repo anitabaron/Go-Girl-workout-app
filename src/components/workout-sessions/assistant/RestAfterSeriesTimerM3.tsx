@@ -14,7 +14,7 @@ export function RestAfterSeriesTimerM3({
   isLastExercise,
 }: Readonly<RestAfterSeriesTimerProps>) {
   const t = useTranslations("assistantTimers");
-  const timerPalette = useTimerPalette("series");
+  const timerPalette = useTimerPalette("break-series");
   if (!restSeconds || restSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
 

@@ -9,7 +9,7 @@ type TimerPalette = {
   trailColor: HexColor;
 };
 
-type PaletteVariant = "default" | "series";
+type PaletteVariant = "exercise" | "break" | "break-series";
 
 function readToken(
   styles: CSSStyleDeclaration,
@@ -35,7 +35,7 @@ function toHexColor(value: string, fallback: HexColor): HexColor {
 }
 
 export function useTimerPalette(
-  paletteVariant: PaletteVariant = "default",
+  paletteVariant: PaletteVariant = "break",
 ): TimerPalette {
   useM3ThemeStore((state) => state.isDark);
   useM3ThemeStore((state) => state.colorVariant);
@@ -43,7 +43,9 @@ export function useTimerPalette(
   if (typeof window === "undefined") {
     return {
       colors:
-        paletteVariant === "series"
+        paletteVariant === "exercise"
+          ? ["#334155", "#64748b", "#94a3b8"]
+          : paletteVariant === "break-series"
           ? ["#be123c", "#e11d48", "#f43f5e"]
           : ["#ef4444", "#f87171", "#fca5a5"],
       trailColor: "#ffbdc8",
@@ -61,18 +63,27 @@ export function useTimerPalette(
     "#fca5a5",
   );
   const outline = toHexColor(readToken(styles, "--m3-outline", "#e11d48"), "#e11d48");
+  const chart2 = toHexColor(readToken(styles, "--chart-2", "#64748b"), "#64748b");
+  const chart3 = toHexColor(readToken(styles, "--chart-3", "#334155"), "#334155");
+  const chart4 = toHexColor(readToken(styles, "--chart-4", "#94a3b8"), "#94a3b8");
   const trailColor = toHexColor(
     readToken(styles, "--m3-surface-container-high", "#ffbdc8"),
     "#ffbdc8",
   );
+  const exerciseTrailColor = toHexColor(
+    readToken(styles, "--m3-surface-container-highest", "#e5e7eb"),
+    "#e5e7eb",
+  );
 
   const colors: [HexColor, HexColor, HexColor] =
-    paletteVariant === "series"
+    paletteVariant === "exercise"
+      ? [chart3, chart2, chart4]
+      : paletteVariant === "break-series"
       ? [primary, outline, outlineVariant]
       : [primary, primaryContainer, outlineVariant];
 
   return {
     colors,
-    trailColor,
+    trailColor: paletteVariant === "exercise" ? exerciseTrailColor : trailColor,
   };
 }

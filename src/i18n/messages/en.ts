@@ -103,7 +103,7 @@ export const enMessages = {
   "theme.colorVariant": "Color variant",
   "theme.colorVariantMonochrome": "Monochrome",
   "theme.colorVariantGreen": "Green",
-  "theme.colorVariantTeal": "Teal",
+  "theme.colorVariantTeal": "Lime",
   "theme.colorVariantOrange": "Orange",
   "theme.colorVariantBlue": "Blue",
   "theme.colorVariantViolet": "Violet",

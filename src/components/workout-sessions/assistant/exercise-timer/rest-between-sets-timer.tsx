@@ -15,7 +15,7 @@ export function RestBetweenSetsTimer({
   isPaused,
   onComplete,
 }: Readonly<RestBetweenSetsTimerProps>) {
-  const timerPalette = useTimerPalette();
+  const timerPalette = useTimerPalette("break");
   // Walidacja: restSeconds musi być > 0
   if (!restSeconds || restSeconds <= 0) {
     return null;

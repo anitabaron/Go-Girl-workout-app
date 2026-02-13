@@ -12,7 +12,7 @@ export function RestBetweenSetsTimerM3({
   onComplete,
 }: Readonly<RestBetweenSetsTimerProps>) {
   const t = useTranslations("assistantTimers");
-  const timerPalette = useTimerPalette();
+  const timerPalette = useTimerPalette("break");
   if (!restSeconds || restSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
 
