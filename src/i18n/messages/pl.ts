@@ -95,6 +95,7 @@ export const plMessages = {
   "theme.colorVariant": "Wariant kolorów",
   "theme.colorVariantMonochrome": "Monochrome",
   "theme.colorVariantGreen": "Green",
+  "theme.colorVariantLime": "Lime",
   "theme.colorVariantTeal": "Lime",
   "theme.colorVariantOrange": "Orange",
   "theme.colorVariantBlue": "Blue",
