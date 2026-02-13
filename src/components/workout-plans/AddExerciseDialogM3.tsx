@@ -99,7 +99,7 @@ export function AddExerciseDialogM3({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="max-w-[400px] rounded-[var(--m3-radius-large)] md:max-w-[600px] lg:max-w-[1000px]"
+        className="flex max-h-[calc(100vh-2rem)] max-w-[400px] flex-col overflow-hidden rounded-[var(--m3-radius-large)] p-4 sm:p-6 md:max-w-[600px] lg:max-w-[1000px]"
         data-test-id="workout-plan-form-add-exercise-dialog"
       >
         <DialogHeader>
@@ -109,7 +109,7 @@ export function AddExerciseDialogM3({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto py-2 pr-1">
           <ExerciseSelectorM3
             selectedExerciseIds={selectedExerciseIds}
             onToggleExercise={handleToggleExercise}
@@ -117,7 +117,7 @@ export function AddExerciseDialogM3({
           />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button
             type="button"
             variant="outline"

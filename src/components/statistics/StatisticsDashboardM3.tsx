@@ -279,7 +279,7 @@ export function StatisticsDashboardM3({
 
   const handleRepeatPlan = async (planId: string | null) => {
     if (!planId) {
-      toast.error(t("repeatPlanMissing"));
+      toast.error(t("repeatPlanDeleted"));
       return;
     }
 
@@ -293,6 +293,10 @@ export function StatisticsDashboardM3({
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          toast.error(t("repeatPlanDeleted"));
+          return;
+        }
         const errorData = (await response.json().catch(() => ({}))) as {
           message?: string;
         };
@@ -319,9 +323,13 @@ export function StatisticsDashboardM3({
   const selectedSessionDurationMinutes = selectedSession
     ? Math.round(getSessionDurationSeconds(selectedSession) / 60)
     : 0;
+  const selectedSessionHasPlan = Boolean(selectedSession?.workout_plan_id);
+  const isStartingSelectedPlan =
+    Boolean(selectedSession?.workout_plan_id) &&
+    startingPlanId === selectedSession?.workout_plan_id;
 
   return (
-    <div className="space-y-8 pb-[calc(var(--m3-mobile-nav-height)+0.25rem)] md:pb-8">
+    <div className="space-y-8">
       <PageHeader title={title} description={description} />
 
       <Surface variant="high" className="space-y-5">
@@ -646,16 +654,16 @@ export function StatisticsDashboardM3({
                 <Button
                   type="button"
                   onClick={() => handleRepeatPlan(selectedSession.workout_plan_id)}
-                  disabled={
-                    !selectedSession.workout_plan_id ||
-                    startingPlanId === selectedSession.workout_plan_id
-                  }
+                  disabled={!selectedSessionHasPlan || isStartingSelectedPlan}
                 >
-                  {startingPlanId === selectedSession.workout_plan_id
-                    ? t("startingPlan")
-                    : t("repeatPlan")}
+                  {isStartingSelectedPlan ? t("startingPlan") : t("repeatPlan")}
                 </Button>
               </div>
+              {!selectedSessionHasPlan && (
+                <p className="text-sm text-muted-foreground">
+                  {t("repeatPlanDeleted")}
+                </p>
+              )}
             </div>
           </DialogContent>
         )}

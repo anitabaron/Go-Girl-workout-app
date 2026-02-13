@@ -163,8 +163,8 @@
   --m3-spacing-12: 3rem;
   --m3-spacing-16: 4rem;
 
-  /* Mobile bottom nav height (h-16 + safe-area) – for sticky/fixed elements above it */
-  --m3-mobile-nav-height: calc(4rem + max(0.5rem, env(safe-area-inset-bottom)));
+  /* Mobile bottom nav total height (h-16 + nav py-2 + safe-area) */
+  --m3-mobile-nav-height: calc(5rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
 
 /* Auth pages: use project pink accents instead of deep bordo */

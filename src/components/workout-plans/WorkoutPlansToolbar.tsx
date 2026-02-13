@@ -107,9 +107,9 @@ export function WorkoutPlansToolbar({
   const hasActiveFilters = part != null && part !== "";
 
   return (
-    <Toolbar className="flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center">
-      <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row sm:flex-nowrap sm:items-center">
-        <div className="flex flex-col gap-1">
+    <Toolbar className="flex flex-col items-stretch gap-4 xs:flex-row xs:flex-wrap xs:items-center">
+      <div className="flex w-full flex-col gap-4 xs:flex-row xs:flex-nowrap xs:items-center">
+        <div className="min-w-0 flex flex-col gap-1 xs:flex-1">
           <label htmlFor="part-filter" className="sr-only">
             {t("partFilterLabel")}
           </label>
@@ -120,7 +120,7 @@ export function WorkoutPlansToolbar({
           >
             <SelectTrigger
               id="part-filter"
-              className="w-full sm:w-[180px]"
+              className="w-full"
               aria-label={t("partFilterAria")}
             >
               <SelectValue placeholder={t("partPlaceholder")} />
@@ -135,7 +135,7 @@ export function WorkoutPlansToolbar({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="min-w-0 flex flex-col gap-1 xs:flex-1">
           <label htmlFor="sort-select" className="sr-only">
             {t("sortLabel")}
           </label>
@@ -146,7 +146,7 @@ export function WorkoutPlansToolbar({
           >
             <SelectTrigger
               id="sort-select"
-              className="w-full sm:w-[180px]"
+              className="w-full"
               aria-label={t("sortAria")}
             >
               <SelectValue placeholder={t("sortPlaceholder")} />
@@ -167,7 +167,7 @@ export function WorkoutPlansToolbar({
           onClick={() => updateParams({ part: null })}
           disabled={isPending}
           aria-label={t("clearFiltersAria")}
-          className="w-full sm:w-auto"
+          className="w-full xs:w-auto"
         >
           {t("clearFilters")}
         </Button>

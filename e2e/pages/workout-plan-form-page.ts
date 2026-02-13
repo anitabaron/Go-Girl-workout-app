@@ -266,21 +266,12 @@ export class WorkoutPlanFormPage {
    * Uses scope header number inputs: [repeat, order].
    */
   async updateFirstScopeOrder(newOrder: number) {
-    const repeatInput = this.exercisesList
-      .locator('[data-test-id^="scope-"][data-test-id$="-repeat-count"]')
+    const orderInput = this.exercisesList
+      .locator(
+        '[data-test-id^="workout-plan-scope-"][data-test-id$="-section-order-desktop"]:visible, [data-test-id^="workout-plan-scope-"][data-test-id$="-section-order-mobile"]:visible',
+      )
       .first();
-    await repeatInput.waitFor({ state: "visible", timeout: 10000 });
-
-    const headerRow = repeatInput.locator(
-      "xpath=ancestor::div[contains(@class,'flex')][1]",
-    );
-    const numericInputs = headerRow.locator('input[type="number"]');
-    const numericInputsCount = await numericInputs.count();
-    if (numericInputsCount < 2) {
-      throw new Error("Scope order input not found");
-    }
-
-    const orderInput = numericInputs.nth(1);
+    await orderInput.waitFor({ state: "visible", timeout: 10000 });
     await orderInput.fill(String(newOrder));
     await this.page.waitForTimeout(300);
   }
@@ -339,8 +330,21 @@ export class WorkoutPlanFormPage {
       );
     }
 
-    const sectionTypeCombobox = exerciseItem.getByRole("combobox").first();
+    let sectionTypeCombobox = exerciseItem.getByRole("combobox").first();
     await sectionTypeCombobox.waitFor({ state: "visible", timeout: 5000 });
+
+    if (await sectionTypeCombobox.isDisabled()) {
+      const scopeContainer = exerciseItem.locator(
+        "xpath=ancestor::*[starts-with(@data-test-id,'workout-plan-scope-')][1]",
+      );
+      sectionTypeCombobox = scopeContainer
+        .locator(
+          '[data-test-id$="-section-type-desktop"]:visible, [data-test-id$="-section-type-mobile"]:visible',
+        )
+        .first();
+      await sectionTypeCombobox.waitFor({ state: "visible", timeout: 5000 });
+    }
+
     await sectionTypeCombobox.click();
     await this.page
       .getByRole("option", {
