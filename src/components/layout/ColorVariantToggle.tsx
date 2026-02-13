@@ -8,6 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -21,10 +22,16 @@ const VARIANT_OPTIONS: ReadonlyArray<{
   labelKey: string;
   dotClass: string;
 }> = [
+  {
+    value: "monochrome",
+    labelKey: "colorVariantMonochrome",
+    dotClass: "bg-[#6b7280]",
+  },
   { value: "green", labelKey: "colorVariantGreen", dotClass: "bg-[#22c55e]" },
   { value: "teal", labelKey: "colorVariantTeal", dotClass: "bg-[#14b8a6]" },
-  { value: "blue", labelKey: "colorVariantBlue", dotClass: "bg-[#3b82f6]" },
-  { value: "purple", labelKey: "colorVariantPurple", dotClass: "bg-[#a855f7]" },
+  { value: "orange", labelKey: "colorVariantOrange", dotClass: "bg-[#f59e0b]" },
+  { value: "blue", labelKey: "colorVariantBlue", dotClass: "bg-[#2563eb]" },
+  { value: "violet", labelKey: "colorVariantViolet", dotClass: "bg-[#7c3aed]" },
   { value: "pink", labelKey: "colorVariantPink", dotClass: "bg-[#df6671]" },
 ] as const;
 
@@ -56,8 +63,12 @@ export function ColorVariantToggle({
         align="end"
         side="top"
         sideOffset={12}
-        className="w-[17rem] rounded-[var(--m3-radius-large)] border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-2 shadow-[var(--m3-shadow-2)]"
+        className="w-[17rem] rounded-[var(--m3-radius-large)] border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-2.5 shadow-[var(--m3-shadow-2)] backdrop-blur-sm"
       >
+        <DropdownMenuLabel className="px-3 py-1 text-xs text-muted-foreground">
+          {t("colorVariant")}
+        </DropdownMenuLabel>
+
         {VARIANT_OPTIONS.map((option) => {
           const isActive = colorVariant === option.value;
 
@@ -68,7 +79,7 @@ export function ColorVariantToggle({
               className={cn(
                 "rounded-[var(--m3-radius-sm)] px-3 py-2.5 text-[15px]",
                 isActive &&
-                  "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]",
+                  "bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)] font-medium",
               )}
             >
               <span className={cn("mr-1 size-3 rounded-full", option.dotClass)} />

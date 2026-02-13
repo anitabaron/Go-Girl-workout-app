@@ -30,4 +30,31 @@ describe("m3-theme-store", () => {
       "teal",
     );
   });
+
+  test("supports orange color variant", () => {
+    useM3ThemeStore.getState().setColorVariant("orange");
+
+    expect(useM3ThemeStore.getState().colorVariant).toBe("orange");
+    expect(document.documentElement.getAttribute("data-m3-variant")).toBe(
+      "orange",
+    );
+  });
+
+  test("supports monochrome color variant", () => {
+    useM3ThemeStore.getState().setColorVariant("monochrome");
+
+    expect(useM3ThemeStore.getState().colorVariant).toBe("monochrome");
+    expect(document.documentElement.getAttribute("data-m3-variant")).toBe(
+      "monochrome",
+    );
+  });
+
+  test("maps legacy purple to violet attribute", () => {
+    useM3ThemeStore.getState().setColorVariant("purple");
+
+    expect(useM3ThemeStore.getState().colorVariant).toBe("violet");
+    expect(document.documentElement.getAttribute("data-m3-variant")).toBe(
+      "violet",
+    );
+  });
 });

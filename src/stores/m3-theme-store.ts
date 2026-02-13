@@ -7,9 +7,12 @@ const STORAGE_KEY = "m3-theme-store";
 export type M3ThemeMode = boolean | null;
 export type M3ColorVariant =
   | "pink"
+  | "monochrome"
   | "green"
   | "teal"
+  | "orange"
   | "blue"
+  | "violet"
   | "purple";
 
 interface M3ThemeStore {
@@ -21,6 +24,13 @@ interface M3ThemeStore {
   toggle: () => void;
 }
 
+function normalizeColorVariant(
+  variant: M3ColorVariant | undefined,
+): Exclude<M3ColorVariant, "purple"> {
+  if (!variant) return "pink";
+  return variant === "purple" ? "violet" : variant;
+}
+
 function applyTheme(root: Element | null, isDark: M3ThemeMode) {
   if (!root) return;
   root.classList.toggle("dark", isDark === true);
@@ -29,7 +39,7 @@ function applyTheme(root: Element | null, isDark: M3ThemeMode) {
 
 function applyColorVariant(root: Element | null, variant: M3ColorVariant) {
   if (!root) return;
-  root.setAttribute("data-m3-variant", variant);
+  root.setAttribute("data-m3-variant", normalizeColorVariant(variant));
 }
 
 function applyThemeToDom(isDark: M3ThemeMode) {
@@ -58,9 +68,10 @@ export const useM3ThemeStore = create<M3ThemeStore>()(
       },
 
       setColorVariant: (colorVariant) => {
-        set({ colorVariant });
+        const normalized = normalizeColorVariant(colorVariant);
+        set({ colorVariant: normalized });
         if (globalThis.window !== undefined) {
-          applyColorVariantToDom(colorVariant);
+          applyColorVariantToDom(normalized);
         }
       },
 
@@ -81,16 +92,21 @@ export const useM3ThemeStore = create<M3ThemeStore>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (!state || globalThis.window === undefined) return;
+        const normalizedVariant = normalizeColorVariant(state.colorVariant);
+        state.colorVariant = normalizedVariant;
         applyThemeToDom(state.isDark);
-        applyColorVariantToDom(state.colorVariant ?? "pink");
+        applyColorVariantToDom(normalizedVariant);
       },
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<M3ThemeStore> | undefined;
+        const mergedVariant = normalizeColorVariant(
+          persisted?.colorVariant ?? currentState.colorVariant,
+        );
         return {
           ...currentState,
           ...persisted,
           isDark: persisted?.isDark ?? currentState.isDark,
-          colorVariant: persisted?.colorVariant ?? currentState.colorVariant,
+          colorVariant: mergedVariant,
         };
       },
     },

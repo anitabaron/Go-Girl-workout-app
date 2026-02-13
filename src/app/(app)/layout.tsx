@@ -27,7 +27,7 @@ export default async function M3Layout({
           {children}
         </main>
 
-        <div className="fixed right-4 z-50 bottom-[calc(var(--m3-mobile-nav-height)+0.75rem)] md:bottom-5">
+        <div className="fixed right-4 z-50 bottom-[calc(var(--m3-mobile-nav-height)+0.75rem)] md:bottom-5 hidden md:block">
           <ColorVariantToggle />
         </div>
       </div>
