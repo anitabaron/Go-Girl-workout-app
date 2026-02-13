@@ -780,6 +780,13 @@ export const plMessages = {
   "assistantSetLog.durationForSet": "Czas dla serii",
   "assistantSetLog.weightForSet": "Ciężar dla serii",
   "assistantSetLog.removeSet": "Usuń serię",
+  "assistantSetLog.empty":
+    "Brak serii. Kliknij „Dodaj serię”, aby dodać pierwszą serię.",
+  "assistantSetLog.addSetAria": "Dodaj nową serię",
+  "assistantSetLog.addSet": "Dodaj serię",
+  "assistantAutosave.saving": "Zapisywanie...",
+  "assistantAutosave.saved": "Zapisano",
+  "assistantAutosave.error": "Błąd zapisu",
   "executionSummaryDisplay.numberOfSets": "Liczba serii",
   "executionSummaryDisplay.totalReps": "Suma powtórzeń",
   "executionSummaryDisplay.durationSeconds": "Czas trwania (sekundy)",
@@ -898,6 +905,8 @@ export const plMessages = {
   "statisticsPage.startingPlan": "Uruchamianie...",
   "statisticsPage.repeatPlanMissing":
     "Nie można uruchomić tego planu ponownie (brak identyfikatora planu).",
+  "statisticsPage.repeatPlanDeleted":
+    "Nie można uruchomić tego planu ponownie, ponieważ został usunięty.",
   "statisticsPage.repeatPlanFailed":
     "Nie udało się uruchomić planu. Spróbuj ponownie.",
   "statisticsPage.repeatPlanSuccess":

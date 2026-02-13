@@ -22,7 +22,7 @@ export default async function M3Layout({
           <LanguageToggle />
         </div>
 
-        <main className="relative z-0 flex-1 w-full min-w-0 mx-auto max-w-4xl lg:max-w-6xl px-4 py-6 sm:px-6 sm:py-8 md:pl-[104px] lg:pl-[112px] pb-[var(--m3-mobile-nav-height)] md:pb-8">
+        <main className="relative z-0 flex-1 w-full min-w-0 mx-auto max-w-4xl lg:max-w-6xl px-4 py-6 sm:px-6 sm:py-8 md:pl-[104px] lg:pl-[112px] pb-[calc(var(--m3-mobile-nav-height)+0.5rem)] md:pb-8">
           {children}
         </main>
       </div>

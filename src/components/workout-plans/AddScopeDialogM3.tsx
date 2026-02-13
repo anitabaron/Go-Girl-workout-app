@@ -140,7 +140,7 @@ export function AddScopeDialogM3({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="max-w-[400px] rounded-[var(--m3-radius-large)] md:max-w-[600px] lg:max-w-[1000px]"
+        className="flex max-h-[calc(100vh-2rem)] max-w-[400px] flex-col overflow-hidden rounded-[var(--m3-radius-large)] p-4 sm:p-6 md:max-w-[600px] lg:max-w-[1000px]"
         data-test-id="workout-plan-form-add-scope-dialog"
       >
         <DialogHeader>
@@ -150,9 +150,9 @@ export function AddScopeDialogM3({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
-          <div className="flex gap-2 items-end">
-            <div className="min-w-0 space-y-2">
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1 space-y-2">
               <label htmlFor="scope-section-type" className="text-sm">
                 {t("section")}
               </label>
@@ -172,7 +172,7 @@ export function AddScopeDialogM3({
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-16 shrink-0 space-y-2">
+            <div className="w-full shrink-0 space-y-2 sm:w-24">
               <label
                 htmlFor="scope-repeat-count"
                 className="text-sm whitespace-nowrap"
@@ -197,7 +197,7 @@ export function AddScopeDialogM3({
             </div>
           </div>
 
-          <div>
+          <div className="pt-1">
             <p className="text-sm mb-2">{t("exercisesInScopeOrder")}</p>
             <ExerciseSelectorM3
               selectedExerciseIds={selectedExerciseIds}
@@ -207,7 +207,7 @@ export function AddScopeDialogM3({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="mt-2 shrink-0 border-t border-[var(--m3-outline-variant)] pt-3">
           <Button
             type="button"
             variant="outline"

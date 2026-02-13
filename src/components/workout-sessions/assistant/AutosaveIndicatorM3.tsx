@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import type { AutosaveStatus } from "@/types/workout-session-assistant";
+import { useTranslations } from "@/i18n/client";
 
 type AutosaveIndicatorM3Props = {
   status: AutosaveStatus;
@@ -12,24 +13,26 @@ export function AutosaveIndicatorM3({
   status,
   errorMessage,
 }: Readonly<AutosaveIndicatorM3Props>) {
+  const t = useTranslations("assistantAutosave");
+
   const getStatusConfig = () => {
     switch (status) {
       case "saving":
         return {
           icon: Loader2,
-          text: "Saving...",
+          text: t("saving"),
           className: "text-muted-foreground",
         };
       case "saved":
         return {
           icon: CheckCircle2,
-          text: "Saved",
+          text: t("saved"),
           className: "text-primary",
         };
       case "error":
         return {
           icon: AlertCircle,
-          text: errorMessage || "Save error",
+          text: errorMessage || t("error"),
           className: "text-destructive",
         };
       default:

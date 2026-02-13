@@ -774,6 +774,13 @@ export const enMessages = {
   "assistantSetLog.durationForSet": "Duration for set",
   "assistantSetLog.weightForSet": "Weight for set",
   "assistantSetLog.removeSet": "Remove set",
+  "assistantSetLog.empty":
+    "No sets. Click \"Add set\" to add the first set.",
+  "assistantSetLog.addSetAria": "Add new set",
+  "assistantSetLog.addSet": "Add set",
+  "assistantAutosave.saving": "Saving...",
+  "assistantAutosave.saved": "Saved",
+  "assistantAutosave.error": "Save error",
   "executionSummaryDisplay.numberOfSets": "Number of sets",
   "executionSummaryDisplay.totalReps": "Total reps",
   "executionSummaryDisplay.durationSeconds": "Duration (seconds)",
@@ -888,6 +895,8 @@ export const enMessages = {
   "statisticsPage.startingPlan": "Starting...",
   "statisticsPage.repeatPlanMissing":
     "This plan cannot be started again (missing plan id).",
+  "statisticsPage.repeatPlanDeleted":
+    "Cannot start this plan again because it was deleted.",
   "statisticsPage.repeatPlanFailed": "Could not start this plan. Try again.",
   "statisticsPage.repeatPlanSuccess":
     "Plan started. Redirecting to the active session.",

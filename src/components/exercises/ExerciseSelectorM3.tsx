@@ -128,18 +128,18 @@ export function ExerciseSelectorM3({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-4">
+      <div className="grid grid-cols-1 gap-2 xs:grid-cols-2 lg:grid-cols-4">
         <Input
           placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-[200px]"
+          className="w-full xs:col-span-2 lg:col-span-1"
         />
         <Select
           value={currentExerciseId}
           onValueChange={(v) => setCurrentExerciseId(v === "all" ? "all" : v)}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder={t("exercisePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
@@ -155,7 +155,7 @@ export function ExerciseSelectorM3({
           value={part}
           onValueChange={(v) => setPart(v as ExercisePart | "all")}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder={t("bodyPartPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
@@ -171,7 +171,7 @@ export function ExerciseSelectorM3({
           value={type}
           onValueChange={(v) => setType(v as ExerciseType | "all")}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder={t("typePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
@@ -185,9 +185,9 @@ export function ExerciseSelectorM3({
         </Select>
       </div>
 
-      <div className="min-h-[400px] max-h-[400px] overflow-y-auto">
+      <div className="h-[min(42vh,360px)] overflow-y-auto pr-1 sm:h-[min(46vh,400px)] lg:h-[420px]">
         {isLoading && (
-          <div className="flex justify-center py-8">
+          <div className="flex h-full items-center justify-center py-8">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
         )}
@@ -197,12 +197,12 @@ export function ExerciseSelectorM3({
           </div>
         )}
         {!isLoading && !error && exercises.length === 0 && (
-          <div className="rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
+          <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
             <p className="text-muted-foreground">{emptyMessage}</p>
           </div>
         )}
         {!isLoading && !error && exercises.length > 0 && (
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 px-1 py-2 md:grid-cols-3">
           {exercises.map((exercise) => {
             const selected = isSelected(exercise.id);
             return (
@@ -210,7 +210,7 @@ export function ExerciseSelectorM3({
                 key={exercise.id}
                 data-test-id="exercise-selector-card"
                 className={`cursor-pointer gap-0 transition-all hover:shadow-md ${
-                  selected ? "ring-2 ring-primary" : ""
+                  selected ? "ring-2 ring-inset ring-primary" : ""
                 }`}
                 onClick={() => handleExerciseClick(exercise)}
               >
