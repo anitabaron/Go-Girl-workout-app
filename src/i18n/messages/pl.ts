@@ -94,8 +94,6 @@ export const plMessages = {
   "theme.toggleDarkMode": "Przełącz tryb ciemny",
   "theme.colorVariant": "Wariant kolorów",
   "theme.colorVariantMonochrome": "Monochrome",
-  "theme.colorVariantGreen": "Green",
-  "theme.colorVariantTeal": "Lime",
   "theme.colorVariantOrange": "Orange",
   "theme.colorVariantBlue": "Blue",
   "theme.colorVariantViolet": "Violet",

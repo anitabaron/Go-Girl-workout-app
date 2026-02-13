@@ -102,8 +102,6 @@ export const enMessages = {
   "theme.toggleDarkMode": "Toggle dark mode",
   "theme.colorVariant": "Color variant",
   "theme.colorVariantMonochrome": "Monochrome",
-  "theme.colorVariantGreen": "Green",
-  "theme.colorVariantTeal": "Lime",
   "theme.colorVariantOrange": "Orange",
   "theme.colorVariantBlue": "Blue",
   "theme.colorVariantViolet": "Violet",

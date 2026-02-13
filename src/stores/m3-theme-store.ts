@@ -8,8 +8,6 @@ export type M3ThemeMode = boolean | null;
 export type M3ColorVariant =
   | "pink"
   | "monochrome"
-  | "green"
-  | "teal"
   | "orange"
   | "blue"
   | "violet"
@@ -25,10 +23,16 @@ interface M3ThemeStore {
 }
 
 function normalizeColorVariant(
-  variant: M3ColorVariant | undefined,
+  variant: string | undefined,
 ): Exclude<M3ColorVariant, "purple"> {
   if (!variant) return "pink";
-  return variant === "purple" ? "violet" : variant;
+  if (variant === "purple") return "violet";
+  if (variant === "pink") return "pink";
+  if (variant === "monochrome") return "monochrome";
+  if (variant === "orange") return "orange";
+  if (variant === "blue") return "blue";
+  if (variant === "violet") return "violet";
+  return "pink";
 }
 
 function applyTheme(root: Element | null, isDark: M3ThemeMode) {
