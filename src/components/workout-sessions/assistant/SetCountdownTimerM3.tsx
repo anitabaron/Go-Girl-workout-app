@@ -4,6 +4,7 @@ import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { SetCountdownTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/client";
+import { useTimerPalette } from "./use-timer-palette";
 
 export function SetCountdownTimerM3({
   durationSeconds,
@@ -12,6 +13,7 @@ export function SetCountdownTimerM3({
   onComplete,
 }: Readonly<SetCountdownTimerProps>) {
   const t = useTranslations("assistantTimers");
+  const timerPalette = useTimerPalette();
   if (!durationSeconds || durationSeconds <= 0) return null;
   if (typeof onComplete !== "function") return null;
 
@@ -20,9 +22,9 @@ export function SetCountdownTimerM3({
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={durationSeconds}
-        colors={["#ef4444", "#f87171", "#fca5a5"]}
+        colors={timerPalette.colors}
         colorsTime={[durationSeconds, durationSeconds * 0.5, 0]}
-        trailColor="#ffbdc8"
+        trailColor={timerPalette.trailColor}
         size={240}
         strokeWidth={12}
         onComplete={() => {

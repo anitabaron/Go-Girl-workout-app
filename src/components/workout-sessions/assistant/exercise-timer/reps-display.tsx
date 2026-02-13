@@ -37,7 +37,7 @@ export function RepsDisplay({
       <div className="relative flex h-60 w-60 flex-col items-center justify-center">
         {/* Kółko jako tło z opacity */}
         <div
-          className="absolute inset-0 rounded-full bg-[#ffbdc8] opacity-30"
+          className="absolute inset-0 rounded-full bg-[var(--m3-primary-container)] opacity-30"
           aria-hidden
         />
         {/* Cyfra i napis nad kółkiem - pełna widoczność */}

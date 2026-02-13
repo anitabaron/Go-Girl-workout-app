@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { useUnilateralDisplay } from "./UnilateralDisplayContext";
 import { useTranslations } from "@/i18n/client";
+import { useTimerPalette } from "./use-timer-palette";
 
 type WorkoutTimerM3Props = {
   activeDurationSeconds: number;
@@ -32,6 +33,7 @@ export function WorkoutTimerM3({
 }: Readonly<WorkoutTimerM3Props>) {
   const t = useTranslations("workoutTimer");
   const unilateralDisplay = useUnilateralDisplay();
+  const timerPalette = useTimerPalette();
   const displaySetNumber =
     unilateralDisplay?.displayInfo?.displaySetNumber ?? currentSetNumber;
 
@@ -105,9 +107,9 @@ export function WorkoutTimerM3({
         <CountdownCircleTimer
           isPlaying={!isPaused}
           duration={restSeconds}
-          colors={["#ef4444", "#f87171", "#fca5a5"]}
+          colors={timerPalette.colors}
           colorsTime={[restSeconds, restSeconds * 0.5, 0]}
-          trailColor="#ffbdc8"
+          trailColor={timerPalette.trailColor}
           size={240}
           strokeWidth={12}
         >

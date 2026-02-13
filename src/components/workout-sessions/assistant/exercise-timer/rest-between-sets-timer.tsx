@@ -3,6 +3,7 @@
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { RestBetweenSetsTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
+import { useTimerPalette } from "../use-timer-palette";
 
 /**
  * Komponent wyświetlający odliczanie przerwy między seriami.
@@ -14,6 +15,7 @@ export function RestBetweenSetsTimer({
   isPaused,
   onComplete,
 }: Readonly<RestBetweenSetsTimerProps>) {
+  const timerPalette = useTimerPalette();
   // Walidacja: restSeconds musi być > 0
   if (!restSeconds || restSeconds <= 0) {
     return null;
@@ -33,9 +35,9 @@ export function RestBetweenSetsTimer({
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={restSeconds}
-        colors={["#ef4444", "#f87171", "#fca5a5"]}
+        colors={timerPalette.colors}
         colorsTime={[restSeconds, restSeconds * 0.5, 0]}
-        trailColor="#ffbdc8"
+        trailColor={timerPalette.trailColor}
         size={240}
         strokeWidth={12}
         onComplete={() => {

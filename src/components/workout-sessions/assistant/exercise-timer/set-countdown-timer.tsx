@@ -3,6 +3,7 @@
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { SetCountdownTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
+import { useTimerPalette } from "../use-timer-palette";
 
 /**
  * Komponent wyświetlający odliczanie czasu dla pojedynczej serii ćwiczenia.
@@ -14,6 +15,7 @@ export function SetCountdownTimer({
   isPaused,
   onComplete,
 }: Readonly<SetCountdownTimerProps>) {
+  const timerPalette = useTimerPalette();
   // Walidacja: durationSeconds musi być > 0
   if (!durationSeconds || durationSeconds <= 0) {
     return null;
@@ -33,9 +35,9 @@ export function SetCountdownTimer({
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={durationSeconds}
-        colors={["#ef4444", "#f87171", "#fca5a5"]}
+        colors={timerPalette.colors}
         colorsTime={[durationSeconds, durationSeconds * 0.5, 0]}
-        trailColor="#ffbdc8"
+        trailColor={timerPalette.trailColor}
         size={240}
         strokeWidth={12}
         onComplete={() => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
+import { useTimerPalette } from "./use-timer-palette";
 
 type WorkoutTimerProps = {
   activeDurationSeconds: number; // skumulowany czas aktywności sesji (z bazy danych)
@@ -32,6 +33,7 @@ export function WorkoutTimer({
   exerciseTimerContent,
   onTimerStop,
 }: Readonly<WorkoutTimerProps>) {
+  const timerPalette = useTimerPalette();
   // Oblicz bazowy czas (skumulowany czas aktywności z bazy)
   const baseSeconds = useMemo(
     () => activeDurationSeconds || 0,
@@ -112,9 +114,9 @@ export function WorkoutTimer({
         <CountdownCircleTimer
           isPlaying={!isPaused}
           duration={restSeconds}
-          colors={["#ef4444", "#f87171", "#fca5a5"]}
+          colors={timerPalette.colors}
           colorsTime={[restSeconds, restSeconds * 0.5, 0]}
-          trailColor="#ffbdc8"
+          trailColor={timerPalette.trailColor}
           size={240}
           strokeWidth={12}
         >

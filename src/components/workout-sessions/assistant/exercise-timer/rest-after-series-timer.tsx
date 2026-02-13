@@ -3,6 +3,7 @@
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { RestAfterSeriesTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
+import { useTimerPalette } from "../use-timer-palette";
 
 /**
  * Komponent wyświetlający odliczanie przerwy po zakończonych seriach ćwiczenia.
@@ -14,6 +15,7 @@ export function RestAfterSeriesTimer({
   isPaused,
   onComplete,
 }: Readonly<RestAfterSeriesTimerProps>) {
+  const timerPalette = useTimerPalette("series");
   // Walidacja: restSeconds musi być > 0
   if (!restSeconds || restSeconds <= 0) {
     return null;
@@ -33,9 +35,9 @@ export function RestAfterSeriesTimer({
       <CountdownCircleTimer
         isPlaying={!isPaused}
         duration={restSeconds}
-        colors={["#be123c", "#e11d48", "#f43f5e"]}
+        colors={timerPalette.colors}
         colorsTime={[restSeconds, restSeconds * 0.5, 0]}
-        trailColor="#ffbdc8"
+        trailColor={timerPalette.trailColor}
         size={240}
         strokeWidth={12}
         onComplete={() => {
