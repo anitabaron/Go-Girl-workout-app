@@ -152,6 +152,7 @@ export function WorkoutPlansExercisesListM3({
           <div
             key={`scope-${slot.scopeId}`}
             className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-raw-primary-container)] p-4"
+            data-test-id={`workout-plan-scope-${slot.scopeId}`}
           >
             <div className="mb-3 border-b border-[var(--m3-outline-variant)] pb-2">
               <div className="hidden items-center justify-between gap-3 lg:flex">
@@ -190,7 +191,10 @@ export function WorkoutPlansExercisesListM3({
                     }}
                     disabled={disabled}
                   >
-                    <SelectTrigger className="h-8 w-[220px] text-sm">
+                    <SelectTrigger
+                      className="h-8 w-[220px] text-sm"
+                      data-test-id={`workout-plan-scope-${slot.scopeId}-section-type-desktop`}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -238,6 +242,7 @@ export function WorkoutPlansExercisesListM3({
                       disabled={disabled}
                       className="h-9 w-14 text-center text-sm font-medium"
                       aria-label={t("orderInSection")}
+                      data-test-id={`workout-plan-scope-${slot.scopeId}-section-order-desktop`}
                     />
                   ) : (
                     <div className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium">
@@ -310,7 +315,10 @@ export function WorkoutPlansExercisesListM3({
                     }}
                     disabled={disabled}
                   >
-                    <SelectTrigger className="h-8 w-full min-w-0 text-sm sm:w-[150px]">
+                    <SelectTrigger
+                      className="h-8 w-full min-w-0 text-sm sm:w-[150px]"
+                      data-test-id={`workout-plan-scope-${slot.scopeId}-section-type-mobile`}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -351,6 +359,7 @@ export function WorkoutPlansExercisesListM3({
                         disabled={disabled}
                         className="h-9 w-14 text-center text-sm font-medium"
                         aria-label={t("orderInSection")}
+                        data-test-id={`workout-plan-scope-${slot.scopeId}-section-order-mobile`}
                       />
                     ) : (
                       <div className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium">

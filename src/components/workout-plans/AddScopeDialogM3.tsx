@@ -196,7 +196,6 @@ export function AddScopeDialogM3({
                   );
                 }}
                 className="h-8 w-full text-center text-sm tabular-nums focus-visible:ring-inset"
-                data-test-id="workout-plan-form-add-scope-repeat"
               />
             </div>
           </div>
@@ -256,6 +255,7 @@ export function AddScopeDialogM3({
                         );
                       }}
                       className="h-8 w-full text-center text-sm tabular-nums focus-visible:ring-inset"
+                      data-test-id="workout-plan-form-add-scope-repeat"
                     />
                   </div>
                 </div>
