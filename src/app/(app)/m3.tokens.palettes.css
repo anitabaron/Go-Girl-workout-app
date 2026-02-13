@@ -274,6 +274,7 @@
   --m3-on-primary-container-from-root: var(--m3-raw-primary-container);
 }
 
+:root[data-m3-variant="lime"],
 :root[data-m3-variant="teal"] {
   --m3-raw-surface: var(--m3v-teal-surface);
   --m3-raw-on-surface: var(--m3v-teal-on-surface);
