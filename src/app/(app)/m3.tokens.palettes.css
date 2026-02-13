@@ -140,15 +140,15 @@
   --m3v-green-surface-container-highest: #dfe8da;
   --m3v-green-outline: #717970;
   --m3v-green-outline-variant: #c0c9bd;
-  --m3v-green-primary: #2f5d2d;
+  --m3v-green-primary: #1f4a1f;
   --m3v-green-on-primary: #ffffff;
-  --m3v-green-primary-container: #c0efb0;
+  --m3v-green-primary-container: #aad79c;
   --m3v-green-on-primary-container: #012204;
-  --m3v-green-primary-override: #2f5d2d;
-  --m3v-green-chart-2: #4e7246;
-  --m3v-green-chart-3: #65715f;
-  --m3v-green-chart-4: #2f4f2d;
-  --m3v-green-chart-5: #7b8973;
+  --m3v-green-primary-override: #1f4a1f;
+  --m3v-green-chart-2: #3f653b;
+  --m3v-green-chart-3: #566752;
+  --m3v-green-chart-4: #204120;
+  --m3v-green-chart-5: #6a7a65;
 
   /* Variant: Green - dark */
   --m3v-green-surface-dark: #171d16;
@@ -159,9 +159,9 @@
   --m3v-green-surface-container-highest-dark: #363e35;
   --m3v-green-outline-dark: #8b9389;
   --m3v-green-outline-variant-dark: #42493f;
-  --m3v-green-primary-dark: #8fbe7e;
+  --m3v-green-primary-dark: #79a76a;
   --m3v-green-on-primary-dark: #0b2f0c;
-  --m3v-green-primary-container-dark: #21471f;
+  --m3v-green-primary-container-dark: #1a3a19;
 
   /* Variant: Blue - light */
   --m3v-blue-surface: #f7f9ff;
