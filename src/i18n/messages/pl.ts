@@ -223,7 +223,7 @@ export const plMessages = {
   "addScopeDialog.addScopeCount": "Dodaj obwód ({count} ćwiczeń x {repeat})",
   "addScopeDialog.title": "Dodaj obwód",
   "addScopeDialog.description":
-    "Wybierz wiele ćwiczeń do wykonania jedno po drugim, a następnie powtarzaj blok. Przykład: Ćwiczenie A -> B -> C, powtórzone 3 razy.",
+    "Wybierz wiele ćwiczeń do wykonania jedno po drugim, a następnie powtarzaj blok.",
   "addScopeDialog.section": "Sekcja",
   "addScopeDialog.repeatTimes": "Powtórz (razy)",
   "addScopeDialog.exercisesInScopeOrder": "Ćwiczenia w obwodzie (kolejność)",

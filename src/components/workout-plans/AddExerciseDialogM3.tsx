@@ -117,7 +117,7 @@ export function AddExerciseDialogM3({
           />
         </div>
 
-        <DialogFooter className="mt-2 shrink-0 pt-3">
+        <DialogFooter className="shrink-0">
           <Button
             type="button"
             variant="outline"

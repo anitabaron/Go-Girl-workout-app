@@ -150,8 +150,8 @@ export function AddScopeDialogM3({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-1">
+          <div className="flex items-end gap-2">
             <div className="min-w-0 flex-1 space-y-2">
               <label htmlFor="scope-section-type" className="text-sm">
                 {t("section")}
@@ -160,7 +160,10 @@ export function AddScopeDialogM3({
                 value={sectionType}
                 onValueChange={(v) => setSectionType(v as ExerciseType)}
               >
-                <SelectTrigger id="scope-section-type">
+                <SelectTrigger
+                  id="scope-section-type"
+                  className="w-full focus-visible:ring-inset"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -172,7 +175,7 @@ export function AddScopeDialogM3({
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full shrink-0 space-y-2 sm:w-24">
+            <div className="w-24 shrink-0 space-y-2">
               <label
                 htmlFor="scope-repeat-count"
                 className="text-sm whitespace-nowrap"
@@ -191,7 +194,7 @@ export function AddScopeDialogM3({
                     v === "" ? DEFAULT_REPEAT_COUNT : Number.parseInt(v, 10),
                   );
                 }}
-                className="w-full text-center tabular-nums"
+                className="w-full text-center tabular-nums focus-visible:ring-inset"
                 data-test-id="workout-plan-form-add-scope-repeat"
               />
             </div>
@@ -207,7 +210,7 @@ export function AddScopeDialogM3({
           </div>
         </div>
 
-        <DialogFooter className="mt-2 shrink-0 border-t border-[var(--m3-outline-variant)] pt-3">
+        <DialogFooter className="shrink-0">
           <Button
             type="button"
             variant="outline"

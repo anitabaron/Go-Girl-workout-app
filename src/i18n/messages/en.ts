@@ -230,7 +230,7 @@ export const enMessages = {
     "Add scope ({count} exercises x {repeat})",
   "addScopeDialog.title": "Add scope",
   "addScopeDialog.description":
-    "Choose multiple exercises to run one after another, then repeat the block. Example: Exercise A -> B -> C, repeated 3 times.",
+    "Choose multiple exercises to run one after another, then repeat the block.",
   "addScopeDialog.section": "Section",
   "addScopeDialog.repeatTimes": "Repeat (times)",
   "addScopeDialog.exercisesInScopeOrder": "Exercises in scope (order)",

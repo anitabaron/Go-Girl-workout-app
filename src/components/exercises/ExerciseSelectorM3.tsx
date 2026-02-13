@@ -128,7 +128,7 @@ export function ExerciseSelectorM3({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-2 xs:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-2 px-1 xs:grid-cols-2 lg:grid-cols-4">
         <Input
           placeholder={t("searchPlaceholder")}
           value={search}
@@ -139,7 +139,7 @@ export function ExerciseSelectorM3({
           value={currentExerciseId}
           onValueChange={(v) => setCurrentExerciseId(v === "all" ? "all" : v)}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full focus-visible:ring-inset">
             <SelectValue placeholder={t("exercisePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
@@ -155,7 +155,7 @@ export function ExerciseSelectorM3({
           value={part}
           onValueChange={(v) => setPart(v as ExercisePart | "all")}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full focus-visible:ring-inset">
             <SelectValue placeholder={t("bodyPartPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
@@ -171,7 +171,7 @@ export function ExerciseSelectorM3({
           value={type}
           onValueChange={(v) => setType(v as ExerciseType | "all")}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full focus-visible:ring-inset">
             <SelectValue placeholder={t("typePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
