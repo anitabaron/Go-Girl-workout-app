@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SetLogItemM3 } from "./SetLogItemM3";
 import type { SetLogFormData } from "@/types/workout-session-assistant";
+import { useTranslations } from "@/i18n/client";
 
 type SetLogsListM3Props = {
   sets: SetLogFormData[];
@@ -26,6 +27,8 @@ export function SetLogsListM3({
   showReps,
   isSkipped = false,
 }: Readonly<SetLogsListM3Props>) {
+  const t = useTranslations("assistantSetLog");
+
   return (
     <div
       className={`space-y-4 ${
@@ -35,7 +38,7 @@ export function SetLogsListM3({
       {sets.length === 0 ? (
         <div className="rounded-[var(--m3-radius-lg)] border border-dashed border-[var(--m3-outline-variant)] p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            No sets. Click &quot;Add set&quot; to add the first set.
+            {t("empty")}
           </p>
         </div>
       ) : (
@@ -61,10 +64,10 @@ export function SetLogsListM3({
           size="sm"
           onClick={onAdd}
           disabled={isSkipped}
-          aria-label="Add new set"
+          aria-label={t("addSetAria")}
         >
           <Plus className="size-4" />
-          <span className="ml-2">Add set</span>
+          <span className="ml-2">{t("addSet")}</span>
         </Button>
       </div>
     </div>

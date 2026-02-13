@@ -176,7 +176,7 @@ export function WorkoutPlanExerciseItemM3({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
           <div>
             <label
               htmlFor={`${exerciseTestId}-section-type`}
@@ -191,7 +191,7 @@ export function WorkoutPlanExerciseItemM3({
                   section_type: value as typeof exercise.section_type,
                 })
               }
-              disabled={disabled}
+              disabled={disabled || inScope}
             >
               <SelectTrigger
                 id={`${exerciseTestId}-section-type`}
@@ -207,7 +207,7 @@ export function WorkoutPlanExerciseItemM3({
                 ))}
               </SelectContent>
             </Select>
-            {exerciseErrors.section_type && (
+            {!inScope && exerciseErrors.section_type && (
               <p className="mt-1 text-xs text-destructive" role="alert">
                 {exerciseErrors.section_type}
               </p>

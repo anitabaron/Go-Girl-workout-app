@@ -4,11 +4,19 @@ import { useMemo } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { WorkoutPlanExerciseItemState } from "@/types/workout-plan-form";
 import { WorkoutPlanExerciseItemM3 } from "./WorkoutPlanExerciseItemM3";
 import { useTranslations } from "@/i18n/client";
 import { formatTotalDuration } from "@/lib/utils/time-format";
 import { calculateScopeEstimatedTimeSeconds } from "@/lib/workout-plans/estimated-time";
+import { exerciseTypeValues } from "@/lib/validation/exercises";
 
 const SECTION_TYPE_ORDER: Record<string, number> = {
   "Warm-up": 1,
@@ -96,7 +104,14 @@ export function WorkoutPlansExercisesListM3({
   disabled,
 }: Readonly<WorkoutPlansExercisesListM3Props>) {
   const t = useTranslations("workoutPlansExercisesList");
+  const tItem = useTranslations("workoutPlanExerciseItem");
   const slots = useMemo(() => buildSlots(exercises), [exercises]);
+  const getTypeLabel = (value: string) => {
+    if (value === "Warm-up") return tItem("typeOption.warmup");
+    if (value === "Main Workout") return tItem("typeOption.mainworkout");
+    if (value === "Cool-down") return tItem("typeOption.cooldown");
+    return value;
+  };
 
   if (exercises.length === 0) return null;
 
@@ -137,100 +152,249 @@ export function WorkoutPlansExercisesListM3({
           <div
             key={`scope-${slot.scopeId}`}
             className="rounded-xl border-2 border-[var(--m3-outline-variant)] bg-[var(--m3-raw-primary-container)] p-4"
+            data-test-id={`workout-plan-scope-${slot.scopeId}`}
           >
-            <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-[var(--m3-outline-variant)] pb-2">
-              <span className="m3-title text-[var(--m3-on-surface-variant)]">
-                {t("scope")} ×
-              </span>
-              <Input
-                type="number"
-                min={1}
-                value={slot.repeatCount}
-                onChange={(e) => {
-                  const v = Number.parseInt(e.target.value, 10);
-                  if (!Number.isNaN(v) && v >= 1) {
-                    for (const { originalIndex } of slot.items) {
-                      onUpdateExercise(originalIndex, {
-                        scope_repeat_count: v,
-                      });
-                    }
-                  }
-                }}
-                disabled={disabled}
-                className="h-9 w-14 text-center text-sm font-medium"
-                aria-label={t("scopeRepeatAria")}
-                data-test-id={`scope-${slot.scopeId}-repeat-count`}
-              />
-              {scopeEstimatedTime != null && (
-                <span className="text-sm font-medium text-[var(--m3-on-surface-variant)]">
-                  • {t("estimatedScopeTimeLabel")}: ~
-                  {formatTotalDuration(scopeEstimatedTime)}
-                </span>
-              )}
-              <span className="text-sm text-muted-foreground">
-                {t("count")
-                  .replace("{count}", String(slot.items.length))
-                  .replace(
-                    "{label}",
-                    slot.items.length === 1
-                      ? t("exerciseSingular")
-                      : t("exercisePlural"),
-                  )}
-              </span>
-              <div className="ml-auto flex items-center gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
-                  {t("orderInSection")}
-                </span>
-                {onUpdateScopeSectionOrder ? (
+            <div className="mb-3 border-b border-[var(--m3-outline-variant)] pb-2">
+              <div className="hidden items-center justify-between gap-3 lg:flex">
+                <div className="min-w-0 flex items-center gap-2">
+                  <span className="m3-title whitespace-nowrap text-[var(--m3-on-surface-variant)]">
+                    {t("scope")} ×
+                  </span>
                   <Input
                     type="number"
                     min={1}
-                    value={slot.items[0]?.exercise.section_order ?? 1}
+                    value={slot.repeatCount}
                     onChange={(e) => {
                       const v = Number.parseInt(e.target.value, 10);
                       if (!Number.isNaN(v) && v >= 1) {
-                        onUpdateScopeSectionOrder(
-                          slot.items.map((i) => i.originalIndex),
-                          v,
-                        );
+                        for (const { originalIndex } of slot.items) {
+                          onUpdateExercise(originalIndex, {
+                            scope_repeat_count: v,
+                          });
+                        }
                       }
                     }}
                     disabled={disabled}
-                    className="h-9 w-14 text-center text-sm font-medium"
-                    aria-label={t("orderInSection")}
+                    className="h-9 w-14 py-0 text-center text-sm leading-none font-medium"
+                    aria-label={t("scopeRepeatAria")}
+                    data-test-id={`scope-${slot.scopeId}-repeat-count`}
                   />
-                ) : (
-                  <div className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium">
-                    {slot.items[0]?.exercise.section_order ?? 1}
+                  <Select
+                    value={slot.items[0]?.exercise.section_type ?? "Main Workout"}
+                    onValueChange={(value) => {
+                      for (const { originalIndex } of slot.items) {
+                        onUpdateExercise(originalIndex, {
+                          section_type:
+                            value as WorkoutPlanExerciseItemState["section_type"],
+                        });
+                      }
+                    }}
+                    disabled={disabled}
+                  >
+                    <SelectTrigger
+                      className="h-8 w-[220px] text-sm"
+                      data-test-id={`workout-plan-scope-${slot.scopeId}-section-type-desktop`}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {exerciseTypeValues.map((typeValue) => (
+                        <SelectItem key={typeValue} value={typeValue}>
+                          {getTypeLabel(typeValue)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {scopeEstimatedTime != null && (
+                    <span className="truncate text-xs font-medium text-[var(--m3-on-surface-variant)] lg:text-sm">
+                      • ~{formatTotalDuration(scopeEstimatedTime)}
+                    </span>
+                  )}
+                  <span className="hidden whitespace-nowrap text-sm text-muted-foreground 2xl:block">
+                    {t("count")
+                      .replace("{count}", String(slot.items.length))
+                      .replace(
+                        "{label}",
+                        slot.items.length === 1
+                          ? t("exerciseSingular")
+                          : t("exercisePlural"),
+                      )}
+                  </span>
+                </div>
+                <div className="shrink-0 flex items-center gap-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {t("orderInSection")}
+                  </span>
+                  {onUpdateScopeSectionOrder ? (
+                    <Input
+                      type="number"
+                      min={1}
+                      value={slot.items[0]?.exercise.section_order ?? 1}
+                      onChange={(e) => {
+                        const v = Number.parseInt(e.target.value, 10);
+                        if (!Number.isNaN(v) && v >= 1) {
+                          onUpdateScopeSectionOrder(
+                            slot.items.map((i) => i.originalIndex),
+                            v,
+                          );
+                        }
+                      }}
+                      disabled={disabled}
+                      className="h-9 w-14 text-center text-sm font-medium"
+                      aria-label={t("orderInSection")}
+                      data-test-id={`workout-plan-scope-${slot.scopeId}-section-order-desktop`}
+                    />
+                  ) : (
+                    <div className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium">
+                      {slot.items[0]?.exercise.section_order ?? 1}
+                    </div>
+                  )}
+                  <div className="flex gap-0.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() =>
+                        onMoveExercise(slot.items[0].originalIndex, "up")
+                      }
+                      disabled={disabled || slotIndex === 0}
+                      className="h-8 w-8 shrink-0"
+                      aria-label={t("moveScopeUp")}
+                    >
+                      <ChevronUp className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() =>
+                        onMoveExercise(slot.items[0].originalIndex, "down")
+                      }
+                      disabled={disabled || slotIndex === slots.length - 1}
+                      className="h-8 w-8 shrink-0"
+                      aria-label={t("moveScopeDown")}
+                    >
+                      <ChevronDown className="size-4" />
+                    </Button>
                   </div>
-                )}
-                <div className="flex gap-0.5">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() =>
-                      onMoveExercise(slot.items[0].originalIndex, "up")
-                    }
-                    disabled={disabled || slotIndex === 0}
-                    className="h-8 w-8 shrink-0"
-                    aria-label={t("moveScopeUp")}
+                </div>
+              </div>
+              <div className="space-y-2 lg:hidden">
+                <div className="grid grid-cols-[auto_3.5rem_minmax(0,1fr)] items-center gap-2">
+                  <span className="m3-title whitespace-nowrap text-[var(--m3-on-surface-variant)]">
+                    {t("scope")} ×
+                  </span>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={slot.repeatCount}
+                    onChange={(e) => {
+                      const v = Number.parseInt(e.target.value, 10);
+                      if (!Number.isNaN(v) && v >= 1) {
+                        for (const { originalIndex } of slot.items) {
+                          onUpdateExercise(originalIndex, {
+                            scope_repeat_count: v,
+                          });
+                        }
+                      }
+                    }}
+                    disabled={disabled}
+                    className="h-9 w-14 py-0 text-center text-sm leading-none font-medium"
+                    aria-label={t("scopeRepeatAria")}
+                    data-test-id={`scope-${slot.scopeId}-repeat-count`}
+                  />
+                  <Select
+                    value={slot.items[0]?.exercise.section_type ?? "Main Workout"}
+                    onValueChange={(value) => {
+                      for (const { originalIndex } of slot.items) {
+                        onUpdateExercise(originalIndex, {
+                          section_type:
+                            value as WorkoutPlanExerciseItemState["section_type"],
+                        });
+                      }
+                    }}
+                    disabled={disabled}
                   >
-                    <ChevronUp className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() =>
-                      onMoveExercise(slot.items[0].originalIndex, "down")
-                    }
-                    disabled={disabled || slotIndex === slots.length - 1}
-                    className="h-8 w-8 shrink-0"
-                    aria-label={t("moveScopeDown")}
-                  >
-                    <ChevronDown className="size-4" />
-                  </Button>
+                    <SelectTrigger
+                      className="h-8 w-full min-w-0 text-sm sm:w-[150px]"
+                      data-test-id={`workout-plan-scope-${slot.scopeId}-section-type-mobile`}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {exerciseTypeValues.map((typeValue) => (
+                        <SelectItem key={typeValue} value={typeValue}>
+                          {getTypeLabel(typeValue)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  {scopeEstimatedTime != null ? (
+                    <span className="whitespace-nowrap text-xs font-medium text-[var(--m3-on-surface-variant)]">
+                      • ~{formatTotalDuration(scopeEstimatedTime)}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <div className="shrink-0 flex items-center gap-1.5">
+                    <span className="hidden whitespace-nowrap text-xs font-medium text-muted-foreground min-[400px]:inline">
+                      {t("orderInSection")}
+                    </span>
+                    {onUpdateScopeSectionOrder ? (
+                      <Input
+                        type="number"
+                        min={1}
+                        value={slot.items[0]?.exercise.section_order ?? 1}
+                        onChange={(e) => {
+                          const v = Number.parseInt(e.target.value, 10);
+                          if (!Number.isNaN(v) && v >= 1) {
+                            onUpdateScopeSectionOrder(
+                              slot.items.map((i) => i.originalIndex),
+                              v,
+                            );
+                          }
+                        }}
+                        disabled={disabled}
+                        className="h-9 w-14 text-center text-sm font-medium"
+                        aria-label={t("orderInSection")}
+                        data-test-id={`workout-plan-scope-${slot.scopeId}-section-order-mobile`}
+                      />
+                    ) : (
+                      <div className="flex h-9 w-12 items-center justify-center rounded-md border border-input bg-background text-sm font-medium">
+                        {slot.items[0]?.exercise.section_order ?? 1}
+                      </div>
+                    )}
+                    <div className="flex gap-0.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          onMoveExercise(slot.items[0].originalIndex, "up")
+                        }
+                        disabled={disabled || slotIndex === 0}
+                        className="h-8 w-8 shrink-0"
+                        aria-label={t("moveScopeUp")}
+                      >
+                        <ChevronUp className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          onMoveExercise(slot.items[0].originalIndex, "down")
+                        }
+                        disabled={disabled || slotIndex === slots.length - 1}
+                        className="h-8 w-8 shrink-0"
+                        aria-label={t("moveScopeDown")}
+                      >
+                        <ChevronDown className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
