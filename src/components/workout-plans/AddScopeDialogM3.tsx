@@ -151,8 +151,8 @@ export function AddScopeDialogM3({
         </DialogHeader>
 
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-1">
-          <div className="flex items-end gap-2">
-            <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-end gap-2 xl:hidden">
+            <div className="min-w-0 flex-1 space-y-2 md:w-[420px] md:flex-none">
               <label htmlFor="scope-section-type" className="text-sm">
                 {t("section")}
               </label>
@@ -162,7 +162,8 @@ export function AddScopeDialogM3({
               >
                 <SelectTrigger
                   id="scope-section-type"
-                  className="w-full focus-visible:ring-inset"
+                  size="sm"
+                  className="h-8 w-full text-sm focus-visible:ring-inset"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -194,7 +195,7 @@ export function AddScopeDialogM3({
                     v === "" ? DEFAULT_REPEAT_COUNT : Number.parseInt(v, 10),
                   );
                 }}
-                className="w-full text-center tabular-nums focus-visible:ring-inset"
+                className="h-8 w-full text-center text-sm tabular-nums focus-visible:ring-inset"
                 data-test-id="workout-plan-form-add-scope-repeat"
               />
             </div>
@@ -206,6 +207,59 @@ export function AddScopeDialogM3({
               selectedExerciseIds={selectedExerciseIds}
               onToggleExercise={handleToggleExercise}
               excludedExerciseIds={existingExerciseIds}
+              desktopLeadingFilters={
+                <div className="grid grid-cols-[1fr_auto] items-end gap-2">
+                  <div className="min-w-0 space-y-1">
+                    <label
+                      htmlFor="scope-section-type-desktop"
+                      className="text-sm xl:sr-only"
+                    >
+                      {t("section")}
+                    </label>
+                    <Select
+                      value={sectionType}
+                      onValueChange={(v) => setSectionType(v as ExerciseType)}
+                    >
+                      <SelectTrigger
+                        id="scope-section-type-desktop"
+                        size="sm"
+                        className="h-8 w-full text-sm focus-visible:ring-inset"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SECTION_TYPES.map(({ value, key }) => (
+                          <SelectItem key={value} value={value}>
+                            {t(`typeOption.${key}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-24 shrink-0 space-y-1">
+                    <label
+                      htmlFor="scope-repeat-count-desktop"
+                      className="text-sm whitespace-nowrap xl:sr-only"
+                    >
+                      {t("repeatTimes")}
+                    </label>
+                    <Input
+                      id="scope-repeat-count-desktop"
+                      type="number"
+                      min={1}
+                      max={9}
+                      value={repeatCount}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setRepeatCount(
+                          v === "" ? DEFAULT_REPEAT_COUNT : Number.parseInt(v, 10),
+                        );
+                      }}
+                      className="h-8 w-full text-center text-sm tabular-nums focus-visible:ring-inset"
+                    />
+                  </div>
+                </div>
+              }
             />
           </div>
         </div>

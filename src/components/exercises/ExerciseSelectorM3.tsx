@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { type ReactNode, useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, SlidersHorizontal } from "lucide-react";
 import type { ExerciseDTO, ExercisePart, ExerciseType } from "@/types";
 import {
   exercisePartValues,
@@ -21,17 +21,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
 import { formatDuration } from "@/lib/utils/time-format";
 import { useTranslations } from "@/i18n/client";
+import { Button } from "@/components/ui/button";
 
 type ExerciseSelectorM3Props = {
   selectedExerciseIds: string[];
   onToggleExercise: (exercise: ExerciseDTO) => void;
   excludedExerciseIds?: string[];
+  desktopLeadingFilters?: ReactNode;
 };
 
 export function ExerciseSelectorM3({
   selectedExerciseIds,
   onToggleExercise,
   excludedExerciseIds = [],
+  desktopLeadingFilters,
 }: Readonly<ExerciseSelectorM3Props>) {
   const t = useTranslations("exerciseSelector");
   const [search, setSearch] = useState("");
@@ -42,6 +45,7 @@ export function ExerciseSelectorM3({
   const [allExercises, setAllExercises] = useState<
     { id: string; title: string }[]
   >([]);
+  const [filtersOpenMobile, setFiltersOpenMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -108,6 +112,10 @@ export function ExerciseSelectorM3({
   const emptyMessage = hasFilters
     ? t("emptyFiltered")
     : t("emptyBase");
+  const selectedExerciseTitle =
+    currentExerciseId === "all"
+      ? null
+      : allExercises.find((ex) => ex.id === currentExerciseId)?.title ?? null;
 
   const getPartLabel = (value: string) => {
     if (value === "Legs") return t("partOption.legs");
@@ -128,18 +136,119 @@ export function ExerciseSelectorM3({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-2 px-1 xs:grid-cols-2 lg:grid-cols-4">
+      <div className="space-y-2 px-1 md:hidden">
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder={t("searchPlaceholder")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 w-full text-sm"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={() => setFiltersOpenMobile((prev) => !prev)}
+          >
+            <SlidersHorizontal className="mr-1 size-4" />
+            {t("filtersButton")}
+            {filtersOpenMobile ? (
+              <ChevronUp className="ml-1 size-4" />
+            ) : (
+              <ChevronDown className="ml-1 size-4" />
+            )}
+          </Button>
+        </div>
+        {filtersOpenMobile && (
+          <div className="grid grid-cols-1 gap-2 xs:grid-cols-2">
+            <Select
+              value={currentExerciseId}
+              onValueChange={(v) =>
+                setCurrentExerciseId(v === "all" ? "all" : v)
+              }
+            >
+              <SelectTrigger
+                size="sm"
+                className="w-full text-sm focus-visible:ring-inset"
+              >
+                <SelectValue placeholder={t("exercisePlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allExercises")}</SelectItem>
+                {allExercises.map((ex) => (
+                  <SelectItem key={ex.id} value={ex.id}>
+                    {ex.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={part}
+              onValueChange={(v) => setPart(v as ExercisePart | "all")}
+            >
+              <SelectTrigger
+                size="sm"
+                className="w-full text-sm focus-visible:ring-inset"
+              >
+                <SelectValue placeholder={t("bodyPartPlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allParts")}</SelectItem>
+                {exercisePartValues.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {getPartLabel(p)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={type}
+              onValueChange={(v) => setType(v as ExerciseType | "all")}
+            >
+              <SelectTrigger
+                size="sm"
+                className="w-full text-sm focus-visible:ring-inset"
+              >
+                <SelectValue placeholder={t("typePlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allTypes")}</SelectItem>
+                {exerciseTypeValues.map((typeValue) => (
+                  <SelectItem key={typeValue} value={typeValue}>
+                    {getTypeLabel(typeValue)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+
+      <div
+        className={`hidden grid-cols-1 gap-2 px-1 xs:grid-cols-2 md:grid ${
+          desktopLeadingFilters ? "md:grid-cols-4 xl:grid-cols-6" : "md:grid-cols-4"
+        }`}
+      >
+        {desktopLeadingFilters && (
+          <div className="hidden xl:block xl:col-span-2">
+            {desktopLeadingFilters}
+          </div>
+        )}
         <Input
           placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full xs:col-span-2 lg:col-span-1"
+          className="h-8 w-full text-sm xs:col-span-2 md:col-span-1"
         />
         <Select
           value={currentExerciseId}
           onValueChange={(v) => setCurrentExerciseId(v === "all" ? "all" : v)}
         >
-          <SelectTrigger className="w-full focus-visible:ring-inset">
+          <SelectTrigger
+            size="sm"
+            className="w-full text-sm focus-visible:ring-inset"
+          >
             <SelectValue placeholder={t("exercisePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
@@ -155,7 +264,10 @@ export function ExerciseSelectorM3({
           value={part}
           onValueChange={(v) => setPart(v as ExercisePart | "all")}
         >
-          <SelectTrigger className="w-full focus-visible:ring-inset">
+          <SelectTrigger
+            size="sm"
+            className="w-full text-sm focus-visible:ring-inset"
+          >
             <SelectValue placeholder={t("bodyPartPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
@@ -171,7 +283,10 @@ export function ExerciseSelectorM3({
           value={type}
           onValueChange={(v) => setType(v as ExerciseType | "all")}
         >
-          <SelectTrigger className="w-full focus-visible:ring-inset">
+          <SelectTrigger
+            size="sm"
+            className="w-full text-sm focus-visible:ring-inset"
+          >
             <SelectValue placeholder={t("typePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
@@ -184,6 +299,58 @@ export function ExerciseSelectorM3({
           </SelectContent>
         </Select>
       </div>
+
+      {hasFilters && (
+        <div className="flex flex-wrap items-center gap-2 px-1">
+          {selectedExerciseTitle && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              onClick={() => setCurrentExerciseId("all")}
+            >
+              {t("exerciseFilterChip").replace("{value}", selectedExerciseTitle)}
+            </Button>
+          )}
+          {part !== "all" && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              onClick={() => setPart("all")}
+            >
+              {t("partFilterChip").replace("{value}", getPartLabel(part))}
+            </Button>
+          )}
+          {type !== "all" && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              onClick={() => setType("all")}
+            >
+              {t("typeFilterChip").replace("{value}", getTypeLabel(type))}
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs"
+            onClick={() => {
+              setCurrentExerciseId("all");
+              setPart("all");
+              setType("all");
+              setSearch("");
+            }}
+          >
+            {t("clearFilters")}
+          </Button>
+        </div>
+      )}
 
       <div className="h-[min(42vh,360px)] overflow-y-auto pr-1 sm:h-[min(46vh,400px)] lg:h-[420px]">
         {isLoading && (
@@ -202,7 +369,7 @@ export function ExerciseSelectorM3({
           </div>
         )}
         {!isLoading && !error && exercises.length > 0 && (
-        <div className="grid grid-cols-1 gap-2 px-1 py-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 px-1 py-2 md:grid-cols-3">
           {exercises.map((exercise) => {
             const selected = isSelected(exercise.id);
             return (

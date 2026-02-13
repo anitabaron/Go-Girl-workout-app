@@ -67,6 +67,7 @@ function PlannedParamField({
   "data-test-id": dataTestId,
   suggestedValue,
   useEstimatedLabel,
+  fixedLabelRowHeight = false,
 }: {
   id: string;
   label: string;
@@ -80,6 +81,7 @@ function PlannedParamField({
   /** Gdy liczba – pokazuje przycisk strzałki w dół do wklejenia tej wartości w pole. */
   suggestedValue?: number | null;
   useEstimatedLabel: string;
+  fixedLabelRowHeight?: boolean;
 }) {
   const errorId = useId();
   const canApplySuggested =
@@ -103,7 +105,7 @@ function PlannedParamField({
 
   return (
     <div>
-      <div className="flex items-center gap-1">
+      <div className={`flex items-center gap-1 ${fixedLabelRowHeight ? "min-h-12 sm:min-h-8" : ""}`}>
         <label
           htmlFor={id}
           className="block text-xs font-medium text-muted-foreground"
@@ -216,6 +218,10 @@ export function PlannedParamsEditorM3({
           })
         : undefined;
 
+    const fixedLabelRowHeight =
+      config.key === "planned_rest_after_series_seconds" ||
+      config.key === "estimated_set_time_seconds";
+
     return (
       <PlannedParamField
         key={config.key}
@@ -229,16 +235,17 @@ export function PlannedParamsEditorM3({
         data-test-id={dataTestId}
         suggestedValue={suggestedValue}
         useEstimatedLabel={t("useEstimated")}
+        fixedLabelRowHeight={fixedLabelRowHeight}
       />
     );
   };
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-3">
         {firstRowFields.map(renderField)}
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-2">
         {secondRowFields.map(renderField)}
       </div>
     </div>
