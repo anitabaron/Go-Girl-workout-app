@@ -675,6 +675,11 @@ export const plMessages = {
   "workoutSessionDetailContent.sessionInfoTitle": "Informacje o sesji",
   "workoutSessionDetailContent.cancelEditAria": "Anuluj edycję",
   "workoutSessionDetailContent.cancelEdit": "Anuluj edycję",
+  "workoutSessionDetailContent.exportSessionAria":
+    "Eksportuj sesję treningową do JSON",
+  "workoutSessionDetailContent.exportJson": "Eksportuj JSON",
+  "workoutSessionDetailContent.exportSuccess":
+    "Sesja treningowa została wyeksportowana do JSON",
   "workoutSessionDetailContent.editSessionAria": "Edytuj sesję",
   "workoutSessionDetailContent.editSession": "Edytuj sesję",
   "workoutSessionDetailContent.inProgress": "W trakcie",

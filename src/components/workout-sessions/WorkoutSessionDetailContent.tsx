@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Play, Pencil, X } from "lucide-react";
+import { Download, Play, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { SessionDetailDTO, SessionSummaryDTO } from "@/types";
 import { formatDateTime } from "@/lib/utils/date-format";
+import { workoutSessionToExportFormat } from "@/lib/workout-sessions/session-to-export-format";
 import {
   getExerciseCount,
   getExerciseCountText,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/utils/session-format";
 import { WorkoutSessionExercisesListM3 } from "./WorkoutSessionExercisesListM3";
 import { useTranslations } from "@/i18n/client";
+import { toast } from "sonner";
 
 type WorkoutSessionDetailContentProps = {
   readonly session: SessionDetailDTO;
@@ -75,6 +77,26 @@ export function WorkoutSessionDetailContent({
     router.replace(`/workout-sessions/${session.id}`, { scroll: false });
   };
 
+  const handleExportJson = () => {
+    const payload = workoutSessionToExportFormat(session);
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const baseName =
+      session.plan_name_at_time?.replaceAll(/[^\p{L}\p{N}\s-]/gu, "").trim() ||
+      "workout-session";
+    const datePart = session.started_at.slice(0, 10);
+
+    a.href = url;
+    a.download = `${baseName}-${datePart}-${session.id.slice(0, 8)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success(t("exportSuccess"));
+  };
+
   return (
     <div className="space-y-8">
       <Card data-test-id="workout-session-details-metadata">
@@ -91,6 +113,17 @@ export function WorkoutSessionDetailContent({
                 >
                   <X className="mr-2 size-4" />
                   {t("cancelEdit")}
+                </Button>
+              )}
+              {isCompleted && !isEditMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportJson}
+                  aria-label={t("exportSessionAria")}
+                >
+                  <Download className="mr-2 size-4" />
+                  {t("exportJson")}
                 </Button>
               )}
               {isCompleted && !isEditMode && (

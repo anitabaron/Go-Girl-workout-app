@@ -674,6 +674,11 @@ export const enMessages = {
   "workoutSessionDetailContent.sessionInfoTitle": "Session info",
   "workoutSessionDetailContent.cancelEditAria": "Cancel edit",
   "workoutSessionDetailContent.cancelEdit": "Cancel edit",
+  "workoutSessionDetailContent.exportSessionAria":
+    "Export workout session to JSON",
+  "workoutSessionDetailContent.exportJson": "Export JSON",
+  "workoutSessionDetailContent.exportSuccess":
+    "Workout session exported to JSON",
   "workoutSessionDetailContent.editSessionAria": "Edit session",
   "workoutSessionDetailContent.editSession": "Edit session",
   "workoutSessionDetailContent.inProgress": "In progress",
