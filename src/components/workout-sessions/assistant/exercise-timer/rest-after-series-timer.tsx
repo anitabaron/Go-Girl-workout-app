@@ -3,6 +3,7 @@
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { RestAfterSeriesTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 import { useTimerPalette } from "../use-timer-palette";
 
 /**
@@ -48,7 +49,7 @@ export function RestAfterSeriesTimer({
         {({ remainingTime }) => (
           <div className="flex flex-col items-center">
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
-              {remainingTime}
+              {formatCompactSeconds(remainingTime)}
             </div>
             <div className="text-sm text-zinc-600 dark:text-zinc-400">
               sekund przerwy
