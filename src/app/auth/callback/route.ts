@@ -20,8 +20,21 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const type = requestUrl.searchParams.get("type");
   const code = requestUrl.searchParams.get("code");
+  const tokenHash =
+    requestUrl.searchParams.get("token_hash") ?? requestUrl.searchParams.get("token");
 
   const supabase = await createClient();
+
+  const redirectToRecoveryConfirm = () =>
+    NextResponse.redirect(new URL("/reset-password/confirm", requestUrl.origin));
+
+  const redirectToRecoveryInvalid = () =>
+    NextResponse.redirect(
+      new URL("/reset-password?error=invalid_token", requestUrl.origin)
+    );
+
+  const redirectToLoginConfirmed = () =>
+    NextResponse.redirect(new URL("/login?confirmed=true", requestUrl.origin));
 
   // Obsługa parametru `code` - wymiana kodu na sesję
   if (code) {
@@ -33,53 +46,47 @@ export async function GET(request: Request) {
 
       if (error || !session) {
         // Kod nieprawidłowy/wygasły
-        return NextResponse.redirect(
-          new URL("/reset-password?error=invalid_token", requestUrl.origin)
-        );
+        return redirectToRecoveryInvalid();
       }
 
       // Po wymianie kodu, przekieruj w zależności od typu
       if (type === "recovery") {
-        return NextResponse.redirect(
-          new URL("/reset-password/confirm", requestUrl.origin)
-        );
+        return redirectToRecoveryConfirm();
       }
 
       // Domyślnie: potwierdzenie emaila
-      return NextResponse.redirect(
-        new URL("/login?confirmed=true", requestUrl.origin)
-      );
+      return redirectToLoginConfirmed();
     } catch (error) {
       console.error("Error exchanging code for session:", error);
-      return NextResponse.redirect(
-        new URL("/reset-password?error=invalid_token", requestUrl.origin)
-      );
+      return redirectToRecoveryInvalid();
     }
   }
 
-  // Obsługa hash fragmentu - Supabase automatycznie przetwarza hash fragment i ustawia sesję
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
+  // Obsługa linków opartych o token_hash/token (fallback dla różnych formatów linków)
+  if (type && tokenHash) {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        type: type as "recovery" | "signup" | "invite" | "email_change" | "magiclink",
+        token_hash: tokenHash,
+      });
 
-  if (error || !session) {
-    // Token nieprawidłowy/wygasły
-    return NextResponse.redirect(
-      new URL("/login?error=invalid_token", requestUrl.origin)
-    );
+      if (error) {
+        console.error("Error verifying auth token:", error);
+        return type === "recovery" ? redirectToRecoveryInvalid() : redirectToLoginConfirmed();
+      }
+
+      return type === "recovery" ? redirectToRecoveryConfirm() : redirectToLoginConfirmed();
+    } catch (error) {
+      console.error("Error verifying auth token:", error);
+      return type === "recovery" ? redirectToRecoveryInvalid() : redirectToLoginConfirmed();
+    }
   }
 
-  // Przekierowanie w zależności od typu callbacku
+  // Fallback bez `code`/`token_hash`: nie sprawdzamy sesji po stronie serwera, bo fragment URL
+  // (#access_token=...) nie jest wysyłany do route handlera. Kierujemy użytkownika dalej.
   if (type === "recovery") {
-    // Reset hasła - przekierowanie do strony potwierdzenia resetu hasła
-    return NextResponse.redirect(
-      new URL("/reset-password/confirm", requestUrl.origin)
-    );
+    return redirectToRecoveryConfirm();
   }
 
-  // Domyślnie: potwierdzenie emaila po rejestracji
-  return NextResponse.redirect(
-    new URL("/login?confirmed=true", requestUrl.origin)
-  );
+  return redirectToLoginConfirmed();
 }

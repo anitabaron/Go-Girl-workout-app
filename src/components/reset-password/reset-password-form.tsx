@@ -11,10 +11,13 @@ export function ResetPasswordForm() {
     email,
     errors,
     isLoading,
+    cooldownRemaining,
     handleChange,
     handleBlur,
     handleSubmit,
   } = useResetPasswordForm();
+
+  const isCooldownActive = cooldownRemaining > 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -28,7 +31,11 @@ export function ResetPasswordForm() {
         disabled={isLoading}
       />
 
-      <ResetPasswordButton isLoading={isLoading} disabled={isLoading} />
+      <ResetPasswordButton
+        isLoading={isLoading}
+        disabled={isLoading || isCooldownActive}
+        cooldownRemaining={cooldownRemaining}
+      />
 
       <div className="pt-2">
         <BackToLoginLink />
