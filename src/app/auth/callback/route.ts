@@ -1,4 +1,5 @@
 import { createClient } from "@/db/supabase.server";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 /**
@@ -22,19 +23,37 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const tokenHash =
     requestUrl.searchParams.get("token_hash") ?? requestUrl.searchParams.get("token");
+  const nextParam = requestUrl.searchParams.get("next");
+  const nextPath =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : null;
+  const isRecoveryFlow = type === "recovery" || nextPath?.startsWith("/reset-password") === true;
 
   const supabase = await createClient();
+  const cookieStore = await cookies();
+
+  const redirectWithCookies = (path: string) => {
+    const response = NextResponse.redirect(new URL(path, requestUrl.origin));
+
+    // Ensure cookies set during PKCE/code exchange are preserved on the final redirect.
+    for (const cookie of cookieStore.getAll()) {
+      response.cookies.set(cookie);
+    }
+
+    return response;
+  };
 
   const redirectToRecoveryConfirm = () =>
-    NextResponse.redirect(new URL("/reset-password/confirm", requestUrl.origin));
+    redirectWithCookies(nextPath ?? "/reset-password/confirm");
 
   const redirectToRecoveryInvalid = () =>
-    NextResponse.redirect(
-      new URL("/reset-password?error=invalid_token", requestUrl.origin)
-    );
+    redirectWithCookies("/reset-password?error=invalid_token");
 
   const redirectToLoginConfirmed = () =>
-    NextResponse.redirect(new URL("/login?confirmed=true", requestUrl.origin));
+    redirectWithCookies("/login?confirmed=true");
+
+  const redirectToLoginInvalid = () => redirectWithCookies("/login?error=invalid_token");
 
   // Obsługa parametru `code` - wymiana kodu na sesję
   if (code) {
@@ -46,11 +65,11 @@ export async function GET(request: Request) {
 
       if (error || !session) {
         // Kod nieprawidłowy/wygasły
-        return redirectToRecoveryInvalid();
+        return isRecoveryFlow ? redirectToRecoveryInvalid() : redirectToLoginInvalid();
       }
 
       // Po wymianie kodu, przekieruj w zależności od typu
-      if (type === "recovery") {
+      if (isRecoveryFlow) {
         return redirectToRecoveryConfirm();
       }
 
@@ -58,7 +77,7 @@ export async function GET(request: Request) {
       return redirectToLoginConfirmed();
     } catch (error) {
       console.error("Error exchanging code for session:", error);
-      return redirectToRecoveryInvalid();
+      return isRecoveryFlow ? redirectToRecoveryInvalid() : redirectToLoginInvalid();
     }
   }
 
@@ -72,19 +91,19 @@ export async function GET(request: Request) {
 
       if (error) {
         console.error("Error verifying auth token:", error);
-        return type === "recovery" ? redirectToRecoveryInvalid() : redirectToLoginConfirmed();
+        return isRecoveryFlow ? redirectToRecoveryInvalid() : redirectToLoginInvalid();
       }
 
-      return type === "recovery" ? redirectToRecoveryConfirm() : redirectToLoginConfirmed();
+      return isRecoveryFlow ? redirectToRecoveryConfirm() : redirectToLoginConfirmed();
     } catch (error) {
       console.error("Error verifying auth token:", error);
-      return type === "recovery" ? redirectToRecoveryInvalid() : redirectToLoginConfirmed();
+      return isRecoveryFlow ? redirectToRecoveryInvalid() : redirectToLoginInvalid();
     }
   }
 
   // Fallback bez `code`/`token_hash`: nie sprawdzamy sesji po stronie serwera, bo fragment URL
   // (#access_token=...) nie jest wysyłany do route handlera. Kierujemy użytkownika dalej.
-  if (type === "recovery") {
+  if (isRecoveryFlow) {
     return redirectToRecoveryConfirm();
   }
 

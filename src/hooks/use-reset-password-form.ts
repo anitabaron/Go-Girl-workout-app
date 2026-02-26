@@ -118,10 +118,16 @@ export function useResetPasswordForm() {
 
     try {
       const callbackPath = basePath ? `${basePath}/auth/callback` : "/auth/callback";
+      const nextPath = basePath
+        ? `${basePath}/reset-password/confirm`
+        : "/reset-password/confirm";
+      const redirectUrl = new URL(callbackPath, globalThis.location.origin);
+      redirectUrl.searchParams.set("next", nextPath);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         // Route through auth callback so PKCE/code links are exchanged for a session
-        // before rendering the password change form.
-        redirectTo: `${globalThis.location.origin}${callbackPath}`,
+        // before rendering the password change form. Include `next` because Supabase
+        // may omit `type=recovery` on the callback redirect.
+        redirectTo: redirectUrl.toString(),
       });
 
       if (error) {
