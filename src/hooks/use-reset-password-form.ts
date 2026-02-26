@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/db/supabase.client";
@@ -29,23 +29,11 @@ export type ResetPasswordFormErrors = {
  * Custom hook zarządzający stanem i logiką formularza resetu hasła.
  */
 export function useResetPasswordForm() {
-  const RESEND_COOLDOWN_SECONDS = 60;
   const { basePath } = useAuthRedirect();
   const [email, setEmail] = useState<string>("");
   const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-  const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
-
-  useEffect(() => {
-    if (cooldownRemaining <= 0) return;
-
-    const timer = globalThis.setInterval(() => {
-      setCooldownRemaining((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-
-    return () => globalThis.clearInterval(timer);
-  }, [cooldownRemaining]);
 
   /**
    * Walidacja pojedynczego pola.
@@ -116,7 +104,7 @@ export function useResetPasswordForm() {
   ): Promise<void> => {
     e.preventDefault();
 
-    if (isLoading || cooldownRemaining > 0) {
+    if (isLoading || isSubmitted) {
       return;
     }
 
@@ -162,7 +150,6 @@ export function useResetPasswordForm() {
         "Sprawdź swoją skrzynkę email. Jeśli podany adres istnieje w systemie, otrzymasz link do resetu hasła."
       );
       setIsSubmitted(true);
-      setCooldownRemaining(RESEND_COOLDOWN_SECONDS);
       setIsLoading(false);
     } catch (error) {
       // Obsługa błędów sieciowych
@@ -183,7 +170,6 @@ export function useResetPasswordForm() {
     errors,
     isLoading,
     isSubmitted,
-    cooldownRemaining,
     handleChange,
     handleBlur,
     handleSubmit,

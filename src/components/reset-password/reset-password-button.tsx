@@ -6,16 +6,12 @@ import { Button } from "@/components/ui/button";
 type ResetPasswordButtonProps = Readonly<{
   isLoading: boolean;
   disabled?: boolean;
-  cooldownRemaining?: number;
 }>;
 
 export function ResetPasswordButton({
   isLoading,
   disabled,
-  cooldownRemaining = 0,
 }: ResetPasswordButtonProps) {
-  const isCooldownActive = cooldownRemaining > 0;
-
   return (
     <Button
       type="submit"
@@ -28,8 +24,6 @@ export function ResetPasswordButton({
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           Wysyłanie...
         </>
-      ) : isCooldownActive ? (
-        `Wyślij ponownie za ${cooldownRemaining}s`
       ) : (
         "Wyślij link resetujący"
       )}

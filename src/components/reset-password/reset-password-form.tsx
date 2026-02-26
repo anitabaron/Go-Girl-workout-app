@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleCheck } from "lucide-react";
 import { useResetPasswordForm } from "@/hooks/use-reset-password-form";
 import { ResetPasswordFormFields } from "./reset-password-form-fields";
 import { ResetPasswordInstructions } from "./reset-password-instructions";
@@ -11,13 +12,30 @@ export function ResetPasswordForm() {
     email,
     errors,
     isLoading,
-    cooldownRemaining,
+    isSubmitted,
     handleChange,
     handleBlur,
     handleSubmit,
   } = useResetPasswordForm();
 
-  const isCooldownActive = cooldownRemaining > 0;
+  if (isSubmitted) {
+    return (
+      <div className="space-y-6 text-center py-4">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+          <CircleCheck className="h-10 w-10" aria-hidden="true" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold text-foreground">Sprawdź email</h2>
+          <p className="text-base text-muted-foreground">
+            Wysłaliśmy link do resetu hasła na podany adres email.
+          </p>
+        </div>
+        <div className="pt-2">
+          <BackToLoginLink />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -33,8 +51,7 @@ export function ResetPasswordForm() {
 
       <ResetPasswordButton
         isLoading={isLoading}
-        disabled={isLoading || isCooldownActive}
-        cooldownRemaining={cooldownRemaining}
+        disabled={isLoading}
       />
 
       <div className="pt-2">
