@@ -92,7 +92,9 @@ export function ResetPasswordConfirmForm() {
 
       <ResetPasswordConfirmButton isLoading={isLoading} disabled={isFormDisabled} />
 
-      <BackToLoginLink />
+      <div className="pt-2">
+        <BackToLoginLink />
+      </div>
     </form>
   );
 }

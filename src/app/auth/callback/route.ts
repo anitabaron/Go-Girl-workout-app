@@ -54,6 +54,7 @@ export async function GET(request: Request) {
     redirectWithCookies("/login?confirmed=true");
 
   const redirectToLoginInvalid = () => redirectWithCookies("/login?error=invalid_token");
+  const redirectToLogin = () => redirectWithCookies("/login");
 
   // Obsługa parametru `code` - wymiana kodu na sesję
   if (code) {
@@ -107,5 +108,5 @@ export async function GET(request: Request) {
     return redirectToRecoveryConfirm();
   }
 
-  return redirectToLoginConfirmed();
+  return redirectToLogin();
 }
