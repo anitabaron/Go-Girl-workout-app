@@ -113,11 +113,11 @@ export function useResetPasswordForm() {
     setErrors({});
 
     try {
-      const confirmPath = basePath
-        ? `${basePath}/reset-password/confirm`
-        : "/reset-password/confirm";
+      const callbackPath = basePath ? `${basePath}/auth/callback` : "/auth/callback";
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${globalThis.location.origin}${confirmPath}`,
+        // Route through auth callback so PKCE/code links are exchanged for a session
+        // before rendering the password change form.
+        redirectTo: `${globalThis.location.origin}${callbackPath}`,
       });
 
       if (error) {
