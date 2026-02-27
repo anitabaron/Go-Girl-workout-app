@@ -100,11 +100,11 @@
   --m3v-orange-primary-container-dark: #7d2d0d;
 
   /* Variant: Blue - light */
-  --m3v-blue-surface: #f7f9ff;
+  --m3v-blue-surface: #fbfcff;
   --m3v-blue-on-surface: #171b24;
   --m3v-blue-on-surface-variant: #414856;
-  --m3v-blue-surface-container: #eaf0fb;
-  --m3v-blue-surface-container-high: #f0f4ff;
+  --m3v-blue-surface-container: #f0f4ff;
+  --m3v-blue-surface-container-high: #e1e8f6;
   --m3v-blue-surface-container-highest: #dbe5f6;
   --m3v-blue-outline: #717886;
   --m3v-blue-outline-variant: #c0c7d8;
@@ -162,6 +162,70 @@
   --m3v-purple-primary-dark: #ddb8ff;
   --m3v-purple-on-primary-dark: #40235d;
   --m3v-purple-primary-container-dark: #573c76;
+
+  /* Variant: Green - light */
+  --m3v-green-surface: #f5faf5;
+  --m3v-green-on-surface: #141d15;
+  --m3v-green-on-surface-variant: #38473a;
+  --m3v-green-surface-container: #e6f1e7;
+  --m3v-green-surface-container-high: #d6e3d7;
+  --m3v-green-surface-container-highest: #c5d9c6;
+  --m3v-green-outline: #617563;
+  --m3v-green-outline-variant: #aec2b0;
+  --m3v-green-primary: #2f7d32;
+  --m3v-green-on-primary: #ffffff;
+  --m3v-green-primary-container: #9fe09b;
+  --m3v-green-on-primary-container: #08210a;
+  --m3v-green-primary-override: #2f7d32;
+  --m3v-green-chart-2: #4c9650;
+  --m3v-green-chart-3: #67896a;
+  --m3v-green-chart-4: #2f6332;
+  --m3v-green-chart-5: #7fad82;
+
+  /* Variant: Green - dark */
+  --m3v-green-surface-dark: #0d150f;
+  --m3v-green-on-surface-dark: #d7e5d8;
+  --m3v-green-on-surface-variant-dark: #b4c8b6;
+  --m3v-green-surface-container-dark: #17241a;
+  --m3v-green-surface-container-high-dark: #213026;
+  --m3v-green-surface-container-highest-dark: #2b3c31;
+  --m3v-green-outline-dark: #819683;
+  --m3v-green-outline-variant-dark: #38473a;
+  --m3v-green-primary-dark: #8fd38c;
+  --m3v-green-on-primary-dark: #00390b;
+  --m3v-green-primary-container-dark: #18581f;
+
+  /* Variant: Lime - light */
+  --m3v-lime-surface: #fcfbee;
+  --m3v-lime-on-surface: #1f1f12;
+  --m3v-lime-on-surface-variant: #4e4f35;
+  --m3v-lime-surface-container: #efeed4;
+  --m3v-lime-surface-container-high: #e3e2bf;
+  --m3v-lime-surface-container-highest: #d7d6b0;
+  --m3v-lime-outline: #7a7b57;
+  --m3v-lime-outline-variant: #bcbd99;
+  --m3v-lime-primary: #7a8300;
+  --m3v-lime-on-primary: #ffffff;
+  --m3v-lime-primary-container: #e0e877;
+  --m3v-lime-on-primary-container: #222600;
+  --m3v-lime-primary-override: #7a8300;
+  --m3v-lime-chart-2: #a2b12b;
+  --m3v-lime-chart-3: #8f9460;
+  --m3v-lime-chart-4: #6e7718;
+  --m3v-lime-chart-5: #b3b780;
+
+  /* Variant: Lime - dark */
+  --m3v-lime-surface-dark: #17180e;
+  --m3v-lime-on-surface-dark: #e4e5cc;
+  --m3v-lime-on-surface-variant-dark: #c2c3a1;
+  --m3v-lime-surface-container-dark: #232417;
+  --m3v-lime-surface-container-high-dark: #2e3021;
+  --m3v-lime-surface-container-highest-dark: #3a3c2c;
+  --m3v-lime-outline-dark: #919272;
+  --m3v-lime-outline-variant-dark: #4e4f35;
+  --m3v-lime-primary-dark: #ccd66a;
+  --m3v-lime-on-primary-dark: #383d00;
+  --m3v-lime-primary-container-dark: #596100;
 
   /* Shared semantic colors */
   --m3-raw-destructive: #b3261e;
@@ -361,4 +425,76 @@
   --m3-raw-primary-dark: var(--m3v-purple-primary-dark);
   --m3-raw-on-primary-dark: var(--m3v-purple-on-primary-dark);
   --m3-raw-primary-container-dark: var(--m3v-purple-primary-container-dark);
+}
+
+:root[data-m3-variant="green"] {
+  --m3-raw-surface: var(--m3v-green-surface);
+  --m3-raw-on-surface: var(--m3v-green-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-green-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-green-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-green-surface-container-high);
+  --m3-raw-surface-container-highest: var(--m3v-green-surface-container-highest);
+  --m3-raw-outline: var(--m3v-green-outline);
+  --m3-raw-outline-variant: var(--m3v-green-outline-variant);
+  --m3-raw-primary: var(--m3v-green-primary);
+  --m3-raw-on-primary: var(--m3v-green-on-primary);
+  --m3-raw-primary-container: var(--m3v-green-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-green-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-green-primary-override);
+  --m3-raw-chart-2: var(--m3v-green-chart-2);
+  --m3-raw-chart-3: var(--m3v-green-chart-3);
+  --m3-raw-chart-4: var(--m3v-green-chart-4);
+  --m3-raw-chart-5: var(--m3v-green-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-green-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-green-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(--m3v-green-on-surface-variant-dark);
+  --m3-raw-surface-container-dark: var(--m3v-green-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-green-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-green-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-green-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-green-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-green-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-green-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-green-primary-container-dark);
+}
+
+:root[data-m3-variant="lime"] {
+  --m3-raw-surface: var(--m3v-lime-surface);
+  --m3-raw-on-surface: var(--m3v-lime-on-surface);
+  --m3-raw-on-surface-variant: var(--m3v-lime-on-surface-variant);
+  --m3-raw-surface-container: var(--m3v-lime-surface-container);
+  --m3-raw-surface-container-high: var(--m3v-lime-surface-container-high);
+  --m3-raw-surface-container-highest: var(--m3v-lime-surface-container-highest);
+  --m3-raw-outline: var(--m3v-lime-outline);
+  --m3-raw-outline-variant: var(--m3v-lime-outline-variant);
+  --m3-raw-primary: var(--m3v-lime-primary);
+  --m3-raw-on-primary: var(--m3v-lime-on-primary);
+  --m3-raw-primary-container: var(--m3v-lime-primary-container);
+  --m3-raw-on-primary-container: var(--m3v-lime-on-primary-container);
+  --m3-raw-primary-override: var(--m3v-lime-primary-override);
+  --m3-raw-chart-2: var(--m3v-lime-chart-2);
+  --m3-raw-chart-3: var(--m3v-lime-chart-3);
+  --m3-raw-chart-4: var(--m3v-lime-chart-4);
+  --m3-raw-chart-5: var(--m3v-lime-chart-5);
+
+  --m3-raw-surface-dark: var(--m3v-lime-surface-dark);
+  --m3-raw-on-surface-dark: var(--m3v-lime-on-surface-dark);
+  --m3-raw-on-surface-variant-dark: var(--m3v-lime-on-surface-variant-dark);
+  --m3-raw-surface-container-dark: var(--m3v-lime-surface-container-dark);
+  --m3-raw-surface-container-high-dark: var(
+    --m3v-lime-surface-container-high-dark
+  );
+  --m3-raw-surface-container-highest-dark: var(
+    --m3v-lime-surface-container-highest-dark
+  );
+  --m3-raw-outline-dark: var(--m3v-lime-outline-dark);
+  --m3-raw-outline-variant-dark: var(--m3v-lime-outline-variant-dark);
+  --m3-raw-primary-dark: var(--m3v-lime-primary-dark);
+  --m3-raw-on-primary-dark: var(--m3v-lime-on-primary-dark);
+  --m3-raw-primary-container-dark: var(--m3v-lime-primary-container-dark);
 }

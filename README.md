@@ -7,11 +7,11 @@ Private workout planning and logging web app for women who train regularly (espe
 ### Table of contents
 
 - [Features](#features)
-- [tech stack](#tech-stack)
-- [getting started](#getting-started)
-- [available scripts](#available-scripts)
-- [testing](#testing)
-- [license](#license)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Available scripts](#available-scripts)
+- [Testing](#testing)
+- [License](#license)
 
 ### Features
 
@@ -46,19 +46,19 @@ Private workout planning and logging web app for women who train regularly (espe
 - View PR history per exercise
 - Track progress over time
 
-#### statistics
+#### Statistics
 
 - Dedicated statistics dashboard (`/statistics`)
 - Weekly metrics, streak tracking, and workout trends
 - Workout calendar with completed sessions
 - Statistics shortcut available on the home page
 
-### what's next
+### What's next
 
-- AI integrations for plan recommendations and smarter training assistance
+- AI trainer integrations for plan recommendations and smarter training assistance
 - Garmin integration for syncing workouts with watch devices
 
-### tech stack
+### Tech stack
 
 - **Frontend**: Next.js 16, React 19, TypeScript 5
 - **Styling**: Tailwind CSS 4, shadcn/ui
@@ -67,14 +67,14 @@ Private workout planning and logging web app for women who train regularly (espe
 - **Validation**: Zod
 - **Testing**: Vitest (unit/integration tests), Playwright (E2E tests)
 
-### getting started
+### Getting started
 
-#### prerequisites
+#### Prerequisites
 
 - Node.js `22.19.0` (see `.nvmrc`)
 - pnpm (recommended)
 
-#### setup
+#### Setup
 
 1. **Install dependencies:**
 
@@ -97,7 +97,7 @@ Private workout planning and logging web app for women who train regularly (espe
 
    The app will be available at `http://localhost:3000`
 
-### available scripts
+### Available scripts
 
 - `pnpm dev` - Start development server
 - `pnpm build` - Build for production
@@ -109,18 +109,18 @@ Private workout planning and logging web app for women who train regularly (espe
 - `pnpm test:e2e` - Run E2E tests with Playwright
 - `pnpm test:e2e:ui` - Run E2E tests with Playwright UI mode
 
-### testing
+### Testing
 
 This project uses a comprehensive testing strategy:
 
-#### unit & integration tests (vitest)
+#### Unit & integration tests (vitest)
 
 - Fast, Vite-based test runner with native TypeScript and ESM support
 - Compatible API with Jest for easy migration
 - Excellent integration with React Testing Library
 - Built-in coverage reporting
 
-#### end-to-end tests (playwright)
+#### End-to-end tests (playwright)
 
 - Reliable browser automation with auto-waiting
 - Multi-browser support (Chromium, Firefox, WebKit)
@@ -128,6 +128,6 @@ This project uses a comprehensive testing strategy:
 - Automatic screenshots and trace viewer for debugging
 - Parallel execution for fast test runs
 
-### license
+### License
 
 No license file is currently included in this repository. Until a license is added, **all rights are reserved** by default.

@@ -11,6 +11,8 @@ export type M3ColorVariant =
   | "orange"
   | "blue"
   | "violet"
+  | "green"
+  | "lime"
   | "purple";
 
 interface M3ThemeStore {
@@ -32,6 +34,8 @@ function normalizeColorVariant(
   if (variant === "orange") return "orange";
   if (variant === "blue") return "blue";
   if (variant === "violet") return "violet";
+  if (variant === "green") return "green";
+  if (variant === "lime") return "lime";
   return "pink";
 }
 

@@ -49,6 +49,24 @@ describe("m3-theme-store", () => {
     );
   });
 
+  test("supports green color variant", () => {
+    useM3ThemeStore.getState().setColorVariant("green");
+
+    expect(useM3ThemeStore.getState().colorVariant).toBe("green");
+    expect(document.documentElement.getAttribute("data-m3-variant")).toBe(
+      "green",
+    );
+  });
+
+  test("supports lime color variant", () => {
+    useM3ThemeStore.getState().setColorVariant("lime");
+
+    expect(useM3ThemeStore.getState().colorVariant).toBe("lime");
+    expect(document.documentElement.getAttribute("data-m3-variant")).toBe(
+      "lime",
+    );
+  });
+
   test("maps legacy purple to violet attribute", () => {
     useM3ThemeStore.getState().setColorVariant("purple");
 
