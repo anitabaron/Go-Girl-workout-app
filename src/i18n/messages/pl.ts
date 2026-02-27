@@ -86,8 +86,7 @@ export const plMessages = {
   "auth.registerValidation.emailInvalid": "Nieprawidłowy format email",
   "auth.registerValidation.passwordRequired": "Hasło jest wymagane",
   "auth.registerValidation.passwordMin": "Hasło musi mieć minimum 6 znaków",
-  "auth.registerValidation.passwordNoSpaces":
-    "Hasło nie może zawierać spacji",
+  "auth.registerValidation.passwordNoSpaces": "Hasło nie może zawierać spacji",
   "auth.registerValidation.confirmPasswordRequired":
     "Potwierdzenie hasła jest wymagane",
   "auth.registerValidation.passwordsMismatch": "Hasła nie są identyczne",
@@ -124,17 +123,23 @@ export const plMessages = {
   "home.feature.personalRecords.title": "Rekordy osobiste",
   "home.feature.personalRecords.description":
     "Śledź swoje rekordy osobiste w różnych metrykach. Osiągaj nowe PR i obserwuj swoje postępy w czasie.",
+  "home.feature.statistics.title": "Statystyki",
+  "home.feature.statistics.description":
+    "Analizuj tygodniowe podsumowania, serie treningowe i trend aktywności. Korzystaj z kalendarza treningów i szybkiego wglądu w postęp.",
   "home.feature.assistant.title": "Asystent treningowy",
   "home.feature.assistant.description":
-    "Asystent treningowy pomaga Ci w organizacji i wykonywaniu treningów. Generuje plany treningowe, dostosowane do Twoich potrzeb.",
+    "Asystent prowadzi trening krok po kroku, pokazuje kolejne ćwiczenia z planu, wspiera licznik sek/rep i pozwala zapisywać realne wyniki.",
   "home.feature.importPlan.title": "Import planu treningowego",
   "home.feature.importPlan.description":
     "Importuj plan treningowy z pliku JSON. Aplikacja przeanalizuje plik i wygeneruje plan treningowy dopasowany do Twoich potrzeb.",
-  "home.heroHeadline": "Zaprojektowana, aby pomóc Ci realizować cele treningowe",
+  "home.feature.comingSoon.title": "Wkrótce",
+  "home.feature.comingSoon.description": "Integracja Garmin i trener AI.",
+  "home.heroHeadline":
+    "Zaprojektowana, aby pomóc Ci realizować cele treningowe",
   "home.getStarted": "Rozpocznij",
   "home.featuresHeading": "Odkryj wszystkie możliwości aplikacji",
   "home.goToFeature": "Przejdź do",
-  "home.quote": "\"Strong today, unstoppable tomorrow.\"",
+  "home.quote": '"Strong today, unstoppable tomorrow."',
   "home.privacyPolicy": "Polityka prywatności",
   "home.allRightsReserved": "Wszelkie prawa zastrzeżone.",
   "exercisesPage.title": "Ćwiczenia",
@@ -152,7 +157,8 @@ export const plMessages = {
   "exercisesList.loading": "Ładowanie...",
   "exercisesList.loadMore": "Załaduj więcej",
   "workoutPlansPage.title": "Plany treningowe",
-  "workoutPlansPage.description": "Przeglądaj i zarządzaj planami treningowymi.",
+  "workoutPlansPage.description":
+    "Przeglądaj i zarządzaj planami treningowymi.",
   "workoutPlansPage.countLabel": "planów",
   "workoutPlansPage.createCta": "Utwórz plan",
   "importPlanButton.fileMustBeJson": "Plik musi być w formacie JSON",
@@ -205,8 +211,7 @@ export const plMessages = {
   "workoutPlanForm.saving": "Zapisywanie...",
   "workoutPlanForm.save": "Zapisz",
   "workoutPlanMetadata.planName": "Nazwa planu",
-  "workoutPlanMetadata.planNamePlaceholder":
-    "np. Siła górnych partii ciała",
+  "workoutPlanMetadata.planNamePlaceholder": "np. Siła górnych partii ciała",
   "workoutPlanMetadata.descriptionOptional": "Opis (opcjonalnie)",
   "workoutPlanMetadata.descriptionPlaceholder":
     "Dodatkowe informacje o planie...",
@@ -444,7 +449,8 @@ export const plMessages = {
   "workoutSessionsList.loadMoreAria": "Załaduj więcej sesji treningowych",
   "workoutSessionsList.loading": "Ładowanie...",
   "workoutSessionsList.loadMore": "Załaduj więcej",
-  "personalRecordsList.loadMoreError": "Nie udało się pobrać kolejnych rekordów",
+  "personalRecordsList.loadMoreError":
+    "Nie udało się pobrać kolejnych rekordów",
   "personalRecordsList.loadMoreToast":
     "Nie udało się załadować więcej rekordów. Spróbuj ponownie.",
   "personalRecordsList.emptyTitle": "Brak rekordów osobistych",
@@ -486,10 +492,8 @@ export const plMessages = {
   "editPersonalRecordDialog.cancel": "Anuluj",
   "editPersonalRecordDialog.save": "Zapisz",
   "editPersonalRecordDialog.saving": "Zapisywanie...",
-  "editPersonalRecordDialog.toast.invalidValue":
-    "Wprowadź prawidłową wartość",
-  "editPersonalRecordDialog.toast.saveFailed":
-    "Nie udało się zapisać rekordu",
+  "editPersonalRecordDialog.toast.invalidValue": "Wprowadź prawidłową wartość",
+  "editPersonalRecordDialog.toast.saveFailed": "Nie udało się zapisać rekordu",
   "editPersonalRecordDialog.toast.saved": "Rekord zapisany",
   "editPersonalRecordDialog.toast.offline":
     "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
@@ -550,8 +554,7 @@ export const plMessages = {
   "exerciseCard.deleteSuccess": "Ćwiczenie zostało usunięte",
   "exerciseCard.offlineError":
     "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
-  "exerciseCard.deleteGenericError":
-    "Wystąpił błąd podczas usuwania ćwiczenia",
+  "exerciseCard.deleteGenericError": "Wystąpił błąd podczas usuwania ćwiczenia",
   "exerciseCard.duplicateAria": "Duplikuj ćwiczenie:",
   "exerciseCard.editAria": "Edytuj ćwiczenie:",
   "exerciseCard.deleteAria": "Usuń ćwiczenie:",
@@ -565,10 +568,8 @@ export const plMessages = {
   "exerciseCard.restBetween": "Przerwa między seriami",
   "exerciseCard.restAfter": "Przerwa po seriach",
   "exerciseCard.deleteDialogTitle": "Usuń ćwiczenie",
-  "exerciseCard.deleteDialogDescriptionStart":
-    "Czy na pewno chcesz usunąć",
-  "exerciseCard.deleteDialogDescriptionEnd":
-    "Tej operacji nie można cofnąć.",
+  "exerciseCard.deleteDialogDescriptionStart": "Czy na pewno chcesz usunąć",
+  "exerciseCard.deleteDialogDescriptionEnd": "Tej operacji nie można cofnąć.",
   "exerciseCard.cancelAria": "Anuluj usuwanie",
   "exerciseCard.cancel": "Anuluj",
   "exerciseCard.confirmDeleteAria": "Potwierdź usunięcie:",
@@ -582,11 +583,9 @@ export const plMessages = {
     "Nieprawidłowe dane wejściowe. Sprawdź wybrany plan.",
   "workoutPlanCard.planNotFound":
     "Nie znaleziono planu treningowego lub nie należy do Ciebie.",
-  "workoutPlanCard.activeSessionExists":
-    "Masz już aktywną sesję. Wznów ją.",
+  "workoutPlanCard.activeSessionExists": "Masz już aktywną sesję. Wznów ją.",
   "workoutPlanCard.unauthorized": "Brak autoryzacji. Zaloguj się ponownie.",
-  "workoutPlanCard.startFailed":
-    "Nie udało się rozpocząć sesji treningowej",
+  "workoutPlanCard.startFailed": "Nie udało się rozpocząć sesji treningowej",
   "workoutPlanCard.startSuccess": "Sesja treningowa rozpoczęta",
   "workoutPlanCard.sessionIdMissing": "Nie udało się pobrać ID sesji",
   "workoutPlanCard.startGenericError":
@@ -596,8 +595,7 @@ export const plMessages = {
   "workoutPlanCard.duplicateAria": "Duplikuj plan:",
   "workoutPlanCard.deleteAria": "Usuń plan:",
   "workoutPlanCard.detailsAria": "Zobacz szczegóły planu:",
-  "workoutPlanCard.missingExercises":
-    "Zawiera ćwiczenia spoza biblioteki",
+  "workoutPlanCard.missingExercises": "Zawiera ćwiczenia spoza biblioteki",
   "workoutPlanCard.durationLabel": "Czas trwania:",
   "workoutPlanCard.scopeRepeatsAria": "Liczba powtórzeń obwodu",
   "workoutPlanCard.tableExercise": "Ćwiczenie",
@@ -650,8 +648,7 @@ export const plMessages = {
   "exerciseDetailContent.seriesLabel": "Serie",
   "exerciseDetailContent.restBetweenLabel": "Przerwa między seriami (sek.)",
   "exerciseDetailContent.restAfterLabel": "Przerwa po seriach (sek.)",
-  "exerciseDetailContent.estimatedSetTimeLabel":
-    "Szacowany czas serii (sek.)",
+  "exerciseDetailContent.estimatedSetTimeLabel": "Szacowany czas serii (sek.)",
   "exerciseDetailContent.relationPrefix":
     "Ćwiczenie nie może zostać usunięte, ponieważ jest używane w",
   "exerciseDetailContent.workoutPlanSingular": "planie treningowym",
@@ -727,8 +724,7 @@ export const plMessages = {
   "assistantExitDialog.cancel": "Anuluj",
   "assistantExitDialog.confirm": "Wyjdź",
   "deleteWorkoutPlanDialog.title": "Usuń plan treningowy",
-  "deleteWorkoutPlanDialog.descriptionStart":
-    "Czy na pewno chcesz usunąć",
+  "deleteWorkoutPlanDialog.descriptionStart": "Czy na pewno chcesz usunąć",
   "deleteWorkoutPlanDialog.descriptionEnd": "Tej operacji nie można cofnąć.",
   "deleteWorkoutPlanDialog.cancel": "Anuluj",
   "deleteWorkoutPlanDialog.delete": "Usuń",
@@ -740,13 +736,11 @@ export const plMessages = {
     "Brak autoryzacji. Zaloguj się ponownie.",
   "deleteWorkoutPlanDialog.toast.failed":
     "Nie udało się usunąć planu treningowego.",
-  "deleteWorkoutPlanDialog.toast.success":
-    "Plan treningowy został usunięty.",
+  "deleteWorkoutPlanDialog.toast.success": "Plan treningowy został usunięty.",
   "deleteWorkoutPlanDialog.toast.generic":
     "Wystąpił błąd podczas usuwania planu treningowego.",
   "deleteWorkoutSessionDialog.title": "Usuń sesję treningową",
-  "deleteWorkoutSessionDialog.descriptionStart":
-    "Czy na pewno chcesz usunąć",
+  "deleteWorkoutSessionDialog.descriptionStart": "Czy na pewno chcesz usunąć",
   "deleteWorkoutSessionDialog.descriptionEnd":
     "Tej operacji nie można cofnąć. Wszystkie ćwiczenia i serie z tej sesji również zostaną usunięte.",
   "deleteWorkoutSessionDialog.cancel": "Anuluj",
@@ -831,26 +825,22 @@ export const plMessages = {
   "workoutSessionExerciseItemEditable.skipExercise": "Pomiń ćwiczenie",
   "workoutSessionExerciseItemEditable.saving": "Zapisywanie...",
   "workoutSessionExerciseItemEditable.saveExercise": "Zapisz ćwiczenie",
-  "workoutSessionExerciseItemEditable.savedSuccess":
-    "Ćwiczenie zapisane",
+  "workoutSessionExerciseItemEditable.savedSuccess": "Ćwiczenie zapisane",
   "workoutSessionExerciseItemEditable.saveFailed":
     "Nie udało się zapisać ćwiczenia",
   "workoutPlanDetailContent.exportSuccess": "Plan wyeksportowano do JSON",
-  "workoutPlanDetailContent.planNotFound":
-    "Nie znaleziono planu treningowego",
+  "workoutPlanDetailContent.planNotFound": "Nie znaleziono planu treningowego",
   "workoutPlanDetailContent.unauthorized":
     "Brak autoryzacji. Zaloguj się ponownie.",
   "workoutPlanDetailContent.startFailed":
     "Nie udało się rozpocząć sesji treningowej",
   "workoutPlanDetailContent.startSuccess": "Sesja treningowa rozpoczęta",
-  "workoutPlanDetailContent.sessionIdMissing":
-    "Nie udało się pobrać ID sesji",
+  "workoutPlanDetailContent.sessionIdMissing": "Nie udało się pobrać ID sesji",
   "workoutPlanDetailContent.startGenericError":
     "Wystąpił błąd podczas rozpoczynania treningu",
   "workoutPlanDetailContent.deleteFailed":
     "Nie udało się usunąć planu treningowego",
-  "workoutPlanDetailContent.deleteSuccess":
-    "Plan treningowy został usunięty",
+  "workoutPlanDetailContent.deleteSuccess": "Plan treningowy został usunięty",
   "workoutPlanDetailContent.deleteGenericError":
     "Wystąpił błąd podczas usuwania planu",
   "workoutPlanDetailContent.startAria": "Rozpocznij trening z tym planem",
@@ -865,10 +855,8 @@ export const plMessages = {
   "workoutPlanDetailContent.exercisesInPlan": "Ćwiczenia w planie",
   "workoutPlanDetailContent.emptyExercises": "Brak ćwiczeń w planie.",
   "workoutPlanDetailContent.scope": "Obwód",
-  "workoutPlanDetailContent.estimatedScopeTimeLabel":
-    "Szacowany czas obwodu",
-  "workoutPlanDetailContent.deleteDialogTitle":
-    "Usuń plan treningowy",
+  "workoutPlanDetailContent.estimatedScopeTimeLabel": "Szacowany czas obwodu",
+  "workoutPlanDetailContent.deleteDialogTitle": "Usuń plan treningowy",
   "workoutPlanDetailContent.deleteDialogDescription":
     "Czy na pewno chcesz usunąć",
   "workoutPlanDetailContent.cancel": "Anuluj",
@@ -957,7 +945,7 @@ export const plMessages = {
     "Placeholder pod przyszłe funkcje synchronizacji treningu i połączenia z zegarkiem Garmin.",
   "statisticsPage.garminSend": "Wyślij trening na zegarek",
   "statisticsPage.garminRefresh": "Odśwież połączenie z Garmin",
-  "statisticsPage.aiTitle": "Asystent AI",
+  "statisticsPage.aiTitle": "Trener AI",
   "statisticsPage.aiDescription":
     "Miejsce pod przyszłe wsparcie AI w planowaniu, optymalizacji i analizie wyników treningowych.",
   "importInstructionPage.backToPlans": "Powrót do planów",

@@ -6,6 +6,8 @@ import {
   Calendar,
   History,
   Trophy,
+  BarChart3,
+  Sparkles,
   ClipboardClock,
   FileJson,
 } from "lucide-react";
@@ -46,6 +48,13 @@ const FEATURES = [
     href: "/personal-records",
   },
   {
+    id: "statistics",
+    titleKey: "feature.statistics.title",
+    descriptionKey: "feature.statistics.description",
+    icon: BarChart3,
+    href: "/statistics",
+  },
+  {
     id: "assistant",
     titleKey: "feature.assistant.title",
     descriptionKey: "feature.assistant.description",
@@ -58,6 +67,13 @@ const FEATURES = [
     descriptionKey: "feature.importPlan.description",
     icon: FileJson,
     href: "/import-instruction",
+  },
+  {
+    id: "coming-soon",
+    titleKey: "feature.comingSoon.title",
+    descriptionKey: "feature.comingSoon.description",
+    icon: Sparkles,
+    href: "/statistics",
   },
 ] as const;
 
@@ -122,7 +138,7 @@ export default async function M3Page({
         </HeroReveal>
       </Surface>
 
-      {/* Features overview – wszystkie 6 funkcji */}
+      {/* Features overview – wszystkie 8 funkcji */}
       <section className="space-y-6 w-full min-w-0">
         <h2 className="m3-headline">{t("featuresHeading")}</h2>
 

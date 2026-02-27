@@ -26,8 +26,7 @@ export const enMessages = {
   "auth.loginPage.metaDescription":
     "Sign in to your Go Girl Workout App account to access exercises, workout plans, and workout sessions.",
   "auth.loginPage.title": "Sign in",
-  "auth.loginPage.description":
-    "Enter your details to access your account.",
+  "auth.loginPage.description": "Enter your details to access your account.",
   "auth.loginForm.submit": "Sign in",
   "auth.loginForm.submitting": "Signing in...",
   "auth.loginForm.forgotPassword": "Forgot your password?",
@@ -80,8 +79,7 @@ export const enMessages = {
     "Connection error. Check your connection and try again.",
   "auth.errors.emailNotConfirmed":
     "Your account is not activated yet. Check your email and click the activation link.",
-  "auth.errors.rateLimit":
-    "Too many attempts. Try again in a moment.",
+  "auth.errors.rateLimit": "Too many attempts. Try again in a moment.",
   "auth.errors.server": "A server error occurred. Please try again later.",
   "auth.errors.accountExists":
     "An account with this email already exists. Sign in or reset your password.",
@@ -93,12 +91,10 @@ export const enMessages = {
   "auth.registerValidation.passwordRequired": "Password is required",
   "auth.registerValidation.passwordMin":
     "Password must be at least 6 characters",
-  "auth.registerValidation.passwordNoSpaces":
-    "Password cannot contain spaces",
+  "auth.registerValidation.passwordNoSpaces": "Password cannot contain spaces",
   "auth.registerValidation.confirmPasswordRequired":
     "Password confirmation is required",
-  "auth.registerValidation.passwordsMismatch":
-    "Passwords do not match",
+  "auth.registerValidation.passwordsMismatch": "Passwords do not match",
   "theme.toggleDarkMode": "Toggle dark mode",
   "theme.colorVariant": "Color variant",
   "theme.colorVariantMonochrome": "Monochrome",
@@ -132,17 +128,22 @@ export const enMessages = {
   "home.feature.personalRecords.title": "Personal records",
   "home.feature.personalRecords.description":
     "Track personal records across metrics. Hit new PRs and monitor your progress over time.",
+  "home.feature.statistics.title": "Statistics",
+  "home.feature.statistics.description":
+    "Analyze weekly summaries, streaks, and activity trends. Use the workout calendar and a fast progress overview.",
   "home.feature.assistant.title": "Workout assistant",
   "home.feature.assistant.description":
-    "The workout assistant helps organize and execute your training sessions with guidance tailored to your needs.",
+    "The assistant guides sessions step by step, shows the next exercises from your plan, supports sec/rep tracking, and lets you save actual results.",
   "home.feature.importPlan.title": "Import workout plan",
   "home.feature.importPlan.description":
     "Import a workout plan from a JSON file. The app will parse it and generate a plan tailored to your needs.",
+  "home.feature.comingSoon.title": "Coming soon",
+  "home.feature.comingSoon.description": "Garmin integration and AI coach.",
   "home.heroHeadline": "Designed to help you stay on track with your goals",
   "home.getStarted": "Get started",
   "home.featuresHeading": "Discover everything the app can do",
   "home.goToFeature": "Go to",
-  "home.quote": "\"Strong today, unstoppable tomorrow.\"",
+  "home.quote": '"Strong today, unstoppable tomorrow."',
   "home.privacyPolicy": "Privacy Policy",
   "home.allRightsReserved": "All rights reserved.",
   "exercisesPage.title": "Exercises",
@@ -152,8 +153,7 @@ export const enMessages = {
   "exercisesPage.emptyTitle": "No exercises yet",
   "exercisesPage.emptyDescription": "Add your first exercise to get started.",
   "exercisesList.loadMoreError": "Failed to fetch more exercises",
-  "exercisesList.loadMoreToast":
-    "Failed to load more exercises. Try again.",
+  "exercisesList.loadMoreToast": "Failed to load more exercises. Try again.",
   "exercisesList.emptyTitle": "No exercises yet",
   "exercisesList.emptyDescription": "Add your first exercise to get started.",
   "exercisesList.loadMoreAria": "Load more exercises",
@@ -234,8 +234,7 @@ export const enMessages = {
     "Choose one or more exercises from your library to add to the plan.",
   "addExerciseDialog.cancel": "Cancel",
   "addScopeDialog.addScope": "Add scope",
-  "addScopeDialog.addScopeCount":
-    "Add scope ({count} exercises x {repeat})",
+  "addScopeDialog.addScopeCount": "Add scope ({count} exercises x {repeat})",
   "addScopeDialog.title": "Add scope",
   "addScopeDialog.description":
     "Choose multiple exercises to run one after another, then repeat the block.",
@@ -335,7 +334,8 @@ export const enMessages = {
   "exerciseNewPage.createTitle": "Add exercise",
   "exerciseNewPage.duplicateDescription":
     "Edit the duplicated exercise and save as a new item.",
-  "exerciseNewPage.createDescription": "Create a new exercise for your library.",
+  "exerciseNewPage.createDescription":
+    "Create a new exercise for your library.",
   "exerciseNewPage.backToList": "Back to list",
   "exerciseForm.cancel": "Cancel",
   "exerciseForm.save": "Save",
@@ -460,8 +460,7 @@ export const enMessages = {
   "deletePersonalRecordsDialog.title": "Delete personal records",
   "deletePersonalRecordsDialog.descriptionStart":
     "Are you sure you want to delete all personal records for exercise",
-  "deletePersonalRecordsDialog.descriptionEnd":
-    "This action cannot be undone.",
+  "deletePersonalRecordsDialog.descriptionEnd": "This action cannot be undone.",
   "deletePersonalRecordsDialog.cancel": "Cancel",
   "deletePersonalRecordsDialog.delete": "Delete",
   "deletePersonalRecordsDialog.deleting": "Deleting...",
@@ -472,8 +471,7 @@ export const enMessages = {
     "Unauthorized. Please log in again.",
   "deletePersonalRecordsDialog.toast.server":
     "Server error. Please try again later.",
-  "deletePersonalRecordsDialog.toast.failed":
-    "Failed to delete records",
+  "deletePersonalRecordsDialog.toast.failed": "Failed to delete records",
   "deletePersonalRecordsDialog.toast.success": "Records deleted",
   "deletePersonalRecordsDialog.toast.offline":
     "No internet connection. Check your connection and try again.",
@@ -501,8 +499,7 @@ export const enMessages = {
   "m3PersonalRecordCard.new": "New",
   "m3PersonalRecordCard.editAria": "Edit records for: {title}",
   "m3PersonalRecordCard.deleteAria": "Delete records for: {title}",
-  "m3PersonalRecordCard.emptyMetrics":
-    "No records available for this exercise",
+  "m3PersonalRecordCard.emptyMetrics": "No records available for this exercise",
   "personalRecordMetricItem.series": "series",
   "personalRecordMetricItem.new": "New",
   "personalRecordMetricItem.viewSession": "View session",
@@ -559,8 +556,7 @@ export const enMessages = {
   "exerciseCard.deleteAria": "Delete exercise:",
   "exerciseCard.detailsAria": "View exercise details:",
   "exerciseCard.unilateral": "Unilateral",
-  "exerciseCard.prNotSavedTitle":
-    "Results not saved to personal records",
+  "exerciseCard.prNotSavedTitle": "Results not saved to personal records",
   "exerciseCard.sets": "Sets",
   "exerciseCard.reps": "Reps",
   "exerciseCard.duration": "Duration",
@@ -595,8 +591,7 @@ export const enMessages = {
   "workoutPlanCard.duplicateAria": "Duplicate plan:",
   "workoutPlanCard.deleteAria": "Delete plan:",
   "workoutPlanCard.detailsAria": "View plan details:",
-  "workoutPlanCard.missingExercises":
-    "Contains exercises outside library",
+  "workoutPlanCard.missingExercises": "Contains exercises outside library",
   "workoutPlanCard.durationLabel": "Duration:",
   "workoutPlanCard.scopeRepeatsAria": "Scope repeats",
   "workoutPlanCard.tableExercise": "Exercise",
@@ -624,10 +619,8 @@ export const enMessages = {
   "exerciseDetailContent.deleteConflict":
     "Cannot delete exercise because it is used in workout history",
   "exerciseDetailContent.deleteNotFound": "Exercise not found",
-  "exerciseDetailContent.unauthorized":
-    "Unauthorized. Please log in again.",
-  "exerciseDetailContent.serverError":
-    "Server error. Please try again later.",
+  "exerciseDetailContent.unauthorized": "Unauthorized. Please log in again.",
+  "exerciseDetailContent.serverError": "Server error. Please try again later.",
   "exerciseDetailContent.deleteFailed": "Failed to delete exercise",
   "exerciseDetailContent.deleteSuccess": "Exercise deleted",
   "exerciseDetailContent.offlineError":
@@ -649,8 +642,7 @@ export const enMessages = {
   "exerciseDetailContent.seriesLabel": "Series",
   "exerciseDetailContent.restBetweenLabel": "Rest between sets (sec)",
   "exerciseDetailContent.restAfterLabel": "Rest after series (sec)",
-  "exerciseDetailContent.estimatedSetTimeLabel":
-    "Estimated set time (sec)",
+  "exerciseDetailContent.estimatedSetTimeLabel": "Estimated set time (sec)",
   "exerciseDetailContent.relationPrefix":
     "Exercise cannot be deleted because it is used in",
   "exerciseDetailContent.workoutPlanSingular": "workout plan",
@@ -691,19 +683,15 @@ export const enMessages = {
   "workoutSessionDetailContent.exercisesInSession": "Exercises in session",
   "workoutPlanStartCard.exerciseSingular": "exercise",
   "workoutPlanStartCard.exercisePlural": "exercises",
-  "workoutPlanStartCard.invalidInput":
-    "Invalid input. Check plan selection.",
+  "workoutPlanStartCard.invalidInput": "Invalid input. Check plan selection.",
   "workoutPlanStartCard.planNotFound":
     "Workout plan not found or does not belong to you.",
   "workoutPlanStartCard.activeSessionExists":
     "You already have an active session. Resume it.",
-  "workoutPlanStartCard.unauthorized":
-    "Unauthorized. Please log in again.",
-  "workoutPlanStartCard.startFailed":
-    "Failed to start workout session",
+  "workoutPlanStartCard.unauthorized": "Unauthorized. Please log in again.",
+  "workoutPlanStartCard.startFailed": "Failed to start workout session",
   "workoutPlanStartCard.startSuccess": "Workout session started",
-  "workoutPlanStartCard.sessionIdMissing":
-    "Failed to get session ID",
+  "workoutPlanStartCard.sessionIdMissing": "Failed to get session ID",
   "workoutPlanStartCard.startGenericError":
     "An error occurred while starting the workout",
   "workoutPlanStartCard.durationLabel": "Duration:",
@@ -725,10 +713,8 @@ export const enMessages = {
   "assistantExitDialog.cancel": "Cancel",
   "assistantExitDialog.confirm": "Exit",
   "deleteWorkoutPlanDialog.title": "Delete workout plan",
-  "deleteWorkoutPlanDialog.descriptionStart":
-    "Are you sure you want to delete",
-  "deleteWorkoutPlanDialog.descriptionEnd":
-    "This action cannot be undone.",
+  "deleteWorkoutPlanDialog.descriptionStart": "Are you sure you want to delete",
+  "deleteWorkoutPlanDialog.descriptionEnd": "This action cannot be undone.",
   "deleteWorkoutPlanDialog.cancel": "Cancel",
   "deleteWorkoutPlanDialog.delete": "Delete",
   "deleteWorkoutPlanDialog.deleting": "Deleting...",
@@ -794,8 +780,7 @@ export const enMessages = {
   "assistantSetLog.durationForSet": "Duration for set",
   "assistantSetLog.weightForSet": "Weight for set",
   "assistantSetLog.removeSet": "Remove set",
-  "assistantSetLog.empty":
-    "No sets. Click \"Add set\" to add the first set.",
+  "assistantSetLog.empty": 'No sets. Click "Add set" to add the first set.',
   "assistantSetLog.addSetAria": "Add new set",
   "assistantSetLog.addSet": "Add set",
   "assistantAutosave.saving": "Saving...",
@@ -826,22 +811,16 @@ export const enMessages = {
   "workoutSessionExerciseItemEditable.saving": "Saving...",
   "workoutSessionExerciseItemEditable.saveExercise": "Save exercise",
   "workoutSessionExerciseItemEditable.savedSuccess": "Exercise saved",
-  "workoutSessionExerciseItemEditable.saveFailed":
-    "Failed to save exercise",
+  "workoutSessionExerciseItemEditable.saveFailed": "Failed to save exercise",
   "workoutPlanDetailContent.exportSuccess": "Plan exported to JSON",
-  "workoutPlanDetailContent.planNotFound":
-    "Workout plan not found",
-  "workoutPlanDetailContent.unauthorized":
-    "Unauthorized. Please log in again.",
-  "workoutPlanDetailContent.startFailed":
-    "Failed to start workout session",
+  "workoutPlanDetailContent.planNotFound": "Workout plan not found",
+  "workoutPlanDetailContent.unauthorized": "Unauthorized. Please log in again.",
+  "workoutPlanDetailContent.startFailed": "Failed to start workout session",
   "workoutPlanDetailContent.startSuccess": "Workout session started",
-  "workoutPlanDetailContent.sessionIdMissing":
-    "Failed to get session ID",
+  "workoutPlanDetailContent.sessionIdMissing": "Failed to get session ID",
   "workoutPlanDetailContent.startGenericError":
     "An error occurred while starting the workout",
-  "workoutPlanDetailContent.deleteFailed":
-    "Failed to delete workout plan",
+  "workoutPlanDetailContent.deleteFailed": "Failed to delete workout plan",
   "workoutPlanDetailContent.deleteSuccess": "Workout plan deleted",
   "workoutPlanDetailContent.deleteGenericError":
     "An error occurred while deleting the plan",
@@ -946,7 +925,7 @@ export const enMessages = {
     "Placeholder for upcoming workout sync and watch connection features.",
   "statisticsPage.garminSend": "Send workout to watch",
   "statisticsPage.garminRefresh": "Refresh Garmin connection",
-  "statisticsPage.aiTitle": "AI assistant",
+  "statisticsPage.aiTitle": "AI trainer",
   "statisticsPage.aiDescription":
     "Reserved space for upcoming AI support in planning, optimization, and performance analysis.",
   "importInstructionPage.backToPlans": "Back to plans",
@@ -959,8 +938,7 @@ export const enMessages = {
   "importInstructionPage.step2Title": "Exercise structure",
   "importInstructionPage.step3Title": "Exercise adding options",
   "importInstructionPage.step3OptionA": "Option A: Existing exercise",
-  "importInstructionPage.step3OptionB":
-    "Option B: New exercise (snapshot)",
+  "importInstructionPage.step3OptionB": "Option B: New exercise (snapshot)",
   "importInstructionPage.step4Title": "Example JSON file",
   "privacyPolicyPage.title": "Privacy Policy",
   "privacyPolicyPage.lastUpdated": "Last updated: February 2026",
