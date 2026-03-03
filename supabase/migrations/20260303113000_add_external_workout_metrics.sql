@@ -50,29 +50,43 @@ create unique index if not exists idx_external_workouts_user_source_external_id
   on external_workouts(user_id, source, external_id)
   where external_id is not null;
 
-create trigger external_workouts_updated_at
-  before update on external_workouts
-  for each row
-  execute function update_updated_at_column();
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_trigger
+    where tgname = 'external_workouts_updated_at'
+      and tgrelid = 'external_workouts'::regclass
+  ) then
+    create trigger external_workouts_updated_at
+      before update on external_workouts
+      for each row
+      execute function update_updated_at_column();
+  end if;
+end $$;
 
 alter table external_workouts enable row level security;
 
+drop policy if exists external_workouts_select_authenticated on external_workouts;
 create policy external_workouts_select_authenticated on external_workouts
   for select
   to authenticated
   using (user_id = auth.uid());
 
+drop policy if exists external_workouts_insert_authenticated on external_workouts;
 create policy external_workouts_insert_authenticated on external_workouts
   for insert
   to authenticated
   with check (user_id = auth.uid());
 
+drop policy if exists external_workouts_update_authenticated on external_workouts;
 create policy external_workouts_update_authenticated on external_workouts
   for update
   to authenticated
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+drop policy if exists external_workouts_delete_authenticated on external_workouts;
 create policy external_workouts_delete_authenticated on external_workouts
   for delete
   to authenticated
