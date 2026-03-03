@@ -502,6 +502,60 @@ export type Database = {
           },
         ];
       };
+      external_workouts: {
+        Row: {
+          calories: number | null;
+          created_at: string;
+          duration_minutes: number;
+          external_id: string | null;
+          hr_avg: number | null;
+          hr_max: number | null;
+          id: string;
+          intensity_rpe: number | null;
+          notes: string | null;
+          raw_payload: Json | null;
+          source: Database["public"]["Enums"]["external_workout_source"];
+          sport_type: Database["public"]["Enums"]["external_workout_sport_type"];
+          started_at: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          calories?: number | null;
+          created_at?: string;
+          duration_minutes: number;
+          external_id?: string | null;
+          hr_avg?: number | null;
+          hr_max?: number | null;
+          id?: string;
+          intensity_rpe?: number | null;
+          notes?: string | null;
+          raw_payload?: Json | null;
+          source?: Database["public"]["Enums"]["external_workout_source"];
+          sport_type: Database["public"]["Enums"]["external_workout_sport_type"];
+          started_at?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          calories?: number | null;
+          created_at?: string;
+          duration_minutes?: number;
+          external_id?: string | null;
+          hr_avg?: number | null;
+          hr_max?: number | null;
+          id?: string;
+          intensity_rpe?: number | null;
+          notes?: string | null;
+          raw_payload?: Json | null;
+          source?: Database["public"]["Enums"]["external_workout_source"];
+          sport_type?: Database["public"]["Enums"]["external_workout_sport_type"];
+          started_at?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       workout_sessions: {
         Row: {
           active_duration_seconds: number | null;
@@ -581,6 +635,8 @@ export type Database = {
     };
     Enums: {
       ai_request_type: "generate" | "optimize";
+      external_workout_source: "manual" | "garmin" | "apple_health";
+      external_workout_sport_type: "pole_dance" | "calisthenics" | "other";
       exercise_part: "Legs" | "Core" | "Back" | "Arms" | "Chest" | "Glutes";
       exercise_type: "Warm-up" | "Main Workout" | "Cool-down";
       pr_metric_type: "total_reps" | "max_duration" | "max_weight";

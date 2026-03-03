@@ -9,5 +9,4 @@
 
 # Backups
 backups/
-*.sql
 !seed.sql

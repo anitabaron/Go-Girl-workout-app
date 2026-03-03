@@ -11,12 +11,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Flame,
+  Plus,
   RefreshCcw,
   Send,
   TrendingUp,
   Watch,
 } from "lucide-react";
 import { toast } from "sonner";
+import type {
+  ExternalWorkoutSource,
+  ExternalWorkoutSportType,
+} from "@/types";
 import { useTranslations } from "@/i18n/client";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
@@ -29,9 +34,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 type StatisticsSession = {
   id: string;
+  entry_type: "session" | "external";
+  external_workout_id?: string;
   workout_plan_id: string | null;
   plan_name_at_time: string | null;
   started_at: string;
@@ -39,6 +56,13 @@ type StatisticsSession = {
   active_duration_seconds?: number | null;
   exercise_count?: number;
   exercise_names?: string[];
+  external_sport_type?: ExternalWorkoutSportType;
+  external_source?: ExternalWorkoutSource;
+  external_calories?: number | null;
+  external_hr_avg?: number | null;
+  external_hr_max?: number | null;
+  external_intensity_rpe?: number | null;
+  external_notes?: string | null;
 };
 
 type StatisticsDashboardM3Props = {
@@ -119,6 +143,38 @@ function compactWorkoutLabel(name: string): string {
   return name.trim();
 }
 
+function getExternalWorkoutSportLabel(
+  sportType: ExternalWorkoutSportType,
+  t: (key: string) => string,
+): string {
+  if (sportType === "pole_dance") return t("externalSportTypePoleDance");
+  if (sportType === "calisthenics") return t("externalSportTypeCalisthenics");
+  return t("externalSportTypeOther");
+}
+
+function getExternalWorkoutSourceLabel(
+  source: ExternalWorkoutSource,
+  t: (key: string) => string,
+): string {
+  if (source === "garmin") return t("externalSourceGarmin");
+  if (source === "apple_health") return t("externalSourceAppleHealth");
+  return t("externalSourceManual");
+}
+
+function getSessionTitle(
+  session: StatisticsSession,
+  t: (key: string) => string,
+): string {
+  if (session.entry_type === "external") {
+    const sport = getExternalWorkoutSportLabel(
+      session.external_sport_type ?? "other",
+      t,
+    );
+    return `${t("manualWorkoutSessionName")}: ${sport}`;
+  }
+  return session.plan_name_at_time ?? t("deletedPlan");
+}
+
 export function StatisticsDashboardM3({
   title,
   description,
@@ -133,6 +189,22 @@ export function StatisticsDashboardM3({
   const [selectedSession, setSelectedSession] = useState<StatisticsSession | null>(
     null,
   );
+  const [isExternalDialogOpen, setIsExternalDialogOpen] = useState(false);
+  const [isSavingExternalWorkout, setIsSavingExternalWorkout] = useState(false);
+  const [externalWorkoutDate, setExternalWorkoutDate] = useState(() =>
+    toDateKey(new Date()),
+  );
+  const [externalWorkoutDurationMinutes, setExternalWorkoutDurationMinutes] =
+    useState("");
+  const [externalWorkoutSportType, setExternalWorkoutSportType] =
+    useState<ExternalWorkoutSportType>("other");
+  const [externalWorkoutCalories, setExternalWorkoutCalories] = useState("");
+  const [externalWorkoutAvgHeartRate, setExternalWorkoutAvgHeartRate] =
+    useState("");
+  const [externalWorkoutMaxHeartRate, setExternalWorkoutMaxHeartRate] =
+    useState("");
+  const [externalWorkoutRpe, setExternalWorkoutRpe] = useState("");
+  const [externalWorkoutNotes, setExternalWorkoutNotes] = useState("");
 
   const normalizedSessions = useMemo(
     () =>
@@ -239,7 +311,7 @@ export function StatisticsDashboardM3({
 
     const counts = new Map<string, number>();
     for (const session of sessionsLast30Days) {
-      const planName = session.plan_name_at_time ?? t("deletedPlan");
+      const planName = getSessionTitle(session, t);
       counts.set(planName, (counts.get(planName) ?? 0) + 1);
     }
 
@@ -328,6 +400,118 @@ export function StatisticsDashboardM3({
     Boolean(selectedSession?.workout_plan_id) &&
     startingPlanId === selectedSession?.workout_plan_id;
 
+  const resetExternalWorkoutForm = () => {
+    setExternalWorkoutDate(toDateKey(new Date()));
+    setExternalWorkoutDurationMinutes("");
+    setExternalWorkoutSportType("other");
+    setExternalWorkoutCalories("");
+    setExternalWorkoutAvgHeartRate("");
+    setExternalWorkoutMaxHeartRate("");
+    setExternalWorkoutRpe("");
+    setExternalWorkoutNotes("");
+  };
+
+  const handleCreateExternalWorkout = async () => {
+    if (!externalWorkoutDate) {
+      toast.error(t("manualWorkoutInvalidDate"));
+      return;
+    }
+
+    const durationMinutes = Number(externalWorkoutDurationMinutes);
+    if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
+      toast.error(t("manualWorkoutInvalidDuration"));
+      return;
+    }
+
+    let caloriesBurned: number | undefined;
+    if (externalWorkoutCalories.trim().length > 0) {
+      caloriesBurned = Number(externalWorkoutCalories);
+      if (!Number.isInteger(caloriesBurned) || caloriesBurned < 0) {
+        toast.error(t("manualWorkoutInvalidCalories"));
+        return;
+      }
+    }
+
+    let avgHeartRate: number | undefined;
+    if (externalWorkoutAvgHeartRate.trim().length > 0) {
+      avgHeartRate = Number(externalWorkoutAvgHeartRate);
+      if (!Number.isInteger(avgHeartRate) || avgHeartRate < 1 || avgHeartRate > 260) {
+        toast.error(t("manualWorkoutInvalidAvgHeartRate"));
+        return;
+      }
+    }
+
+    let maxHeartRate: number | undefined;
+    if (externalWorkoutMaxHeartRate.trim().length > 0) {
+      maxHeartRate = Number(externalWorkoutMaxHeartRate);
+      if (!Number.isInteger(maxHeartRate) || maxHeartRate < 1 || maxHeartRate > 260) {
+        toast.error(t("manualWorkoutInvalidMaxHeartRate"));
+        return;
+      }
+    }
+    if (
+      typeof avgHeartRate === "number" &&
+      typeof maxHeartRate === "number" &&
+      maxHeartRate < avgHeartRate
+    ) {
+      toast.error(t("manualWorkoutInvalidHeartRateOrder"));
+      return;
+    }
+
+    let intensityRpe: number | undefined;
+    if (externalWorkoutRpe.trim().length > 0) {
+      intensityRpe = Number(externalWorkoutRpe);
+      if (!Number.isInteger(intensityRpe) || intensityRpe < 1 || intensityRpe > 10) {
+        toast.error(t("manualWorkoutInvalidRpe"));
+        return;
+      }
+    }
+
+    const startedAtDate = new Date(`${externalWorkoutDate}T12:00:00`);
+    if (Number.isNaN(startedAtDate.getTime())) {
+      toast.error(t("manualWorkoutInvalidDate"));
+      return;
+    }
+    const startedAt = startedAtDate.toISOString();
+
+    setIsSavingExternalWorkout(true);
+    try {
+      const response = await fetch("/api/external-workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          started_at: startedAt,
+          sport_type: externalWorkoutSportType,
+          duration_minutes: durationMinutes,
+          calories: caloriesBurned,
+          hr_avg: avgHeartRate,
+          hr_max: maxHeartRate,
+          intensity_rpe: intensityRpe,
+          notes: externalWorkoutNotes.trim() || undefined,
+          source: "manual",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json().catch(() => ({}))) as {
+          message?: string;
+        };
+        toast.error(errorData.message ?? t("manualWorkoutSaveFailed"));
+        return;
+      }
+
+      toast.success(t("manualWorkoutSaveSuccess"));
+      setIsExternalDialogOpen(false);
+      resetExternalWorkoutForm();
+      router.refresh();
+    } catch (error) {
+      console.error("Error creating external workout", error);
+      toast.error(t("manualWorkoutSaveFailed"));
+    } finally {
+      setIsSavingExternalWorkout(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <PageHeader title={title} description={description} />
@@ -339,6 +523,14 @@ export function StatisticsDashboardM3({
             <h2 className="m3-title-large">{t("calendarTitle")}</h2>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsExternalDialogOpen(true)}
+            >
+              <Plus className="size-4" />
+              {t("manualWorkoutAddButton")}
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -429,9 +621,7 @@ export function StatisticsDashboardM3({
                       title={t("openDayDetails")}
                     >
                       <span className="block w-full overflow-hidden break-words text-[9px] leading-[1.05] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-                        {compactWorkoutLabel(
-                          daySessions[0].plan_name_at_time ?? t("deletedPlan"),
-                        )}
+                        {compactWorkoutLabel(getSessionTitle(daySessions[0], t))}
                       </span>
                     </button>
                   )}
@@ -445,9 +635,9 @@ export function StatisticsDashboardM3({
                         setSelectedDateKey(dayKey);
                         setSelectedSession(daySessions[0]);
                       }}
-                      title={daySessions[0].plan_name_at_time ?? t("deletedPlan")}
+                      title={getSessionTitle(daySessions[0], t)}
                     >
-                      {daySessions[0].plan_name_at_time ?? t("deletedPlan")}
+                      {getSessionTitle(daySessions[0], t)}
                     </button>
                   )}
                 </div>
@@ -596,6 +786,170 @@ export function StatisticsDashboardM3({
         <p className="text-sm text-muted-foreground">{t("aiDescription")}</p>
       </Surface>
 
+      <Dialog open={isExternalDialogOpen} onOpenChange={setIsExternalDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("manualWorkoutDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("manualWorkoutDialogDescription")}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-date">{t("manualWorkoutDateLabel")}</Label>
+              <Input
+                id="manual-workout-date"
+                type="date"
+                value={externalWorkoutDate}
+                onChange={(event) => setExternalWorkoutDate(event.target.value)}
+                max={toDateKey(new Date())}
+                disabled={isSavingExternalWorkout}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-duration">
+                {t("manualWorkoutDurationLabel")}
+              </Label>
+              <Input
+                id="manual-workout-duration"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={externalWorkoutDurationMinutes}
+                onChange={(event) => setExternalWorkoutDurationMinutes(event.target.value)}
+                placeholder="45"
+                disabled={isSavingExternalWorkout}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-sport-type">
+                {t("manualWorkoutSportTypeLabel")}
+              </Label>
+              <Select
+                value={externalWorkoutSportType}
+                onValueChange={(value) =>
+                  setExternalWorkoutSportType(value as ExternalWorkoutSportType)
+                }
+                disabled={isSavingExternalWorkout}
+              >
+                <SelectTrigger id="manual-workout-sport-type" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pole_dance">
+                    {t("externalSportTypePoleDance")}
+                  </SelectItem>
+                  <SelectItem value="calisthenics">
+                    {t("externalSportTypeCalisthenics")}
+                  </SelectItem>
+                  <SelectItem value="other">{t("externalSportTypeOther")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-calories">
+                {t("manualWorkoutCaloriesLabel")}
+              </Label>
+              <Input
+                id="manual-workout-calories"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={externalWorkoutCalories}
+                onChange={(event) => setExternalWorkoutCalories(event.target.value)}
+                placeholder="420"
+                disabled={isSavingExternalWorkout}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-avg-heart-rate">
+                {t("manualWorkoutAvgHeartRateLabel")}
+              </Label>
+              <Input
+                id="manual-workout-avg-heart-rate"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={260}
+                value={externalWorkoutAvgHeartRate}
+                onChange={(event) => setExternalWorkoutAvgHeartRate(event.target.value)}
+                placeholder="142"
+                disabled={isSavingExternalWorkout}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-max-heart-rate">
+                {t("manualWorkoutMaxHeartRateLabel")}
+              </Label>
+              <Input
+                id="manual-workout-max-heart-rate"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={260}
+                value={externalWorkoutMaxHeartRate}
+                onChange={(event) => setExternalWorkoutMaxHeartRate(event.target.value)}
+                placeholder="178"
+                disabled={isSavingExternalWorkout}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-rpe">{t("manualWorkoutRpeLabel")}</Label>
+              <Input
+                id="manual-workout-rpe"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={10}
+                value={externalWorkoutRpe}
+                onChange={(event) => setExternalWorkoutRpe(event.target.value)}
+                placeholder="7"
+                disabled={isSavingExternalWorkout}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-notes">{t("manualWorkoutNotesLabel")}</Label>
+              <Textarea
+                id="manual-workout-notes"
+                value={externalWorkoutNotes}
+                onChange={(event) => setExternalWorkoutNotes(event.target.value)}
+                placeholder={t("manualWorkoutNotesPlaceholder")}
+                disabled={isSavingExternalWorkout}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsExternalDialogOpen(false);
+                  resetExternalWorkoutForm();
+                }}
+                disabled={isSavingExternalWorkout}
+              >
+                {t("manualWorkoutCancel")}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCreateExternalWorkout}
+                disabled={isSavingExternalWorkout}
+              >
+                {isSavingExternalWorkout
+                  ? t("manualWorkoutSaving")
+                  : t("manualWorkoutSave")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog
         open={Boolean(selectedSession)}
         onOpenChange={(open) => {
@@ -605,7 +959,7 @@ export function StatisticsDashboardM3({
         {selectedSession && (
           <DialogContent className="sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle>{selectedSession.plan_name_at_time ?? t("deletedPlan")}</DialogTitle>
+              <DialogTitle>{getSessionTitle(selectedSession, t)}</DialogTitle>
               <DialogDescription>{t("sessionDetailsModalSubtitle")}</DialogDescription>
             </DialogHeader>
 
@@ -633,7 +987,76 @@ export function StatisticsDashboardM3({
                   <span className="text-muted-foreground">{t("sessionExercisesLabel")}</span>
                   <span className="font-medium">{selectedSession.exercise_count ?? 0}</span>
                 </div>
+                {selectedSession.entry_type === "external" && (
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t("sessionExternalSportTypeLabel")}
+                    </span>
+                    <span className="font-medium">
+                      {getExternalWorkoutSportLabel(
+                        selectedSession.external_sport_type ?? "other",
+                        t,
+                      )}
+                    </span>
+                  </div>
+                )}
+                {selectedSession.entry_type === "external" && (
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t("sessionExternalSourceLabel")}
+                    </span>
+                    <span className="font-medium">
+                      {getExternalWorkoutSourceLabel(
+                        selectedSession.external_source ?? "manual",
+                        t,
+                      )}
+                    </span>
+                  </div>
+                )}
+                {typeof selectedSession.external_calories === "number" && (
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{t("sessionCaloriesLabel")}</span>
+                    <span className="font-medium">
+                      {selectedSession.external_calories} kcal
+                    </span>
+                  </div>
+                )}
+                {typeof selectedSession.external_hr_avg === "number" && (
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t("sessionAvgHeartRateLabel")}
+                    </span>
+                    <span className="font-medium">
+                      {selectedSession.external_hr_avg} bpm
+                    </span>
+                  </div>
+                )}
+                {typeof selectedSession.external_hr_max === "number" && (
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{t("sessionMaxHeartRateLabel")}</span>
+                    <span className="font-medium">
+                      {selectedSession.external_hr_max} bpm
+                    </span>
+                  </div>
+                )}
+                {typeof selectedSession.external_intensity_rpe === "number" && (
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{t("sessionRpeLabel")}</span>
+                    <span className="font-medium">
+                      {selectedSession.external_intensity_rpe}/10
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {selectedSession.external_notes && (
+                <div className="rounded-lg border border-border bg-card p-3">
+                  <p className="mb-2 text-sm font-medium">{t("sessionNotesLabel")}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedSession.external_notes}
+                  </p>
+                </div>
+              )}
 
               {selectedSession.exercise_names && selectedSession.exercise_names.length > 0 && (
                 <div className="rounded-lg border border-border bg-card p-3">
@@ -645,21 +1068,25 @@ export function StatisticsDashboardM3({
               )}
 
               <div className="flex flex-wrap gap-2">
-                <Button asChild variant="outline" onClick={() => setSelectedSession(null)}>
-                  <Link href={`/workout-sessions/${selectedSession.id}`}>
-                    {t("openDetails")}
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleRepeatPlan(selectedSession.workout_plan_id)}
-                  disabled={!selectedSessionHasPlan || isStartingSelectedPlan}
-                >
-                  {isStartingSelectedPlan ? t("startingPlan") : t("repeatPlan")}
-                </Button>
+                {selectedSession.entry_type === "session" && (
+                  <Button asChild variant="outline" onClick={() => setSelectedSession(null)}>
+                    <Link href={`/workout-sessions/${selectedSession.id}`}>
+                      {t("openDetails")}
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                )}
+                {selectedSession.entry_type === "session" && (
+                  <Button
+                    type="button"
+                    onClick={() => handleRepeatPlan(selectedSession.workout_plan_id)}
+                    disabled={!selectedSessionHasPlan || isStartingSelectedPlan}
+                  >
+                    {isStartingSelectedPlan ? t("startingPlan") : t("repeatPlan")}
+                  </Button>
+                )}
               </div>
-              {!selectedSessionHasPlan && (
+              {selectedSession.entry_type === "session" && !selectedSessionHasPlan && (
                 <p className="text-sm text-muted-foreground">
                   {t("repeatPlanDeleted")}
                 </p>

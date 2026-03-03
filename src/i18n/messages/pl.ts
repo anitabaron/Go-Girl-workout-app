@@ -903,6 +903,47 @@ export const plMessages = {
   "statisticsPage.weekdayFri": "Pt",
   "statisticsPage.weekdaySat": "Sob",
   "statisticsPage.weekdaySun": "Nd",
+  "statisticsPage.manualWorkoutAddButton": "Dodaj trening spoza aplikacji",
+  "statisticsPage.manualWorkoutDialogTitle": "Dodaj trening spoza aplikacji",
+  "statisticsPage.manualWorkoutDialogDescription":
+    "Wpisz ręcznie trening wykonany poza aplikacją (np. z zegarka).",
+  "statisticsPage.manualWorkoutDateLabel": "Data treningu",
+  "statisticsPage.manualWorkoutDurationLabel": "Czas trwania (min)",
+  "statisticsPage.manualWorkoutSportTypeLabel": "Typ sportu",
+  "statisticsPage.manualWorkoutCaloriesLabel": "Kalorie (kcal)",
+  "statisticsPage.manualWorkoutAvgHeartRateLabel": "Średnie tętno (opcjonalnie)",
+  "statisticsPage.manualWorkoutMaxHeartRateLabel": "Maksymalne tętno (opcjonalnie)",
+  "statisticsPage.manualWorkoutRpeLabel": "Intensywność RPE 1-10 (opcjonalnie)",
+  "statisticsPage.manualWorkoutNotesLabel": "Notatki (opcjonalnie)",
+  "statisticsPage.manualWorkoutNotesPlaceholder":
+    "Np. trening z Garmin, interwały, samopoczucie...",
+  "statisticsPage.manualWorkoutCancel": "Anuluj",
+  "statisticsPage.manualWorkoutSave": "Zapisz trening",
+  "statisticsPage.manualWorkoutSaving": "Zapisywanie...",
+  "statisticsPage.manualWorkoutSessionName": "Trening spoza aplikacji",
+  "statisticsPage.manualWorkoutSaveSuccess": "Trening zapisany w kalendarzu.",
+  "statisticsPage.manualWorkoutSaveFailed":
+    "Nie udało się zapisać treningu. Spróbuj ponownie.",
+  "statisticsPage.manualWorkoutInvalidDate":
+    "Podaj prawidłową datę treningu.",
+  "statisticsPage.manualWorkoutInvalidDuration":
+    "Czas trwania musi być dodatnią liczbą minut.",
+  "statisticsPage.manualWorkoutInvalidCalories":
+    "Kalorie muszą być liczbą całkowitą (0 lub więcej).",
+  "statisticsPage.manualWorkoutInvalidAvgHeartRate":
+    "Średnie tętno musi być w zakresie 1-260 bpm.",
+  "statisticsPage.manualWorkoutInvalidMaxHeartRate":
+    "Maksymalne tętno musi być w zakresie 1-260 bpm.",
+  "statisticsPage.manualWorkoutInvalidHeartRateOrder":
+    "Maksymalne tętno nie może być mniejsze niż średnie tętno.",
+  "statisticsPage.manualWorkoutInvalidRpe":
+    "RPE musi być liczbą całkowitą w zakresie 1-10.",
+  "statisticsPage.externalSportTypePoleDance": "Pole dance",
+  "statisticsPage.externalSportTypeCalisthenics": "Kalistenika",
+  "statisticsPage.externalSportTypeOther": "Inny",
+  "statisticsPage.externalSourceManual": "Ręcznie",
+  "statisticsPage.externalSourceGarmin": "Garmin",
+  "statisticsPage.externalSourceAppleHealth": "Apple Health",
   "statisticsPage.moreWorkouts": "więcej",
   "statisticsPage.selectedDayWithWorkouts": "Wykonane treningi tego dnia.",
   "statisticsPage.selectedDayEmpty": "Brak treningów tego dnia.",
@@ -926,6 +967,13 @@ export const plMessages = {
   "statisticsPage.sessionDateLabel": "Data treningu",
   "statisticsPage.sessionDurationLabel": "Czas trwania",
   "statisticsPage.sessionExercisesLabel": "Liczba ćwiczeń",
+  "statisticsPage.sessionExternalSportTypeLabel": "Typ sportu",
+  "statisticsPage.sessionExternalSourceLabel": "Źródło",
+  "statisticsPage.sessionCaloriesLabel": "Kalorie",
+  "statisticsPage.sessionAvgHeartRateLabel": "Średnie tętno",
+  "statisticsPage.sessionMaxHeartRateLabel": "Maksymalne tętno",
+  "statisticsPage.sessionRpeLabel": "Intensywność RPE",
+  "statisticsPage.sessionNotesLabel": "Notatki",
   "statisticsPage.sessionExerciseNamesLabel": "Ćwiczenia",
   "statisticsPage.minutesShort": "min",
   "statisticsPage.hoursShort": "h",
