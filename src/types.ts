@@ -21,6 +21,8 @@ export type ExerciseType = Enums<"exercise_type">;
 export type WorkoutSessionStatus = Enums<"workout_session_status">;
 export type PRMetricType = Enums<"pr_metric_type">;
 export type AIRequestType = Enums<"ai_request_type">;
+export type ExternalWorkoutSportType = Enums<"external_workout_sport_type">;
+export type ExternalWorkoutSource = Enums<"external_workout_source">;
 
 /**
  * Base entity aliases for convenience.
@@ -31,6 +33,7 @@ export type WorkoutPlanExerciseEntity = Tables<"workout_plan_exercises">;
 export type WorkoutSessionEntity = Tables<"workout_sessions">;
 export type WorkoutSessionExerciseEntity = Tables<"workout_session_exercises">;
 export type WorkoutSessionSetEntity = Tables<"workout_session_sets">;
+export type ExternalWorkoutEntity = Tables<"external_workouts">;
 export type PersonalRecordEntity = Tables<"personal_records">;
 export type AIUsageEntity = Tables<"ai_usage">;
 export type AIRequestEntity = Tables<"ai_requests">;
@@ -296,6 +299,32 @@ export type SessionExerciseAutosaveResponse = SessionExerciseDTO & {
     current_position: number;
     last_action_at: string;
   };
+};
+
+/**
+ * External Workouts
+ */
+export type ExternalWorkoutCreateCommand = Pick<
+  TablesInsert<"external_workouts">,
+  | "started_at"
+  | "sport_type"
+  | "duration_minutes"
+  | "calories"
+  | "hr_avg"
+  | "hr_max"
+  | "intensity_rpe"
+  | "notes"
+  | "source"
+  | "external_id"
+  | "raw_payload"
+>;
+
+export type ExternalWorkoutDTO = Omit<ExternalWorkoutEntity, "user_id">;
+
+export type ExternalWorkoutListQueryParams = {
+  from?: string;
+  to?: string;
+  limit?: number;
 };
 
 /**

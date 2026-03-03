@@ -158,6 +158,69 @@ test.describe("Statistics", () => {
     await expect(page).toHaveURL(/\/workout-sessions\/[^/]+\/active/);
   });
 
+  test("E2E-STAT-003 should allow adding external workout from statistics page", async ({
+    page,
+  }) => {
+    test.setTimeout(60000);
+    await authenticateUser(page);
+
+    await page.goto("/statistics");
+    await page.waitForLoadState("networkidle", { timeout: 30000 });
+
+    await page
+      .getByRole("button", {
+        name: /Dodaj trening spoza aplikacji|Add workout from outside app/i,
+      })
+      .click();
+
+    await page
+      .getByLabel(/Czas trwania \(min\)|Duration \(min\)/i)
+      .fill("47");
+    await page
+      .getByLabel(/Kalorie \(kcal\)|Calories \(kcal\)/i)
+      .fill("333");
+    await page
+      .getByLabel(/Średnie tętno|Avg heart rate/i)
+      .fill("150");
+    await page
+      .getByLabel(/Maksymalne tętno|Max heart rate/i)
+      .fill("177");
+    await page
+      .getByLabel(/Intensywność RPE|Intensity RPE/i)
+      .fill("8");
+
+    await page
+      .getByRole("button", { name: /Zapisz trening|Save workout/i })
+      .click();
+
+    await expect(
+      page.getByRole("dialog", { name: /Dodaj trening|Add external workout/i }),
+    ).not.toBeVisible({ timeout: 15000 });
+
+    const response = await page.request.get("/api/external-workouts?limit=30");
+    expect(response.ok()).toBe(true);
+    const payload = (await response.json()) as {
+      items: Array<{
+        calories?: number | null;
+        hr_avg?: number | null;
+        hr_max?: number | null;
+        intensity_rpe?: number | null;
+        source?: string | null;
+      }>;
+    };
+
+    const created = payload.items.find(
+      (item) =>
+        item.calories === 333 &&
+        item.hr_avg === 150 &&
+        item.hr_max === 177 &&
+        item.intensity_rpe === 8 &&
+        item.source === "manual",
+    );
+
+    expect(created).toBeTruthy();
+  });
+
   test("E2E-I18N-001 should persist selected language after reload and page navigation", async ({
     page,
   }) => {

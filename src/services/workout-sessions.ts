@@ -63,6 +63,7 @@ export async function startWorkoutSessionService(
   const parsed = parseOrThrow(sessionStartSchema, payload);
 
   const supabase = await createClient();
+  const workoutPlanId = parsed.workout_plan_id;
 
   // Sprawdź, czy użytkownik ma już sesję in_progress
   const { data: existingSession, error: existingError } =
@@ -86,7 +87,7 @@ export async function startWorkoutSessionService(
   const { data: plan, error: planError } = await findWorkoutPlanById(
     supabase,
     userId,
-    parsed.workout_plan_id,
+    workoutPlanId,
   );
 
   if (planError) {
@@ -102,7 +103,7 @@ export async function startWorkoutSessionService(
 
   // Pobierz ćwiczenia planu
   const { data: planExercises, error: planExercisesError } =
-    await listWorkoutPlanExercises(supabase, parsed.workout_plan_id);
+    await listWorkoutPlanExercises(supabase, workoutPlanId);
 
   if (planExercisesError) {
     throw mapDbError(planExercisesError);
@@ -148,7 +149,7 @@ export async function startWorkoutSessionService(
     supabase,
     userId,
     {
-      workout_plan_id: parsed.workout_plan_id,
+      workout_plan_id: workoutPlanId,
       plan_name_at_time: plan.name,
     },
   );
