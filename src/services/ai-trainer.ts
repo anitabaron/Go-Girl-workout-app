@@ -1,5 +1,11 @@
 import { createClient } from "@/db/supabase.server";
-import { assertUser, mapDbError, parseOrThrow } from "@/lib/service-utils";
+import { getOpenAIClient } from "@/lib/openai";
+import {
+  ServiceError,
+  assertUser,
+  mapDbError,
+  parseOrThrow,
+} from "@/lib/service-utils";
 import {
   aiTrainerChatSchema,
   type AITrainerChatCommand,
@@ -29,6 +35,25 @@ type ExternalWorkoutPreview = {
   sport_type: string;
 };
 
+function getErrorSummary(error: unknown): string {
+  if (error && typeof error === "object") {
+    const maybe = error as {
+      status?: number;
+      code?: string;
+      type?: string;
+      message?: string;
+    };
+    const parts = [
+      maybe.status ? `status=${maybe.status}` : "",
+      maybe.code ? `code=${maybe.code}` : "",
+      maybe.type ? `type=${maybe.type}` : "",
+      maybe.message ? `message=${maybe.message}` : "",
+    ].filter(Boolean);
+    if (parts.length > 0) return parts.join(", ");
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
 function summarizeExternalWorkouts(
   workouts: ExternalWorkoutPreview[],
 ): Pick<
@@ -55,58 +80,102 @@ function summarizeExternalWorkouts(
   };
 }
 
-function buildRecommendations(
+function buildFallbackRecommendations(
   input: AITrainerChatCommand,
   context: AITrainerChatResponse["context"],
 ): string[] {
-  const recs: string[] = [];
+  const recommendations: string[] = [];
 
   if (context.external_workouts_last_7d >= 3) {
-    recs.push(
-      "Ten tydzień jest już dość obciążony. Warto skrócić najbliższy trening o 10-15 minut i utrzymać RPE 6-7.",
+    recommendations.push(
+      "Ogranicz intensywność najbliższego treningu i utrzymaj RPE w przedziale 6-7.",
     );
   } else {
-    recs.push(
-      "Możesz progresować objętość: dodaj 1 serię w głównym ćwiczeniu lub +2 powtórzenia w ostatniej serii.",
+    recommendations.push(
+      "Możesz lekko progresować objętość: +1 seria w ćwiczeniu głównym.",
     );
   }
 
   if (input.workout_plan_id) {
-    recs.push(
-      "Dla wybranego planu przygotuj wariant A (standard) i B (lżejszy), aby szybko reagować na zmęczenie.",
+    recommendations.push(
+      "Dla bieżącego planu przygotuj wariant standard i lżejszy zależnie od regeneracji.",
     );
   } else {
-    recs.push(
-      "Trzymaj 2 uniwersalne szablony (Workout 1 i Workout 2), a sesję finalną dobieraj dynamicznie pod aktualny stan.",
+    recommendations.push(
+      "Utrzymuj dwa szablony bazowe: Workout 1 oraz Workout 2.",
     );
   }
 
   if (context.top_sport_last_7d) {
-    recs.push(
-      `Najczęstsza aktywność poza aplikacją: ${context.top_sport_last_7d}. Uwzględnij to przy doborze intensywności kolejnego treningu.`,
+    recommendations.push(
+      `Uwzględnij obciążenie z aktywności: ${context.top_sport_last_7d}.`,
     );
   }
 
-  return recs;
+  return recommendations.slice(0, 3);
 }
 
-function buildReply(
+function extractRecommendations(reply: string): string[] {
+  const lines = reply
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const bulletLines = lines
+    .filter((line) => /^[-*\d.]/.test(line))
+    .map((line) => line.replace(/^[-*\d.\s]+/, "").trim())
+    .filter(Boolean);
+
+  if (bulletLines.length >= 2) {
+    return bulletLines.slice(0, 3);
+  }
+  return [];
+}
+
+async function generateAIReply(
   input: AITrainerChatCommand,
   context: AITrainerChatResponse["context"],
-  recommendations: string[],
-): string {
-  const plansPreview =
-    context.plans_preview.length > 0
-      ? context.plans_preview.join(", ")
-      : "brak planów";
+): Promise<string> {
+  const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+  const openai = getOpenAIClient();
 
-  return [
-    `Analiza kontekstu: masz ${context.plans_count} plan(ów) (${plansPreview}).`,
-    `W ostatnich 7 dniach: ${context.external_workouts_last_7d} trening(i) spoza aplikacji, łącznie ${context.external_duration_minutes_last_7d} min.`,
-    `Twoja wiadomość: "${input.message}".`,
-    "Proponuję taki kierunek:",
-    ...recommendations.map((rec, index) => `${index + 1}. ${rec}`),
+  const plansPreview =
+    context.plans_preview.length > 0 ? context.plans_preview.join(", ") : "brak";
+  const prompt = [
+    "Jesteś trenerem AI w aplikacji treningowej.",
+    "Twórz krótkie, konkretne odpowiedzi po polsku.",
+    "Uwzględniaj regenerację, ryzyko przeciążenia i treningi poza aplikacją.",
+    "Na końcu dodaj sekcję 'Rekomendacje:' z 2-3 punktami (lista).",
+    "",
+    "Kontekst użytkownika:",
+    `- liczba planów: ${context.plans_count}`,
+    `- podgląd planów: ${plansPreview}`,
+    `- treningi poza aplikacją (7 dni): ${context.external_workouts_last_7d}`,
+    `- czas treningów poza aplikacją (7 dni): ${context.external_duration_minutes_last_7d} min`,
+    `- najczęstszy sport (7 dni): ${context.top_sport_last_7d ?? "brak"}`,
+    input.workout_plan_id
+      ? `- tryb: optymalizacja planu ${input.workout_plan_id}`
+      : "- tryb: generowanie wskazówek do planu",
+    "",
+    `Wiadomość użytkownika: ${input.message}`,
   ].join("\n");
+
+  const response = await openai.responses.create({
+    model,
+    input: [
+      {
+        role: "system",
+        content:
+          "Jesteś ekspertem planowania treningu siłowego i kondycyjnego. Nie udzielasz porad medycznych.",
+      },
+      { role: "user", content: prompt },
+    ],
+  });
+
+  const reply = response.output_text?.trim();
+  if (!reply) {
+    throw new ServiceError("INTERNAL", "Model nie zwrócił treści odpowiedzi.");
+  }
+  return reply;
 }
 
 export async function aiTrainerChatService(
@@ -154,8 +223,31 @@ export async function aiTrainerChatService(
     ...externalSummary,
   };
 
-  const recommendations = buildRecommendations(parsed, context);
-  const reply = buildReply(parsed, context, recommendations);
+  let reply = "";
+  let recommendations: string[] = [];
+  try {
+    reply = await generateAIReply(parsed, context);
+    recommendations = extractRecommendations(reply);
+    if (recommendations.length === 0) {
+      recommendations = buildFallbackRecommendations(parsed, context);
+    }
+  } catch (error) {
+    console.error("[aiTrainerChatService] OpenAI call failed, using fallback", error);
+    recommendations = buildFallbackRecommendations(parsed, context);
+    const diagnostic = getErrorSummary(error);
+    const diagnosticLine =
+      process.env.NODE_ENV === "production"
+        ? ""
+        : `\n[diag] ${diagnostic}`;
+    reply = [
+      "Nie udało się pobrać pełnej odpowiedzi modelu, dlatego używam bezpiecznego trybu fallback.",
+      diagnosticLine,
+      "Rekomendacje:",
+      ...recommendations.map((item, index) => `${index + 1}. ${item}`),
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
 
   const requestType = parsed.workout_plan_id ? "optimize" : "generate";
   const response: AITrainerChatResponse = {
