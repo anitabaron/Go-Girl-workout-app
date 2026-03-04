@@ -891,7 +891,11 @@ export const enMessages = {
   "statisticsPage.manualWorkoutDateLabel": "Workout date",
   "statisticsPage.manualWorkoutDurationLabel": "Duration (min)",
   "statisticsPage.manualWorkoutSportTypeLabel": "Sport type",
-  "statisticsPage.manualWorkoutCaloriesLabel": "Calories (kcal)",
+  "statisticsPage.manualWorkoutSportTypePlaceholder":
+    "e.g. pole_dance, calisthenics, yoga",
+  "statisticsPage.manualWorkoutCaloriesLabel": "Calories (kcal, optional)",
+  "statisticsPage.manualWorkoutSourceLabel": "Source (optional)",
+  "statisticsPage.manualWorkoutSourcePlaceholder": "Default: manual",
   "statisticsPage.manualWorkoutAvgHeartRateLabel": "Avg heart rate (optional)",
   "statisticsPage.manualWorkoutMaxHeartRateLabel": "Max heart rate (optional)",
   "statisticsPage.manualWorkoutRpeLabel": "Intensity RPE 1-10 (optional)",
@@ -908,6 +912,8 @@ export const enMessages = {
   "statisticsPage.manualWorkoutInvalidDate": "Provide a valid workout date.",
   "statisticsPage.manualWorkoutInvalidDuration":
     "Duration must be a positive number of minutes.",
+  "statisticsPage.manualWorkoutInvalidSportType":
+    "Provide a sport type.",
   "statisticsPage.manualWorkoutInvalidCalories":
     "Calories must be an integer (0 or higher).",
   "statisticsPage.manualWorkoutInvalidAvgHeartRate":

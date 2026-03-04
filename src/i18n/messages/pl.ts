@@ -910,7 +910,12 @@ export const plMessages = {
   "statisticsPage.manualWorkoutDateLabel": "Data treningu",
   "statisticsPage.manualWorkoutDurationLabel": "Czas trwania (min)",
   "statisticsPage.manualWorkoutSportTypeLabel": "Typ sportu",
-  "statisticsPage.manualWorkoutCaloriesLabel": "Kalorie (kcal)",
+  "statisticsPage.manualWorkoutSportTypePlaceholder":
+    "np. pole_dance, calisthenics, yoga",
+  "statisticsPage.manualWorkoutCaloriesLabel": "Kalorie (kcal, opcjonalnie)",
+  "statisticsPage.manualWorkoutSourceLabel": "Źródło (opcjonalnie)",
+  "statisticsPage.manualWorkoutSourcePlaceholder":
+    "Domyślnie: ręcznie",
   "statisticsPage.manualWorkoutAvgHeartRateLabel": "Średnie tętno (opcjonalnie)",
   "statisticsPage.manualWorkoutMaxHeartRateLabel": "Maksymalne tętno (opcjonalnie)",
   "statisticsPage.manualWorkoutRpeLabel": "Intensywność RPE 1-10 (opcjonalnie)",
@@ -928,6 +933,8 @@ export const plMessages = {
     "Podaj prawidłową datę treningu.",
   "statisticsPage.manualWorkoutInvalidDuration":
     "Czas trwania musi być dodatnią liczbą minut.",
+  "statisticsPage.manualWorkoutInvalidSportType":
+    "Podaj typ sportu.",
   "statisticsPage.manualWorkoutInvalidCalories":
     "Kalorie muszą być liczbą całkowitą (0 lub więcej).",
   "statisticsPage.manualWorkoutInvalidAvgHeartRate":

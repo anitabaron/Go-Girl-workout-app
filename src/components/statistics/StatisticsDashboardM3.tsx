@@ -69,6 +69,7 @@ type StatisticsDashboardM3Props = {
   title: string;
   description: string;
   sessions: StatisticsSession[];
+  availableExternalSportTypes: string[];
 };
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -143,13 +144,21 @@ function compactWorkoutLabel(name: string): string {
   return name.trim();
 }
 
+function humanizeSportType(value: string): string {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function getExternalWorkoutSportLabel(
-  sportType: ExternalWorkoutSportType,
+  sportType: string,
   t: (key: string) => string,
 ): string {
   if (sportType === "pole_dance") return t("externalSportTypePoleDance");
   if (sportType === "calisthenics") return t("externalSportTypeCalisthenics");
-  return t("externalSportTypeOther");
+  if (sportType === "other") return t("externalSportTypeOther");
+  return humanizeSportType(sportType);
 }
 
 function getExternalWorkoutSourceLabel(
@@ -179,6 +188,7 @@ export function StatisticsDashboardM3({
   title,
   description,
   sessions,
+  availableExternalSportTypes,
 }: Readonly<StatisticsDashboardM3Props>) {
   const t = useTranslations("statisticsPage");
   const router = useRouter();
@@ -197,7 +207,7 @@ export function StatisticsDashboardM3({
   const [externalWorkoutDurationMinutes, setExternalWorkoutDurationMinutes] =
     useState("");
   const [externalWorkoutSportType, setExternalWorkoutSportType] =
-    useState<ExternalWorkoutSportType>("other");
+    useState("pole_dance");
   const [externalWorkoutCalories, setExternalWorkoutCalories] = useState("");
   const [externalWorkoutAvgHeartRate, setExternalWorkoutAvgHeartRate] =
     useState("");
@@ -205,6 +215,14 @@ export function StatisticsDashboardM3({
     useState("");
   const [externalWorkoutRpe, setExternalWorkoutRpe] = useState("");
   const [externalWorkoutNotes, setExternalWorkoutNotes] = useState("");
+  const [externalWorkoutSource, setExternalWorkoutSource] = useState<
+    ExternalWorkoutSource | ""
+  >("");
+  const externalWorkoutSportSuggestions = useMemo(() => {
+    const base = ["pole_dance", "calisthenics"];
+    const values = [...base, ...availableExternalSportTypes];
+    return Array.from(new Set(values.map((item) => item.trim()).filter(Boolean)));
+  }, [availableExternalSportTypes]);
 
   const normalizedSessions = useMemo(
     () =>
@@ -403,12 +421,13 @@ export function StatisticsDashboardM3({
   const resetExternalWorkoutForm = () => {
     setExternalWorkoutDate(toDateKey(new Date()));
     setExternalWorkoutDurationMinutes("");
-    setExternalWorkoutSportType("other");
+    setExternalWorkoutSportType("pole_dance");
     setExternalWorkoutCalories("");
     setExternalWorkoutAvgHeartRate("");
     setExternalWorkoutMaxHeartRate("");
     setExternalWorkoutRpe("");
     setExternalWorkoutNotes("");
+    setExternalWorkoutSource("");
   };
 
   const handleCreateExternalWorkout = async () => {
@@ -420,6 +439,12 @@ export function StatisticsDashboardM3({
     const durationMinutes = Number(externalWorkoutDurationMinutes);
     if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
       toast.error(t("manualWorkoutInvalidDuration"));
+      return;
+    }
+
+    const sportType = externalWorkoutSportType.trim();
+    if (sportType.length === 0) {
+      toast.error(t("manualWorkoutInvalidSportType"));
       return;
     }
 
@@ -481,14 +506,14 @@ export function StatisticsDashboardM3({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           started_at: startedAt,
-          sport_type: externalWorkoutSportType,
+          sport_type: sportType,
           duration_minutes: durationMinutes,
           calories: caloriesBurned,
           hr_avg: avgHeartRate,
           hr_max: maxHeartRate,
           intensity_rpe: intensityRpe,
           notes: externalWorkoutNotes.trim() || undefined,
-          source: "manual",
+          source: externalWorkoutSource || undefined,
         }),
       });
 
@@ -826,26 +851,20 @@ export function StatisticsDashboardM3({
               <Label htmlFor="manual-workout-sport-type">
                 {t("manualWorkoutSportTypeLabel")}
               </Label>
-              <Select
+              <Input
+                id="manual-workout-sport-type"
+                type="text"
                 value={externalWorkoutSportType}
-                onValueChange={(value) =>
-                  setExternalWorkoutSportType(value as ExternalWorkoutSportType)
-                }
+                onChange={(event) => setExternalWorkoutSportType(event.target.value)}
+                list="manual-workout-sport-type-suggestions"
+                placeholder={t("manualWorkoutSportTypePlaceholder")}
                 disabled={isSavingExternalWorkout}
-              >
-                <SelectTrigger id="manual-workout-sport-type" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pole_dance">
-                    {t("externalSportTypePoleDance")}
-                  </SelectItem>
-                  <SelectItem value="calisthenics">
-                    {t("externalSportTypeCalisthenics")}
-                  </SelectItem>
-                  <SelectItem value="other">{t("externalSportTypeOther")}</SelectItem>
-                </SelectContent>
-              </Select>
+              />
+              <datalist id="manual-workout-sport-type-suggestions">
+                {externalWorkoutSportSuggestions.map((sportType) => (
+                  <option key={sportType} value={sportType} />
+                ))}
+              </datalist>
             </div>
 
             <div className="space-y-2">
@@ -862,6 +881,30 @@ export function StatisticsDashboardM3({
                 placeholder="420"
                 disabled={isSavingExternalWorkout}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manual-workout-source">
+                {t("manualWorkoutSourceLabel")}
+              </Label>
+              <Select
+                value={externalWorkoutSource || "manual"}
+                onValueChange={(value) =>
+                  setExternalWorkoutSource(value as ExternalWorkoutSource)
+                }
+                disabled={isSavingExternalWorkout}
+              >
+                <SelectTrigger id="manual-workout-source" className="w-full">
+                  <SelectValue placeholder={t("manualWorkoutSourcePlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">{t("externalSourceManual")}</SelectItem>
+                  <SelectItem value="garmin">{t("externalSourceGarmin")}</SelectItem>
+                  <SelectItem value="apple_health">
+                    {t("externalSourceAppleHealth")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

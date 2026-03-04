@@ -21,7 +21,7 @@ export type ExerciseType = Enums<"exercise_type">;
 export type WorkoutSessionStatus = Enums<"workout_session_status">;
 export type PRMetricType = Enums<"pr_metric_type">;
 export type AIRequestType = Enums<"ai_request_type">;
-export type ExternalWorkoutSportType = Enums<"external_workout_sport_type">;
+export type ExternalWorkoutSportType = string;
 export type ExternalWorkoutSource = Enums<"external_workout_source">;
 
 /**

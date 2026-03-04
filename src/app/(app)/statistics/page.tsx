@@ -1,6 +1,9 @@
 import { requireAuth } from "@/lib/auth";
 import { getTranslations } from "@/i18n/server";
-import { listExternalWorkoutsService } from "@/services/external-workouts";
+import {
+  listExternalWorkoutSportTypesService,
+  listExternalWorkoutsService,
+} from "@/services/external-workouts";
 import { listWorkoutSessionsService } from "@/services/workout-sessions";
 import type {
   ExternalWorkoutSource,
@@ -115,13 +118,17 @@ async function fetchStatisticsSessions(
 export default async function StatisticsPage() {
   const t = await getTranslations("statisticsPage");
   const userId = await requireAuth();
-  const sessions = await fetchStatisticsSessions(userId);
+  const [sessions, availableExternalSportTypes] = await Promise.all([
+    fetchStatisticsSessions(userId),
+    listExternalWorkoutSportTypesService(userId).then((result) => result.items),
+  ]);
 
   return (
     <StatisticsDashboardM3
       title={t("title")}
       description={t("description")}
       sessions={sessions}
+      availableExternalSportTypes={availableExternalSportTypes}
     />
   );
 }

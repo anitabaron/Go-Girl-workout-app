@@ -66,3 +66,26 @@ export async function insertExternalWorkout(
 
   return { data: mapExternalWorkout(data as ExternalWorkoutRow), error: null };
 }
+
+export async function listExternalWorkoutSportTypesByUserId(
+  client: DbClient,
+  userId: string,
+): Promise<{ data: string[]; error: PostgrestError | null }> {
+  const { data, error } = await client
+    .from("external_workouts")
+    .select("sport_type, started_at")
+    .eq("user_id", userId)
+    .order("started_at", { ascending: false })
+    .limit(1000);
+
+  if (error || !data) return { data: [], error };
+
+  const unique = new Set<string>();
+  for (const row of data) {
+    if (typeof row.sport_type === "string" && row.sport_type.trim().length > 0) {
+      unique.add(row.sport_type.trim());
+    }
+  }
+
+  return { data: Array.from(unique), error: null };
+}
