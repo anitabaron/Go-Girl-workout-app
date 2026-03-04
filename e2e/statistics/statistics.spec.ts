@@ -173,6 +173,14 @@ test.describe("Statistics", () => {
       })
       .click();
 
+    await page.getByLabel(/Typ sportu|Sport type/i).click();
+    await page
+      .getByRole("option", {
+        name: /Pole dance|Kalistenika|Calisthenics|Inny|Other/i,
+      })
+      .first()
+      .click();
+
     await page
       .getByLabel(/Czas trwania \(min\)|Duration \(min\)/i)
       .fill("47");
@@ -189,9 +197,19 @@ test.describe("Statistics", () => {
       .getByLabel(/Intensywność RPE|Intensity RPE/i)
       .fill("8");
 
+    const createExternalWorkoutRequest = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/external-workouts") &&
+        response.request().method() === "POST",
+      { timeout: 15000 },
+    );
+
     await page
       .getByRole("button", { name: /Zapisz trening|Save workout/i })
       .click();
+
+    const createResponse = await createExternalWorkoutRequest;
+    expect(createResponse.ok()).toBe(true);
 
     await expect(
       page.getByRole("dialog", { name: /Dodaj trening|Add external workout/i }),
