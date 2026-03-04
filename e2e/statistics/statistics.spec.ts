@@ -92,7 +92,7 @@ test.describe("Statistics", () => {
     test.setTimeout(90000);
     await authenticateUser(page);
 
-    const { planName, planId } = await createWorkoutPlan(page, {
+    const { planId } = await createWorkoutPlan(page, {
       planName: `Stats Modal Plan ${Date.now()}`,
       exercises: [
         { part: "Arms", series: 1, reps: 1 },
@@ -104,7 +104,7 @@ test.describe("Statistics", () => {
     await page.goto("/statistics");
     await page.waitForLoadState("networkidle", { timeout: 30000 });
     const planButton = page
-      .getByRole("button", { name: new RegExp(planName, "i") })
+      .getByRole("button", { name: /^Stats Modal Plan/i })
       .first();
     await expect(planButton).toBeVisible({ timeout: 30000 });
     await planButton.click();
@@ -129,7 +129,7 @@ test.describe("Statistics", () => {
     test.setTimeout(90000);
     await authenticateUser(page);
 
-    const { planName, planId } = await createWorkoutPlan(page, {
+    const { planId } = await createWorkoutPlan(page, {
       planName: `Stats Repeat Plan ${Date.now()}`,
       exercises: [
         { part: "Back", series: 1, reps: 1 },
@@ -141,7 +141,7 @@ test.describe("Statistics", () => {
     await page.goto("/statistics");
     await page.waitForLoadState("networkidle", { timeout: 30000 });
     const planButton = page
-      .getByRole("button", { name: new RegExp(planName, "i") })
+      .getByRole("button", { name: /^Stats Repeat Plan/i })
       .first();
     await expect(planButton).toBeVisible({ timeout: 30000 });
     await planButton.click();
@@ -177,7 +177,7 @@ test.describe("Statistics", () => {
       .getByLabel(/Czas trwania \(min\)|Duration \(min\)/i)
       .fill("47");
     await page
-      .getByLabel(/Kalorie \(kcal\)|Calories \(kcal\)/i)
+      .getByLabel(/Kalorie|Calories/i)
       .fill("333");
     await page
       .getByLabel(/Średnie tętno|Avg heart rate/i)
@@ -189,9 +189,19 @@ test.describe("Statistics", () => {
       .getByLabel(/Intensywność RPE|Intensity RPE/i)
       .fill("8");
 
+    const createExternalWorkoutRequest = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/external-workouts") &&
+        response.request().method() === "POST",
+      { timeout: 15000 },
+    );
+
     await page
       .getByRole("button", { name: /Zapisz trening|Save workout/i })
       .click();
+
+    const createResponse = await createExternalWorkoutRequest;
+    expect(createResponse.ok()).toBe(true);
 
     await expect(
       page.getByRole("dialog", { name: /Dodaj trening|Add external workout/i }),

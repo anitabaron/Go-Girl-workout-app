@@ -515,7 +515,7 @@ export type Database = {
           notes: string | null;
           raw_payload: Json | null;
           source: Database["public"]["Enums"]["external_workout_source"];
-          sport_type: Database["public"]["Enums"]["external_workout_sport_type"];
+          sport_type: string;
           started_at: string;
           updated_at: string;
           user_id: string;
@@ -532,7 +532,7 @@ export type Database = {
           notes?: string | null;
           raw_payload?: Json | null;
           source?: Database["public"]["Enums"]["external_workout_source"];
-          sport_type: Database["public"]["Enums"]["external_workout_sport_type"];
+          sport_type: string;
           started_at?: string;
           updated_at?: string;
           user_id: string;
@@ -549,7 +549,7 @@ export type Database = {
           notes?: string | null;
           raw_payload?: Json | null;
           source?: Database["public"]["Enums"]["external_workout_source"];
-          sport_type?: Database["public"]["Enums"]["external_workout_sport_type"];
+          sport_type?: string;
           started_at?: string;
           updated_at?: string;
           user_id?: string;

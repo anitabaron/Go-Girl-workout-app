@@ -3,7 +3,6 @@ import { z } from "zod";
 export const externalWorkoutSportTypeValues = [
   "pole_dance",
   "calisthenics",
-  "other",
 ] as const;
 
 export const externalWorkoutSourceValues = [
@@ -20,7 +19,22 @@ export const externalWorkoutCreateSchema = z
         (val) => !Number.isNaN(Date.parse(val)),
         "started_at musi być prawidłowym timestampem ISO 8601",
       ),
-    sport_type: z.enum(externalWorkoutSportTypeValues),
+    sport_type: z
+      .string()
+      .trim()
+      .min(1, "sport_type nie może być pusty")
+      .max(64, "sport_type nie może przekraczać 64 znaków")
+      .transform((value) =>
+        value
+          .toLowerCase()
+          .replace(/[\s-]+/g, "_")
+          .replace(/[^a-z0-9_]/g, "")
+          .replace(/_+/g, "_")
+          .replace(/^_+|_+$/g, ""),
+      )
+      .refine((value) => value.length > 0, {
+        message: "sport_type nie może być pusty",
+      }),
     duration_minutes: z
       .number()
       .int()

@@ -17,6 +17,7 @@ import {
 } from "@/lib/service-utils";
 import {
   insertExternalWorkout,
+  listExternalWorkoutSportTypesByUserId,
   listExternalWorkoutsByUserId,
 } from "@/repositories/external-workouts";
 
@@ -70,6 +71,24 @@ export async function listExternalWorkoutsService(
     to: parsed.to,
     limit: parsed.limit,
   });
+
+  if (error) {
+    throw mapDbError(error);
+  }
+
+  return { items: data };
+}
+
+export async function listExternalWorkoutSportTypesService(
+  userId: string,
+): Promise<{ items: string[] }> {
+  assertUser(userId);
+  const supabase = await createClient();
+
+  const { data, error } = await listExternalWorkoutSportTypesByUserId(
+    supabase,
+    userId,
+  );
 
   if (error) {
     throw mapDbError(error);
