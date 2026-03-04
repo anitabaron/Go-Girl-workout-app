@@ -983,6 +983,31 @@ export const enMessages = {
   "statisticsPage.aiTitle": "AI trainer",
   "statisticsPage.aiDescription":
     "Reserved space for upcoming AI support in planning, optimization, and performance analysis.",
+  "aiAssistant.title": "AI Assistant",
+  "aiAssistant.greeting": "Good morning!",
+  "aiAssistant.subtitle":
+    "Build your plan around goals and update it from workouts and recovery feedback.",
+  "aiAssistant.quickActions": "Quick actions",
+  "aiAssistant.quickActionPlanToday": "Plan today workout",
+  "aiAssistant.quickActionPlanWeek": "Plan this week",
+  "aiAssistant.quickActionAdjustRecovery": "Adjust after fatigue or pain",
+  "aiAssistant.quickActionReviewGoal": "Review goal progress",
+  "aiAssistant.history": "History",
+  "aiAssistant.newChat": "New chat",
+  "aiAssistant.close": "Close",
+  "aiAssistant.inputPlaceholder":
+    "Ask about training, progression, or recovery...",
+  "aiAssistant.inputAria": "AI assistant message input",
+  "aiAssistant.sendAria": "Send message",
+  "aiAssistant.openMobile": "AI",
+  "aiAssistant.openMobileAria": "Open AI assistant",
+  "aiAssistant.thinking": "Thinking...",
+  "aiAssistant.emptyStateTitle":
+    "Describe your goal, constraints, and training preferences.",
+  "aiAssistant.emptyStateDescription":
+    "The assistant will propose a plan direction and recommendations for upcoming workouts.",
+  "aiAssistant.responseError":
+    "Could not get assistant response. Please try again.",
   "importInstructionPage.backToPlans": "Back to plans",
   "importInstructionPage.title": "Workout plan import guide",
   "importInstructionPage.description":

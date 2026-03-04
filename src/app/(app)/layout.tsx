@@ -2,6 +2,7 @@ import { AuthProvider } from "@/components/auth/auth-provider";
 import { createClient } from "@/db/supabase.server";
 import { NavigationRail } from "@/components/layout/NavigationRail";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { AIAssistantShell } from "@/components/ai/AIAssistantShell";
 import "./m3.css";
 /**
  * M3 Layout – GSAP ScrollTrigger uses native scroll.
@@ -18,11 +19,12 @@ export default async function M3Layout({
     <AuthProvider user={user}>
       <div className="min-h-dvh w-full text-foreground flex flex-col overflow-visible">
         <NavigationRail />
-        <div className="fixed right-4 top-4 z-50 hidden md:block">
+        <div className="fixed right-4 top-4 z-50 hidden md:block xl:right-[436px]">
           <LanguageToggle />
         </div>
+        <AIAssistantShell />
 
-        <main className="relative z-0 flex-1 w-full min-w-0 mx-auto max-w-4xl lg:max-w-6xl px-4 py-6 sm:px-6 sm:py-8 md:pl-[104px] lg:pl-[112px] pb-[calc(var(--m3-mobile-nav-height)+0.5rem)] md:pb-8">
+        <main className="relative z-0 flex-1 w-full min-w-0 mx-auto max-w-4xl lg:max-w-6xl px-4 py-6 sm:px-6 sm:py-8 md:pl-[104px] lg:pl-[112px] xl:pr-[452px] pb-[calc(var(--m3-mobile-nav-height)+0.5rem)] md:pb-8">
           {children}
         </main>
       </div>

@@ -1005,6 +1005,31 @@ export const plMessages = {
   "statisticsPage.aiTitle": "Trener AI",
   "statisticsPage.aiDescription":
     "Miejsce pod przyszłe wsparcie AI w planowaniu, optymalizacji i analizie wyników treningowych.",
+  "aiAssistant.title": "Asystent AI",
+  "aiAssistant.greeting": "Dzień dobry!",
+  "aiAssistant.subtitle":
+    "Ułóż plan pod Twoje cele i aktualizuj go na bazie treningów oraz samopoczucia.",
+  "aiAssistant.quickActions": "Szybkie akcje",
+  "aiAssistant.quickActionPlanToday": "Ułóż dzisiejszy trening",
+  "aiAssistant.quickActionPlanWeek": "Rozpisz plan na ten tydzień",
+  "aiAssistant.quickActionAdjustRecovery": "Dostosuj po zmęczeniu lub bólu",
+  "aiAssistant.quickActionReviewGoal": "Sprawdź progres celu",
+  "aiAssistant.history": "Historia",
+  "aiAssistant.newChat": "Nowa rozmowa",
+  "aiAssistant.close": "Zamknij",
+  "aiAssistant.inputPlaceholder":
+    "Zapytaj o trening, progresję albo regenerację...",
+  "aiAssistant.inputAria": "Pole wiadomości do asystenta AI",
+  "aiAssistant.sendAria": "Wyślij wiadomość",
+  "aiAssistant.openMobile": "AI",
+  "aiAssistant.openMobileAria": "Otwórz asystenta AI",
+  "aiAssistant.thinking": "Myślę...",
+  "aiAssistant.emptyStateTitle":
+    "Opisz cel, ograniczenia i preferencje treningowe.",
+  "aiAssistant.emptyStateDescription":
+    "Asystent przygotuje kierunek planu i rekomendacje do kolejnych treningów.",
+  "aiAssistant.responseError":
+    "Nie udało się uzyskać odpowiedzi od asystenta. Spróbuj ponownie.",
   "importInstructionPage.backToPlans": "Powrót do planów",
   "importInstructionPage.title": "Instrukcja importu planów treningowych",
   "importInstructionPage.description":
