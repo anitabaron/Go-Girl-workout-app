@@ -13,6 +13,11 @@ import {
 
 export type AITrainerChatResponse = {
   conversation_id: string | null;
+  usage: {
+    limit: number;
+    used: number;
+    remaining: number;
+  };
   reply: string;
   recommendations: string[];
   context: {
@@ -70,10 +75,92 @@ type AIMessageRow = {
   created_at: string;
 };
 
+type AIUsageRow = {
+  id: string;
+  usage_count: number;
+};
+
+const AI_DAILY_LIMIT = 20;
+
 function conversationTitleFromMessage(message: string): string {
   const normalized = message.replace(/\s+/g, " ").trim();
   if (!normalized) return "Nowa konwersacja";
   return normalized.length > 80 ? `${normalized.slice(0, 77)}...` : normalized;
+}
+
+function getDayIso(date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+}
+
+async function getCurrentAIUsage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<{ rowId: string | null; used: number }> {
+  const dayKey = getDayIso();
+  const { data, error } = await supabase
+    .from("ai_usage")
+    .select("id,usage_count")
+    .eq("user_id", userId)
+    .eq("month_year", dayKey)
+    .maybeSingle();
+
+  if (error) {
+    throw mapDbError(error);
+  }
+
+  const row = data as AIUsageRow | null;
+  return { rowId: row?.id ?? null, used: row?.usage_count ?? 0 };
+}
+
+async function incrementAIUsage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  current: { rowId: string | null; used: number },
+): Promise<number> {
+  const dayKey = getDayIso();
+
+  if (current.rowId) {
+    const { error } = await supabase
+      .from("ai_usage")
+      .update({ usage_count: current.used + 1 })
+      .eq("id", current.rowId)
+      .eq("user_id", userId);
+    if (error) throw mapDbError(error);
+    return current.used + 1;
+  }
+
+  const { error } = await supabase.from("ai_usage").insert({
+    user_id: userId,
+    month_year: dayKey,
+    usage_count: 1,
+  });
+
+  if (!error) return 1;
+
+  // Row might have been created concurrently.
+  if (error.code === "23505") {
+    const fresh = await getCurrentAIUsage(supabase, userId);
+    if (!fresh.rowId) {
+      throw new ServiceError("INTERNAL", "Nie udało się odczytać limitu AI.");
+    }
+    if (fresh.used >= AI_DAILY_LIMIT) {
+      throw new ServiceError(
+        "FORBIDDEN",
+        `Wykorzystałaś dzienny limit Trenera AI (${AI_DAILY_LIMIT}/${AI_DAILY_LIMIT}).`,
+      );
+    }
+    const { error: updateError } = await supabase
+      .from("ai_usage")
+      .update({ usage_count: fresh.used + 1 })
+      .eq("id", fresh.rowId)
+      .eq("user_id", userId);
+    if (updateError) throw mapDbError(updateError);
+    return fresh.used + 1;
+  }
+
+  throw mapDbError(error);
 }
 
 function getErrorSummary(error: unknown): string {
@@ -226,6 +313,13 @@ export async function aiTrainerChatService(
   assertUser(userId);
   const parsed = parseOrThrow(aiTrainerChatSchema, payload);
   const supabase = await createClient();
+  const usageBefore = await getCurrentAIUsage(supabase, userId);
+  if (usageBefore.used >= AI_DAILY_LIMIT) {
+    throw new ServiceError(
+      "FORBIDDEN",
+      `Wykorzystałaś dzienny limit Trenera AI (${AI_DAILY_LIMIT}/${AI_DAILY_LIMIT}).`,
+    );
+  }
 
   let conversationId = parsed.conversation_id ?? null;
   let canPersistConversation = true;
@@ -321,6 +415,7 @@ export async function aiTrainerChatService(
 
   let reply = "";
   let recommendations: string[] = [];
+  let isSystemError = false;
   try {
     reply = await generateAIReply(parsed, context);
     recommendations = extractRecommendations(reply);
@@ -328,6 +423,7 @@ export async function aiTrainerChatService(
       recommendations = buildFallbackRecommendations(parsed, context);
     }
   } catch (error) {
+    isSystemError = true;
     console.error("[aiTrainerChatService] OpenAI call failed, using fallback", error);
     recommendations = buildFallbackRecommendations(parsed, context);
     const diagnostic = getErrorSummary(error);
@@ -346,8 +442,17 @@ export async function aiTrainerChatService(
   }
 
   const requestType = parsed.workout_plan_id ? "optimize" : "generate";
+  let usageAfter = usageBefore.used;
+  if (!isSystemError) {
+    usageAfter = await incrementAIUsage(supabase, userId, usageBefore);
+  }
   const response: AITrainerChatResponse = {
     conversation_id: canPersistConversation ? conversationId : null,
+    usage: {
+      limit: AI_DAILY_LIMIT,
+      used: usageAfter,
+      remaining: Math.max(0, AI_DAILY_LIMIT - usageAfter),
+    },
     reply,
     recommendations,
     context,
@@ -389,7 +494,7 @@ export async function aiTrainerChatService(
     workout_plan_id: parsed.workout_plan_id ?? null,
     input_params: parsed,
     response_json: response,
-    is_system_error: false,
+    is_system_error: isSystemError,
   });
 
   if (aiRequestError) {
@@ -397,6 +502,21 @@ export async function aiTrainerChatService(
   }
 
   return response;
+}
+
+export async function getAITrainerUsageService(userId: string): Promise<{
+  limit: number;
+  used: number;
+  remaining: number;
+}> {
+  assertUser(userId);
+  const supabase = await createClient();
+  const usage = await getCurrentAIUsage(supabase, userId);
+  return {
+    limit: AI_DAILY_LIMIT,
+    used: usage.used,
+    remaining: Math.max(0, AI_DAILY_LIMIT - usage.used),
+  };
 }
 
 export async function listAITrainerConversationsService(

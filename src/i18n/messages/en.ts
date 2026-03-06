@@ -1011,6 +1011,7 @@ export const enMessages = {
   "aiAssistant.quickActionPlanWeek": "Plan this week",
   "aiAssistant.quickActionAdjustRecovery": "Adjust after fatigue or pain",
   "aiAssistant.quickActionReviewGoal": "Review goal progress",
+  "aiAssistant.remainingToday": "{count} questions left for today",
   "aiAssistant.history": "History",
   "aiAssistant.newChat": "New chat",
   "aiAssistant.close": "Close",

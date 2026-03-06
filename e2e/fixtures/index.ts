@@ -5,6 +5,7 @@
  */
 export {
   authenticateUser,
+  prepareTestUserCredentials,
   logout,
   isAuthenticated,
   getTestUserCredentials,

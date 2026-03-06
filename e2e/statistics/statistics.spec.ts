@@ -55,11 +55,14 @@ test.describe("Statistics", () => {
       page.getByRole("heading", { name: "Kalendarz treningów", level: 2 }),
     ).toBeVisible();
 
-    const monthLabel = page.locator("p.min-w-44").first();
+    const previousMonthButton = page.getByRole("button", {
+      name: /Poprzedni miesiąc|Previous month/i,
+    });
+    const monthLabel = previousMonthButton.locator("xpath=following-sibling::p[1]");
     const initialMonth = (await monthLabel.textContent())?.trim() ?? "";
     expect(initialMonth.length).toBeGreaterThan(0);
 
-    await page.getByRole("button", { name: "Następny miesiąc" }).click();
+    await page.getByRole("button", { name: /Następny miesiąc|Next month/i }).click();
     await expect
       .poll(async () => (await monthLabel.textContent())?.trim() ?? "", {
         timeout: 5000,
@@ -169,13 +172,16 @@ test.describe("Statistics", () => {
 
     await page
       .getByRole("button", {
-        name: /Dodaj trening spoza aplikacji|Add workout from outside app/i,
+        name: /Dodaj inny trening|Dodaj trening spoza aplikacji|Add workout from outside app/i,
       })
       .click();
 
     await page
       .getByLabel(/Czas trwania \(min\)|Duration \(min\)/i)
       .fill("47");
+    await page
+      .getByLabel(/Typ sportu|Sport type/i)
+      .fill("Joga");
     await page
       .getByLabel(/Kalorie|Calories/i)
       .fill("333");

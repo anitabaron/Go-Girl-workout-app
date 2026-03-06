@@ -19,6 +19,7 @@ type AssistantPanelProps = {
   messages: ChatMessage[];
   conversationHistory: ConversationHistoryItem[];
   isHistoryOpen: boolean;
+  usage: AIUsage | null;
   input: string;
   isSending: boolean;
   onInputChange: (value: string) => void;
@@ -44,10 +45,17 @@ type ConversationHistoryItem = {
   updated_at: string;
 };
 
+type AIUsage = {
+  limit: number;
+  used: number;
+  remaining: number;
+};
+
 function AIAssistantPanel({
   messages,
   conversationHistory,
   isHistoryOpen,
+  usage,
   input,
   isSending,
   onInputChange,
@@ -77,6 +85,11 @@ function AIAssistantPanel({
         <div className="flex items-center gap-2">
           <Bot className="size-4 text-muted-foreground" />
           <h2 className="text-sm font-semibold tracking-wide uppercase">{t("title")}</h2>
+          {usage ? (
+            <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
+              {t("remainingToday").replace("{count}", String(usage.remaining))}
+            </span>
+          ) : null}
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -87,7 +100,7 @@ function AIAssistantPanel({
             onClick={onToggleHistory}
             className={
               isHistoryOpen
-                ? "!border-primary/40 !bg-primary/20 !text-primary hover:!bg-primary/25"
+                ? "ai-history-active"
                 : undefined
             }
           >
@@ -195,7 +208,7 @@ function AIAssistantPanel({
                   type="button"
                   className="rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent"
                   onClick={() => void onQuickAction(action)}
-                  disabled={isSending}
+                  disabled={isSending || (usage?.remaining ?? 1) <= 0}
                 >
                   {action}
                 </button>
@@ -220,14 +233,14 @@ function AIAssistantPanel({
                 void onSend();
               }
             }}
-            disabled={isSending}
+            disabled={isSending || (usage?.remaining ?? 1) <= 0}
           />
           <Button
             type="button"
             size="icon-sm"
             aria-label={t("sendAria")}
             onClick={() => void onSend()}
-            disabled={isSending || input.trim().length === 0}
+            disabled={isSending || input.trim().length === 0 || (usage?.remaining ?? 1) <= 0}
           >
             <Send className="size-4" />
           </Button>
@@ -248,6 +261,7 @@ export function AIAssistantShell() {
   const [conversationHistory, setConversationHistory] = useState<
     ConversationHistoryItem[]
   >([]);
+  const [usage, setUsage] = useState<AIUsage | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     null,
   );
@@ -272,10 +286,33 @@ export function AIAssistantShell() {
     }
   }, []);
 
+  const fetchUsage = useCallback(async () => {
+    try {
+      const response = await fetch("/api/ai/trainer/usage", {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      const data = (await response.json()) as { usage?: AIUsage };
+      if (data.usage) {
+        setUsage(data.usage);
+      }
+    } catch (error) {
+      console.error("[AIAssistantShell] Failed to fetch AI usage", error);
+    }
+  }, []);
+
   const sendMessage = useCallback(
     async (messageText: string) => {
       const trimmed = messageText.trim();
       if (!trimmed || isSending) return;
+      if ((usage?.remaining ?? 1) <= 0) {
+        const dailyLimit = usage?.limit ?? 20;
+        toast.error(
+          `Wykorzystałaś dzienny limit Trenera AI (${dailyLimit}/${dailyLimit}).`,
+        );
+        return;
+      }
 
       const userMessage: ChatMessage = {
         id: `user-${Date.now()}`,
@@ -307,10 +344,16 @@ export function AIAssistantShell() {
 
         const data = (await response.json()) as {
           conversation_id?: string;
+          usage?: AIUsage;
           reply?: string;
         };
         if (data.conversation_id) {
           setActiveConversationId(data.conversation_id);
+        }
+        if (data.usage) {
+          setUsage(data.usage);
+        } else {
+          void fetchUsage();
         }
         const assistantMessage: ChatMessage = {
           id: `assistant-${Date.now()}`,
@@ -326,12 +369,13 @@ export function AIAssistantShell() {
         setIsSending(false);
       }
     },
-    [activeConversationId, fetchConversationHistory, isSending, t],
+    [activeConversationId, fetchConversationHistory, fetchUsage, isSending, t, usage?.remaining],
   );
 
   useEffect(() => {
     void fetchConversationHistory();
-  }, [fetchConversationHistory]);
+    void fetchUsage();
+  }, [fetchConversationHistory, fetchUsage]);
 
   const handleSend = useCallback(async () => sendMessage(input), [input, sendMessage]);
   const handleQuickAction = useCallback(
@@ -396,6 +440,7 @@ export function AIAssistantShell() {
           messages={messages}
           conversationHistory={conversationHistory}
           isHistoryOpen={isHistoryOpen}
+          usage={usage}
           input={input}
           isSending={isSending}
           onInputChange={setInput}
@@ -433,6 +478,7 @@ export function AIAssistantShell() {
             messages={messages}
             conversationHistory={conversationHistory}
             isHistoryOpen={isHistoryOpen}
+            usage={usage}
             input={input}
             isSending={isSending}
             onInputChange={setInput}

@@ -1,6 +1,7 @@
 import { Page, type Cookie } from "@playwright/test";
 import { config } from "dotenv";
 import { resolve } from "node:path";
+import { createClient } from "@supabase/supabase-js";
 import { LoginPage } from "../pages/login-page";
 
 /**
@@ -16,6 +17,8 @@ export interface TestUserCredentials {
   password: string;
   userId?: string;
 }
+
+let ensuredLoginKey: string | null = null;
 
 /**
  * Get test user credentials from environment variables
@@ -41,6 +44,90 @@ export function getTestUserCredentials(): TestUserCredentials {
   };
 }
 
+async function ensureTestUserCanLogin(
+  credentials: TestUserCredentials,
+): Promise<void> {
+  const loginKey = `${credentials.email}|${credentials.password}|${credentials.userId ?? ""}`;
+  if (ensuredLoginKey === loginKey) {
+    return;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+
+  // If service role is missing, fall back to plain UI login path.
+  if (!supabaseUrl || !serviceRoleKey) {
+    ensuredLoginKey = loginKey;
+    return;
+  }
+
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  let targetUserId: string | null = credentials.userId ?? null;
+
+  if (targetUserId) {
+    const { data, error } = await adminClient.auth.admin.getUserById(targetUserId);
+    if (error || !data?.user) {
+      targetUserId = null;
+    }
+  }
+
+  if (!targetUserId) {
+    let page = 1;
+    const perPage = 200;
+    while (page <= 10 && !targetUserId) {
+      const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+      if (error) {
+        throw new Error(`Failed to list users for E2E login bootstrap: ${error.message}`);
+      }
+      const found = data.users.find(
+        (user) => user.email?.toLowerCase() === credentials.email.toLowerCase(),
+      );
+      if (found) {
+        targetUserId = found.id;
+        break;
+      }
+      if (data.users.length < perPage) {
+        break;
+      }
+      page += 1;
+    }
+  }
+
+  if (targetUserId) {
+    const { error } = await adminClient.auth.admin.updateUserById(targetUserId, {
+      password: credentials.password,
+      email_confirm: true,
+    });
+    if (error) {
+      throw new Error(`Failed to update E2E test user password: ${error.message}`);
+    }
+  } else {
+    const { error } = await adminClient.auth.admin.createUser({
+      email: credentials.email,
+      password: credentials.password,
+      email_confirm: true,
+    });
+    if (error) {
+      throw new Error(`Failed to create E2E test user: ${error.message}`);
+    }
+  }
+
+  ensuredLoginKey = loginKey;
+}
+
+export async function prepareTestUserCredentials(): Promise<TestUserCredentials> {
+  const credentials = getTestUserCredentials();
+  await ensureTestUserCanLogin(credentials);
+  return credentials;
+}
+
 /**
  * Authenticate user in the application
  *
@@ -60,15 +147,19 @@ export async function authenticateUser(
   email?: string,
   password?: string,
 ): Promise<void> {
-  const credentials = getTestUserCredentials();
+  const baseCredentials = getTestUserCredentials();
+  const credentials: TestUserCredentials = {
+    email: email || baseCredentials.email,
+    password: password || baseCredentials.password,
+    userId: baseCredentials.userId,
+  };
+
+  await ensureTestUserCanLogin(credentials);
   const loginPage = new LoginPage(page);
 
   await loginPage.goto();
   await loginPage.waitForForm();
-  await loginPage.login(
-    email || credentials.email,
-    password || credentials.password,
-  );
+  await loginPage.login(credentials.email, credentials.password);
 
   // Wait for navigation after login (should redirect to home page "/" or exercises)
   // Using more flexible approach - wait for URL to not be login page

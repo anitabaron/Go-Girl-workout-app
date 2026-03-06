@@ -1035,6 +1035,7 @@ export const plMessages = {
   "aiAssistant.quickActionPlanWeek": "Rozpisz plan na ten tydzień",
   "aiAssistant.quickActionAdjustRecovery": "Dostosuj po zmęczeniu lub bólu",
   "aiAssistant.quickActionReviewGoal": "Sprawdź progres celu",
+  "aiAssistant.remainingToday": "Zostało na dziś {count} pytań",
   "aiAssistant.history": "Historia",
   "aiAssistant.newChat": "Nowa rozmowa",
   "aiAssistant.close": "Zamknij",
