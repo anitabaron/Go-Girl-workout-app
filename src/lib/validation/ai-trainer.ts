@@ -20,6 +20,23 @@ export const aiTrainerChatSchema = z
       .refine((val) => uuidRegex.test(val), "conversation_id musi być UUID")
       .optional()
       .nullable(),
+    profile_id: z
+      .string()
+      .refine((val) => uuidRegex.test(val), "profile_id musi być UUID")
+      .optional()
+      .nullable(),
+    attachments: z
+      .array(
+        z
+          .object({
+            type: z.enum(["plan", "program", "date_range", "session", "metric_pack"]),
+            value: z.record(z.string(), z.unknown()),
+          })
+          .strict(),
+      )
+      .max(20)
+      .optional()
+      .nullable(),
   })
   .strict();
 

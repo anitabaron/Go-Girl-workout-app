@@ -49,6 +49,7 @@ import {
   calculateAggregatesFromSets,
   preparePlannedUpdates,
 } from "@/lib/workout-sessions/aggregates";
+import { markProgramSessionCompletedByWorkoutSessionId } from "@/repositories/training-programs";
 
 export { ServiceError } from "@/lib/service-utils";
 
@@ -325,6 +326,17 @@ export async function updateWorkoutSessionStatusService(
       "INTERNAL",
       "Nie udało się zaktualizować statusu sesji.",
     );
+  }
+
+  if (parsed.status === "completed") {
+    const { error: syncProgramSessionError } =
+      await markProgramSessionCompletedByWorkoutSessionId(supabase, userId, id);
+    if (syncProgramSessionError) {
+      console.warn(
+        "[updateWorkoutSessionStatusService] Failed to sync program session completion",
+        syncProgramSessionError,
+      );
+    }
   }
 
   return updated;

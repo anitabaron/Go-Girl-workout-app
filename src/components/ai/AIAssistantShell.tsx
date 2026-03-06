@@ -9,33 +9,40 @@ import { useTranslations } from "@/i18n/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet";
 
-type AssistantPanelProps = {
-  messages: ChatMessage[];
-  conversationHistory: ConversationHistoryItem[];
-  isHistoryOpen: boolean;
-  usage: AIUsage | null;
-  input: string;
-  isSending: boolean;
-  onInputChange: (value: string) => void;
-  onSend: () => Promise<void>;
-  onToggleHistory: () => void;
-  onSelectHistory: (conversationId: string) => void;
-  onQuickAction: (prompt: string) => Promise<void>;
-  onResetConversation: () => void;
-  onClose?: () => void;
-  mobile?: boolean;
+type ChatAction = {
+  id: string;
+  type:
+    | "APPLY_LIGHT_VERSION"
+    | "ADD_DELOAD_WEEK"
+    | "ADD_RECOVERY_DAY"
+    | "GENERATE_PROGRAM";
+  label: string;
+  description: string;
+  requires_confirmation: boolean;
+  payload: Record<string, unknown>;
 };
 
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  actions?: ChatAction[];
 };
 
 type ConversationHistoryItem = {
@@ -51,6 +58,24 @@ type AIUsage = {
   remaining: number;
 };
 
+type AssistantPanelProps = {
+  messages: ChatMessage[];
+  conversationHistory: ConversationHistoryItem[];
+  isHistoryOpen: boolean;
+  usage: AIUsage | null;
+  input: string;
+  isSending: boolean;
+  onInputChange: (value: string) => void;
+  onSend: () => Promise<void>;
+  onToggleHistory: () => void;
+  onSelectHistory: (conversationId: string) => void;
+  onQuickAction: (prompt: string) => Promise<void>;
+  onResetConversation: () => void;
+  onActionClick: (action: ChatAction) => Promise<void>;
+  onClose?: () => void;
+  mobile?: boolean;
+};
+
 function AIAssistantPanel({
   messages,
   conversationHistory,
@@ -64,6 +89,7 @@ function AIAssistantPanel({
   onSelectHistory,
   onQuickAction,
   onResetConversation,
+  onActionClick,
   onClose,
   mobile = false,
 }: Readonly<AssistantPanelProps>) {
@@ -98,11 +124,7 @@ function AIAssistantPanel({
             size="icon-sm"
             aria-label={t("history")}
             onClick={onToggleHistory}
-            className={
-              isHistoryOpen
-                ? "ai-history-active"
-                : undefined
-            }
+            className={isHistoryOpen ? "ai-history-active" : undefined}
           >
             <History className="size-4" />
           </Button>
@@ -171,16 +193,33 @@ function AIAssistantPanel({
         ) : messages.length > 0 ? (
           <section className="space-y-2">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={[
-                  "max-w-[90%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap",
-                  message.role === "user"
-                    ? "ml-auto bg-primary text-primary-foreground"
-                    : "mr-auto border border-border bg-card text-foreground",
-                ].join(" ")}
-              >
-                {message.content}
+              <div key={message.id} className="space-y-2">
+                <div
+                  className={[
+                    "max-w-[90%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap",
+                    message.role === "user"
+                      ? "ml-auto bg-primary text-primary-foreground"
+                      : "mr-auto border border-border bg-card text-foreground",
+                  ].join(" ")}
+                >
+                  {message.content}
+                </div>
+                {message.role === "assistant" && (message.actions?.length ?? 0) > 0 ? (
+                  <div className="mr-auto grid max-w-[90%] grid-cols-1 gap-2">
+                    {message.actions?.map((action) => (
+                      <button
+                        key={`${message.id}-${action.id}`}
+                        type="button"
+                        className="rounded-lg border border-border bg-card px-3 py-2 text-left text-xs transition-colors hover:bg-accent"
+                        onClick={() => void onActionClick(action)}
+                        title={action.description}
+                      >
+                        <p className="font-semibold">{action.label}</p>
+                        <p className="mt-0.5 text-muted-foreground">{action.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ))}
             {isSending ? (
@@ -240,7 +279,9 @@ function AIAssistantPanel({
             size="icon-sm"
             aria-label={t("sendAria")}
             onClick={() => void onSend()}
-            disabled={isSending || input.trim().length === 0 || (usage?.remaining ?? 1) <= 0}
+            disabled={
+              isSending || input.trim().length === 0 || (usage?.remaining ?? 1) <= 0
+            }
           >
             <Send className="size-4" />
           </Button>
@@ -262,6 +303,8 @@ export function AIAssistantShell() {
     ConversationHistoryItem[]
   >([]);
   const [usage, setUsage] = useState<AIUsage | null>(null);
+  const [pendingAction, setPendingAction] = useState<ChatAction | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     null,
   );
@@ -346,6 +389,7 @@ export function AIAssistantShell() {
           conversation_id?: string;
           usage?: AIUsage;
           reply?: string;
+          actions?: ChatAction[];
         };
         if (data.conversation_id) {
           setActiveConversationId(data.conversation_id);
@@ -359,6 +403,7 @@ export function AIAssistantShell() {
           id: `assistant-${Date.now()}`,
           role: "assistant",
           content: data.reply ?? t("responseError"),
+          actions: data.actions ?? [],
         };
         setMessages((prev) => [...prev, assistantMessage]);
         void fetchConversationHistory();
@@ -369,7 +414,15 @@ export function AIAssistantShell() {
         setIsSending(false);
       }
     },
-    [activeConversationId, fetchConversationHistory, fetchUsage, isSending, t, usage?.remaining],
+    [
+      activeConversationId,
+      fetchConversationHistory,
+      fetchUsage,
+      isSending,
+      t,
+      usage?.remaining,
+      usage?.limit,
+    ],
   );
 
   useEffect(() => {
@@ -392,6 +445,132 @@ export function AIAssistantShell() {
   const handleToggleHistory = useCallback(() => {
     setIsHistoryOpen((prev) => !prev);
   }, []);
+
+  const executeAction = useCallback(
+    async (action: ChatAction) => {
+      if (action.type !== "GENERATE_PROGRAM") {
+        toast.info(
+          "Akcja wymaga podpięcia endpointu wykonawczego. Na tym etapie pozostaje sugestią z potwierdzeniem.",
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/ai/programs/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            goal_text: "Program ogólnorozwojowy",
+            duration_months:
+              typeof action.payload.duration_months === "number"
+                ? action.payload.duration_months
+                : 1,
+            sessions_per_week:
+              typeof action.payload.sessions_per_week === "number"
+                ? action.payload.sessions_per_week
+                : 2,
+          }),
+        });
+
+        if (!response.ok) {
+          const err = (await response.json().catch(() => ({}))) as { message?: string };
+          throw new Error(err.message ?? t("responseError"));
+        }
+
+        const data = (await response.json()) as {
+          program?: {
+            name?: string;
+            goal_text?: string;
+            duration_months?: number;
+            sessions_per_week?: number;
+            source?: "ai" | "manual";
+            status?: "draft" | "active" | "archived";
+            coach_profile_snapshot?: Record<string, unknown> | null;
+          };
+          sessions?: Array<{
+            workout_plan_id: string;
+            workout_plan_name: string;
+            scheduled_date: string;
+            week_index: number;
+            session_index: number;
+            status: "planned" | "completed";
+            progression_overrides?: Record<string, unknown>;
+          }>;
+        };
+
+        const saveResponse = await fetch("/api/ai/programs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.program?.name ?? "Program AI",
+            goal_text: data.program?.goal_text ?? "Program wygenerowany przez AI",
+            duration_months: data.program?.duration_months ?? 1,
+            sessions_per_week: data.program?.sessions_per_week ?? 2,
+            source: data.program?.source ?? "ai",
+            status: data.program?.status ?? "draft",
+            coach_profile_snapshot: data.program?.coach_profile_snapshot ?? null,
+            sessions: (data.sessions ?? []).map((session) => ({
+              workout_plan_id: session.workout_plan_id,
+              scheduled_date: session.scheduled_date,
+              week_index: session.week_index,
+              session_index: session.session_index,
+              status: session.status,
+              progression_overrides: session.progression_overrides ?? null,
+            })),
+          }),
+        });
+
+        if (!saveResponse.ok) {
+          const saveErr = (await saveResponse.json().catch(() => ({}))) as {
+            message?: string;
+          };
+          throw new Error(saveErr.message ?? "Nie udało się zapisać programu.");
+        }
+
+        const savedProgram = (await saveResponse.json()) as { id?: string; name?: string };
+
+        const preview = (data.sessions ?? [])
+          .slice(0, 3)
+          .map((session) => `${session.scheduled_date}: ${session.workout_plan_name}`)
+          .join("\n");
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-action-${Date.now()}`,
+            role: "assistant",
+            content: [
+              "Wygenerowałam i zapisałam program treningowy.",
+              `Nazwa: ${savedProgram.name ?? data.program?.name ?? "Program AI"}`,
+              `Czas: ${data.program?.duration_months ?? 1} mies.`,
+              `Treningi/tydz.: ${data.program?.sessions_per_week ?? 2}`,
+              savedProgram.id ? `ID programu: ${savedProgram.id}` : "",
+              preview ? `Podgląd sesji:\n${preview}` : "",
+              "Program znajdziesz w zakładce „Programy” i sesje planned w kalendarzu.",
+            ]
+              .filter(Boolean)
+              .join("\n"),
+            actions: [],
+          },
+        ]);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : t("responseError"));
+      }
+    },
+    [t],
+  );
+
+  const handleActionClick = useCallback(
+    async (action: ChatAction) => {
+      if (!action.requires_confirmation) {
+        await executeAction(action);
+        return;
+      }
+      setPendingAction(action);
+      setIsConfirmOpen(true);
+    },
+    [executeAction],
+  );
 
   const handleSelectHistory = useCallback(
     async (conversationId: string) => {
@@ -420,6 +599,7 @@ export function AIAssistantShell() {
             id: message.id,
             role: message.role,
             content: message.content,
+            actions: [],
           })),
         );
         setIsHistoryOpen(false);
@@ -449,6 +629,7 @@ export function AIAssistantShell() {
           onSelectHistory={handleSelectHistory}
           onQuickAction={handleQuickAction}
           onResetConversation={handleResetConversation}
+          onActionClick={handleActionClick}
         />
       </aside>
 
@@ -487,11 +668,42 @@ export function AIAssistantShell() {
             onSelectHistory={handleSelectHistory}
             onQuickAction={handleQuickAction}
             onResetConversation={handleResetConversation}
+            onActionClick={handleActionClick}
             mobile
             onClose={() => setIsOpenMobile(false)}
           />
         </SheetContent>
       </Sheet>
+
+      <AlertDialog
+        open={isConfirmOpen}
+        onOpenChange={(open) => {
+          setIsConfirmOpen(open);
+          if (!open) setPendingAction(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingAction?.label ?? "Potwierdź akcję"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction?.description ?? "Czy na pewno chcesz kontynuować?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingAction) return;
+                void executeAction(pendingAction);
+              }}
+            >
+              Kontynuuj
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

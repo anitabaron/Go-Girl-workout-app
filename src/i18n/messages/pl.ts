@@ -3,6 +3,7 @@ export const plMessages = {
   "nav.home": "Start",
   "nav.exercises": "Ćwiczenia",
   "nav.plans": "Plany",
+  "nav.programs": "Programy",
   "nav.sessions": "Sesje",
   "nav.records": "Rekordy",
   "nav.statistics": "Statystyki",

@@ -9,6 +9,7 @@ export const enMessages = {
   "nav.home": "Home",
   "nav.exercises": "Exercises",
   "nav.plans": "Plans",
+  "nav.programs": "Programs",
   "nav.sessions": "Sessions",
   "nav.records": "Records",
   "nav.statistics": "Statistics",

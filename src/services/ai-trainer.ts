@@ -1,4 +1,5 @@
 import { createClient } from "@/db/supabase.server";
+import type { Json } from "@/db/database.types";
 import { getOpenAIClient } from "@/lib/openai";
 import {
   ServiceError,
@@ -20,6 +21,24 @@ export type AITrainerChatResponse = {
   };
   reply: string;
   recommendations: string[];
+  actions: Array<{
+    id: string;
+    type:
+      | "APPLY_LIGHT_VERSION"
+      | "ADD_DELOAD_WEEK"
+      | "ADD_RECOVERY_DAY"
+      | "GENERATE_PROGRAM";
+    label: string;
+    description: string;
+    requires_confirmation: boolean;
+    payload: Record<string, unknown>;
+  }>;
+  context_used: {
+    profile_id: string | null;
+    profile_persona_name: string | null;
+    attachments_count: number;
+    includes_recent_performance: boolean;
+  };
   context: {
     plans_count: number;
     plans_preview: string[];
@@ -78,6 +97,19 @@ type AIMessageRow = {
 type AIUsageRow = {
   id: string;
   usage_count: number;
+};
+
+type AICoachProfilePreview = {
+  id: string;
+  persona_name: string;
+  tone: "calm" | "motivating" | "direct";
+  strictness: "low" | "medium" | "high";
+  verbosity: "short" | "balanced" | "detailed";
+  focus: string | null;
+  risk_tolerance: string | null;
+  contraindications: string | null;
+  preferred_methodology: string | null;
+  rules: Record<string, unknown> | null;
 };
 
 const AI_DAILY_LIMIT = 20;
@@ -262,6 +294,7 @@ function extractRecommendations(reply: string): string[] {
 async function generateAIReply(
   input: AITrainerChatCommand,
   context: AITrainerChatResponse["context"],
+  profile: AICoachProfilePreview | null,
 ): Promise<string> {
   const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
   const openai = getOpenAIClient();
@@ -283,6 +316,16 @@ async function generateAIReply(
     input.workout_plan_id
       ? `- tryb: optymalizacja planu ${input.workout_plan_id}`
       : "- tryb: generowanie wskazówek do planu",
+    profile
+      ? `- profil trenera: ${profile.persona_name}, ton=${profile.tone}, rygor=${profile.strictness}, szczegółowość=${profile.verbosity}`
+      : "- profil trenera: domyślny",
+    profile?.focus ? `- fokus trenera: ${profile.focus}` : "",
+    profile?.risk_tolerance
+      ? `- tolerancja ryzyka: ${profile.risk_tolerance}`
+      : "",
+    profile?.contraindications
+      ? `- przeciwwskazania: ${profile.contraindications}`
+      : "",
     "",
     `Wiadomość użytkownika: ${input.message}`,
   ].join("\n");
@@ -304,6 +347,102 @@ async function generateAIReply(
     throw new ServiceError("INTERNAL", "Model nie zwrócił treści odpowiedzi.");
   }
   return reply;
+}
+
+function buildSuggestedActions(
+  input: AITrainerChatCommand,
+  context: AITrainerChatResponse["context"],
+): AITrainerChatResponse["actions"] {
+  const text = input.message.toLowerCase();
+  const normalized = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const actions: AITrainerChatResponse["actions"] = [];
+
+  if (
+    text.includes("zmęcz") ||
+    normalized.includes("zmecz") ||
+    text.includes("obola") ||
+    normalized.includes("obola") ||
+    text.includes("lżejs") ||
+    normalized.includes("lzejs")
+  ) {
+    actions.push({
+      id: "apply-light-version",
+      type: "APPLY_LIGHT_VERSION",
+      label: "Zastosuj lżejszą wersję planu",
+      description:
+        "Zmniejszy obciążenie i objętość w najbliższych treningach programu.",
+      requires_confirmation: true,
+      payload: {
+        reduction_percent: 20,
+        based_on: "fatigue_signal",
+      },
+    });
+  }
+
+  if (
+    normalized.includes("deload") ||
+    normalized.includes("regenerac") ||
+    context.external_workouts_last_7d >= 4
+  ) {
+    actions.push({
+      id: "add-deload-week",
+      type: "ADD_DELOAD_WEEK",
+      label: "Dodaj deload na ten tydzień",
+      description:
+        "Wprowadzi tydzień lżejszy (mniejsza objętość i intensywność) dla regeneracji.",
+      requires_confirmation: true,
+      payload: {
+        volume_reduction_percent: 15,
+        load_reduction_percent: 10,
+      },
+    });
+  }
+
+  if (normalized.includes("regener") || normalized.includes("odpoczy")) {
+    actions.push({
+      id: "add-recovery-day",
+      type: "ADD_RECOVERY_DAY",
+      label: "Wpisz dzień regeneracji do kalendarza",
+      description:
+        "Doda planowany dzień regeneracji bez obciążenia siłowego.",
+      requires_confirmation: true,
+      payload: {
+        day_type: "recovery",
+      },
+    });
+  }
+
+  const asksForProgram =
+    normalized.includes("program") ||
+    normalized.includes("na 1 miesiac") ||
+    normalized.includes("na 2 miesiac") ||
+    normalized.includes("na 3 miesiac") ||
+    normalized.includes("miesiac") ||
+    normalized.includes("miesiace") ||
+    normalized.includes("miesiecy") ||
+    normalized.includes("8 tyg") ||
+    normalized.includes("12 tyg") ||
+    (normalized.includes("rozpisz") && normalized.includes("plan")) ||
+    (normalized.includes("plan") && normalized.includes("cel"));
+
+  if (asksForProgram) {
+    actions.push({
+      id: "generate-program",
+      type: "GENERATE_PROGRAM",
+      label: "Utwórz program treningowy",
+      description:
+        "Wygeneruje draft programu 1-3 miesiące z harmonogramem sesji tygodniowych.",
+      requires_confirmation: true,
+      payload: {
+        duration_months: 1,
+        sessions_per_week: 2,
+      },
+    });
+  }
+
+  return actions.slice(0, 4);
 }
 
 export async function aiTrainerChatService(
@@ -376,8 +515,11 @@ export async function aiTrainerChatService(
     console.warn("[aiTrainerChatService] Conversation persistence disabled:", error);
   }
 
-  const [{ data: plans, error: plansError }, { data: external, error: extError }] =
-    await Promise.all([
+  const [
+    { data: plans, error: plansError },
+    { data: external, error: extError },
+    { data: coachProfile, error: coachProfileError },
+  ] = await Promise.all([
       supabase
         .from("workout_plans")
         .select("id,name,part")
@@ -394,6 +536,22 @@ export async function aiTrainerChatService(
         )
         .order("started_at", { ascending: false })
         .limit(100),
+      parsed.profile_id
+        ? supabase
+            .from("ai_coach_profiles")
+            .select(
+              "id,persona_name,tone,strictness,verbosity,focus,risk_tolerance,contraindications,preferred_methodology,rules",
+            )
+            .eq("user_id", userId)
+            .eq("id", parsed.profile_id)
+            .maybeSingle()
+        : supabase
+            .from("ai_coach_profiles")
+            .select(
+              "id,persona_name,tone,strictness,verbosity,focus,risk_tolerance,contraindications,preferred_methodology,rules",
+            )
+            .eq("user_id", userId)
+            .maybeSingle(),
     ]);
 
   if (plansError) {
@@ -401,6 +559,9 @@ export async function aiTrainerChatService(
   }
   if (extError) {
     throw mapDbError(extError);
+  }
+  if (coachProfileError) {
+    throw mapDbError(coachProfileError);
   }
 
   const plansRows = (plans ?? []) as PlanPreview[];
@@ -415,9 +576,11 @@ export async function aiTrainerChatService(
 
   let reply = "";
   let recommendations: string[] = [];
+  const actions = buildSuggestedActions(parsed, context);
+  const coachProfileRow = (coachProfile ?? null) as AICoachProfilePreview | null;
   let isSystemError = false;
   try {
-    reply = await generateAIReply(parsed, context);
+    reply = await generateAIReply(parsed, context, coachProfileRow);
     recommendations = extractRecommendations(reply);
     if (recommendations.length === 0) {
       recommendations = buildFallbackRecommendations(parsed, context);
@@ -455,6 +618,13 @@ export async function aiTrainerChatService(
     },
     reply,
     recommendations,
+    actions,
+    context_used: {
+      profile_id: coachProfileRow?.id ?? null,
+      profile_persona_name: coachProfileRow?.persona_name ?? null,
+      attachments_count: parsed.attachments?.length ?? 0,
+      includes_recent_performance: true,
+    },
     context,
   };
 
@@ -492,8 +662,8 @@ export async function aiTrainerChatService(
     user_id: userId,
     request_type: requestType,
     workout_plan_id: parsed.workout_plan_id ?? null,
-    input_params: parsed,
-    response_json: response,
+    input_params: parsed as unknown as Json,
+    response_json: response as unknown as Json,
     is_system_error: isSystemError,
   });
 

@@ -5,6 +5,8 @@ import {
   listExternalWorkoutsService,
 } from "@/services/external-workouts";
 import { listWorkoutSessionsService } from "@/services/workout-sessions";
+import { listProgramSessionsService } from "@/services/training-programs";
+import { listWorkoutPlansService } from "@/services/workout-plans";
 import type {
   ExternalWorkoutSource,
   ExternalWorkoutSportType,
@@ -28,7 +30,7 @@ type StatisticsSessionBase = Pick<
 >;
 
 type StatisticsSession = StatisticsSessionBase & {
-  entry_type: "session" | "external";
+  entry_type: "session" | "external" | "planned";
   external_workout_id?: string;
   external_sport_type?: ExternalWorkoutSportType;
   external_source?: ExternalWorkoutSource;
@@ -37,6 +39,7 @@ type StatisticsSession = StatisticsSessionBase & {
   external_hr_max?: number | null;
   external_intensity_rpe?: number | null;
   external_notes?: string | null;
+  program_session_id?: string;
 };
 
 async function fetchStatisticsSessions(
@@ -110,9 +113,54 @@ async function fetchStatisticsSessions(
     },
   );
 
-  return [...allItems, ...mappedExternal].sort(
+  let plannedSessions: Awaited<ReturnType<typeof listProgramSessionsService>> = {
+    items: [],
+  };
+  try {
+    plannedSessions = await listProgramSessionsService(userId, {
+      from: toDateOnly(new Date()),
+      status: "planned",
+    });
+  } catch (error) {
+    console.warn("[statistics] program planned sessions unavailable", error);
+  }
+
+  const plansResult = await listWorkoutPlansService(userId, {
+    sort: "created_at",
+    order: "desc",
+    limit: 100,
+  });
+  const planNameById = new Map(
+    plansResult.items.map((plan) => [plan.id, plan.name]),
+  );
+
+  const mappedPlanned = plannedSessions.items.map<StatisticsSession>((session) => {
+    const startedAt = new Date(`${session.scheduled_date}T12:00:00`);
+    return {
+      id: `planned-${session.id}`,
+      entry_type: "planned",
+      program_session_id: session.id,
+      workout_plan_id: session.workout_plan_id,
+      plan_name_at_time:
+        planNameById.get(session.workout_plan_id) ?? "Program treningowy",
+      started_at: startedAt.toISOString(),
+      completed_at: null,
+      active_duration_seconds: null,
+      exercise_count: 0,
+      exercise_names: [],
+    };
+  });
+
+  return [...allItems, ...mappedExternal, ...mappedPlanned].sort(
     (a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime(),
   );
+}
+
+function toDateOnly(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export default async function StatisticsPage() {
