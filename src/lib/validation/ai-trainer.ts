@@ -15,6 +15,11 @@ export const aiTrainerChatSchema = z
       .refine((val) => uuidRegex.test(val), "workout_plan_id musi być UUID")
       .optional()
       .nullable(),
+    conversation_id: z
+      .string()
+      .refine((val) => uuidRegex.test(val), "conversation_id musi być UUID")
+      .optional()
+      .nullable(),
   })
   .strict();
 

@@ -16,9 +16,11 @@ import {
   ServiceError,
 } from "@/lib/service-utils";
 import {
+  deleteExternalWorkoutById,
   insertExternalWorkout,
   listExternalWorkoutSportTypesByUserId,
   listExternalWorkoutsByUserId,
+  updateExternalWorkoutById,
 } from "@/repositories/external-workouts";
 
 export { ServiceError } from "@/lib/service-utils";
@@ -95,6 +97,67 @@ export async function listExternalWorkoutSportTypesService(
   }
 
   return { items: data };
+}
+
+export async function updateExternalWorkoutService(
+  userId: string,
+  workoutId: string,
+  payload: unknown,
+): Promise<ExternalWorkoutDTO> {
+  assertUser(userId);
+  const parsed = parseOrThrow(externalWorkoutCreateSchema, payload);
+  const supabase = await createClient();
+
+  const { data, error } = await updateExternalWorkoutById(
+    supabase,
+    userId,
+    workoutId,
+    {
+      started_at: parsed.started_at,
+      sport_type: parsed.sport_type,
+      duration_minutes: parsed.duration_minutes,
+      calories: parsed.calories ?? null,
+      hr_avg: parsed.hr_avg ?? null,
+      hr_max: parsed.hr_max ?? null,
+      intensity_rpe: parsed.intensity_rpe ?? null,
+      notes: parsed.notes ?? null,
+      source: parsed.source,
+      external_id: parsed.external_id ?? null,
+      raw_payload: (parsed.raw_payload ?? null) as Json | null,
+    },
+  );
+
+  if (error) {
+    throw mapDbError(error);
+  }
+
+  if (!data) {
+    throw new ServiceError("NOT_FOUND", "Nie znaleziono treningu spoza aplikacji.");
+  }
+
+  return data;
+}
+
+export async function deleteExternalWorkoutService(
+  userId: string,
+  workoutId: string,
+): Promise<void> {
+  assertUser(userId);
+  const supabase = await createClient();
+
+  const { error, deleted } = await deleteExternalWorkoutById(
+    supabase,
+    userId,
+    workoutId,
+  );
+
+  if (error) {
+    throw mapDbError(error);
+  }
+
+  if (!deleted) {
+    throw new ServiceError("NOT_FOUND", "Nie znaleziono treningu spoza aplikacji.");
+  }
 }
 
 export type ExternalWorkoutCreateInput = ExternalWorkoutCreateCommand;

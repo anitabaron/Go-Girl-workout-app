@@ -12,6 +12,7 @@ import {
 } from "@/lib/validation/ai-trainer";
 
 export type AITrainerChatResponse = {
+  conversation_id: string | null;
   reply: string;
   recommendations: string[];
   context: {
@@ -21,6 +22,26 @@ export type AITrainerChatResponse = {
     external_duration_minutes_last_7d: number;
     top_sport_last_7d: string | null;
   };
+};
+
+export type AIConversationListItem = {
+  id: string;
+  title: string;
+  preview: string;
+  updated_at: string;
+};
+
+export type AIConversationMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+};
+
+export type AIConversationDetails = {
+  id: string;
+  title: string;
+  messages: AIConversationMessage[];
 };
 
 type PlanPreview = {
@@ -34,6 +55,26 @@ type ExternalWorkoutPreview = {
   duration_minutes: number;
   sport_type: string;
 };
+
+type AIConversationRow = {
+  id: string;
+  title: string;
+  updated_at: string;
+};
+
+type AIMessageRow = {
+  id: string;
+  conversation_id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+};
+
+function conversationTitleFromMessage(message: string): string {
+  const normalized = message.replace(/\s+/g, " ").trim();
+  if (!normalized) return "Nowa konwersacja";
+  return normalized.length > 80 ? `${normalized.slice(0, 77)}...` : normalized;
+}
 
 function getErrorSummary(error: unknown): string {
   if (error && typeof error === "object") {
@@ -186,6 +227,61 @@ export async function aiTrainerChatService(
   const parsed = parseOrThrow(aiTrainerChatSchema, payload);
   const supabase = await createClient();
 
+  let conversationId = parsed.conversation_id ?? null;
+  let canPersistConversation = true;
+
+  try {
+    if (conversationId) {
+      const { data: existingConversation, error: existingConversationError } =
+        await supabase
+          .from("ai_chat_conversations")
+          .select("id")
+          .eq("id", conversationId)
+          .eq("user_id", userId)
+          .single();
+      if (existingConversationError || !existingConversation) {
+        conversationId = null;
+      }
+    }
+
+    if (!conversationId) {
+      const { data: createdConversation, error: createConversationError } =
+        await supabase
+          .from("ai_chat_conversations")
+          .insert({
+            user_id: userId,
+            title: conversationTitleFromMessage(parsed.message),
+            last_message_at: new Date().toISOString(),
+          })
+          .select("id")
+          .single();
+
+      if (createConversationError || !createdConversation) {
+        canPersistConversation = false;
+      } else {
+        conversationId = createdConversation.id;
+      }
+    }
+
+    if (canPersistConversation && conversationId) {
+      const { error: userMessageError } = await supabase
+        .from("ai_chat_messages")
+        .insert({
+          conversation_id: conversationId,
+          user_id: userId,
+          role: "user",
+          content: parsed.message,
+        });
+      if (userMessageError) {
+        canPersistConversation = false;
+      }
+    }
+  } catch (error) {
+    canPersistConversation = false;
+    conversationId = null;
+    console.warn("[aiTrainerChatService] Conversation persistence disabled:", error);
+  }
+
   const [{ data: plans, error: plansError }, { data: external, error: extError }] =
     await Promise.all([
       supabase
@@ -251,10 +347,41 @@ export async function aiTrainerChatService(
 
   const requestType = parsed.workout_plan_id ? "optimize" : "generate";
   const response: AITrainerChatResponse = {
+    conversation_id: canPersistConversation ? conversationId : null,
     reply,
     recommendations,
     context,
   };
+
+  if (canPersistConversation && conversationId) {
+    const [{ error: assistantMessageError }, { error: conversationUpdateError }] =
+      await Promise.all([
+        supabase.from("ai_chat_messages").insert({
+          conversation_id: conversationId,
+          user_id: userId,
+          role: "assistant",
+          content: reply,
+        }),
+        supabase
+          .from("ai_chat_conversations")
+          .update({ last_message_at: new Date().toISOString() })
+          .eq("id", conversationId)
+          .eq("user_id", userId),
+      ]);
+
+    if (assistantMessageError) {
+      console.warn(
+        "[aiTrainerChatService] Failed to write ai_chat_messages assistant row:",
+        assistantMessageError,
+      );
+    }
+    if (conversationUpdateError) {
+      console.warn(
+        "[aiTrainerChatService] Failed to update ai_chat_conversations row:",
+        conversationUpdateError,
+      );
+    }
+  }
 
   const { error: aiRequestError } = await supabase.from("ai_requests").insert({
     user_id: userId,
@@ -270,4 +397,102 @@ export async function aiTrainerChatService(
   }
 
   return response;
+}
+
+export async function listAITrainerConversationsService(
+  userId: string,
+): Promise<AIConversationListItem[]> {
+  assertUser(userId);
+  const supabase = await createClient();
+
+  const { data: conversations, error: conversationsError } = await supabase
+    .from("ai_chat_conversations")
+    .select("id,title,updated_at")
+    .eq("user_id", userId)
+    .order("last_message_at", { ascending: false })
+    .limit(50);
+
+  if (conversationsError) {
+    throw mapDbError(conversationsError);
+  }
+
+  const rows = (conversations ?? []) as AIConversationRow[];
+  if (rows.length === 0) return [];
+
+  const conversationIds = rows.map((row) => row.id);
+  const { data: messages, error: messagesError } = await supabase
+    .from("ai_chat_messages")
+    .select("conversation_id,content,created_at")
+    .in("conversation_id", conversationIds)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (messagesError) {
+    throw mapDbError(messagesError);
+  }
+
+  const latestMessageByConversation = new Map<
+    string,
+    { content: string; created_at: string }
+  >();
+  for (const message of messages ?? []) {
+    if (!latestMessageByConversation.has(message.conversation_id)) {
+      latestMessageByConversation.set(message.conversation_id, {
+        content: message.content,
+        created_at: message.created_at,
+      });
+    }
+  }
+
+  return rows.map((row) => {
+    const latest = latestMessageByConversation.get(row.id);
+    const preview = latest?.content?.trim() ?? "";
+    return {
+      id: row.id,
+      title: row.title,
+      preview: preview.length > 140 ? `${preview.slice(0, 137)}...` : preview,
+      updated_at: latest?.created_at ?? row.updated_at,
+    };
+  });
+}
+
+export async function getAITrainerConversationDetailsService(
+  userId: string,
+  conversationId: string,
+): Promise<AIConversationDetails> {
+  assertUser(userId);
+  const supabase = await createClient();
+
+  const { data: conversation, error: conversationError } = await supabase
+    .from("ai_chat_conversations")
+    .select("id,title")
+    .eq("id", conversationId)
+    .eq("user_id", userId)
+    .single();
+
+  if (conversationError || !conversation) {
+    throw new ServiceError("NOT_FOUND", "Konwersacja nie została znaleziona.");
+  }
+
+  const { data: messages, error: messagesError } = await supabase
+    .from("ai_chat_messages")
+    .select("id,role,content,created_at,conversation_id")
+    .eq("conversation_id", conversationId)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+
+  if (messagesError) {
+    throw mapDbError(messagesError);
+  }
+
+  return {
+    id: conversation.id,
+    title: conversation.title,
+    messages: ((messages ?? []) as AIMessageRow[]).map((message) => ({
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      created_at: message.created_at,
+    })),
+  };
 }
