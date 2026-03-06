@@ -46,9 +46,8 @@ export class WorkoutSessionDetailsPage {
 
   async getExerciseCount(): Promise<number> {
     await this.exercisesList.waitFor({ state: "visible", timeout: 10000 });
-    // Legacy: div.rounded-lg.border, M3: data-test-id="workout-session-exercise-item"
     const cards = this.exercisesList.locator(
-      'div.rounded-lg.border, [data-test-id="workout-session-exercise-item"]',
+      '[data-test-id="workout-session-exercise-item"]',
     );
     return await cards.count();
   }

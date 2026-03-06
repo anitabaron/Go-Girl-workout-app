@@ -175,7 +175,9 @@ export class WorkoutPlanFormPage {
 
     // Retry to handle eventual consistency after creating exercise right before opening dialog.
     for (let attempt = 0; attempt < 8; attempt++) {
-      const loader = this.page.locator('svg[class*="animate-spin"]').first();
+      const loader = this.page
+        .locator('[data-test-id="exercise-selector-loading"]')
+        .first();
       try {
         await loader.waitFor({ state: "hidden", timeout: 5000 });
       } catch {
@@ -288,7 +290,7 @@ export class WorkoutPlanFormPage {
     }
 
     const moveUpButton = exerciseItem
-      .locator('button:has(svg.lucide-chevron-up)')
+      .getByRole("button", { name: /Przesuń.*wyżej|Przesuń.*górę|Move.*up/i })
       .first();
     await moveUpButton.waitFor({ state: "visible", timeout: 5000 });
     await moveUpButton.click();

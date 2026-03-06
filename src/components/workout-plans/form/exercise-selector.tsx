@@ -330,7 +330,10 @@ export function ExerciseSelector({
       {(() => {
         if (isLoading) {
           return (
-            <div className="flex items-center justify-center py-8">
+            <div
+              className="flex items-center justify-center py-8"
+              data-test-id="exercise-selector-loading"
+            >
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
           );

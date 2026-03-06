@@ -16,7 +16,10 @@ export function WorkoutSessionExerciseItem({
   totalExercises,
 }: WorkoutSessionExerciseItemProps) {
   return (
-    <Card className="rounded-lg border border-border bg-white dark:border-border dark:bg-zinc-950">
+    <Card
+      data-test-id="workout-session-exercise-item"
+      className="rounded-lg border border-border bg-white dark:border-border dark:bg-zinc-950"
+    >
       <CardHeader>
         <ExerciseHeader
           exercise={exercise}
