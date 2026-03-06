@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage } from "../pages/login-page";
-import { authenticateUser, prepareTestUserCredentials } from "../fixtures";
+import { authenticateUser, getTestUserCredentials } from "../fixtures";
 import { getAuthLabelMatcher } from "../pages/i18n-labels";
 
 /**
@@ -49,7 +49,7 @@ test.describe("Login E2E", () => {
     page,
   }) => {
     const loginPage = new LoginPage(page);
-    const credentials = await prepareTestUserCredentials();
+    const credentials = getTestUserCredentials();
 
     // Navigate to login page
     await loginPage.goto();
@@ -77,7 +77,7 @@ test.describe("Login E2E", () => {
     page,
   }) => {
     const loginPage = new LoginPage(page);
-    const credentials = await prepareTestUserCredentials();
+    const credentials = getTestUserCredentials();
 
     await loginPage.goto();
     await loginPage.waitForForm();

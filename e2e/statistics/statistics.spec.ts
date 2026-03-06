@@ -55,10 +55,9 @@ test.describe("Statistics", () => {
       page.getByRole("heading", { name: "Kalendarz treningów", level: 2 }),
     ).toBeVisible();
 
-    const previousMonthButton = page.getByRole("button", {
-      name: /Poprzedni miesiąc|Previous month/i,
-    });
-    const monthLabel = previousMonthButton.locator("xpath=following-sibling::p[1]");
+    const monthLabel = page.locator(
+      '[data-test-id="statistics-calendar-month-label"]',
+    );
     const initialMonth = (await monthLabel.textContent())?.trim() ?? "";
     expect(initialMonth.length).toBeGreaterThan(0);
 
@@ -171,9 +170,7 @@ test.describe("Statistics", () => {
     await page.waitForLoadState("networkidle", { timeout: 30000 });
 
     await page
-      .getByRole("button", {
-        name: /Dodaj inny trening|Dodaj trening spoza aplikacji|Add workout from outside app/i,
-      })
+      .locator('[data-test-id="statistics-manual-workout-add-button"]')
       .click();
 
     await page

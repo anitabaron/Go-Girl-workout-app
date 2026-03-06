@@ -716,6 +716,7 @@ export function StatisticsDashboardM3({
               type="button"
               variant="outline"
               className="text-sm sm:text-base"
+              data-test-id="statistics-manual-workout-add-button"
               onClick={() => {
                 resetExternalWorkoutForm();
                 setIsExternalDialogOpen(true);
@@ -739,7 +740,9 @@ export function StatisticsDashboardM3({
                 <ChevronLeft className="size-4" />
               </Button>
               <p className="min-w-32 text-center text-[10px] font-semibold capitalize sm:min-w-36 sm:text-xs md:text-sm">
+                <span data-test-id="statistics-calendar-month-label">
                 {formatMonthLabel(monthCursor, locale)}
+                </span>
               </p>
               <Button
                 type="button"
