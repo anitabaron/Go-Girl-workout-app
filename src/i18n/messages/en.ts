@@ -888,6 +888,9 @@ export const enMessages = {
   "statisticsPage.manualWorkoutDialogTitle": "Add external workout",
   "statisticsPage.manualWorkoutDialogDescription":
     "Manually add a workout completed outside the app (for example from a watch).",
+  "statisticsPage.manualWorkoutEditDialogTitle": "Edit external workout",
+  "statisticsPage.manualWorkoutEditDialogDescription":
+    "Update workout details added manually or imported.",
   "statisticsPage.manualWorkoutDateLabel": "Workout date",
   "statisticsPage.manualWorkoutDurationLabel": "Duration (min)",
   "statisticsPage.manualWorkoutSportTypeLabel": "Sport type",
@@ -895,7 +898,7 @@ export const enMessages = {
     "e.g. pole_dance, calisthenics, yoga",
   "statisticsPage.manualWorkoutCaloriesLabel": "Calories (kcal, optional)",
   "statisticsPage.manualWorkoutSourceLabel": "Source (optional)",
-  "statisticsPage.manualWorkoutSourcePlaceholder": "Default: manual",
+  "statisticsPage.manualWorkoutSourcePlaceholder": "e.g. Manual",
   "statisticsPage.manualWorkoutAvgHeartRateLabel": "Avg heart rate (optional)",
   "statisticsPage.manualWorkoutMaxHeartRateLabel": "Max heart rate (optional)",
   "statisticsPage.manualWorkoutRpeLabel": "Intensity RPE 1-10 (optional)",
@@ -904,11 +907,27 @@ export const enMessages = {
     "For example Garmin workout, intervals, how you felt...",
   "statisticsPage.manualWorkoutCancel": "Cancel",
   "statisticsPage.manualWorkoutSave": "Save workout",
+  "statisticsPage.manualWorkoutUpdate": "Save changes",
   "statisticsPage.manualWorkoutSaving": "Saving...",
+  "statisticsPage.manualWorkoutEdit": "Edit workout",
   "statisticsPage.manualWorkoutSessionName": "External workout",
   "statisticsPage.manualWorkoutSaveSuccess": "Workout saved in calendar.",
+  "statisticsPage.manualWorkoutUpdateSuccess": "Workout changes have been saved.",
   "statisticsPage.manualWorkoutSaveFailed":
     "Could not save workout. Please try again.",
+  "statisticsPage.manualWorkoutUpdateFailed":
+    "Could not save workout changes. Please try again.",
+  "statisticsPage.manualWorkoutEditUnavailable":
+    "This workout entry cannot be edited.",
+  "statisticsPage.manualWorkoutDelete": "Delete workout",
+  "statisticsPage.manualWorkoutDeleting": "Deleting...",
+  "statisticsPage.manualWorkoutDeleteConfirm":
+    "Are you sure you want to delete this external workout?",
+  "statisticsPage.manualWorkoutDeleteSuccess": "Workout has been deleted.",
+  "statisticsPage.manualWorkoutDeleteFailed":
+    "Could not delete workout. Please try again.",
+  "statisticsPage.manualWorkoutDeleteUnavailable":
+    "This workout entry cannot be deleted.",
   "statisticsPage.manualWorkoutInvalidDate": "Provide a valid workout date.",
   "statisticsPage.manualWorkoutInvalidDuration":
     "Duration must be a positive number of minutes.",
@@ -983,6 +1002,32 @@ export const enMessages = {
   "statisticsPage.aiTitle": "AI trainer",
   "statisticsPage.aiDescription":
     "Reserved space for upcoming AI support in planning, optimization, and performance analysis.",
+  "aiAssistant.title": "AI Trainer",
+  "aiAssistant.greeting": "Good morning!",
+  "aiAssistant.subtitle":
+    "Build your plan around goals and update it from workouts and recovery feedback.",
+  "aiAssistant.quickActions": "Quick actions",
+  "aiAssistant.quickActionPlanToday": "Plan today workout",
+  "aiAssistant.quickActionPlanWeek": "Plan this week",
+  "aiAssistant.quickActionAdjustRecovery": "Adjust after fatigue or pain",
+  "aiAssistant.quickActionReviewGoal": "Review goal progress",
+  "aiAssistant.remainingToday": "{count} questions left for today",
+  "aiAssistant.history": "History",
+  "aiAssistant.newChat": "New chat",
+  "aiAssistant.close": "Close",
+  "aiAssistant.inputPlaceholder":
+    "Ask about training, progression, or recovery...",
+  "aiAssistant.inputAria": "AI assistant message input",
+  "aiAssistant.sendAria": "Send message",
+  "aiAssistant.openMobile": "AI",
+  "aiAssistant.openMobileAria": "Open AI assistant",
+  "aiAssistant.thinking": "Thinking...",
+  "aiAssistant.emptyStateTitle":
+    "Describe your goal, constraints, and training preferences.",
+  "aiAssistant.emptyStateDescription":
+    "The assistant will propose a plan direction and recommendations for upcoming workouts.",
+  "aiAssistant.responseError":
+    "Could not get assistant response. Please try again.",
   "importInstructionPage.backToPlans": "Back to plans",
   "importInstructionPage.title": "Workout plan import guide",
   "importInstructionPage.description":

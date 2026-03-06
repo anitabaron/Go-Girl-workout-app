@@ -67,6 +67,46 @@ export async function insertExternalWorkout(
   return { data: mapExternalWorkout(data as ExternalWorkoutRow), error: null };
 }
 
+export async function updateExternalWorkoutById(
+  client: DbClient,
+  userId: string,
+  workoutId: string,
+  input: Omit<
+    Database["public"]["Tables"]["external_workouts"]["Update"],
+    "user_id"
+  >,
+): Promise<{ data: ExternalWorkoutDTO | null; error: PostgrestError | null }> {
+  const { data, error } = await client
+    .from("external_workouts")
+    .update(input)
+    .eq("id", workoutId)
+    .eq("user_id", userId)
+    .select(externalWorkoutSelectColumns)
+    .maybeSingle();
+
+  if (error || !data) return { data: null, error };
+
+  return { data: mapExternalWorkout(data as ExternalWorkoutRow), error: null };
+}
+
+export async function deleteExternalWorkoutById(
+  client: DbClient,
+  userId: string,
+  workoutId: string,
+): Promise<{ error: PostgrestError | null; deleted: boolean }> {
+  const { data, error } = await client
+    .from("external_workouts")
+    .delete()
+    .eq("id", workoutId)
+    .eq("user_id", userId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { error, deleted: false };
+
+  return { error: null, deleted: Boolean(data?.id) };
+}
+
 export async function listExternalWorkoutSportTypesByUserId(
   client: DbClient,
   userId: string,

@@ -22,7 +22,7 @@ W MVP produkt dostarcza:
 - plany treningowe jako szablony wielokrotnego użytku (CRUD),
 - asystenta treningu do wykonywania sesji (start/pause/next/back/skip) z autozapisem i możliwością wznowienia,
 - historię sesji i PR per ćwiczenie, wyliczane z zapisanych serii,
-- integrację AI przez jeden endpoint (OpenRouter), ograniczoną do ćwiczeń użytkownika, z limitem 5/miesiąc per użytkownik.
+- integrację AI przez jeden endpoint (OpenRouter), ograniczoną do ćwiczeń użytkownika, z limitem 20/dzień per użytkownik.
 
 ### 1.3 Użytkownicy i kontekst użycia
 
@@ -165,8 +165,9 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   3.6.4 Kontrakt odpowiedzi AI:
 - AI zwraca ustrukturyzowany JSON zawierający listę elementów planu: exercise*id oraz parametry planned*\*,
 - produkt waliduje JSON i odrzuca plan, jeśli zawiera exercise_id nie należące do użytkowniczki lub brakujące wymagane pola.
-  3.6.5 Limity AI:
-- limit 5 akcji AI na użytkownika na miesiąc (reset 1. dnia miesiąca),
+3.6.5 Limity AI:
+- limit 20 akcji AI na użytkownika na dzień (reset codziennie),
+- 1 akcja AI = 1 wysłana wiadomość/prompt użytkownika do Trenera AI,
 - generuj i optymalizuj liczą się identycznie,
 - retry nie jest liczone tylko, jeśli poprzednie wywołanie zakończyło się błędem systemowym (np. błąd sieci/5xx).
   3.6.6 Polityka danych dla AI:
@@ -611,11 +612,11 @@ Osoby trenujące regularnie potrzebują narzędzia, które pozwala:
   - Aplikacja nie zapisuje częściowo niepoprawnego planu.
 
 - ID: US-084
-  Tytuł: Limit 5 akcji AI na miesiąc na użytkownika
+  Tytuł: Limit 20 akcji AI na dzień na użytkownika
   Opis: Jako użytkowniczka chcę wiedzieć, ile mam pozostałych użyć AI, aby kontrolować limit.
   Kryteria akceptacji:
   - System blokuje wywołanie AI po przekroczeniu limitu.
-  - UI pokazuje informację o pozostałych użyciach oraz dacie resetu (1. dzień miesiąca).
+  - UI pokazuje informację o pozostałych użyciach oraz dacie resetu (następny dzień).
 
 - ID: US-087
   Tytuł: Blokada użycia AI, gdy brak ćwiczeń

@@ -354,7 +354,10 @@ export function ExerciseSelectorM3({
 
       <div className="h-[min(42vh,360px)] overflow-y-auto pr-1 sm:h-[min(46vh,400px)] lg:h-[420px]">
         {isLoading && (
-          <div className="flex h-full items-center justify-center py-8">
+          <div
+            className="flex h-full items-center justify-center py-8"
+            data-test-id="exercise-selector-loading"
+          >
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
         )}

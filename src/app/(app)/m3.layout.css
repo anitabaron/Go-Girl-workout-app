@@ -38,3 +38,10 @@ html {
     padding-bottom: 0;
   }
 }
+
+/* Workout active page: hide right-side AI reserve space when assistant is disabled */
+@media (min-width: 1280px) {
+  main:has([data-page="workout-active"]) {
+    padding-right: 1.5rem !important;
+  }
+}

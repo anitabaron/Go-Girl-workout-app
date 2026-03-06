@@ -108,6 +108,17 @@
   background: var(--m3-surface-container-high) !important;
 }
 
+/* AI panel: explicit active state for history clock button */
+[data-slot="button"].ai-history-active {
+  background: var(--m3-raw-primary-container) !important;
+  color: var(--m3-primary) !important;
+  border: 1px solid color-mix(in srgb, var(--m3-primary) 30%, transparent) !important;
+}
+
+[data-slot="button"].ai-history-active:hover {
+  background: color-mix(in srgb, var(--m3-raw-primary-container) 88%, var(--m3-primary) 12%) !important;
+}
+
 /* Destructive - M3 error/delete styling */
 [data-slot="button"][data-variant="destructive"] {
   background: var(--destructive) !important;

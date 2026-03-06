@@ -903,32 +903,53 @@ export const plMessages = {
   "statisticsPage.weekdayFri": "Pt",
   "statisticsPage.weekdaySat": "Sob",
   "statisticsPage.weekdaySun": "Nd",
-  "statisticsPage.manualWorkoutAddButton": "Dodaj trening spoza aplikacji",
+  "statisticsPage.manualWorkoutAddButton": "Dodaj inny trening",
   "statisticsPage.manualWorkoutDialogTitle": "Dodaj trening spoza aplikacji",
   "statisticsPage.manualWorkoutDialogDescription":
     "Wpisz ręcznie trening wykonany poza aplikacją (np. z zegarka).",
+  "statisticsPage.manualWorkoutEditDialogTitle": "Edytuj trening spoza aplikacji",
+  "statisticsPage.manualWorkoutEditDialogDescription":
+    "Zaktualizuj dane treningu dodanego ręcznie lub z importu.",
   "statisticsPage.manualWorkoutDateLabel": "Data treningu",
   "statisticsPage.manualWorkoutDurationLabel": "Czas trwania (min)",
   "statisticsPage.manualWorkoutSportTypeLabel": "Typ sportu",
   "statisticsPage.manualWorkoutSportTypePlaceholder":
-    "np. pole_dance, calisthenics, yoga",
+    "np. Pole dance, Kalistenika, Joga",
   "statisticsPage.manualWorkoutCaloriesLabel": "Kalorie (kcal, opcjonalnie)",
   "statisticsPage.manualWorkoutSourceLabel": "Źródło (opcjonalnie)",
   "statisticsPage.manualWorkoutSourcePlaceholder":
-    "Domyślnie: ręcznie",
+    "np. Ręcznie",
   "statisticsPage.manualWorkoutAvgHeartRateLabel": "Średnie tętno (opcjonalnie)",
   "statisticsPage.manualWorkoutMaxHeartRateLabel": "Maksymalne tętno (opcjonalnie)",
-  "statisticsPage.manualWorkoutRpeLabel": "Intensywność RPE 1-10 (opcjonalnie)",
+  "statisticsPage.manualWorkoutRpeLabel":
+    "Intensywność RPE (subiektywna skala wysiłku) 1-10 (opcjonalnie)",
   "statisticsPage.manualWorkoutNotesLabel": "Notatki (opcjonalnie)",
   "statisticsPage.manualWorkoutNotesPlaceholder":
     "Np. trening z Garmin, interwały, samopoczucie...",
   "statisticsPage.manualWorkoutCancel": "Anuluj",
   "statisticsPage.manualWorkoutSave": "Zapisz trening",
+  "statisticsPage.manualWorkoutUpdate": "Zapisz zmiany",
   "statisticsPage.manualWorkoutSaving": "Zapisywanie...",
-  "statisticsPage.manualWorkoutSessionName": "Trening spoza aplikacji",
+  "statisticsPage.manualWorkoutEdit": "Edytuj trening",
+  "statisticsPage.manualWorkoutSessionName": "Inny trening",
   "statisticsPage.manualWorkoutSaveSuccess": "Trening zapisany w kalendarzu.",
+  "statisticsPage.manualWorkoutUpdateSuccess":
+    "Zmiany treningu zostały zapisane.",
   "statisticsPage.manualWorkoutSaveFailed":
     "Nie udało się zapisać treningu. Spróbuj ponownie.",
+  "statisticsPage.manualWorkoutUpdateFailed":
+    "Nie udało się zapisać zmian treningu. Spróbuj ponownie.",
+  "statisticsPage.manualWorkoutEditUnavailable":
+    "Nie można edytować tego wpisu treningowego.",
+  "statisticsPage.manualWorkoutDelete": "Usuń trening",
+  "statisticsPage.manualWorkoutDeleting": "Usuwanie...",
+  "statisticsPage.manualWorkoutDeleteConfirm":
+    "Czy na pewno chcesz usunąć ten inny trening?",
+  "statisticsPage.manualWorkoutDeleteSuccess": "Trening został usunięty.",
+  "statisticsPage.manualWorkoutDeleteFailed":
+    "Nie udało się usunąć treningu. Spróbuj ponownie.",
+  "statisticsPage.manualWorkoutDeleteUnavailable":
+    "Nie można usunąć tego wpisu treningowego.",
   "statisticsPage.manualWorkoutInvalidDate":
     "Podaj prawidłową datę treningu.",
   "statisticsPage.manualWorkoutInvalidDuration":
@@ -1005,6 +1026,32 @@ export const plMessages = {
   "statisticsPage.aiTitle": "Trener AI",
   "statisticsPage.aiDescription":
     "Miejsce pod przyszłe wsparcie AI w planowaniu, optymalizacji i analizie wyników treningowych.",
+  "aiAssistant.title": "Trener AI",
+  "aiAssistant.greeting": "Dzień dobry!",
+  "aiAssistant.subtitle":
+    "Ułóż plan pod Twoje cele i aktualizuj go na bazie treningów oraz samopoczucia.",
+  "aiAssistant.quickActions": "Szybkie akcje",
+  "aiAssistant.quickActionPlanToday": "Ułóż dzisiejszy trening",
+  "aiAssistant.quickActionPlanWeek": "Rozpisz plan na ten tydzień",
+  "aiAssistant.quickActionAdjustRecovery": "Dostosuj po zmęczeniu lub bólu",
+  "aiAssistant.quickActionReviewGoal": "Sprawdź progres celu",
+  "aiAssistant.remainingToday": "Zostało na dziś {count} pytań",
+  "aiAssistant.history": "Historia",
+  "aiAssistant.newChat": "Nowa rozmowa",
+  "aiAssistant.close": "Zamknij",
+  "aiAssistant.inputPlaceholder":
+    "Zapytaj o trening, progresję albo regenerację...",
+  "aiAssistant.inputAria": "Pole wiadomości do asystenta AI",
+  "aiAssistant.sendAria": "Wyślij wiadomość",
+  "aiAssistant.openMobile": "AI",
+  "aiAssistant.openMobileAria": "Otwórz asystenta AI",
+  "aiAssistant.thinking": "Myślę...",
+  "aiAssistant.emptyStateTitle":
+    "Opisz cel, ograniczenia i preferencje treningowe.",
+  "aiAssistant.emptyStateDescription":
+    "Asystent przygotuje kierunek planu i rekomendacje do kolejnych treningów.",
+  "aiAssistant.responseError":
+    "Nie udało się uzyskać odpowiedzi od asystenta. Spróbuj ponownie.",
   "importInstructionPage.backToPlans": "Powrót do planów",
   "importInstructionPage.title": "Instrukcja importu planów treningowych",
   "importInstructionPage.description":
