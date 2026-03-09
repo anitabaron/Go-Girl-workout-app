@@ -45,6 +45,7 @@ export type AIUsageEntity = Tables<"ai_usage">;
 export type AIRequestEntity = Tables<"ai_requests">;
 export type TrainingProgramEntity = Tables<"training_programs">;
 export type ProgramSessionEntity = Tables<"program_sessions">;
+export type ProgramNoteEntity = Tables<"program_notes">;
 export type AICoachProfileEntity = Tables<"ai_coach_profiles">;
 
 /**
@@ -291,6 +292,19 @@ export type ProgramSessionListQueryParams = {
 };
 
 export type ProgramSessionDTO = Omit<ProgramSessionEntity, "user_id">;
+export type ProgramNoteSource = "user" | "ai_action" | "ai_summary";
+export type ProgramNoteDTO = Omit<ProgramNoteEntity, "user_id">;
+export type ProgramNoteCreateCommand = {
+  program_session_id?: ProgramSessionEntity["id"] | null;
+  note_text: string;
+  fatigue_level?: number | null;
+  vitality_level?: number | null;
+  source?: ProgramNoteSource;
+};
+export type ProgramNoteListQueryParams = {
+  program_session_id?: ProgramSessionEntity["id"];
+  limit?: number;
+};
 
 export type TrainingProgramDTO = Omit<TrainingProgramEntity, "user_id"> & {
   sessions: ProgramSessionDTO[];

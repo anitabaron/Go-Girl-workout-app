@@ -41,3 +41,24 @@ export const aiTrainerChatSchema = z
   .strict();
 
 export type AITrainerChatCommand = z.infer<typeof aiTrainerChatSchema>;
+
+export const aiTrainerActionExecuteSchema = z
+  .object({
+    type: z.enum([
+      "APPLY_LIGHT_VERSION",
+      "ADD_DELOAD_WEEK",
+      "ADD_RECOVERY_DAY",
+      "GENERATE_PROGRAM",
+    ]),
+    payload: z.record(z.string(), z.unknown()).default({}),
+    conversation_id: z
+      .string()
+      .refine((val) => uuidRegex.test(val), "conversation_id musi być UUID")
+      .nullable()
+      .optional(),
+  })
+  .strict();
+
+export type AITrainerActionExecuteCommand = z.infer<
+  typeof aiTrainerActionExecuteSchema
+>;

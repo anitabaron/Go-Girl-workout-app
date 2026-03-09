@@ -9,7 +9,6 @@ import {
   Dumbbell,
   Calendar,
   CalendarDays,
-  CalendarRange,
   History,
   Trophy,
   LogIn,
@@ -35,7 +34,6 @@ const NAV_ITEMS: ReadonlyArray<{
   { href: "/", labelKey: "home", icon: Home },
   { href: "/exercises", labelKey: "exercises", icon: Dumbbell },
   { href: "/workout-plans", labelKey: "plans", icon: Calendar },
-  { href: "/programs", labelKey: "programs", icon: CalendarRange },
   { href: "/workout-sessions", labelKey: "sessions", icon: History },
   { href: "/personal-records", labelKey: "records", icon: Trophy },
   { href: "/calendar", labelKey: "statistics", icon: CalendarDays },
@@ -44,6 +42,9 @@ const NAV_ITEMS: ReadonlyArray<{
 
 function isNavItemActive(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
+  if (href === "/workout-plans") {
+    return pathname.startsWith("/workout-plans") || pathname.startsWith("/programs");
+  }
   if (href === "/workout-sessions")
     return (
       pathname.startsWith("/workout-sessions") &&

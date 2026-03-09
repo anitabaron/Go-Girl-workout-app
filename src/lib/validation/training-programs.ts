@@ -194,3 +194,30 @@ export const programSessionUpdateSchema = z
       payload.progression_overrides !== undefined,
     { message: "Przekaż co najmniej jedno pole do aktualizacji." },
   );
+
+export const programNoteCreateSchema = z
+  .object({
+    program_session_id: z
+      .string()
+      .refine((val) => uuidRegex.test(val), "program_session_id musi być UUID")
+      .nullable()
+      .optional(),
+    note_text: z
+      .string()
+      .trim()
+      .min(1, "note_text nie może być puste")
+      .max(4000, "note_text nie może przekraczać 4000 znaków"),
+    fatigue_level: z.number().int().min(1).max(10).nullable().optional(),
+    vitality_level: z.number().int().min(1).max(10).nullable().optional(),
+  })
+  .strict();
+
+export const programNoteListQuerySchema = z
+  .object({
+    program_session_id: z
+      .string()
+      .refine((val) => uuidRegex.test(val), "program_session_id musi być UUID")
+      .optional(),
+    limit: z.number().int().positive().max(100).default(50),
+  })
+  .strict();

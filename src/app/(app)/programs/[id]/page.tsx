@@ -185,7 +185,7 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
     <div className="space-y-6">
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-2">
-          <Link href="/programs" className="flex items-center gap-2">
+          <Link href="/workout-plans?section=programs" className="flex items-center gap-2">
             <ArrowLeft className="size-4" />
             Wróć do programów
           </Link>

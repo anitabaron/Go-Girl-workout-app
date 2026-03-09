@@ -306,6 +306,22 @@ function extractRecommendations(reply: string): string[] {
   return [];
 }
 
+function formatRulesForPrompt(
+  rules: Record<string, unknown> | null | undefined,
+): string | null {
+  if (!rules) return null;
+  try {
+    const serialized = JSON.stringify(rules);
+    if (!serialized || serialized === "{}") return null;
+    const maxChars = 1800;
+    return serialized.length > maxChars
+      ? `${serialized.slice(0, maxChars - 3)}...`
+      : serialized;
+  } catch {
+    return null;
+  }
+}
+
 async function generateAIReply(
   input: AITrainerChatCommand,
   context: AITrainerChatResponse["context"],
@@ -317,6 +333,7 @@ async function generateAIReply(
 
   const plansPreview =
     context.plans_preview.length > 0 ? context.plans_preview.join(", ") : "brak";
+  const rulesForPrompt = formatRulesForPrompt(profile?.rules);
   const prompt = [
     "Jesteś trenerem AI w aplikacji treningowej.",
     "Twórz krótkie, konkretne odpowiedzi po polsku.",
@@ -342,6 +359,10 @@ async function generateAIReply(
     profile?.contraindications
       ? `- przeciwwskazania: ${profile.contraindications}`
       : "",
+    profile?.preferred_methodology
+      ? `- preferowana metodologia: ${profile.preferred_methodology}`
+      : "",
+    rulesForPrompt ? `- dodatkowe zasady/profil: ${rulesForPrompt}` : "",
     attachmentContextLines.length > 0 ? "Kontekst z załączników:" : "",
     ...attachmentContextLines.map((line) => `- ${line}`),
     "",

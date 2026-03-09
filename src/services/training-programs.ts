@@ -9,6 +9,8 @@ import {
 import {
   programCreateSchema,
   programGenerateSchema,
+  programNoteCreateSchema,
+  programNoteListQuerySchema,
   programListQuerySchema,
   programSessionListQuerySchema,
   programSessionUpdateSchema,
@@ -23,8 +25,10 @@ import {
   linkProgramSessionToWorkoutSession,
   listProgramSessionsByUserId,
   listProgramSessionsByProgramId,
+  listProgramNotesByProgramId,
   listTrainingProgramsByUserId,
   listWorkoutPlansForProgramGeneration,
+  insertProgramNote,
   updateProgramSessionById,
   updateTrainingProgramById,
 } from "@/repositories/training-programs";
@@ -36,13 +40,18 @@ import {
   updateWorkoutPlan,
 } from "@/repositories/workout-plans";
 import { getOrCreateAICoachProfileService } from "@/services/ai-coach-profiles";
-import { startWorkoutSessionService } from "@/services/workout-sessions";
+import {
+  getWorkoutSessionService,
+  startWorkoutSessionService,
+} from "@/services/workout-sessions";
 import { calculatePlanEstimatedTotalTimeSeconds } from "@/lib/workout-plans/estimated-time";
 import type {
   ExercisePart,
   ExerciseType,
   ProgramListQueryParams,
   ProgramGeneratedPlanTemplate,
+  ProgramNoteCreateCommand,
+  ProgramNoteDTO,
   ProgramSessionListQueryParams,
   ProgramSessionCreateCommand,
   ProgramUpdateCommand,
@@ -816,6 +825,12 @@ type SessionWithPlanRef = {
   workout_plan_name?: string;
 };
 
+type ProgressionOverrides = {
+  load_adjustment_percent?: number | null;
+  volume_adjustment_percent?: number | null;
+  emphasis?: string | null;
+};
+
 type SessionWithOptionalPlanRef = Omit<ProgramSessionCreateCommand, "workout_plan_id"> & {
   workout_plan_id?: string;
   workout_plan_name?: string;
@@ -1096,6 +1111,85 @@ async function getProgramWithSessions(
     ...program,
     sessions: (sessions ?? []).filter((item) => item.training_program_id === program.id),
   };
+}
+
+function parseProgressionOverrides(value: unknown): ProgressionOverrides {
+  if (!value || typeof value !== "object") return {};
+  const obj = value as Record<string, unknown>;
+  return {
+    load_adjustment_percent:
+      typeof obj.load_adjustment_percent === "number"
+        ? obj.load_adjustment_percent
+        : null,
+    volume_adjustment_percent:
+      typeof obj.volume_adjustment_percent === "number"
+        ? obj.volume_adjustment_percent
+        : null,
+    emphasis: typeof obj.emphasis === "string" ? obj.emphasis : null,
+  };
+}
+
+function adjustSessionValue(
+  baseValue: number | null,
+  adjustmentPercent: number | null | undefined,
+): number | null {
+  if (baseValue === null) return null;
+  if (!adjustmentPercent) return baseValue;
+  const factor = 1 + adjustmentPercent / 100;
+  const rounded =
+    adjustmentPercent > 0 ? Math.ceil(baseValue * factor) : Math.floor(baseValue * factor);
+  return Math.max(1, rounded);
+}
+
+async function applyProgramProgressionToStartedSession(params: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  workoutSessionId: string;
+  progressionOverrides: unknown;
+}): Promise<void> {
+  const { supabase, workoutSessionId, progressionOverrides } = params;
+  const parsed = parseProgressionOverrides(progressionOverrides);
+  const volumePct = parsed.volume_adjustment_percent ?? 0;
+  if (volumePct === 0) return;
+
+  const { data: sessionExercises, error: sessionExercisesError } = await supabase
+    .from("workout_session_exercises")
+    .select(
+      "id,exercise_type_at_time,planned_sets,planned_reps,planned_duration_seconds",
+    )
+    .eq("session_id", workoutSessionId)
+    .order("exercise_order", { ascending: true });
+  if (sessionExercisesError) throw mapDbError(sessionExercisesError);
+  if (!sessionExercises || sessionExercises.length === 0) return;
+
+  for (const exercise of sessionExercises) {
+    // Progression only for main section; leave warm-up/cool-down untouched.
+    if (exercise.exercise_type_at_time !== "Main Workout") continue;
+
+    const hasReps = exercise.planned_reps !== null;
+    const hasDuration = !hasReps && exercise.planned_duration_seconds !== null;
+    const hasSets = !hasReps && !hasDuration && exercise.planned_sets !== null;
+
+    const nextPlannedSets = hasSets
+      ? adjustSessionValue(exercise.planned_sets, volumePct)
+      : exercise.planned_sets;
+    const nextPlannedReps = hasReps
+      ? adjustSessionValue(exercise.planned_reps, volumePct)
+      : exercise.planned_reps;
+    const nextPlannedDuration = hasDuration
+      ? adjustSessionValue(exercise.planned_duration_seconds, volumePct)
+      : exercise.planned_duration_seconds;
+
+    const { error: updateExerciseError } = await supabase
+      .from("workout_session_exercises")
+      .update({
+        planned_sets: nextPlannedSets,
+        planned_reps: nextPlannedReps,
+        planned_duration_seconds: nextPlannedDuration,
+      })
+      .eq("id", exercise.id);
+    if (updateExerciseError) throw mapDbError(updateExerciseError);
+  }
 }
 
 export async function generateAIProgramService(
@@ -1390,6 +1484,109 @@ export async function patchProgramSessionService(
   return updated;
 }
 
+export async function listProgramNotesService(
+  userId: string,
+  programId: string,
+  query: unknown,
+): Promise<{ items: ProgramNoteDTO[] }> {
+  assertUser(userId);
+  const parsed = parseOrThrow(programNoteListQuerySchema, query ?? {});
+  const supabase = await createClient();
+
+  const { data: program, error: programError } = await findTrainingProgramById(
+    supabase,
+    userId,
+    programId,
+  );
+  if (programError) throw mapDbError(programError);
+  if (!program) {
+    throw new ServiceError("NOT_FOUND", "Program treningowy nie został znaleziony.");
+  }
+
+  if (parsed.program_session_id) {
+    const { data: session, error: sessionError } = await findProgramSessionById(
+      supabase,
+      userId,
+      parsed.program_session_id,
+    );
+    if (sessionError) throw mapDbError(sessionError);
+    if (!session || session.training_program_id !== programId) {
+      throw new ServiceError("NOT_FOUND", "Sesja programu nie została znaleziona.");
+    }
+  }
+
+  const { data, error } = await listProgramNotesByProgramId(supabase, userId, programId, {
+    limit: parsed.limit,
+    program_session_id: parsed.program_session_id,
+  });
+  if (error) throw mapDbError(error);
+
+  return { items: (data ?? []) as ProgramNoteDTO[] };
+}
+
+export async function createProgramNoteService(
+  userId: string,
+  programId: string,
+  payload: unknown,
+): Promise<ProgramNoteDTO> {
+  assertUser(userId);
+  const parsed = parseOrThrow(programNoteCreateSchema, payload);
+  return await createProgramNoteInternal(userId, programId, {
+    ...parsed,
+    source: "user",
+  });
+}
+
+export async function createProgramSystemNoteService(
+  userId: string,
+  programId: string,
+  input: ProgramNoteCreateCommand,
+): Promise<ProgramNoteDTO> {
+  assertUser(userId);
+  return await createProgramNoteInternal(userId, programId, {
+    ...input,
+    source: input.source ?? "ai_action",
+  });
+}
+
+async function createProgramNoteInternal(
+  userId: string,
+  programId: string,
+  input: ProgramNoteCreateCommand,
+): Promise<ProgramNoteDTO> {
+  const supabase = await createClient();
+
+  const { data: program, error: programError } = await findTrainingProgramById(
+    supabase,
+    userId,
+    programId,
+  );
+  if (programError) throw mapDbError(programError);
+  if (!program) {
+    throw new ServiceError("NOT_FOUND", "Program treningowy nie został znaleziony.");
+  }
+
+  if (input.program_session_id) {
+    const { data: session, error: sessionError } = await findProgramSessionById(
+      supabase,
+      userId,
+      input.program_session_id,
+    );
+    if (sessionError) throw mapDbError(sessionError);
+    if (!session || session.training_program_id !== programId) {
+      throw new ServiceError("NOT_FOUND", "Sesja programu nie została znaleziona.");
+    }
+  }
+
+  const { data, error } = await insertProgramNote(supabase, userId, programId, input);
+  if (error) throw mapDbError(error);
+  if (!data) {
+    throw new ServiceError("INTERNAL", "Nie udało się zapisać uwagi do programu.");
+  }
+
+  return data as ProgramNoteDTO;
+}
+
 export async function startProgramSessionService(
   userId: string,
   id: string,
@@ -1414,6 +1611,17 @@ export async function startProgramSessionService(
   const { session, isNew } = await startWorkoutSessionService(userId, {
     workout_plan_id: programSession.workout_plan_id,
   });
+  let resolvedSession = session;
+
+  if (isNew) {
+    await applyProgramProgressionToStartedSession({
+      supabase,
+      userId,
+      workoutSessionId: session.id,
+      progressionOverrides: programSession.progression_overrides,
+    });
+    resolvedSession = await getWorkoutSessionService(userId, session.id);
+  }
 
   const { data: linked, error: linkError } = await linkProgramSessionToWorkoutSession(
     supabase,
@@ -1428,7 +1636,7 @@ export async function startProgramSessionService(
 
   return {
     program_session: linked,
-    workout_session: session,
+    workout_session: resolvedSession,
     is_new_session: isNew,
   };
 }

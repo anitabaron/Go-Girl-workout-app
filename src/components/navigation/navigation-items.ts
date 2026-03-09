@@ -2,7 +2,6 @@ import {
   Dumbbell,
   Calendar,
   CalendarDays,
-  CalendarRange,
   History,
   Trophy,
   Play,
@@ -15,7 +14,6 @@ import type { ComponentType } from "react";
 export type NavigationSection =
   | "exercises" // Biblioteka ćwiczeń
   | "workout-plans" // Plany treningowe
-  | "programs" // Programy treningowe
   | "workout-sessions" // Historia sesji
   | "personal-records" // Rekordy
   | "statistics"; // Statystyki
@@ -48,13 +46,6 @@ export const navigationItems: NavigationItem[] = [
     href: "/workout-plans",
     icon: Calendar,
     mobileLabel: "Plany",
-  },
-  {
-    id: "programs",
-    label: "Programy treningowe",
-    href: "/programs",
-    icon: CalendarRange,
-    mobileLabel: "Programy",
   },
   {
     id: "workout-sessions",

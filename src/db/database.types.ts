@@ -831,6 +831,60 @@ export type Database = {
           },
         ];
       };
+      program_notes: {
+        Row: {
+          created_at: string;
+          fatigue_level: number | null;
+          id: string;
+          note_text: string;
+          program_session_id: string | null;
+          source: string;
+          training_program_id: string;
+          updated_at: string;
+          user_id: string;
+          vitality_level: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          fatigue_level?: number | null;
+          id?: string;
+          note_text: string;
+          program_session_id?: string | null;
+          source?: string;
+          training_program_id: string;
+          updated_at?: string;
+          user_id: string;
+          vitality_level?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          fatigue_level?: number | null;
+          id?: string;
+          note_text?: string;
+          program_session_id?: string | null;
+          source?: string;
+          training_program_id?: string;
+          updated_at?: string;
+          user_id?: string;
+          vitality_level?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "program_notes_program_session_id_fkey";
+            columns: ["program_session_id"];
+            isOneToOne: false;
+            referencedRelation: "program_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "program_notes_training_program_id_fkey";
+            columns: ["training_program_id"];
+            isOneToOne: false;
+            referencedRelation: "training_programs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;

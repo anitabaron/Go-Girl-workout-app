@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Json } from "@/db/database.types";
 import type {
+  ProgramNoteCreateCommand,
+  ProgramNoteListQueryParams,
   ProgramSessionCreateCommand,
   ProgramSessionListQueryParams,
   ProgramSessionUpdateCommand,
@@ -16,6 +18,8 @@ const programSelectColumns =
 
 const programSessionSelectColumns =
   "id,training_program_id,workout_plan_id,scheduled_date,week_index,session_index,status,progression_overrides,linked_workout_session_id,created_at,updated_at";
+const programNoteSelectColumns =
+  "id,training_program_id,program_session_id,note_text,fatigue_level,vitality_level,source,created_at,updated_at";
 
 export async function listTrainingProgramsByUserId(
   client: DbClient,
@@ -268,4 +272,47 @@ export async function listWorkoutPlansForProgramGeneration(
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(limit);
+}
+
+export async function listProgramNotesByProgramId(
+  client: DbClient,
+  userId: string,
+  programId: string,
+  query: Required<Pick<ProgramNoteListQueryParams, "limit">> &
+    ProgramNoteListQueryParams,
+) {
+  let builder = client
+    .from("program_notes")
+    .select(programNoteSelectColumns)
+    .eq("user_id", userId)
+    .eq("training_program_id", programId)
+    .order("created_at", { ascending: false })
+    .limit(query.limit);
+
+  if (query.program_session_id) {
+    builder = builder.eq("program_session_id", query.program_session_id);
+  }
+
+  return await builder;
+}
+
+export async function insertProgramNote(
+  client: DbClient,
+  userId: string,
+  programId: string,
+  input: ProgramNoteCreateCommand,
+) {
+  return await client
+    .from("program_notes")
+    .insert({
+      user_id: userId,
+      training_program_id: programId,
+      program_session_id: input.program_session_id ?? null,
+      note_text: input.note_text,
+      fatigue_level: input.fatigue_level ?? null,
+      vitality_level: input.vitality_level ?? null,
+      source: input.source ?? "user",
+    })
+    .select(programNoteSelectColumns)
+    .single();
 }

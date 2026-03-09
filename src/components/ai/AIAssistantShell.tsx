@@ -907,8 +907,8 @@ export function AIAssistantShell() {
           },
         ]);
 
-        if (pathname !== "/programs") {
-          router.push("/programs");
+        if (pathname !== "/workout-plans") {
+          router.push("/workout-plans?section=programs");
         }
         router.refresh();
       } catch (error) {
