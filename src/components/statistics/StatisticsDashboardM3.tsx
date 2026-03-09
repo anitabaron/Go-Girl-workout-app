@@ -22,7 +22,7 @@ import type {
   ExternalWorkoutSource,
   ExternalWorkoutSportType,
 } from "@/types";
-import { useTranslations } from "@/i18n/client";
+import { useLocale, useTranslations } from "@/i18n/client";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
 import { Badge } from "@/components/ui/badge";
@@ -253,6 +253,7 @@ export function StatisticsDashboardM3({
   availableExternalSportTypes,
 }: Readonly<StatisticsDashboardM3Props>) {
   const t = useTranslations("statisticsPage");
+  const { locale } = useLocale();
   const router = useRouter();
   const [monthCursor, setMonthCursor] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -359,7 +360,7 @@ export function StatisticsDashboardM3({
   }, [selectedDateKey, sessionsByDate, todayKey]);
 
   const monthGrid = useMemo(() => buildMonthGrid(monthCursor), [monthCursor]);
-  const locale = "pl-PL";
+  const localeTag = locale === "pl" ? "pl-PL" : "en-US";
 
   const dayLabels = [
     t("weekdayMon"),
@@ -597,6 +598,43 @@ export function StatisticsDashboardM3({
     setIsExternalDialogOpen(true);
   };
 
+  const openDuplicateExternalWorkoutDialog = (session: StatisticsSession) => {
+    if (session.entry_type !== "external") {
+      toast.error(t("manualWorkoutEditUnavailable"));
+      return;
+    }
+
+    const startedAt = new Date(session.started_at);
+    setEditingExternalWorkoutId(null);
+    setExternalWorkoutDate(toDateKey(startedAt));
+    setExternalWorkoutDurationMinutes(
+      String(Math.max(1, Math.round(getSessionDurationSeconds(session) / 60))),
+    );
+    setExternalWorkoutSportType(
+      getExternalWorkoutSportLabel(session.external_sport_type ?? "other", t),
+    );
+    setExternalWorkoutCalories(
+      typeof session.external_calories === "number"
+        ? String(session.external_calories)
+        : "",
+    );
+    setExternalWorkoutAvgHeartRate(
+      typeof session.external_hr_avg === "number" ? String(session.external_hr_avg) : "",
+    );
+    setExternalWorkoutMaxHeartRate(
+      typeof session.external_hr_max === "number" ? String(session.external_hr_max) : "",
+    );
+    setExternalWorkoutRpe(
+      typeof session.external_intensity_rpe === "number"
+        ? String(session.external_intensity_rpe)
+        : "",
+    );
+    setExternalWorkoutNotes(session.external_notes ?? "");
+    setExternalWorkoutSource(session.external_source ?? "manual");
+    setSelectedSession(null);
+    setIsExternalDialogOpen(true);
+  };
+
   const handleDeleteExternalWorkout = async (session: StatisticsSession) => {
     if (session.entry_type !== "external" || !session.external_workout_id) {
       toast.error(t("manualWorkoutDeleteUnavailable"));
@@ -796,7 +834,7 @@ export function StatisticsDashboardM3({
               </Button>
               <p className="min-w-32 text-center text-[10px] font-semibold capitalize sm:min-w-36 sm:text-xs md:text-sm">
                 <span data-test-id="statistics-calendar-month-label">
-                {formatMonthLabel(monthCursor, locale)}
+                {formatMonthLabel(monthCursor, localeTag)}
                 </span>
               </p>
               <Button
@@ -1305,6 +1343,11 @@ export function StatisticsDashboardM3({
                   event.stopPropagation();
                   openEditExternalWorkoutDialog(selectedSession);
                 }}
+                onDuplicate={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  openDuplicateExternalWorkoutDialog(selectedSession);
+                }}
                 onDelete={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -1317,8 +1360,10 @@ export function StatisticsDashboardM3({
                   setSessionPendingDelete(selectedSession);
                 }}
                 editAriaLabel={t("manualWorkoutEdit")}
+                duplicateAriaLabel={t("manualWorkoutDuplicate")}
                 deleteAriaLabel={t("manualWorkoutDelete")}
                 editDisabled={isDeletingExternalWorkout}
+                duplicateDisabled={isDeletingExternalWorkout}
                 deleteDisabled={isDeletingExternalWorkout}
                 alwaysVisible
                 positionClassName="right-14 top-4"

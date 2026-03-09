@@ -37,6 +37,8 @@ export type AITrainerChatResponse = {
     profile_id: string | null;
     profile_persona_name: string | null;
     attachments_count: number;
+    attached_program_ids: string[];
+    attached_program_names: string[];
     includes_recent_performance: boolean;
   };
   context: {
@@ -110,6 +112,19 @@ type AICoachProfilePreview = {
   contraindications: string | null;
   preferred_methodology: string | null;
   rules: Record<string, unknown> | null;
+};
+
+type AIProgramAttachmentContext = {
+  id: string;
+  name: string;
+  duration_months: number;
+  sessions_per_week: number;
+  status: string;
+  next_sessions: Array<{
+    scheduled_date: string;
+    workout_plan_name: string;
+    status: string;
+  }>;
 };
 
 const AI_DAILY_LIMIT = 20;
@@ -295,6 +310,7 @@ async function generateAIReply(
   input: AITrainerChatCommand,
   context: AITrainerChatResponse["context"],
   profile: AICoachProfilePreview | null,
+  attachmentContextLines: string[],
 ): Promise<string> {
   const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
   const openai = getOpenAIClient();
@@ -326,6 +342,8 @@ async function generateAIReply(
     profile?.contraindications
       ? `- przeciwwskazania: ${profile.contraindications}`
       : "",
+    attachmentContextLines.length > 0 ? "Kontekst z załączników:" : "",
+    ...attachmentContextLines.map((line) => `- ${line}`),
     "",
     `Wiadomość użytkownika: ${input.message}`,
   ].join("\n");
@@ -443,6 +461,37 @@ function buildSuggestedActions(
   }
 
   return actions.slice(0, 4);
+}
+
+function extractProgramAttachmentIds(input: AITrainerChatCommand): string[] {
+  const ids = new Set<string>();
+  for (const attachment of input.attachments ?? []) {
+    if (attachment.type !== "program") continue;
+    const rawId =
+      typeof attachment.value.program_id === "string"
+        ? attachment.value.program_id
+        : typeof attachment.value.id === "string"
+          ? attachment.value.id
+          : null;
+    if (rawId) ids.add(rawId);
+  }
+  return Array.from(ids);
+}
+
+function mapProgramContextToPromptLines(
+  programs: AIProgramAttachmentContext[],
+): string[] {
+  if (programs.length === 0) return [];
+  return programs.flatMap((program) => {
+    const header = `${program.name} (id=${program.id}, ${program.duration_months} mies., ${program.sessions_per_week}/tydz., status=${program.status})`;
+    const sessions = program.next_sessions.map(
+      (session) =>
+        `${session.scheduled_date}: ${session.workout_plan_name} (${session.status})`,
+    );
+    return sessions.length > 0
+      ? [header, ...sessions.slice(0, 6).map((line) => `sesja ${line}`)]
+      : [header, "brak zaplanowanych sesji"];
+  });
 }
 
 export async function aiTrainerChatService(
@@ -573,6 +622,66 @@ export async function aiTrainerChatService(
     plans_preview: plansRows.slice(0, 3).map((plan) => plan.name),
     ...externalSummary,
   };
+  const attachedProgramIds = extractProgramAttachmentIds(parsed);
+  let attachedProgramsContext: AIProgramAttachmentContext[] = [];
+  if (attachedProgramIds.length > 0) {
+    const [{ data: programsData, error: programsError }, { data: sessionsData, error: sessionsError }] =
+      await Promise.all([
+        supabase
+          .from("training_programs")
+          .select("id,name,duration_months,sessions_per_week,status")
+          .eq("user_id", userId)
+          .in("id", attachedProgramIds),
+        supabase
+          .from("program_sessions")
+          .select("training_program_id,scheduled_date,status,workout_plans(name)")
+          .eq("user_id", userId)
+          .in("training_program_id", attachedProgramIds)
+          .order("scheduled_date", { ascending: true }),
+      ]);
+
+    if (programsError) {
+      throw mapDbError(programsError);
+    }
+    if (sessionsError) {
+      throw mapDbError(sessionsError);
+    }
+
+    const now = new Date();
+    const sessionsByProgram = new Map<string, AIProgramAttachmentContext["next_sessions"]>();
+    for (const row of (sessionsData ?? []) as Array<{
+      training_program_id: string;
+      scheduled_date: string;
+      status: string;
+      workout_plans: { name: string } | { name: string }[] | null;
+    }>) {
+      const scheduledDate = new Date(row.scheduled_date);
+      if (Number.isNaN(scheduledDate.getTime())) continue;
+      if (scheduledDate < now && row.status !== "planned") continue;
+      const planNameRaw = Array.isArray(row.workout_plans)
+        ? row.workout_plans[0]?.name
+        : row.workout_plans?.name;
+      const current = sessionsByProgram.get(row.training_program_id) ?? [];
+      current.push({
+        scheduled_date: row.scheduled_date,
+        status: row.status,
+        workout_plan_name: planNameRaw ?? "Plan treningowy",
+      });
+      sessionsByProgram.set(row.training_program_id, current);
+    }
+
+    attachedProgramsContext = ((programsData ?? []) as Array<{
+      id: string;
+      name: string;
+      duration_months: number;
+      sessions_per_week: number;
+      status: string;
+    }>).map((program) => ({
+      ...program,
+      next_sessions: (sessionsByProgram.get(program.id) ?? []).slice(0, 8),
+    }));
+  }
+  const attachmentContextLines = mapProgramContextToPromptLines(attachedProgramsContext);
 
   let reply = "";
   let recommendations: string[] = [];
@@ -580,7 +689,12 @@ export async function aiTrainerChatService(
   const coachProfileRow = (coachProfile ?? null) as AICoachProfilePreview | null;
   let isSystemError = false;
   try {
-    reply = await generateAIReply(parsed, context, coachProfileRow);
+    reply = await generateAIReply(
+      parsed,
+      context,
+      coachProfileRow,
+      attachmentContextLines,
+    );
     recommendations = extractRecommendations(reply);
     if (recommendations.length === 0) {
       recommendations = buildFallbackRecommendations(parsed, context);
@@ -623,6 +737,8 @@ export async function aiTrainerChatService(
       profile_id: coachProfileRow?.id ?? null,
       profile_persona_name: coachProfileRow?.persona_name ?? null,
       attachments_count: parsed.attachments?.length ?? 0,
+      attached_program_ids: attachedProgramsContext.map((item) => item.id),
+      attached_program_names: attachedProgramsContext.map((item) => item.name),
       includes_recent_performance: true,
     },
     context,

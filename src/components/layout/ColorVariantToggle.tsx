@@ -1,6 +1,7 @@
 "use client";
 
 import { Palette } from "lucide-react";
+import { useSyncExternalStore } from "react";
 import { useTranslations } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useM3ThemeStore, type M3ColorVariant } from "@/stores/m3-theme-store";
@@ -38,9 +39,26 @@ const VARIANT_OPTIONS: ReadonlyArray<{
 export function ColorVariantToggle({
   className,
 }: Readonly<ColorVariantToggleProps>) {
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const t = useTranslations("theme");
   const colorVariant = useM3ThemeStore((state) => state.colorVariant);
   const setColorVariant = useM3ThemeStore((state) => state.setColorVariant);
+
+  if (!isClient) {
+    return (
+      <span
+        className={cn(
+          "inline-flex size-12 rounded-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)]",
+          className,
+        )}
+        aria-hidden
+      />
+    );
+  }
 
   return (
     <DropdownMenu>

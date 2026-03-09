@@ -1,10 +1,10 @@
 import {
   Dumbbell,
   Calendar,
+  CalendarDays,
   CalendarRange,
   History,
   Trophy,
-  BarChart3,
   Play,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -72,10 +72,10 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     id: "statistics",
-    label: "Statystyki",
-    href: "/statistics",
-    icon: BarChart3,
-    mobileLabel: "Statystyki",
+    label: "Kalendarz",
+    href: "/calendar",
+    icon: CalendarDays,
+    mobileLabel: "Kalendarz",
   },
 ];
 

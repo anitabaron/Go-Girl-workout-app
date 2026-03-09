@@ -102,6 +102,9 @@ export function WorkoutPlanActions({
       });
 
       if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as {
+          message?: string;
+        };
         if (response.status === 404) {
           toast.error("Plan treningowy nie został znaleziony");
         } else if (response.status === 401 || response.status === 403) {
@@ -110,7 +113,7 @@ export function WorkoutPlanActions({
         } else if (response.status >= 500) {
           toast.error("Wystąpił błąd serwera. Spróbuj ponownie później.");
         } else {
-          toast.error("Nie udało się usunąć planu treningowego");
+          toast.error(err.message ?? "Nie udało się usunąć planu treningowego");
         }
         return;
       }

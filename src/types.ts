@@ -212,8 +212,36 @@ export type ProgramGenerateCommand = {
   goal_text: string;
   duration_months?: 1 | 2 | 3;
   sessions_per_week?: number;
+  weekdays?: Array<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun">;
+  program_mode?: "existing_only" | "mix_existing_new" | "new_only";
+  mix_ratio?: number;
   constraints?: string | null;
   profile_id?: string | null;
+};
+
+export type ProgramGeneratedExerciseInput = {
+  section_type: ExerciseType;
+  section_order: number;
+  exercise_id?: string | null;
+  exercise_title: string;
+  exercise_type?: ExerciseType | null;
+  exercise_part?: ExercisePart | null;
+  exercise_details?: string | null;
+  exercise_is_unilateral?: boolean | null;
+  planned_sets?: number | null;
+  planned_reps?: number | null;
+  planned_duration_seconds?: number | null;
+  planned_rest_seconds?: number | null;
+  planned_rest_after_series_seconds?: number | null;
+  estimated_set_time_seconds?: number | null;
+};
+
+export type ProgramGeneratedPlanTemplate = {
+  template_key: string;
+  name: string;
+  description?: string | null;
+  part?: ExercisePart | null;
+  exercises: ProgramGeneratedExerciseInput[];
 };
 
 export type ProgramCreateCommand = {
@@ -235,7 +263,8 @@ export type ProgramUpdateCommand = Partial<
 };
 
 export type ProgramSessionCreateCommand = {
-  workout_plan_id: WorkoutPlanEntity["id"];
+  workout_plan_id?: WorkoutPlanEntity["id"];
+  generated_plan?: ProgramGeneratedPlanTemplate;
   scheduled_date: string;
   week_index: number;
   session_index: number;

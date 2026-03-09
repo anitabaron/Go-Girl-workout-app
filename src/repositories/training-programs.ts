@@ -52,6 +52,20 @@ export async function findTrainingProgramById(
     .maybeSingle();
 }
 
+export async function deleteTrainingProgramById(
+  client: DbClient,
+  userId: string,
+  id: string,
+) {
+  return await client
+    .from("training_programs")
+    .delete()
+    .eq("user_id", userId)
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+}
+
 export async function insertTrainingProgram(
   client: DbClient,
   userId: string,
@@ -111,10 +125,20 @@ export async function insertProgramSessions(
   programId: string,
   sessions: ProgramSessionCreateCommand[],
 ) {
+  const normalizedSessions = sessions.map((session) => {
+    if (!session.workout_plan_id) {
+      throw new Error("program session requires workout_plan_id");
+    }
+    return {
+      ...session,
+      workout_plan_id: session.workout_plan_id,
+    };
+  });
+
   return await client
     .from("program_sessions")
     .insert(
-      sessions.map((session) => ({
+      normalizedSessions.map((session) => ({
         user_id: userId,
         training_program_id: programId,
         workout_plan_id: session.workout_plan_id,
@@ -153,6 +177,19 @@ export async function listProgramSessionsByUserId(
   }
 
   return await builder;
+}
+
+export async function listProgramSessionsByProgramId(
+  client: DbClient,
+  userId: string,
+  trainingProgramId: string,
+) {
+  return await client
+    .from("program_sessions")
+    .select(programSessionSelectColumns)
+    .eq("user_id", userId)
+    .eq("training_program_id", trainingProgramId)
+    .order("session_index", { ascending: true });
 }
 
 export async function findProgramSessionById(
@@ -227,7 +264,7 @@ export async function listWorkoutPlansForProgramGeneration(
 ) {
   return await client
     .from("workout_plans")
-    .select("id,name,part")
+    .select("id,name,part,description")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(limit);

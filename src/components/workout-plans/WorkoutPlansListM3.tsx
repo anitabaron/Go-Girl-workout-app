@@ -65,7 +65,12 @@ export function WorkoutPlansListM3({
     const response = await fetch(`/api/workout-plans/${planId}`, {
       method: "DELETE",
     });
-    if (!response.ok) throw new Error("Failed to delete plan");
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as {
+        message?: string;
+      };
+      throw new Error(err.message ?? "Nie udało się usunąć planu treningowego.");
+    }
     startTransition(() => {
       setPlans((prev) => prev.filter((p) => p.id !== planId));
     });

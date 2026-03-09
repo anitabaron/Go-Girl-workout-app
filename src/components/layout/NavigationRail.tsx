@@ -8,10 +8,10 @@ import {
   Play,
   Dumbbell,
   Calendar,
+  CalendarDays,
   CalendarRange,
   History,
   Trophy,
-  BarChart3,
   LogIn,
   LogOut,
   Menu,
@@ -38,7 +38,7 @@ const NAV_ITEMS: ReadonlyArray<{
   { href: "/programs", labelKey: "programs", icon: CalendarRange },
   { href: "/workout-sessions", labelKey: "sessions", icon: History },
   { href: "/personal-records", labelKey: "records", icon: Trophy },
-  { href: "/statistics", labelKey: "statistics", icon: BarChart3 },
+  { href: "/calendar", labelKey: "statistics", icon: CalendarDays },
   { href: "/workout-sessions/start", labelKey: "start", icon: Play },
 ] as const;
 

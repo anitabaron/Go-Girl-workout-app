@@ -35,19 +35,22 @@ export function DeleteWorkoutPlanDialogM3({
           method: "DELETE",
         });
         if (!response.ok) {
+          const err = (await response.json().catch(() => ({}))) as {
+            message?: string;
+          };
           if (response.status === 404) toast.error(t("toast.notFound"));
           else if (response.status === 401 || response.status === 403) {
             toast.error(t("toast.unauthorized"));
             router.push("/login");
-          } else toast.error(t("toast.failed"));
+          } else toast.error(err.message ?? t("toast.failed"));
           return;
         }
       }
       toast.success(t("toast.success"));
       onOpenChange(false);
       router.refresh();
-    } catch {
-      toast.error(t("toast.generic"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("toast.generic"));
     } finally {
       setIsDeleting(false);
     }

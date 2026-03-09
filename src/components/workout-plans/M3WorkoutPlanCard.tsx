@@ -63,6 +63,7 @@ import {
   formatDuration,
   formatTotalDuration,
 } from "@/lib/utils/time-format";
+import { calculatePlanEstimatedTotalTimeSeconds } from "@/lib/workout-plans/estimated-time";
 import { formatDateTime } from "@/lib/utils/date-format";
 import { toast } from "sonner";
 import { useTranslations } from "@/i18n/client";
@@ -114,6 +115,28 @@ function M3WorkoutPlanCardComponent({
     return t("exercisePlural");
   }, [exerciseCount, plan.exercise_count, t]);
   const finalExerciseCount = exerciseCount ?? plan.exercise_count ?? 0;
+  const estimatedDurationSeconds = useMemo(() => {
+    if (plan.estimated_total_time_seconds != null) {
+      return plan.estimated_total_time_seconds;
+    }
+    if (!plan.exercise_summaries || plan.exercise_summaries.length === 0) {
+      return null;
+    }
+    return calculatePlanEstimatedTotalTimeSeconds(
+      plan.exercise_summaries.map((exercise) => ({
+        scope_id: exercise.scope_id ?? null,
+        scope_repeat_count: exercise.scope_repeat_count ?? null,
+        estimated_set_time_seconds: null,
+        exercise_estimated_set_time_seconds: null,
+        planned_sets: exercise.planned_sets ?? null,
+        planned_reps: exercise.planned_reps ?? null,
+        planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+        planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+        planned_rest_after_series_seconds: null,
+        exercise_is_unilateral: null,
+      })),
+    );
+  }, [plan.estimated_total_time_seconds, plan.exercise_summaries]);
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -260,12 +283,11 @@ function M3WorkoutPlanCardComponent({
                   </Badge>
                 )}
               </div>
-              {plan.estimated_total_time_seconds != null && (
+              {estimatedDurationSeconds != null && (
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <Clock10 className="size-4" />
                   <span>
-                    {t("durationLabel")}{" "}
-                    {formatTotalDuration(plan.estimated_total_time_seconds)}
+                    {t("durationLabel")} {formatTotalDuration(estimatedDurationSeconds)}
                   </span>
                 </div>
               )}
