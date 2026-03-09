@@ -762,6 +762,7 @@ export const enMessages = {
   "assistantCurrentExercise.plannedRestAfter": "Planned rest after",
   "assistantTimers.seconds": "seconds",
   "assistantTimers.secondsRest": "seconds rest",
+  "assistantTimers.remainingTime": "time remaining",
   "assistantTimers.skipBreak": "Skip break",
   "assistantTimers.getReadyPrefix": "Get ready:",
   "assistantTimers.getReadyNext": "Get ready for the next exercise",
@@ -854,10 +855,10 @@ export const enMessages = {
   "workoutPlanDetailContent.unilateral": "Unilateral",
   "workoutPlanDetailContent.sets": "Sets",
   "workoutPlanDetailContent.reps": "Reps",
-  "workoutPlanDetailContent.duration": "Duration (s)",
-  "workoutPlanDetailContent.restBetween": "Rest between sets (s)",
-  "workoutPlanDetailContent.restAfter": "Rest after sets (s)",
-  "workoutPlanDetailContent.estimatedSetTime": "Estimated set time (s)",
+  "workoutPlanDetailContent.duration": "Duration",
+  "workoutPlanDetailContent.restBetween": "Rest between sets",
+  "workoutPlanDetailContent.restAfter": "Rest after sets",
+  "workoutPlanDetailContent.estimatedSetTime": "Estimated set time",
   "workoutPlanDetailContent.details": "Details",
   "workoutTimer.secondsRest": "seconds rest",
   "workoutTimer.setLabel": "Set",
@@ -914,7 +915,8 @@ export const enMessages = {
   "statisticsPage.manualWorkoutDuplicate": "Duplicate workout",
   "statisticsPage.manualWorkoutSessionName": "External workout",
   "statisticsPage.manualWorkoutSaveSuccess": "Workout saved in calendar.",
-  "statisticsPage.manualWorkoutUpdateSuccess": "Workout changes have been saved.",
+  "statisticsPage.manualWorkoutUpdateSuccess":
+    "Workout changes have been saved.",
   "statisticsPage.manualWorkoutSaveFailed":
     "Could not save workout. Please try again.",
   "statisticsPage.manualWorkoutUpdateFailed":
@@ -933,8 +935,7 @@ export const enMessages = {
   "statisticsPage.manualWorkoutInvalidDate": "Provide a valid workout date.",
   "statisticsPage.manualWorkoutInvalidDuration":
     "Duration must be a positive number of minutes.",
-  "statisticsPage.manualWorkoutInvalidSportType":
-    "Provide a sport type.",
+  "statisticsPage.manualWorkoutInvalidSportType": "Provide a sport type.",
   "statisticsPage.manualWorkoutInvalidCalories":
     "Calories must be an integer (0 or higher).",
   "statisticsPage.manualWorkoutInvalidAvgHeartRate":

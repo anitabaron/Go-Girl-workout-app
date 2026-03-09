@@ -1,5 +1,6 @@
 import type { PersonalRecordWithExerciseDTO, PRMetricType } from "@/types";
 import { EXERCISE_PART_LABELS, EXERCISE_TYPE_LABELS } from "@/lib/constants";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 
 /**
  * Wartości per seria w formacie { S1: 10, S2: 10, S3: 10 }
@@ -84,7 +85,7 @@ function formatMetricValue(metricType: PRMetricType, value: number): string {
     case "total_reps":
       return value.toString();
     case "max_duration":
-      return `${value}s`;
+      return formatCompactSeconds(value);
     case "max_weight":
       return `${value} kg`;
     default:

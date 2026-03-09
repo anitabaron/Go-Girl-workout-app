@@ -3,12 +3,18 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { requireAuth } from "@/lib/auth";
-import { ServiceError, getTrainingProgramService } from "@/services/training-programs";
+import {
+  ServiceError,
+  getTrainingProgramService,
+  listProgramNotesService,
+} from "@/services/training-programs";
 import { getWorkoutPlanService } from "@/services/workout-plans";
+import { ProgramNotesJournal } from "@/components/programs/ProgramNotesJournal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 
 type ProgramDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -29,11 +35,11 @@ function extractProgressionSummary(value: unknown): ProgressionSummary {
   return {
     load:
       typeof obj.load_adjustment_percent === "number"
-        ? obj.load_adjustment_percent
+        ? Math.max(-30, Math.min(40, obj.load_adjustment_percent))
         : null,
     volume:
       typeof obj.volume_adjustment_percent === "number"
-        ? obj.volume_adjustment_percent
+        ? Math.max(-30, Math.min(40, obj.volume_adjustment_percent))
         : null,
     emphasis: typeof obj.emphasis === "string" ? obj.emphasis : null,
   };
@@ -42,6 +48,7 @@ function extractProgressionSummary(value: unknown): ProgressionSummary {
 function adjustDiscreteValue(
   baseValue: number | null | undefined,
   adjustmentPercent: number | null | undefined,
+  minValue = 1,
 ): number | null {
   if (baseValue === null || baseValue === undefined) return null;
   if (!adjustmentPercent) return baseValue;
@@ -51,10 +58,10 @@ function adjustDiscreteValue(
     adjustmentPercent > 0
       ? Math.ceil(baseValue * factor)
       : Math.floor(baseValue * factor);
-  adjusted = Math.max(1, adjusted);
+  adjusted = Math.max(minValue, adjusted);
 
   if (adjusted === baseValue) {
-    adjusted = Math.max(1, baseValue + (adjustmentPercent > 0 ? 1 : -1));
+    adjusted = Math.max(minValue, baseValue + (adjustmentPercent > 0 ? 1 : -1));
   }
 
   return adjusted;
@@ -76,22 +83,34 @@ function estimateExerciseSeconds(input: {
   return Math.max(0, sets * perSetSeconds + Math.max(0, sets - 1) * rest);
 }
 
+function formatDurationWithUnits(seconds: number | null | undefined): string {
+  if (seconds === null || seconds === undefined) return "—";
+  return formatCompactSeconds(seconds);
+}
+
 export default async function ProgramDetailPage({ params }: ProgramDetailPageProps) {
   const { id } = await params;
   if (!UUID_REGEX.test(id)) {
-    redirect("/programs");
+    redirect("/workout-plans?section=programs");
   }
 
   const userId = await requireAuth();
 
-  let program;
+  let program: Awaited<ReturnType<typeof getTrainingProgramService>>;
+  let notes = { items: [] as Awaited<ReturnType<typeof listProgramNotesService>>["items"] };
   try {
     program = await getTrainingProgramService(userId, id);
   } catch (error) {
     if (error instanceof ServiceError && error.code === "NOT_FOUND") {
       notFound();
     }
-    redirect("/programs");
+    redirect("/workout-plans?section=programs");
+  }
+
+  try {
+    notes = await listProgramNotesService(userId, id, { limit: 60 });
+  } catch (error) {
+    console.warn("[ProgramDetailPage] Program notes unavailable, rendering without notes", error);
   }
 
   const uniquePlanIds = Array.from(
@@ -274,6 +293,14 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
         </div>
       </Surface>
 
+      <Surface variant="high">
+        <ProgramNotesJournal
+          programId={program.id}
+          sessions={program.sessions}
+          initialNotes={notes.items}
+        />
+      </Surface>
+
       <div className="space-y-4">
         {orderedWeeks.map((week) => {
           const weekSessions = (sessionsByWeek.get(week) ?? []).sort((a, b) =>
@@ -289,10 +316,6 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
                   const progression = extractProgressionSummary(
                     session.progression_overrides,
                   );
-                  const hasWarmup =
-                    plan?.exercises?.some(
-                      (exercise) => exercise.section_type === "Warm-up",
-                    ) ?? false;
                   const estimatedPlanSeconds =
                     plan?.estimated_total_time_seconds ??
                     (plan?.exercises?.reduce((sum, exercise) => {
@@ -310,13 +333,17 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
                         !adjustDuration &&
                         exercise.planned_sets !== null;
                       const adjustedSets = adjustSets
-                        ? adjustDiscreteValue(exercise.planned_sets, volumePct)
+                        ? adjustDiscreteValue(exercise.planned_sets, volumePct, 1)
                         : exercise.planned_sets;
                       const adjustedReps = adjustReps
-                        ? adjustDiscreteValue(exercise.planned_reps, volumePct)
+                        ? adjustDiscreteValue(exercise.planned_reps, volumePct, 5)
                         : exercise.planned_reps;
                       const adjustedDuration = adjustDuration
-                        ? adjustDiscreteValue(exercise.planned_duration_seconds, volumePct)
+                        ? adjustDiscreteValue(
+                            exercise.planned_duration_seconds,
+                            volumePct,
+                            10,
+                          )
                         : exercise.planned_duration_seconds;
 
                       return (
@@ -351,8 +378,6 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
                             Status: {session.status}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Rozgrzewka: {hasWarmup ? "tak" : "brak"}{" "}
-                            {" • "}
                             Czas:{" "}
                             {estimatedPlanMinutes !== null
                               ? `~${estimatedPlanMinutes} min`
@@ -412,15 +437,24 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
                                     exercise.planned_sets !== null;
 
                                   const adjustedSets = adjustSets
-                                    ? adjustDiscreteValue(exercise.planned_sets, volumePct)
+                                    ? adjustDiscreteValue(
+                                        exercise.planned_sets,
+                                        volumePct,
+                                        1,
+                                      )
                                     : exercise.planned_sets;
                                   const adjustedReps = adjustReps
-                                    ? adjustDiscreteValue(exercise.planned_reps, volumePct)
+                                    ? adjustDiscreteValue(
+                                        exercise.planned_reps,
+                                        volumePct,
+                                        5,
+                                      )
                                     : exercise.planned_reps;
                                   const adjustedDuration = adjustDuration
                                     ? adjustDiscreteValue(
                                         exercise.planned_duration_seconds,
                                         volumePct,
+                                        10,
                                       )
                                     : exercise.planned_duration_seconds;
 
@@ -466,11 +500,16 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
                                       {exercise.planned_duration_seconds ? (
                                         durationChanged ? (
                                           <span className="font-medium text-primary">
-                                            {exercise.planned_duration_seconds}s→
-                                            {adjustedDuration}s
+                                            {formatDurationWithUnits(
+                                              exercise.planned_duration_seconds,
+                                            )}
+                                            →
+                                            {formatDurationWithUnits(adjustedDuration)}
                                           </span>
                                         ) : (
-                                          `${exercise.planned_duration_seconds}s`
+                                          formatDurationWithUnits(
+                                            exercise.planned_duration_seconds,
+                                          )
                                         )
                                       ) : null}
                                 </span>

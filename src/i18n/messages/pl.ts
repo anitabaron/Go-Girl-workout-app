@@ -776,6 +776,7 @@ export const plMessages = {
   "assistantCurrentExercise.plannedRestAfter": "Planowana przerwa po seriach",
   "assistantTimers.seconds": "sekund",
   "assistantTimers.secondsRest": "sekund przerwy",
+  "assistantTimers.remainingTime": "pozostały czas",
   "assistantTimers.skipBreak": "Pomiń przerwę",
   "assistantTimers.getReadyPrefix": "Przygotuj się:",
   "assistantTimers.getReadyNext": "Przygotuj się na kolejne ćwiczenie",
@@ -873,10 +874,10 @@ export const plMessages = {
   "workoutPlanDetailContent.unilateral": "Jednostronne",
   "workoutPlanDetailContent.sets": "Serie",
   "workoutPlanDetailContent.reps": "Powtórzenia",
-  "workoutPlanDetailContent.duration": "Czas (s)",
-  "workoutPlanDetailContent.restBetween": "Przerwa między seriami (s)",
-  "workoutPlanDetailContent.restAfter": "Przerwa po seriach (s)",
-  "workoutPlanDetailContent.estimatedSetTime": "Szacowany czas serii (s)",
+  "workoutPlanDetailContent.duration": "Czas  ",
+  "workoutPlanDetailContent.restBetween": "Przerwa między seriami",
+  "workoutPlanDetailContent.restAfter": "Przerwa po seriach",
+  "workoutPlanDetailContent.estimatedSetTime": "Szacowany czas serii",
   "workoutPlanDetailContent.details": "Szczegóły",
   "workoutTimer.secondsRest": "sekund przerwy",
   "workoutTimer.setLabel": "Seria",
@@ -908,7 +909,8 @@ export const plMessages = {
   "statisticsPage.manualWorkoutDialogTitle": "Dodaj trening spoza aplikacji",
   "statisticsPage.manualWorkoutDialogDescription":
     "Wpisz ręcznie trening wykonany poza aplikacją (np. z zegarka).",
-  "statisticsPage.manualWorkoutEditDialogTitle": "Edytuj trening spoza aplikacji",
+  "statisticsPage.manualWorkoutEditDialogTitle":
+    "Edytuj trening spoza aplikacji",
   "statisticsPage.manualWorkoutEditDialogDescription":
     "Zaktualizuj dane treningu dodanego ręcznie lub z importu.",
   "statisticsPage.manualWorkoutDateLabel": "Data treningu",
@@ -918,10 +920,11 @@ export const plMessages = {
     "np. Pole dance, Kalistenika, Joga",
   "statisticsPage.manualWorkoutCaloriesLabel": "Kalorie (kcal, opcjonalnie)",
   "statisticsPage.manualWorkoutSourceLabel": "Źródło (opcjonalnie)",
-  "statisticsPage.manualWorkoutSourcePlaceholder":
-    "np. Ręcznie",
-  "statisticsPage.manualWorkoutAvgHeartRateLabel": "Średnie tętno (opcjonalnie)",
-  "statisticsPage.manualWorkoutMaxHeartRateLabel": "Maksymalne tętno (opcjonalnie)",
+  "statisticsPage.manualWorkoutSourcePlaceholder": "np. Ręcznie",
+  "statisticsPage.manualWorkoutAvgHeartRateLabel":
+    "Średnie tętno (opcjonalnie)",
+  "statisticsPage.manualWorkoutMaxHeartRateLabel":
+    "Maksymalne tętno (opcjonalnie)",
   "statisticsPage.manualWorkoutRpeLabel":
     "Intensywność RPE (subiektywna skala wysiłku) 1-10 (opcjonalnie)",
   "statisticsPage.manualWorkoutNotesLabel": "Notatki (opcjonalnie)",
@@ -952,12 +955,10 @@ export const plMessages = {
     "Nie udało się usunąć treningu. Spróbuj ponownie.",
   "statisticsPage.manualWorkoutDeleteUnavailable":
     "Nie można usunąć tego wpisu treningowego.",
-  "statisticsPage.manualWorkoutInvalidDate":
-    "Podaj prawidłową datę treningu.",
+  "statisticsPage.manualWorkoutInvalidDate": "Podaj prawidłową datę treningu.",
   "statisticsPage.manualWorkoutInvalidDuration":
     "Czas trwania musi być dodatnią liczbą minut.",
-  "statisticsPage.manualWorkoutInvalidSportType":
-    "Podaj typ sportu.",
+  "statisticsPage.manualWorkoutInvalidSportType": "Podaj typ sportu.",
   "statisticsPage.manualWorkoutInvalidCalories":
     "Kalorie muszą być liczbą całkowitą (0 lub więcej).",
   "statisticsPage.manualWorkoutInvalidAvgHeartRate":

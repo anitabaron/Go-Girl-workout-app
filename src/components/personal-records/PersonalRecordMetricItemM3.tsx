@@ -7,6 +7,7 @@ import type {
   PersonalRecordMetricVM,
   SeriesValues,
 } from "@/lib/personal-records/view-model";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 
 type PersonalRecordMetricItemM3Props = {
   metric: PersonalRecordMetricVM;
@@ -20,7 +21,7 @@ function formatSeriesValue(
     case "total_reps":
       return value.toString();
     case "max_duration":
-      return `${value}s`;
+      return formatCompactSeconds(value);
     case "max_weight":
       return `${value} kg`;
     default:

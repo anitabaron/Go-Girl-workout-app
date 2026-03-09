@@ -6,6 +6,7 @@ import type {
   PersonalRecordMetricVM,
   SeriesValues,
 } from "@/lib/personal-records/view-model";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 import { NewRecordBadge } from "./new-record-badge";
 
 type PersonalRecordMetricItemProps = {
@@ -19,11 +20,8 @@ function formatSeriesValue(
   switch (metricType) {
     case "total_reps":
       return value.toString();
-    case "max_duration": {
-      const minutes = Math.floor(value / 60);
-      const seconds = value % 60;
-      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-    }
+    case "max_duration":
+      return formatCompactSeconds(value);
     case "max_weight":
       return `${value} kg`;
     default:

@@ -1,3 +1,5 @@
+import { formatCompactSeconds } from "@/lib/utils/time-format";
+
 export type EstimatedSetTimeInput = {
   series: number | string;
   reps?: number | string | null;
@@ -40,7 +42,7 @@ export function calculateEstimatedSetTimeSeconds(
 const ESTIMATED_SET_TIME_LABEL_BASE = "Estimated set time";
 
 /**
- * Zwraca etykietę dla pola estimated set time (z opcjonalną podpowiedzią ≈ X s).
+ * Zwraca etykietę dla pola estimated set time (z opcjonalną podpowiedzią ≈ X s / M:SS min).
  * @param calculatedSeconds - wynik calculateEstimatedSetTimeSeconds lub null
  * @param unit - "s" (krótka) lub "sec" (pełna), domyślnie "s"
  */
@@ -54,5 +56,5 @@ export function getEstimatedSetTimeLabel(
   if (calculatedSeconds === null) {
     return baseLabel;
   }
-  return `${baseLabel} ≈ ${calculatedSeconds} s`;
+  return `${baseLabel} ≈ ${formatCompactSeconds(calculatedSeconds)}`;
 }

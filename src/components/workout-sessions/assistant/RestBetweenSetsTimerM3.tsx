@@ -4,7 +4,7 @@ import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import type { RestBetweenSetsTimerProps } from "@/types/workout-session-assistant";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/client";
-import { formatCompactSeconds } from "@/lib/utils/time-format";
+import { formatTimerSeconds } from "@/lib/utils/time-format";
 import { useTimerPalette } from "./use-timer-palette";
 
 export function RestBetweenSetsTimerM3({
@@ -35,10 +35,10 @@ export function RestBetweenSetsTimerM3({
         {({ remainingTime }) => (
           <div className="flex flex-col items-center">
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
-              {formatCompactSeconds(remainingTime)}
+              {formatTimerSeconds(remainingTime)}
             </div>
             <div className="text-sm text-muted-foreground">
-              {t("secondsRest")}
+              {t("remainingTime")}
             </div>
           </div>
         )}

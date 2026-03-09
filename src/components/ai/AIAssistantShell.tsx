@@ -101,6 +101,48 @@ function formatWeekdayLabels(
   return labels.join(", ");
 }
 
+function isActionConfirmationMessage(message: string): boolean {
+  const text = message.toLowerCase();
+  return (
+    /\b(ok|okej|zgoda|jasne|super|dzialaj|działaj|wprowadz|wprowadź|zastosuj|zrob|zrób)\b/.test(
+      text,
+    ) ||
+    text.includes("mozesz") ||
+    text.includes("możesz")
+  );
+}
+
+function pickSuggestedActionForConfirmation(
+  message: string,
+  actions: ChatAction[],
+): ChatAction | null {
+  const nonGenerate = actions.filter((action) => action.type !== "GENERATE_PROGRAM");
+  if (nonGenerate.length === 0) return null;
+
+  const text = message.toLowerCase();
+  if (text.includes("deload")) {
+    return nonGenerate.find((action) => action.type === "ADD_DELOAD_WEEK") ?? nonGenerate[0]!;
+  }
+  if (text.includes("regener")) {
+    return (
+      nonGenerate.find((action) => action.type === "ADD_RECOVERY_DAY") ?? nonGenerate[0]!
+    );
+  }
+  if (
+    text.includes("lze") ||
+    text.includes("lżej") ||
+    text.includes("zmec") ||
+    text.includes("zmęc")
+  ) {
+    return (
+      nonGenerate.find((action) => action.type === "APPLY_LIGHT_VERSION") ??
+      nonGenerate[0]!
+    );
+  }
+
+  return nonGenerate[0]!;
+}
+
 type AssistantPanelProps = {
   messages: ChatMessage[];
   conversationHistory: ConversationHistoryItem[];
@@ -378,7 +420,7 @@ function AIAssistantPanel({
               </div>
             ))}
             {isSending ? (
-              <div className="mr-auto rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+              <div className="mr-auto px-1 text-sm text-muted-foreground">
                 {t("thinking")}
               </div>
             ) : null}
@@ -487,6 +529,9 @@ export function AIAssistantShell() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     null,
   );
+  const [lastProgramContextId, setLastProgramContextId] = useState<string | null>(
+    null,
+  );
   const isWorkoutSessionActivePage = useMemo(
     () => /^\/workout-sessions\/[^/]+\/active\/?$/.test(pathname ?? ""),
     [pathname],
@@ -543,6 +588,89 @@ export function AIAssistantShell() {
       };
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
+
+      const latestAssistantWithActions = [...messages]
+        .reverse()
+        .find(
+          (message) =>
+            message.role === "assistant" && (message.actions?.length ?? 0) > 0,
+        );
+      const confirmedAction =
+        latestAssistantWithActions && isActionConfirmationMessage(trimmed)
+          ? pickSuggestedActionForConfirmation(
+              trimmed,
+              latestAssistantWithActions.actions ?? [],
+            )
+          : null;
+      const fallbackConfirmedAction: ChatAction | null =
+        !confirmedAction &&
+        isActionConfirmationMessage(trimmed) &&
+        lastProgramContextId
+          ? {
+              id: `fallback-light-${Date.now()}`,
+              type: "APPLY_LIGHT_VERSION",
+              label: "Zastosuj lżejszą wersję planu",
+              description: "Fallback: wdrożenie lżejszej wersji na podpiętym programie.",
+              requires_confirmation: false,
+              payload: {
+                reduction_percent: 20,
+                based_on: "confirmation_fallback",
+                target_program_id: lastProgramContextId,
+                apply_scope: "whole_program",
+              },
+            }
+          : null;
+      const actionToExecute = confirmedAction ?? fallbackConfirmedAction;
+
+      if (actionToExecute) {
+        setIsSending(true);
+        try {
+          const response = await fetch("/api/ai/trainer/actions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: actionToExecute.type,
+              payload: actionToExecute.payload ?? {},
+              conversation_id: activeConversationId,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = (await response.json().catch(() => ({}))) as {
+              message?: string;
+              details?: string;
+            };
+            const baseMessage = errorData.message ?? t("responseError");
+            throw new Error(
+              errorData.details
+                ? `${baseMessage}\nSzczegóły: ${errorData.details}`
+                : baseMessage,
+            );
+          }
+
+          const data = (await response.json()) as { message?: string };
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `assistant-action-${Date.now()}`,
+              role: "assistant",
+              content:
+                data.message ??
+                "Wdrożyłam zmianę w programie. Sprawdź szczegóły programu i kalendarz.",
+              actions: [],
+            },
+          ]);
+          router.refresh();
+          return;
+        } catch (error) {
+          console.error("[AIAssistantShell] Failed to execute confirmed action", error);
+          toast.error(error instanceof Error ? error.message : t("responseError"));
+          return;
+        } finally {
+          setIsSending(false);
+        }
+      }
+
       const requestAttachments = attachments.map(({ type, value }) => ({ type, value }));
       setAttachments([]);
       setIsSending(true);
@@ -563,8 +691,12 @@ export function AIAssistantShell() {
         if (!response.ok) {
           const errorData = (await response.json().catch(() => ({}))) as {
             message?: string;
+            details?: string;
           };
-          throw new Error(errorData.message ?? t("responseError"));
+          const baseMessage = errorData.message ?? t("responseError");
+          throw new Error(
+            errorData.details ? `${baseMessage}\nSzczegóły: ${errorData.details}` : baseMessage,
+          );
         }
 
         const data = (await response.json()) as {
@@ -602,6 +734,9 @@ export function AIAssistantShell() {
       fetchConversationHistory,
       fetchUsage,
       isSending,
+      lastProgramContextId,
+      messages,
+      router,
       t,
       usage?.remaining,
       usage?.limit,
@@ -619,6 +754,18 @@ export function AIAssistantShell() {
       if (!detail) return;
 
       if (detail.attachment) {
+        if (detail.attachment.type === "program") {
+          const rawProgramId =
+            typeof detail.attachment.value.program_id === "string"
+              ? detail.attachment.value.program_id
+              : typeof detail.attachment.value.id === "string"
+                ? detail.attachment.value.id
+                : null;
+          if (rawProgramId) {
+            setLastProgramContextId(rawProgramId);
+          }
+        }
+
         const nextAttachment: ChatAttachment = {
           type: detail.attachment.type,
           value: detail.attachment.value,
@@ -727,9 +874,40 @@ export function AIAssistantShell() {
   const executeAction = useCallback(
     async (action: ChatAction) => {
       if (action.type !== "GENERATE_PROGRAM") {
-        toast.info(
-          "Akcja wymaga podpięcia endpointu wykonawczego. Na tym etapie pozostaje sugestią z potwierdzeniem.",
-        );
+        try {
+          const response = await fetch("/api/ai/trainer/actions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: action.type,
+              payload: action.payload ?? {},
+              conversation_id: activeConversationId,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = (await response.json().catch(() => ({}))) as {
+              message?: string;
+            };
+            throw new Error(errorData.message ?? t("responseError"));
+          }
+
+          const data = (await response.json()) as { message?: string };
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `assistant-action-${Date.now()}`,
+              role: "assistant",
+              content:
+                data.message ??
+                "Wdrożono zmianę w programie. Sprawdź kalendarz i szczegóły programu.",
+              actions: [],
+            },
+          ]);
+          router.refresh();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : t("responseError"));
+        }
         return;
       }
 
@@ -915,7 +1093,7 @@ export function AIAssistantShell() {
         toast.error(error instanceof Error ? error.message : t("responseError"));
       }
     },
-    [messages, pathname, router, selectedWeekdays, t],
+    [activeConversationId, messages, pathname, router, selectedWeekdays, t],
   );
 
   const handleActionClick = useCallback(

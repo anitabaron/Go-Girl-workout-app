@@ -1,10 +1,22 @@
 export function formatCompactSeconds(seconds: number): string {
-  if (seconds <= 60) {
-    return `${seconds}`;
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  if (safeSeconds <= 60) {
+    return `${safeSeconds} s`;
   }
 
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")} min`;
+}
+
+export function formatTimerSeconds(seconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  if (safeSeconds <= 60) {
+    return `${safeSeconds}`;
+  }
+
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
@@ -15,7 +27,7 @@ export function formatDuration(seconds: number | null | undefined): string {
 
 /**
  * Formats reps or duration for display in plan card.
- * Returns "10 reps" if reps set, compact duration ("45", "1:05"), otherwise "-".
+ * Returns "10 reps" if reps set, compact duration ("45 s", "1:05 min"), otherwise "-".
  */
 export function formatRepsOrDuration(
   reps: number | null | undefined,
@@ -29,13 +41,5 @@ export function formatRepsOrDuration(
 }
 
 export function formatTotalDuration(seconds: number): string {
-  if (seconds < 60) {
-    return `${seconds}s`;
-  }
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  if (remainingSeconds === 0) {
-    return `${minutes}min`;
-  }
-  return `${minutes}min ${remainingSeconds}s`;
+  return formatCompactSeconds(seconds);
 }
