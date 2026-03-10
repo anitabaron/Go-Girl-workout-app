@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bot, History, Plus, Send, Sparkles, X } from "lucide-react";
+import { Bot, History, Loader2, Plus, Send, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { useTranslations } from "@/i18n/client";
@@ -151,11 +151,15 @@ type AssistantPanelProps = {
   input: string;
   attachments: ChatAttachment[];
   isSending: boolean;
+  isGeneratingProgram: boolean;
+  deletingConversationId: string | null;
   onInputChange: (value: string) => void;
   onRemoveAttachment: (index: number) => void;
   onSend: () => Promise<void>;
   onToggleHistory: () => void;
   onSelectHistory: (conversationId: string) => void;
+  onDeleteConversation: (conversationId: string) => Promise<void>;
+  onRequestDeleteConversation: (conversation: ConversationHistoryItem) => void;
   onQuickAction: (prompt: string) => Promise<void>;
   selectedDurationMonths: 1 | 2 | 3;
   selectedWeekdays: WeekdayCode[];
@@ -176,11 +180,15 @@ function AIAssistantPanel({
   input,
   attachments,
   isSending,
+  isGeneratingProgram,
+  deletingConversationId,
   onInputChange,
   onRemoveAttachment,
   onSend,
   onToggleHistory,
   onSelectHistory,
+  onDeleteConversation,
+  onRequestDeleteConversation,
   onQuickAction,
   selectedDurationMonths,
   selectedWeekdays,
@@ -282,20 +290,39 @@ function AIAssistantPanel({
             {conversationHistory.length > 0 ? (
               <div className="space-y-2">
                 {conversationHistory.map((conversation) => (
-                  <button
+                  <div
                     key={conversation.id}
-                    type="button"
-                    className="w-full cursor-pointer rounded-xl border border-border bg-card px-3 py-3 text-left transition-colors hover:bg-accent"
-                    onClick={() => onSelectHistory(conversation.id)}
+                    className="flex items-start gap-2 rounded-xl border border-border bg-card px-3 py-3 transition-colors hover:bg-accent"
                   >
-                    <p className="truncate text-base font-semibold">{conversation.title}</p>
-                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                      {conversation.preview}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground/80">
-                      {new Date(conversation.updated_at).toLocaleString("pl-PL")}
-                    </p>
-                  </button>
+                    <button
+                      type="button"
+                      className="min-w-0 flex-1 cursor-pointer text-left"
+                      onClick={() => onSelectHistory(conversation.id)}
+                    >
+                      <p className="truncate text-base font-semibold">{conversation.title}</p>
+                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                        {conversation.preview}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground/80">
+                        {new Date(conversation.updated_at).toLocaleString("pl-PL")}
+                      </p>
+                    </button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="mt-0.5 shrink-0"
+                      aria-label={`Usuń konwersację ${conversation.title}`}
+                      disabled={deletingConversationId === conversation.id}
+                      onClick={() => onRequestDeleteConversation(conversation)}
+                    >
+                      {deletingConversationId === conversation.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-4" />
+                      )}
+                    </Button>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -340,7 +367,11 @@ function AIAssistantPanel({
                                         Number(event.target.value) as 1 | 2 | 3,
                                       )
                                     }
-                                    disabled={isSending || (usage?.remaining ?? 1) <= 0}
+                                    disabled={
+                                      isSending ||
+                                      isGeneratingProgram ||
+                                      (usage?.remaining ?? 1) <= 0
+                                    }
                                     className="h-7 w-14 rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                   >
                                     <option value={1}>1</option>
@@ -366,7 +397,11 @@ function AIAssistantPanel({
                                             type="checkbox"
                                             checked={checked}
                                             onChange={() => onToggleWeekday(weekday.code)}
-                                            disabled={isSending || (usage?.remaining ?? 1) <= 0}
+                                            disabled={
+                                              isSending ||
+                                              isGeneratingProgram ||
+                                              (usage?.remaining ?? 1) <= 0
+                                            }
                                             className="sr-only"
                                           />
                                           <span
@@ -392,11 +427,19 @@ function AIAssistantPanel({
                                 className="h-8 w-full px-3 text-xs"
                                 disabled={
                                   isSending ||
+                                  isGeneratingProgram ||
                                   (usage?.remaining ?? 1) <= 0 ||
                                   selectedWeekdays.length === 0
                                 }
                               >
-                                {t("programGenerateButton")}
+                                {isGeneratingProgram ? (
+                                  <span className="inline-flex items-center gap-2">
+                                    <Loader2 className="size-4 animate-spin" />
+                                    {t("programGeneratingButton")}
+                                  </span>
+                                ) : (
+                                  t("programGenerateButton")
+                                )}
                               </Button>
                             </div>
                           </section>
@@ -512,6 +555,7 @@ export function AIAssistantShell() {
   const [isOpenMobile, setIsOpenMobile] = useState(false);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isGeneratingProgram, setIsGeneratingProgram] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<
@@ -526,7 +570,12 @@ export function AIAssistantShell() {
   ]);
   const [pendingAction, setPendingAction] = useState<ChatAction | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingConversationDelete, setPendingConversationDelete] =
+    useState<ConversationHistoryItem | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
+    null,
+  );
+  const [deletingConversationId, setDeletingConversationId] = useState<string | null>(
     null,
   );
   const [lastProgramContextId, setLastProgramContextId] = useState<string | null>(
@@ -568,6 +617,39 @@ export function AIAssistantShell() {
       console.error("[AIAssistantShell] Failed to fetch AI usage", error);
     }
   }, []);
+
+  const handleDeleteConversation = useCallback(
+    async (conversationId: string) => {
+      if (deletingConversationId) return;
+      setDeletingConversationId(conversationId);
+      try {
+        const response = await fetch(`/api/ai/trainer/conversations/${conversationId}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          const errorData = (await response.json().catch(() => ({}))) as {
+            message?: string;
+          };
+          throw new Error(errorData.message ?? t("responseError"));
+        }
+
+        setConversationHistory((prev) =>
+          prev.filter((conversation) => conversation.id !== conversationId),
+        );
+
+        if (activeConversationId === conversationId) {
+          setActiveConversationId(null);
+          setMessages([]);
+          setIsHistoryOpen(false);
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : t("responseError"));
+      } finally {
+        setDeletingConversationId(null);
+      }
+    },
+    [activeConversationId, deletingConversationId, t],
+  );
 
   const sendMessage = useCallback(
     async (messageText: string) => {
@@ -912,6 +994,7 @@ export function AIAssistantShell() {
       }
 
       try {
+        setIsGeneratingProgram(true);
         const actionWeekdays = Array.isArray(action.payload.weekdays)
           ? (action.payload.weekdays.filter((day): day is WeekdayCode =>
               typeof day === "string" &&
@@ -992,6 +1075,7 @@ export function AIAssistantShell() {
         }
 
         const data = (await response.json()) as {
+          decision_log_id?: string | null;
           program?: {
             name?: string;
             goal_text?: string;
@@ -1063,6 +1147,7 @@ export function AIAssistantShell() {
             sessions_per_week: data.program?.sessions_per_week ?? 2,
             source: data.program?.source ?? "ai",
             status: data.program?.status ?? "draft",
+            decision_log_id: data.decision_log_id ?? null,
             coach_profile_snapshot: data.program?.coach_profile_snapshot ?? null,
             sessions: (data.sessions ?? []).map((session) => ({
               workout_plan_id: session.workout_plan_id,
@@ -1085,29 +1170,7 @@ export function AIAssistantShell() {
 
         const savedProgram = (await saveResponse.json()) as { id?: string; name?: string };
 
-        const preview = (data.sessions ?? [])
-          .slice(0, 3)
-          .map((session) => `${session.scheduled_date}: ${session.workout_plan_name}`)
-          .join("\n");
-        const guardrailPreview = (data.guardrail_events ?? [])
-          .slice(0, 3)
-          .map(
-            (event) =>
-              `${event.exercise_title}: ${event.field} ${event.from} -> ${event.to}`,
-          )
-          .join("\n");
         const readinessDrivers = (data.training_state?.readiness_drivers ?? [])
-          .slice(0, 2)
-          .join(", ");
-        const validationPreview = (data.validation?.violations ?? [])
-          .slice(0, 3)
-          .map((violation) =>
-            `${violation.severity === "error" ? "Błąd" : "Uwaga"}: ${
-              violation.message ?? "problem walidacji"
-            }`,
-          )
-          .join("\n");
-        const plannerRationale = (data.planner_proposal?.rationale ?? [])
           .slice(0, 2)
           .join(", ");
 
@@ -1121,44 +1184,14 @@ export function AIAssistantShell() {
               `Nazwa: ${savedProgram.name ?? data.program?.name ?? "Program AI"}`,
               `Czas: ${data.program?.duration_months ?? 1} mies.`,
               `Treningi/tydz.: ${data.program?.sessions_per_week ?? 2}`,
-              `Tryb: ${
-                data.program?.program_mode === "existing_only"
-                      ? t("programModeExisting")
-                    : data.program?.program_mode === "new_only"
-                      ? t("programModeNewOnly")
-                    : t("programModeMix")
-              }${
-                data.program?.program_mode === "mix_existing_new"
-                  ? ` (${data.program?.mix_ratio ?? DEFAULT_MIX_RATIO}/${
-                      100 - (data.program?.mix_ratio ?? DEFAULT_MIX_RATIO)
-                    })`
-                  : ""
-              }`,
               typeof data.training_state?.readiness_score === "number"
                 ? `Gotowość startowa: ${data.training_state.readiness_score}/100`
                 : "",
-              data.planner_proposal?.source
-                ? `Źródło proposal: ${data.planner_proposal.source}`
-                : "",
-              readinessDrivers ? `Powody korekt: ${readinessDrivers}` : "",
-              plannerRationale ? `Racjonalizacja planera: ${plannerRationale}` : "",
-              typeof data.validation?.score === "number"
-                ? `Walidacja: ${data.validation.score}/100${data.validation.valid ? "" : " (wymagała korekt)"}`
-                : "",
-              typeof data.realism?.score === "number"
-                ? `Realism score: ${data.realism.score}/100`
-                : "",
-              (data.repair_log?.length ?? 0) > 0
-                ? `Auto-poprawki: ${data.repair_log?.length}`
-                : "",
+              readinessDrivers ? `Uwzględniono: ${readinessDrivers}` : "",
               (data.guardrail_events?.length ?? 0) > 0
-                ? `Korekty systemowe: ${data.guardrail_events?.length}`
+                ? "Plan został automatycznie skorygowany do bezpiecznych i bardziej realistycznych zakresów."
                 : "",
-              validationPreview ? `Walidator zgłosił:\n${validationPreview}` : "",
-              guardrailPreview ? `Przykładowe korekty:\n${guardrailPreview}` : "",
-              savedProgram.id ? `ID programu: ${savedProgram.id}` : "",
-              preview ? `Podgląd sesji:\n${preview}` : "",
-              "Program znajdziesz w zakładce „Programy” i sesje planned w kalendarzu.",
+              "Program znajdziesz w zakładce „Programy”, a zaplanowane sesje w kalendarzu.",
             ]
               .filter(Boolean)
               .join("\n"),
@@ -1172,6 +1205,8 @@ export function AIAssistantShell() {
         router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : t("responseError"));
+      } finally {
+        setIsGeneratingProgram(false);
       }
     },
     [activeConversationId, messages, pathname, router, selectedWeekdays, t],
@@ -1265,11 +1300,15 @@ export function AIAssistantShell() {
           input={input}
           attachments={attachments}
           isSending={isSending}
+          isGeneratingProgram={isGeneratingProgram}
+          deletingConversationId={deletingConversationId}
           onInputChange={setInput}
           onRemoveAttachment={handleRemoveAttachment}
           onSend={handleSend}
           onToggleHistory={handleToggleHistory}
           onSelectHistory={handleSelectHistory}
+          onDeleteConversation={handleDeleteConversation}
+          onRequestDeleteConversation={setPendingConversationDelete}
           onQuickAction={handleQuickAction}
           selectedDurationMonths={selectedDurationMonths}
           selectedWeekdays={selectedWeekdays}
@@ -1311,11 +1350,15 @@ export function AIAssistantShell() {
             input={input}
             attachments={attachments}
             isSending={isSending}
+            isGeneratingProgram={isGeneratingProgram}
+            deletingConversationId={deletingConversationId}
             onInputChange={setInput}
             onRemoveAttachment={handleRemoveAttachment}
             onSend={handleSend}
             onToggleHistory={handleToggleHistory}
             onSelectHistory={handleSelectHistory}
+            onDeleteConversation={handleDeleteConversation}
+            onRequestDeleteConversation={setPendingConversationDelete}
             onQuickAction={handleQuickAction}
             selectedDurationMonths={selectedDurationMonths}
             selectedWeekdays={selectedWeekdays}
@@ -1355,6 +1398,36 @@ export function AIAssistantShell() {
               }}
             >
               Kontynuuj
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(pendingConversationDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingConversationDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Czy na pewno usunąć?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingConversationDelete
+                ? `Ta operacja usunie całą konwersację „${pendingConversationDelete.title}” wraz z wiadomościami.`
+                : "Ta operacja usunie całą konwersację wraz z wiadomościami."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingConversationDelete) return;
+                void handleDeleteConversation(pendingConversationDelete.id);
+                setPendingConversationDelete(null);
+              }}
+            >
+              Usuń
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

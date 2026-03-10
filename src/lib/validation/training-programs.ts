@@ -148,6 +148,11 @@ export const programCreateSchema = z
     sessions_per_week: sessionsPerWeekSchema,
     source: z.enum(["ai", "manual"]).default("ai"),
     status: z.enum(["draft", "active", "archived"]).default("draft"),
+    decision_log_id: z
+      .string()
+      .refine((val) => uuidRegex.test(val), "decision_log_id musi być UUID")
+      .nullable()
+      .optional(),
     coach_profile_snapshot: z
       .record(z.string(), z.unknown())
       .nullable()

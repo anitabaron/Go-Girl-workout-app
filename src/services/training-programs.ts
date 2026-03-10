@@ -34,6 +34,10 @@ import {
   updateTrainingProgramById,
 } from "@/repositories/training-programs";
 import {
+  insertAIPlanDecision,
+  updateAIPlanDecisionById,
+} from "@/repositories/ai-plan-decisions";
+import {
   findWorkoutPlanById,
   insertWorkoutPlan,
   insertWorkoutPlanExercises,
@@ -118,6 +122,7 @@ type SchedulePlanCandidate = {
 };
 
 export type ProgramGenerateResponse = {
+  decision_log_id: string | null;
   program: {
     name: string;
     goal_text: string;
@@ -236,13 +241,41 @@ function buildInterpretedGoalText(goalText: string, constraints?: string | null)
   return `Program ukierunkowany na ${topFocuses.join(", ")}.`;
 }
 
-function buildProgramNameFromInterpretation(interpretedGoalText: string): string {
-  const normalized = interpretedGoalText
-    .replace(/^Program ukierunkowany na /i, "")
-    .replace(/\.$/, "")
-    .trim();
-  const short = normalized.length > 56 ? `${normalized.slice(0, 53)}...` : normalized;
-  return `Program: ${short}`;
+function buildProgramName(goalText: string, constraints?: string | null): string {
+  const text = `${goalText} ${constraints ?? ""}`.toLowerCase();
+  const labels: string[] = [];
+
+  if (/\bl-?sit\b|kompres|unoszen|zginacz/.test(text)) {
+    labels.push("L-Sit i Kompresja");
+  }
+  if (/handstand|stanie na ręk|pike/.test(text)) {
+    labels.push("Handstand");
+  }
+  if (/pole|poledance|handspring|shouldermount/.test(text)) {
+    labels.push("Pole Strength");
+  }
+  if (/bark/.test(text) && !labels.includes("Handstand")) {
+    labels.push("Barki i Stabilizacja");
+  }
+  if (/core|brzuch|stabiliz/.test(text) && !labels.includes("L-Sit i Kompresja")) {
+    labels.push("Core i Stabilizacja");
+  }
+  if (/mobil|rozciag|stretch/.test(text)) {
+    labels.push("Mobilność");
+  }
+  if (/kontuz|ból|bol|przeciąż|przeciaz|kolano/.test(text)) {
+    labels.push("Powrót Bez Przeciążeń");
+  }
+  if (/sił|sila|strength/.test(text) && labels.length === 0) {
+    labels.push("Siła Bazowa");
+  }
+
+  const uniqueLabels = Array.from(new Set(labels)).slice(0, 2);
+  if (uniqueLabels.length > 0) {
+    return uniqueLabels.join(" · ");
+  }
+
+  return "Plan Treningowy";
 }
 
 function buildRecommendations(
@@ -671,6 +704,8 @@ type PlanExerciseInsertShape = {
 
 const TARGET_PLAN_MIN_SECONDS = 50 * 60;
 const TARGET_PLAN_MAX_SECONDS = 60 * 60;
+const TARGET_WARMUP_MIN_SECONDS = 8 * 60;
+const TARGET_COOLDOWN_MIN_SECONDS = 5 * 60;
 const MAIN_WORKOUT_MIN_SETS = 1;
 const MAIN_WORKOUT_MAX_SETS = 6;
 const MAIN_WORKOUT_MIN_REPS = 5;
@@ -785,15 +820,14 @@ function sanitizePlanTemplate(
 ): { template: ProgramGeneratedPlanTemplate; guardrailEvents: ProgramGuardrailEvent[] } {
   const exercises = template.exercises.map((exercise) => ({
     ...exercise,
-    exercise_prescription_config:
-      exercise.exercise_prescription_config ??
-      buildDefaultExercisePrescriptionConfig({
-        title: exercise.exercise_title,
-        reps: exercise.planned_reps ?? null,
-        duration_seconds: exercise.planned_duration_seconds ?? null,
-        series: exercise.planned_sets ?? null,
-        rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
-      }),
+    exercise_prescription_config: resolveExercisePrescriptionConfig({
+      title: exercise.exercise_title,
+      reps: exercise.planned_reps ?? null,
+      duration_seconds: exercise.planned_duration_seconds ?? null,
+      series: exercise.planned_sets ?? null,
+      rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
+      prescription_config: exercise.exercise_prescription_config ?? null,
+    }),
   }));
   const normalized = normalizePlanDuration(
     enforceWarmupCooldownMinutes(
@@ -818,12 +852,28 @@ function sanitizePlanTemplate(
           planned_rest_after_series_seconds:
             exercise.planned_rest_after_series_seconds ?? null,
           estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
-          exercise_prescription_config:
-            exercise.exercise_prescription_config ?? null,
+          exercise_prescription_config: resolveExercisePrescriptionConfig({
+            title: exercise.exercise_title,
+            reps: exercise.planned_reps ?? null,
+            duration_seconds: exercise.planned_duration_seconds ?? null,
+            series: exercise.planned_sets ?? null,
+            rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
+            prescription_config: exercise.exercise_prescription_config ?? null,
+          }),
         })),
       ),
     ),
-  );
+  ).map((exercise) => ({
+    ...exercise,
+    exercise_prescription_config: resolveExercisePrescriptionConfig({
+        title: exercise.exercise_title,
+        reps: exercise.planned_reps ?? null,
+        duration_seconds: exercise.planned_duration_seconds ?? null,
+        series: exercise.planned_sets ?? null,
+        rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
+        prescription_config: exercise.exercise_prescription_config ?? null,
+      }),
+  }));
 
   const guardrailEvents: ProgramGuardrailEvent[] = [];
   normalized.forEach((exercise, index) => {
@@ -1058,6 +1108,18 @@ function increaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
     return;
   }
 
+  if (
+    exercise.planned_rest_seconds &&
+    exercise.planned_rest_seconds > 0 &&
+    exercise.planned_rest_seconds < prescription.max_rest_seconds
+  ) {
+    exercise.planned_rest_seconds = Math.min(
+      prescription.max_rest_seconds,
+      exercise.planned_rest_seconds + 15,
+    );
+    return;
+  }
+
   exercise.planned_sets = Math.max(prescription.min_sets, exercise.planned_sets ?? 1);
   if (prescription.min_reps !== null) {
     exercise.planned_reps = prescription.min_reps;
@@ -1072,6 +1134,17 @@ function increaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
 
 function decreaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
   const prescription = getExercisePrescription(exercise);
+
+  if (
+    exercise.planned_rest_seconds &&
+    exercise.planned_rest_seconds > prescription.min_rest_seconds
+  ) {
+    exercise.planned_rest_seconds = Math.max(
+      prescription.min_rest_seconds,
+      exercise.planned_rest_seconds - 15,
+    );
+    return;
+  }
 
   if (exercise.planned_sets && exercise.planned_sets > prescription.min_sets) {
     exercise.planned_sets = Math.max(prescription.min_sets, exercise.planned_sets - 1);
@@ -1351,8 +1424,8 @@ function enforceWarmupCooldownMinutes(
     const firstWarmup = next[firstWarmupIndex];
     if (firstWarmup) {
       const current = firstWarmup.planned_duration_seconds ?? 0;
-      if (current < 240) {
-        firstWarmup.planned_duration_seconds = 240;
+      if (current < TARGET_WARMUP_MIN_SECONDS) {
+        firstWarmup.planned_duration_seconds = TARGET_WARMUP_MIN_SECONDS;
         firstWarmup.planned_sets = 1;
         firstWarmup.planned_reps = null;
       }
@@ -1364,8 +1437,8 @@ function enforceWarmupCooldownMinutes(
     const firstCooldown = next[firstCooldownIndex];
     if (firstCooldown) {
       const current = firstCooldown.planned_duration_seconds ?? 0;
-      if (current < 180) {
-        firstCooldown.planned_duration_seconds = 180;
+      if (current < TARGET_COOLDOWN_MIN_SECONDS) {
+        firstCooldown.planned_duration_seconds = TARGET_COOLDOWN_MIN_SECONDS;
         firstCooldown.planned_sets = 1;
         firstCooldown.planned_reps = null;
       }
@@ -2088,42 +2161,98 @@ export async function generateAIProgramService(
     resolvedMixRatio = 0;
   }
 
-  return {
-    program: {
-      name: buildProgramNameFromInterpretation(interpretedGoalText),
-      goal_text: interpretedGoalText,
-      duration_months: parsed.duration_months,
-      weeks_count: weeksCount,
-      sessions_per_week: sessionsPerWeek,
+  const programPayload = {
+    name: buildProgramName(parsed.goal_text, parsed.constraints ?? null),
+    goal_text: interpretedGoalText,
+    duration_months: parsed.duration_months,
+    weeks_count: weeksCount,
+    sessions_per_week: sessionsPerWeek,
+    program_mode: mode,
+    mix_ratio: resolvedMixRatio,
+    source: "ai" as const,
+    status: "draft" as const,
+    coach_profile_snapshot: {
+      profile_id: coachProfile.id,
+      persona_name: coachProfile.persona_name,
+      tone: coachProfile.tone,
+      strictness: coachProfile.strictness,
+      verbosity: coachProfile.verbosity,
+      focus: coachProfile.focus,
+      risk_tolerance: coachProfile.risk_tolerance,
+      contraindications: coachProfile.contraindications,
+      preferred_methodology: coachProfile.preferred_methodology,
+      rules: coachProfile.rules,
+      original_goal_text: parsed.goal_text,
       program_mode: mode,
-      mix_ratio: resolvedMixRatio,
-      source: "ai",
-      status: "draft",
-      coach_profile_snapshot: {
-        profile_id: coachProfile.id,
-        persona_name: coachProfile.persona_name,
-        tone: coachProfile.tone,
-        strictness: coachProfile.strictness,
-        verbosity: coachProfile.verbosity,
-        focus: coachProfile.focus,
-        risk_tolerance: coachProfile.risk_tolerance,
-        contraindications: coachProfile.contraindications,
-        preferred_methodology: coachProfile.preferred_methodology,
-        rules: coachProfile.rules,
-        original_goal_text: parsed.goal_text,
-        program_mode: mode,
-        mix_ratio: mode === "mix_existing_new" ? mixRatio : null,
-        constraints: parsed.constraints ?? null,
-        training_state: {
-          readiness_score: trainingState.readiness_score,
-          readiness_drivers: trainingState.readiness_drivers,
-          external_workouts_last_7d: trainingState.external_workouts_last_7d,
-          external_duration_minutes_last_7d:
-            trainingState.external_duration_minutes_last_7d,
-          fatigue_notes_last_14d: trainingState.fatigue_notes_last_14d,
-        },
+      mix_ratio: mode === "mix_existing_new" ? mixRatio : null,
+      constraints: parsed.constraints ?? null,
+      training_state: {
+        readiness_score: trainingState.readiness_score,
+        readiness_drivers: trainingState.readiness_drivers,
+        external_workouts_last_7d: trainingState.external_workouts_last_7d,
+        external_duration_minutes_last_7d:
+          trainingState.external_duration_minutes_last_7d,
+        fatigue_notes_last_14d: trainingState.fatigue_notes_last_14d,
       },
     },
+  };
+
+  const guardrailEvents = [
+    ...capabilityCappedSeedPlans.guardrailEvents,
+    ...sanitizedSeedPlans.guardrailEvents,
+  ];
+  const plannerOutput = {
+    ...plannerProposal,
+    templates: repairedProposal.templates,
+  };
+  const trainingStatePreview = {
+    readiness_score: trainingState.readiness_score,
+    readiness_drivers: trainingState.readiness_drivers,
+    external_workouts_last_7d: trainingState.external_workouts_last_7d,
+    external_duration_minutes_last_7d:
+      trainingState.external_duration_minutes_last_7d,
+    fatigue_notes_last_14d: trainingState.fatigue_notes_last_14d,
+  };
+  const { data: decisionLog, error: decisionLogError } = await insertAIPlanDecision(
+    supabase,
+    userId,
+    {
+      request_type: "generate",
+      planner_source: llmTemplates?.sourceLabel ?? "fallback",
+      input_snapshot: {
+        goal_text: parsed.goal_text,
+        constraints: parsed.constraints ?? null,
+        duration_months: parsed.duration_months,
+        sessions_per_week: parsed.sessions_per_week,
+        weekdays: parsed.weekdays ?? null,
+        program_mode: parsed.program_mode,
+        mix_ratio: mixRatio,
+        training_state: trainingStatePreview,
+      } as Json,
+      planner_output: plannerOutput as Json,
+      validation_result: postRepairValidation as Json,
+      repair_log: repairedProposal.repairLog as Json,
+      final_output: {
+        program: programPayload,
+        sessions,
+        recommendations: buildRecommendations(
+          weeksCount,
+          sessionsPerWeek,
+          sanitizedSeedPlans.candidates,
+          mode,
+          mixRatio,
+        ),
+      } as Json,
+      guardrail_events: guardrailEvents as Json,
+      realism_score: realism.score,
+      accepted: postRepairValidation.valid,
+    },
+  );
+  if (decisionLogError) throw mapDbError(decisionLogError);
+
+  return {
+    decision_log_id: decisionLog?.id ?? null,
+    program: programPayload,
     sessions,
     recommendations: buildRecommendations(
       weeksCount,
@@ -2132,25 +2261,12 @@ export async function generateAIProgramService(
       mode,
       mixRatio,
     ),
-    planner_proposal: {
-      ...plannerProposal,
-      templates: repairedProposal.templates,
-    },
+    planner_proposal: plannerOutput,
     validation: postRepairValidation,
     repair_log: repairedProposal.repairLog,
     realism,
-    guardrail_events: [
-      ...capabilityCappedSeedPlans.guardrailEvents,
-      ...sanitizedSeedPlans.guardrailEvents,
-    ],
-    training_state: {
-      readiness_score: trainingState.readiness_score,
-      readiness_drivers: trainingState.readiness_drivers,
-      external_workouts_last_7d: trainingState.external_workouts_last_7d,
-      external_duration_minutes_last_7d:
-        trainingState.external_duration_minutes_last_7d,
-      fatigue_notes_last_14d: trainingState.fatigue_notes_last_14d,
-    },
+    guardrail_events: guardrailEvents,
+    training_state: trainingStatePreview,
   };
 }
 
@@ -2208,6 +2324,24 @@ export async function createTrainingProgramService(
     );
 
   if (insertSessionsError) throw mapDbError(insertSessionsError);
+
+  if (parsed.decision_log_id) {
+    const { error: updateDecisionError } = await updateAIPlanDecisionById(
+      supabase,
+      userId,
+      parsed.decision_log_id,
+      {
+        training_program_id: insertedProgram.id,
+        final_output: {
+          program_id: insertedProgram.id,
+          program_name: insertedProgram.name,
+          sessions_count: insertedSessions?.length ?? 0,
+        } as Json,
+        accepted: true,
+      },
+    );
+    if (updateDecisionError) throw mapDbError(updateDecisionError);
+  }
 
   return {
     ...insertedProgram,

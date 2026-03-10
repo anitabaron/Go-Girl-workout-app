@@ -166,6 +166,8 @@ export const enMessages = {
   "workoutPlansPage.description": "Browse and manage your workout plans.",
   "workoutPlansPage.countLabel": "plans",
   "workoutPlansPage.createCta": "Create plan",
+  "programsList.emptyDescription":
+    "No programs yet. Create your first program from AI Trainer.",
   "importPlanButton.fileMustBeJson": "File must be in JSON format",
   "importPlanButton.importError": "Error during import",
   "importPlanButton.planImportedWithMissing":
@@ -1041,6 +1043,7 @@ export const enMessages = {
   "aiAssistant.programMixRatioLabel": "Mix",
   "aiAssistant.programDaysLabel": "Days",
   "aiAssistant.programGenerateButton": "Generate training program",
+  "aiAssistant.programGeneratingButton": "Generating program...",
   "aiAssistant.programGenerateActionTitle": "Create training program",
   "aiAssistant.programGenerateActionDescription":
     "Uses settings from the module below (months + mode + selected days).",

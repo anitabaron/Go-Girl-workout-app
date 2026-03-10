@@ -1564,3 +1564,26 @@ export async function getAITrainerConversationDetailsService(
     })),
   };
 }
+
+export async function deleteAITrainerConversationService(
+  userId: string,
+  conversationId: string,
+): Promise<void> {
+  assertUser(userId);
+  const supabase = await createClient();
+
+  const { data: deleted, error } = await supabase
+    .from("ai_chat_conversations")
+    .delete()
+    .eq("id", conversationId)
+    .eq("user_id", userId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw mapDbError(error);
+  }
+  if (!deleted) {
+    throw new ServiceError("NOT_FOUND", "Konwersacja nie została znaleziona.");
+  }
+}

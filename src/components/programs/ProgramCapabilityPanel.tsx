@@ -221,6 +221,45 @@ export function ProgramCapabilityPanel({
         </div>
       </div>
 
+      <div className="rounded-xl border border-dashed border-border bg-card/70 p-3 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">Legenda</p>
+        <div className="mt-2 space-y-1">
+          <p>
+            <strong>Gotowość 0-100</strong>: ogólna ocena, czy AI powinna zacząć
+            ostrożniej czy może pozwolić na normalną progresję.
+          </p>
+          <p>
+            <strong>External load 7d</strong>: liczba treningów poza aplikacją z ostatnich 7
+            dni i ich łączny czas.
+          </p>
+          <p>
+            <strong>Fatigue notes 14d</strong>: ile razy w notatkach z ostatnich 14 dni
+            pojawił się wysoki poziom zmęczenia.
+          </p>
+          <p>
+            <strong>Średnie RPE zewnętrzne</strong>: średnia trudność treningów poza
+            aplikacją, jeśli była zapisana.
+          </p>
+          <p>
+            <strong>Wzorzec</strong>: typ zdolności, np. <em>core hold</em> to
+            wytrzymanie pozycji core, <em>vertical pull</em> to ruchy przyciągania w pionie,
+            a <em>handstand support</em> to podparcie i kontrola barków w pozycjach odwróconych.
+          </p>
+          <p>
+            <strong>Comfort max</strong>: bezpieczny, realny limit na dziś. AI nie powinna
+            go przekraczać agresywnie.
+          </p>
+          <p>
+            <strong>Confidence score</strong>: jak bardzo system ufa, że obecne limity są
+            trafne. Niższy wynik oznacza bardziej ostrożne propozycje.
+          </p>
+          <p>
+            <strong>Pain flag</strong>: aktywne przeciążenie lub ból. Wtedy AI powinna
+            obniżać objętość albo unikać progresji dla tego wzorca.
+          </p>
+        </div>
+      </div>
+
       {trainingState.readiness_drivers.length > 0 ? (
         <div className="rounded-xl border border-border bg-card p-3">
           <p className="text-xs font-medium text-muted-foreground">Co obniża gotowość</p>

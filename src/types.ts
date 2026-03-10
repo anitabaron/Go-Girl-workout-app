@@ -46,6 +46,7 @@ export type PersonalRecordEntity = Tables<"personal_records">;
 export type AIUsageEntity = Tables<"ai_usage">;
 export type AIRequestEntity = Tables<"ai_requests">;
 export type TrainingProgramEntity = Tables<"training_programs">;
+export type AIPlanDecisionEntity = Tables<"ai_plan_decisions">;
 export type ProgramSessionEntity = Tables<"program_sessions">;
 export type ProgramNoteEntity = Tables<"program_notes">;
 export type AICoachProfileEntity = Tables<"ai_coach_profiles">;
@@ -260,6 +261,7 @@ export type ProgramCreateCommand = {
   source?: TrainingProgramSource;
   status?: TrainingProgramStatus;
   coach_profile_snapshot?: Record<string, unknown> | null;
+  decision_log_id?: string | null;
   sessions: ProgramSessionCreateCommand[];
 };
 
@@ -301,6 +303,7 @@ export type ProgramSessionListQueryParams = {
 export type ProgramSessionDTO = Omit<ProgramSessionEntity, "user_id">;
 export type ProgramNoteSource = "user" | "ai_action" | "ai_summary";
 export type ProgramNoteDTO = Omit<ProgramNoteEntity, "user_id">;
+export type AIPlanDecisionDTO = Omit<AIPlanDecisionEntity, "user_id">;
 
 export type UserCapabilityProfileDTO = Omit<UserCapabilityProfileEntity, "user_id"> & {
   movement_key: MovementKey;

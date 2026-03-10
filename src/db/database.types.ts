@@ -767,6 +767,68 @@ export type Database = {
         };
         Relationships: [];
       };
+      ai_plan_decisions: {
+        Row: {
+          accepted: boolean;
+          created_at: string;
+          final_output: Json;
+          guardrail_events: Json;
+          id: string;
+          input_snapshot: Json;
+          planner_output: Json;
+          planner_source: string;
+          realism_score: number;
+          repair_log: Json;
+          request_type: Database["public"]["Enums"]["ai_request_type"];
+          training_program_id: string | null;
+          updated_at: string;
+          user_id: string;
+          validation_result: Json;
+        };
+        Insert: {
+          accepted?: boolean;
+          created_at?: string;
+          final_output: Json;
+          guardrail_events?: Json;
+          id?: string;
+          input_snapshot: Json;
+          planner_output: Json;
+          planner_source?: string;
+          realism_score: number;
+          repair_log?: Json;
+          request_type?: Database["public"]["Enums"]["ai_request_type"];
+          training_program_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+          validation_result: Json;
+        };
+        Update: {
+          accepted?: boolean;
+          created_at?: string;
+          final_output?: Json;
+          guardrail_events?: Json;
+          id?: string;
+          input_snapshot?: Json;
+          planner_output?: Json;
+          planner_source?: string;
+          realism_score?: number;
+          repair_log?: Json;
+          request_type?: Database["public"]["Enums"]["ai_request_type"];
+          training_program_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          validation_result?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_plan_decisions_training_program_id_fkey";
+            columns: ["training_program_id"];
+            isOneToOne: false;
+            referencedRelation: "training_programs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       program_sessions: {
         Row: {
           created_at: string;
