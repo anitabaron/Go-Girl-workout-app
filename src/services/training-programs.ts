@@ -40,16 +40,19 @@ import {
   updateWorkoutPlan,
 } from "@/repositories/workout-plans";
 import { getOrCreateAICoachProfileService } from "@/services/ai-coach-profiles";
+import { applyCapabilityFeedbackSignal } from "@/services/capability-profiles";
 import {
   getWorkoutSessionService,
   startWorkoutSessionService,
 } from "@/services/workout-sessions";
+import { buildTrainingStateSnapshotService } from "@/services/training-state";
 import { calculatePlanEstimatedTotalTimeSeconds } from "@/lib/workout-plans/estimated-time";
 import {
   buildDefaultExercisePrescriptionConfig,
   resolveExercisePrescriptionConfig,
   type ExercisePrescriptionConfig,
 } from "@/lib/training/exercise-prescription";
+import { inferMovementKey } from "@/lib/training/movement-keys";
 import type {
   ExercisePart,
   ExerciseType,
@@ -112,6 +115,13 @@ export type ProgramGenerateResponse = {
   sessions: ProgramGeneratedSession[];
   recommendations: string[];
   guardrail_events: ProgramGuardrailEvent[];
+  training_state: {
+    readiness_score: number;
+    readiness_drivers: string[];
+    external_workouts_last_7d: number;
+    external_duration_minutes_last_7d: number;
+    fatigue_notes_last_14d: number;
+  };
 };
 
 export type ProgramGuardrailEvent = {
@@ -129,7 +139,9 @@ export type ProgramGuardrailEvent = {
     | "exercise_min"
     | "exercise_max"
     | "main_workout_min"
-    | "main_workout_max";
+    | "main_workout_max"
+    | "capability_limit"
+    | "readiness_downscale";
   reason: string;
 };
 
@@ -771,6 +783,109 @@ function sanitizeSchedulePlanCandidates(
   });
 
   return { candidates: sanitizedCandidates, guardrailEvents };
+}
+
+function applyCapabilityCapsToCandidates(
+  candidates: SchedulePlanCandidate[],
+  trainingState: Awaited<ReturnType<typeof buildTrainingStateSnapshotService>>,
+): {
+  candidates: SchedulePlanCandidate[];
+  guardrailEvents: ProgramGuardrailEvent[];
+} {
+  const events: ProgramGuardrailEvent[] = [];
+
+  const cappedCandidates = candidates.map((candidate) => {
+    if (!candidate.generated_plan) return candidate;
+
+    const nextExercises = candidate.generated_plan.exercises.map((exercise) => {
+      const movementKey = inferMovementKey({
+        title: exercise.exercise_title,
+        part: exercise.exercise_part ?? candidate.generated_plan?.part ?? null,
+      });
+      const capability = trainingState.capability_summary.find(
+        (item) => item.movement_key === movementKey,
+      );
+      if (!capability) return exercise;
+
+      const next = { ...exercise };
+      const title = exercise.exercise_title;
+
+      if (
+        typeof next.planned_reps === "number" &&
+        typeof capability.comfort_max_reps === "number"
+      ) {
+        const cap = Math.max(
+          capability.comfort_max_reps,
+          capability.comfort_max_reps + 1,
+        );
+        if (next.planned_reps > cap) {
+          events.push({
+            template_key: candidate.generated_plan!.template_key,
+            workout_plan_name: candidate.generated_plan!.name,
+            exercise_title: title,
+            field: "planned_reps",
+            from: next.planned_reps,
+            to: cap,
+            reason_code: "capability_limit",
+            reason: `Zastosowano limit możliwości dla wzorca ${movementKey}.`,
+          });
+          next.planned_reps = cap;
+        }
+      }
+
+      if (
+        typeof next.planned_duration_seconds === "number" &&
+        typeof capability.comfort_max_duration_seconds === "number"
+      ) {
+        const cap = Math.max(
+          capability.comfort_max_duration_seconds,
+          Math.floor(capability.comfort_max_duration_seconds * 1.15),
+        );
+        if (next.planned_duration_seconds > cap) {
+          events.push({
+            template_key: candidate.generated_plan!.template_key,
+            workout_plan_name: candidate.generated_plan!.name,
+            exercise_title: title,
+            field: "planned_duration_seconds",
+            from: next.planned_duration_seconds,
+            to: cap,
+            reason_code: "capability_limit",
+            reason: `Zastosowano limit możliwości dla wzorca ${movementKey}.`,
+          });
+          next.planned_duration_seconds = cap;
+        }
+      }
+
+      if (capability.pain_flag && typeof next.planned_sets === "number") {
+        const nextSets = Math.max(1, next.planned_sets - 1);
+        if (nextSets !== next.planned_sets) {
+          events.push({
+            template_key: candidate.generated_plan!.template_key,
+            workout_plan_name: candidate.generated_plan!.name,
+            exercise_title: title,
+            field: "planned_sets",
+            from: next.planned_sets,
+            to: nextSets,
+            reason_code: "capability_limit",
+            reason: `Obniżono objętość z powodu aktywnej flagi bólowej dla wzorca ${movementKey}.`,
+          });
+          next.planned_sets = nextSets;
+        }
+      }
+
+      return next;
+    });
+
+    return {
+      ...candidate,
+      generated_plan: {
+        ...candidate.generated_plan,
+        exercises: nextExercises,
+      },
+    };
+  });
+
+  return { candidates: cappedCandidates, guardrailEvents: events };
 }
 
 function clonePlanExercises(
@@ -1664,6 +1779,7 @@ export async function generateAIProgramService(
   }
 
   const coachProfile = await getOrCreateAICoachProfileService(userId);
+  const trainingState = await buildTrainingStateSnapshotService(userId);
   const aiTemplates = buildAIPlanTemplates(parsed.goal_text, parsed.constraints);
   const nonAICandidates = planRows.filter((plan) => !isAIAuthoredPlanCandidate(plan));
   const sourcePlansForExisting = nonAICandidates.length > 0 ? nonAICandidates : planRows;
@@ -1717,13 +1833,36 @@ export async function generateAIProgramService(
       "Nie udało się zbudować programu. Dodaj plan treningowy lub doprecyzuj cel.",
     );
   }
-  const sanitizedSeedPlans = sanitizeSchedulePlanCandidates(seedPlans);
+  const capabilityCappedSeedPlans = applyCapabilityCapsToCandidates(
+    seedPlans,
+    trainingState,
+  );
+  const sanitizedSeedPlans = sanitizeSchedulePlanCandidates(
+    capabilityCappedSeedPlans.candidates,
+  );
   const sessions = generateProgramSchedule(
     sanitizedSeedPlans.candidates,
     parsed.duration_months,
     sessionsPerWeek,
     parsed.weekdays,
-  );
+  ).map((session) => {
+    if (trainingState.readiness_score >= 60) return session;
+    return {
+      ...session,
+      progression_overrides: {
+        ...session.progression_overrides,
+        load_adjustment_percent: Math.min(
+          session.progression_overrides.load_adjustment_percent,
+          -10,
+        ),
+        volume_adjustment_percent: Math.min(
+          session.progression_overrides.volume_adjustment_percent,
+          -10,
+        ),
+        emphasis: "conservative_start",
+      },
+    };
+  });
   const weeksCount = getWeeksCount(parsed.duration_months);
   const interpretedGoalText = buildInterpretedGoalText(
     parsed.goal_text,
@@ -1762,6 +1901,14 @@ export async function generateAIProgramService(
         program_mode: mode,
         mix_ratio: mode === "mix_existing_new" ? mixRatio : null,
         constraints: parsed.constraints ?? null,
+        training_state: {
+          readiness_score: trainingState.readiness_score,
+          readiness_drivers: trainingState.readiness_drivers,
+          external_workouts_last_7d: trainingState.external_workouts_last_7d,
+          external_duration_minutes_last_7d:
+            trainingState.external_duration_minutes_last_7d,
+          fatigue_notes_last_14d: trainingState.fatigue_notes_last_14d,
+        },
       },
     },
     sessions,
@@ -1772,7 +1919,18 @@ export async function generateAIProgramService(
       mode,
       mixRatio,
     ),
-    guardrail_events: sanitizedSeedPlans.guardrailEvents,
+    guardrail_events: [
+      ...capabilityCappedSeedPlans.guardrailEvents,
+      ...sanitizedSeedPlans.guardrailEvents,
+    ],
+    training_state: {
+      readiness_score: trainingState.readiness_score,
+      readiness_drivers: trainingState.readiness_drivers,
+      external_workouts_last_7d: trainingState.external_workouts_last_7d,
+      external_duration_minutes_last_7d:
+        trainingState.external_duration_minutes_last_7d,
+      fatigue_notes_last_14d: trainingState.fatigue_notes_last_14d,
+    },
   };
 }
 
@@ -2042,6 +2200,18 @@ async function createProgramNoteInternal(
   if (!data) {
     throw new ServiceError("INTERNAL", "Nie udało się zapisać uwagi do programu.");
   }
+
+  await applyCapabilityFeedbackSignal({
+    userId,
+    noteText: input.note_text,
+    fatigueLevel: input.fatigue_level ?? null,
+    vitalityLevel: input.vitality_level ?? null,
+  }).catch((error) => {
+    console.warn(
+      "[createProgramNoteInternal] capability feedback update skipped",
+      error,
+    );
+  });
 
   return data as ProgramNoteDTO;
 }

@@ -5,6 +5,7 @@ import type {
   TablesUpdate,
 } from "./db/database.types";
 import type { ExercisePrescriptionConfig } from "@/lib/training/exercise-prescription";
+import type { MovementKey } from "@/lib/training/movement-keys";
 
 /**
  * Shared DTOs, API contracts, and DB-derived types.
@@ -48,6 +49,7 @@ export type TrainingProgramEntity = Tables<"training_programs">;
 export type ProgramSessionEntity = Tables<"program_sessions">;
 export type ProgramNoteEntity = Tables<"program_notes">;
 export type AICoachProfileEntity = Tables<"ai_coach_profiles">;
+export type UserCapabilityProfileEntity = Tables<"user_capability_profiles">;
 
 /**
  * API response helpers.
@@ -299,6 +301,19 @@ export type ProgramSessionListQueryParams = {
 export type ProgramSessionDTO = Omit<ProgramSessionEntity, "user_id">;
 export type ProgramNoteSource = "user" | "ai_action" | "ai_summary";
 export type ProgramNoteDTO = Omit<ProgramNoteEntity, "user_id">;
+
+export type UserCapabilityProfileDTO = Omit<UserCapabilityProfileEntity, "user_id"> & {
+  movement_key: MovementKey;
+};
+export type UserCapabilityProfilePatchCommand = Partial<
+  Omit<UserCapabilityProfileDTO, "id" | "created_at" | "updated_at" | "movement_key">
+> & {
+  movement_key?: MovementKey;
+};
+export type UserCapabilityProfileUpsertCommand = UserCapabilityProfilePatchCommand & {
+  movement_key: MovementKey;
+  exercise_id?: string | null;
+};
 export type ProgramNoteCreateCommand = {
   program_session_id?: ProgramSessionEntity["id"] | null;
   note_text: string;

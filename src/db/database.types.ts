@@ -834,6 +834,83 @@ export type Database = {
           },
         ];
       };
+      user_capability_profiles: {
+        Row: {
+          best_recent_duration_seconds: number | null;
+          best_recent_load_kg: number | null;
+          best_recent_reps: number | null;
+          comfort_max_duration_seconds: number | null;
+          comfort_max_load_kg: number | null;
+          comfort_max_reps: number | null;
+          confidence_score: number;
+          created_at: string;
+          current_level: string | null;
+          exercise_id: string | null;
+          id: string;
+          movement_key: string;
+          pain_flag: boolean;
+          pain_notes: string | null;
+          per_session_progression_cap_duration_seconds: number | null;
+          per_session_progression_cap_reps: number | null;
+          updated_at: string;
+          updated_from: string;
+          user_id: string;
+          weekly_progression_cap_percent: number;
+        };
+        Insert: {
+          best_recent_duration_seconds?: number | null;
+          best_recent_load_kg?: number | null;
+          best_recent_reps?: number | null;
+          comfort_max_duration_seconds?: number | null;
+          comfort_max_load_kg?: number | null;
+          comfort_max_reps?: number | null;
+          confidence_score?: number;
+          created_at?: string;
+          current_level?: string | null;
+          exercise_id?: string | null;
+          id?: string;
+          movement_key: string;
+          pain_flag?: boolean;
+          pain_notes?: string | null;
+          per_session_progression_cap_duration_seconds?: number | null;
+          per_session_progression_cap_reps?: number | null;
+          updated_at?: string;
+          updated_from?: string;
+          user_id: string;
+          weekly_progression_cap_percent?: number;
+        };
+        Update: {
+          best_recent_duration_seconds?: number | null;
+          best_recent_load_kg?: number | null;
+          best_recent_reps?: number | null;
+          comfort_max_duration_seconds?: number | null;
+          comfort_max_load_kg?: number | null;
+          comfort_max_reps?: number | null;
+          confidence_score?: number;
+          created_at?: string;
+          current_level?: string | null;
+          exercise_id?: string | null;
+          id?: string;
+          movement_key?: string;
+          pain_flag?: boolean;
+          pain_notes?: string | null;
+          per_session_progression_cap_duration_seconds?: number | null;
+          per_session_progression_cap_reps?: number | null;
+          updated_at?: string;
+          updated_from?: string;
+          user_id?: string;
+          weekly_progression_cap_percent?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_capability_profiles_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       program_notes: {
         Row: {
           created_at: string;

@@ -1003,6 +1003,24 @@ export function AIAssistantShell() {
             status?: "draft" | "active" | "archived";
             coach_profile_snapshot?: Record<string, unknown> | null;
           };
+          training_state?: {
+            readiness_score?: number;
+            readiness_drivers?: string[];
+            external_workouts_last_7d?: number;
+            external_duration_minutes_last_7d?: number;
+            fatigue_notes_last_14d?: number;
+          };
+          guardrail_events?: Array<{
+            exercise_title: string;
+            field:
+              | "planned_sets"
+              | "planned_reps"
+              | "planned_duration_seconds"
+              | "planned_rest_seconds";
+            from: number;
+            to: number;
+            reason: string;
+          }>;
           sessions?: Array<{
             workout_plan_id?: string;
             workout_plan_name: string;
@@ -1051,6 +1069,16 @@ export function AIAssistantShell() {
           .slice(0, 3)
           .map((session) => `${session.scheduled_date}: ${session.workout_plan_name}`)
           .join("\n");
+        const guardrailPreview = (data.guardrail_events ?? [])
+          .slice(0, 3)
+          .map(
+            (event) =>
+              `${event.exercise_title}: ${event.field} ${event.from} -> ${event.to}`,
+          )
+          .join("\n");
+        const readinessDrivers = (data.training_state?.readiness_drivers ?? [])
+          .slice(0, 2)
+          .join(", ");
 
         setMessages((prev) => [
           ...prev,
@@ -1075,6 +1103,14 @@ export function AIAssistantShell() {
                     })`
                   : ""
               }`,
+              typeof data.training_state?.readiness_score === "number"
+                ? `Gotowość startowa: ${data.training_state.readiness_score}/100`
+                : "",
+              readinessDrivers ? `Powody korekt: ${readinessDrivers}` : "",
+              (data.guardrail_events?.length ?? 0) > 0
+                ? `Korekty systemowe: ${data.guardrail_events?.length}`
+                : "",
+              guardrailPreview ? `Przykładowe korekty:\n${guardrailPreview}` : "",
               savedProgram.id ? `ID programu: ${savedProgram.id}` : "",
               preview ? `Podgląd sesji:\n${preview}` : "",
               "Program znajdziesz w zakładce „Programy” i sesje planned w kalendarzu.",

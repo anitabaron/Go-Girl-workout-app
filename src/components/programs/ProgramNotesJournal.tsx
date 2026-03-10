@@ -75,6 +75,7 @@ export function ProgramNotesJournal({
       setSelectedSessionId("");
       setFatigueLevel("");
       setVitalityLevel("");
+      window.dispatchEvent(new CustomEvent("ai:training-state-refresh"));
       toast.success("Uwaga zapisana w dzienniku.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nie udało się zapisać uwagi.");

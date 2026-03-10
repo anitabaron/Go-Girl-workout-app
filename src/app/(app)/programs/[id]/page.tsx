@@ -8,7 +8,10 @@ import {
   getTrainingProgramService,
   listProgramNotesService,
 } from "@/services/training-programs";
+import { listCapabilityProfilesService } from "@/services/capability-profiles";
+import { buildTrainingStateSnapshotService } from "@/services/training-state";
 import { getWorkoutPlanService } from "@/services/workout-plans";
+import { ProgramCapabilityPanel } from "@/components/programs/ProgramCapabilityPanel";
 import { ProgramNotesJournal } from "@/components/programs/ProgramNotesJournal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
@@ -98,6 +101,28 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
 
   let program: Awaited<ReturnType<typeof getTrainingProgramService>>;
   let notes = { items: [] as Awaited<ReturnType<typeof listProgramNotesService>>["items"] };
+  const capabilityProfiles = await listCapabilityProfilesService(userId).catch((error) => {
+    console.warn(
+      "[ProgramDetailPage] Capability profiles unavailable, rendering without capability panel data",
+      error,
+    );
+    return [];
+  });
+  const trainingState = await buildTrainingStateSnapshotService(userId).catch((error) => {
+    console.warn(
+      "[ProgramDetailPage] Training state unavailable, rendering fallback state",
+      error,
+    );
+    return {
+      readiness_score: 100,
+      readiness_drivers: [] as string[],
+      external_workouts_last_7d: 0,
+      external_duration_minutes_last_7d: 0,
+      average_external_rpe_last_7d: null,
+      fatigue_notes_last_14d: 0,
+      capability_summary: [],
+    };
+  });
   try {
     program = await getTrainingProgramService(userId, id);
   } catch (error) {
@@ -298,6 +323,13 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
           programId={program.id}
           sessions={program.sessions}
           initialNotes={notes.items}
+        />
+      </Surface>
+
+      <Surface variant="high">
+        <ProgramCapabilityPanel
+          initialProfiles={capabilityProfiles}
+          initialTrainingState={trainingState}
         />
       </Surface>
 
