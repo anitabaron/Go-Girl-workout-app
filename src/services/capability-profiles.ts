@@ -196,6 +196,12 @@ export async function applyCapabilitySessionResult(params: {
   userId: string;
   exerciseTitle: string;
   exercisePart?: string | null;
+  plannedSets?: number | null;
+  plannedReps?: number | null;
+  plannedDurationSeconds?: number | null;
+  actualSetCount?: number | null;
+  bestSetReps?: number | null;
+  bestSetDurationSeconds?: number | null;
   actualReps?: number | null;
   actualDurationSeconds?: number | null;
   isSkipped?: boolean;
@@ -210,6 +216,12 @@ export async function applyCapabilitySessionResult(params: {
   );
   const nextProfile = deriveCapabilityProfileFromSessionResult(existing ?? null, {
     movementKey,
+    plannedSets: params.plannedSets ?? null,
+    plannedReps: params.plannedReps ?? null,
+    plannedDurationSeconds: params.plannedDurationSeconds ?? null,
+    actualSetCount: params.actualSetCount ?? null,
+    bestSetReps: params.bestSetReps ?? null,
+    bestSetDurationSeconds: params.bestSetDurationSeconds ?? null,
     actualReps: params.actualReps ?? null,
     actualDurationSeconds: params.actualDurationSeconds ?? null,
     isSkipped: params.isSkipped ?? false,
@@ -226,58 +238,124 @@ export function deriveCapabilityProfileFromSessionResult(
   existing: UserCapabilityProfileDTO | null,
   params: {
     movementKey: UserCapabilityProfileDTO["movement_key"];
+    plannedSets: number | null;
+    plannedReps: number | null;
+    plannedDurationSeconds: number | null;
+    actualSetCount: number | null;
+    bestSetReps: number | null;
+    bestSetDurationSeconds: number | null;
     actualReps: number | null;
     actualDurationSeconds: number | null;
     isSkipped: boolean;
   },
 ): UserCapabilityProfileUpsertCommand | null {
-  if (!params.isSkipped && params.actualReps == null && params.actualDurationSeconds == null) {
+  if (
+    !params.isSkipped &&
+    params.actualReps == null &&
+    params.actualDurationSeconds == null &&
+    params.bestSetReps == null &&
+    params.bestSetDurationSeconds == null
+  ) {
     return null;
   }
 
   const currentConfidence = existing?.confidence_score ?? 60;
+  const observedReps = params.bestSetReps ?? params.actualReps ?? null;
+  const observedDuration =
+    params.bestSetDurationSeconds ?? params.actualDurationSeconds ?? null;
+  const setRatio =
+    params.plannedSets && params.actualSetCount != null
+      ? params.actualSetCount / Math.max(params.plannedSets, 1)
+      : null;
+  const repRatio =
+    params.plannedReps && observedReps != null
+      ? observedReps / Math.max(params.plannedReps, 1)
+      : null;
+  const durationRatio =
+    params.plannedDurationSeconds && observedDuration != null
+      ? observedDuration / Math.max(params.plannedDurationSeconds, 1)
+      : null;
+
+  const performanceRatios = [setRatio, repRatio, durationRatio].filter(
+    (value): value is number => typeof value === "number" && Number.isFinite(value),
+  );
+  const weakestRatio =
+    performanceRatios.length > 0 ? Math.min(...performanceRatios) : null;
+  const strongestRatio =
+    performanceRatios.length > 0 ? Math.max(...performanceRatios) : null;
+
+  const underperformed =
+    !params.isSkipped && weakestRatio != null && weakestRatio < 0.75;
+  const exceededPlan =
+    !params.isSkipped &&
+    strongestRatio != null &&
+    strongestRatio >= 1.05 &&
+    (setRatio == null || setRatio >= 0.9);
+
   const nextConfidence = params.isSkipped
     ? Math.max(20, currentConfidence - 12)
-    : Math.min(100, currentConfidence + 4);
+    : underperformed
+      ? Math.max(25, currentConfidence - 8)
+      : exceededPlan
+        ? Math.min(100, currentConfidence + 6)
+        : Math.min(100, currentConfidence + 2);
 
-  const nextReps =
-    params.actualReps != null
-      ? Math.max(existing?.comfort_max_reps ?? 1, params.actualReps)
-      : (existing?.comfort_max_reps ?? null);
-  const nextDuration =
-    params.actualDurationSeconds != null
-      ? Math.max(
-          existing?.comfort_max_duration_seconds ?? 10,
-          params.actualDurationSeconds,
-        )
-      : (existing?.comfort_max_duration_seconds ?? null);
+  const nextComfortReps = (() => {
+    const current = existing?.comfort_max_reps ?? null;
+    if (observedReps == null) {
+      return params.isSkipped ? Math.max(1, (current ?? 2) - 1) : current;
+    }
+    if (params.isSkipped) {
+      return Math.max(1, (current ?? observedReps) - 1);
+    }
+    if (underperformed) {
+      return current == null ? observedReps : Math.max(1, Math.min(current, observedReps));
+    }
+    return Math.max(current ?? 1, observedReps);
+  })();
+
+  const nextComfortDuration = (() => {
+    const current = existing?.comfort_max_duration_seconds ?? null;
+    if (observedDuration == null) {
+      return params.isSkipped ? Math.max(10, (current ?? 12) - 3) : current;
+    }
+    if (params.isSkipped) {
+      return Math.max(10, (current ?? observedDuration) - 3);
+    }
+    if (underperformed) {
+      return current == null
+        ? Math.max(10, observedDuration)
+        : Math.max(10, Math.min(current, observedDuration));
+    }
+    return Math.max(current ?? 10, observedDuration);
+  })();
 
   return {
     movement_key: params.movementKey,
     exercise_id: null,
     current_level: existing?.current_level ?? null,
-    comfort_max_reps: params.isSkipped
-      ? Math.max(1, (existing?.comfort_max_reps ?? 2) - 1)
-      : nextReps,
-    comfort_max_duration_seconds: params.isSkipped
-      ? Math.max(10, (existing?.comfort_max_duration_seconds ?? 12) - 3)
-      : nextDuration,
+    comfort_max_reps: nextComfortReps,
+    comfort_max_duration_seconds: nextComfortDuration,
     comfort_max_load_kg: existing?.comfort_max_load_kg ?? null,
     best_recent_reps:
-      params.actualReps != null
-        ? Math.max(existing?.best_recent_reps ?? 0, params.actualReps)
+      observedReps != null
+        ? Math.max(existing?.best_recent_reps ?? 0, observedReps)
         : (existing?.best_recent_reps ?? null),
     best_recent_duration_seconds:
-      params.actualDurationSeconds != null
+      observedDuration != null
         ? Math.max(
             existing?.best_recent_duration_seconds ?? 0,
-            params.actualDurationSeconds,
+            observedDuration,
           )
         : (existing?.best_recent_duration_seconds ?? null),
     best_recent_load_kg: existing?.best_recent_load_kg ?? null,
     weekly_progression_cap_percent: params.isSkipped
       ? Math.max(5, (existing?.weekly_progression_cap_percent ?? 15) - 5)
-      : (existing?.weekly_progression_cap_percent ?? 15),
+      : underperformed
+        ? Math.max(5, (existing?.weekly_progression_cap_percent ?? 15) - 3)
+        : exceededPlan
+          ? Math.min(20, (existing?.weekly_progression_cap_percent ?? 15) + 1)
+          : (existing?.weekly_progression_cap_percent ?? 15),
     per_session_progression_cap_reps:
       existing?.per_session_progression_cap_reps ?? 1,
     per_session_progression_cap_duration_seconds:

@@ -927,6 +927,26 @@ export async function autosaveWorkoutSessionExerciseService(
     userId,
     exerciseTitle: exercise.exercise_title_at_time,
     exercisePart: exercise.exercise_part_at_time,
+    plannedSets: exercise.planned_sets,
+    plannedReps: exercise.planned_reps,
+    plannedDurationSeconds: exercise.planned_duration_seconds,
+    actualSetCount: aggregates.actual_sets,
+    bestSetReps:
+      parsed.sets && parsed.sets.length > 0
+        ? Math.max(
+            ...parsed.sets
+              .map((set) => set.reps ?? 0)
+              .filter((value) => Number.isFinite(value)),
+          ) || null
+        : null,
+    bestSetDurationSeconds:
+      parsed.sets && parsed.sets.length > 0
+        ? Math.max(
+            ...parsed.sets
+              .map((set) => set.duration_seconds ?? 0)
+              .filter((value) => Number.isFinite(value)),
+          ) || null
+        : null,
     actualReps: aggregates.actual_reps,
     actualDurationSeconds: aggregates.actual_duration_seconds,
     isSkipped: parsed.is_skipped ?? false,
