@@ -36,7 +36,7 @@ export const programModeSchema = z.enum([
   "new_only",
 ]);
 
-const generatedPlanExerciseSchema = z
+export const generatedPlanExerciseSchema = z
   .object({
     exercise_id: z
       .string()
@@ -67,7 +67,7 @@ const generatedPlanExerciseSchema = z
   })
   .strict();
 
-const generatedPlanTemplateSchema = z
+export const generatedPlanTemplateSchema = z
   .object({
     template_key: z.string().trim().min(1).max(80),
     name: z.string().trim().min(1).max(160),
@@ -76,6 +76,11 @@ const generatedPlanTemplateSchema = z
     exercises: z.array(generatedPlanExerciseSchema).min(1),
   })
   .strict();
+
+export const generatedPlanTemplatesSchema = z
+  .array(generatedPlanTemplateSchema)
+  .min(1)
+  .max(3);
 
 export const programSessionCreateSchema = z
   .object({

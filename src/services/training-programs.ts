@@ -8,6 +8,7 @@ import {
 } from "@/lib/service-utils";
 import {
   programCreateSchema,
+  generatedPlanTemplatesSchema,
   programGenerateSchema,
   programNoteCreateSchema,
   programNoteListQuerySchema,
@@ -46,6 +47,7 @@ import {
   startWorkoutSessionService,
 } from "@/services/workout-sessions";
 import { buildTrainingStateSnapshotService } from "@/services/training-state";
+import { getOpenAIClient } from "@/lib/openai";
 import { calculatePlanEstimatedTotalTimeSeconds } from "@/lib/workout-plans/estimated-time";
 import {
   buildDefaultExercisePrescriptionConfig,
@@ -53,6 +55,22 @@ import {
   type ExercisePrescriptionConfig,
 } from "@/lib/training/exercise-prescription";
 import { inferMovementKey } from "@/lib/training/movement-keys";
+import {
+  createProgramPlannerProposal,
+  type ProgramPlannerProposal,
+} from "@/lib/training/program-planner-contract";
+import {
+  validateProgramTemplates,
+  type ProgramPlanValidationResult,
+} from "@/lib/training/program-plan-validator";
+import {
+  repairProgramTemplates,
+  type ProgramPlanRepairLog,
+} from "@/lib/training/program-plan-repairer";
+import {
+  scoreProgramTemplatesRealism,
+  type ProgramPlanRealismScore,
+} from "@/lib/training/program-plan-realism";
 import type {
   ExercisePart,
   ExerciseType,
@@ -115,6 +133,10 @@ export type ProgramGenerateResponse = {
   sessions: ProgramGeneratedSession[];
   recommendations: string[];
   guardrail_events: ProgramGuardrailEvent[];
+  planner_proposal: ProgramPlannerProposal;
+  validation: ProgramPlanValidationResult;
+  repair_log: ProgramPlanRepairLog[];
+  realism: ProgramPlanRealismScore;
   training_state: {
     readiness_score: number;
     readiness_drivers: string[];
@@ -519,6 +541,110 @@ function buildAIPlanTemplates(
     .slice(0, 3)
     .map((item) => item.generated_plan!)
     .filter(Boolean);
+}
+
+async function generateProgramTemplatesWithLLM(params: {
+  goalText: string;
+  constraints?: string | null;
+  sessionsPerWeek: number;
+  mode: ProgramGenerationMode;
+  readinessScore: number;
+  readinessDrivers: string[];
+  externalWorkoutsLast7d: number;
+  topMovementKeys: string[];
+  coachProfile: {
+    persona_name: string;
+    focus: string | null;
+    risk_tolerance: string | null;
+    preferred_methodology: string | null;
+  };
+}): Promise<{
+  templates: ProgramGeneratedPlanTemplate[];
+  rationale: string[];
+  assumptions: string[];
+  sourceLabel: string;
+} | null> {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  const model = process.env.OPENAI_PROGRAM_PLANNER_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+  const openai = getOpenAIClient();
+  const readinessDrivers =
+    params.readinessDrivers.length > 0
+      ? params.readinessDrivers.join(", ")
+      : "brak istotnych sygnałów";
+  const topMovementKeys =
+    params.topMovementKeys.length > 0 ? params.topMovementKeys.join(", ") : "brak";
+  const prompt = [
+    "Zwróć wyłącznie poprawny JSON bez markdownu.",
+    "Tworzysz 1-3 szablony jednostek treningowych dla programu treningowego.",
+    "Każdy szablon musi zawierać warm-up, 2-5 ćwiczeń main workout i cool-down.",
+    "Używaj realistycznych zakresów:",
+    "- izometrie zwykle 10-45 s",
+    "- główne ćwiczenia zwykle 2-6 serii",
+    "- rest zwykle 30-120 s",
+    "Nie przekraczaj konserwatywnej objętości, jeśli readiness jest niskie.",
+    "Dla każdego ćwiczenia podaj albo planned_reps, albo planned_duration_seconds. Nie obu naraz.",
+    "Dozwolone section_type i exercise_type: Warm-up, Main Workout, Cool-down.",
+    "Dozwolone exercise_part: Arms, Legs, Back, Core, Full Body.",
+    "",
+    "Zwróć tablicę JSON szablonów o polach:",
+    "template_key, name, description, part, exercises[].",
+    "Każde exercises[] ma pola:",
+    "section_type, section_order, exercise_title, exercise_type, exercise_part, exercise_details, planned_sets, planned_reps, planned_duration_seconds, planned_rest_seconds.",
+    "",
+    "Kontekst:",
+    `goal_text: ${params.goalText}`,
+    `constraints: ${params.constraints ?? "brak"}`,
+    `mode: ${params.mode}`,
+    `sessions_per_week: ${params.sessionsPerWeek}`,
+    `readiness_score: ${params.readinessScore}/100`,
+    `readiness_drivers: ${readinessDrivers}`,
+    `external_workouts_last_7d: ${params.externalWorkoutsLast7d}`,
+    `top_movement_keys: ${topMovementKeys}`,
+    `coach_persona: ${params.coachProfile.persona_name}`,
+    `coach_focus: ${params.coachProfile.focus ?? "brak"}`,
+    `coach_risk_tolerance: ${params.coachProfile.risk_tolerance ?? "brak"}`,
+    `coach_methodology: ${params.coachProfile.preferred_methodology ?? "brak"}`,
+  ].join("\n");
+
+  try {
+    const response = await openai.responses.create({
+      model,
+      input: [
+        {
+          role: "system",
+          content:
+            "Jesteś systemem planowania treningowego. Tworzysz tylko realistyczne propozycje treningowe w JSON. Nie zwracasz tekstu objaśniającego.",
+        },
+        { role: "user", content: prompt },
+      ],
+    });
+
+    const text = response.output_text?.trim();
+    if (!text) return null;
+
+    const parsed = JSON.parse(text);
+    const result = generatedPlanTemplatesSchema.safeParse(parsed);
+    if (!result.success) {
+      return null;
+    }
+
+    return {
+      templates: result.data,
+      rationale: [
+        `Planner LLM użył modelu ${model}.`,
+        `Proposal uwzględniał readiness ${params.readinessScore}/100 i external load z 7 dni.`,
+      ],
+      assumptions: [
+        "Proposal z LLM jest tylko kandydatem i przechodzi lokalną walidację oraz repair.",
+      ],
+      sourceLabel: "llm",
+    };
+  } catch {
+    return null;
+  }
 }
 
 type PlanExerciseInsertShape = {
@@ -1780,7 +1906,28 @@ export async function generateAIProgramService(
 
   const coachProfile = await getOrCreateAICoachProfileService(userId);
   const trainingState = await buildTrainingStateSnapshotService(userId);
-  const aiTemplates = buildAIPlanTemplates(parsed.goal_text, parsed.constraints);
+  const fallbackAiTemplates = buildAIPlanTemplates(parsed.goal_text, parsed.constraints);
+  const llmTemplates = await generateProgramTemplatesWithLLM({
+    goalText: parsed.goal_text,
+    constraints: parsed.constraints ?? null,
+    sessionsPerWeek: parsed.sessions_per_week,
+    mode,
+    readinessScore: trainingState.readiness_score,
+    readinessDrivers: trainingState.readiness_drivers,
+    externalWorkoutsLast7d: trainingState.external_workouts_last_7d,
+    topMovementKeys: trainingState.capability_summary
+      .slice(0, 5)
+      .map((item) => item.movement_key),
+    coachProfile: {
+      persona_name: coachProfile.persona_name,
+      focus: coachProfile.focus ?? null,
+      risk_tolerance: coachProfile.risk_tolerance ?? null,
+      preferred_methodology: coachProfile.preferred_methodology ?? null,
+    },
+  });
+  const aiTemplates = llmTemplates?.templates?.length
+    ? llmTemplates.templates
+    : fallbackAiTemplates;
   const nonAICandidates = planRows.filter((plan) => !isAIAuthoredPlanCandidate(plan));
   const sourcePlansForExisting = nonAICandidates.length > 0 ? nonAICandidates : planRows;
   const existingCandidates: SchedulePlanCandidate[] = sourcePlansForExisting.map((plan) => ({
@@ -1833,6 +1980,72 @@ export async function generateAIProgramService(
       "Nie udało się zbudować programu. Dodaj plan treningowy lub doprecyzuj cel.",
     );
   }
+  const proposalTemplates = seedPlans
+    .map((candidate) => candidate.generated_plan)
+    .filter((template): template is ProgramGeneratedPlanTemplate => Boolean(template));
+  const plannerProposal = createProgramPlannerProposal({
+    source:
+      mode === "existing_only"
+        ? "existing_plan_selection"
+        : mode === "new_only"
+          ? "template_library"
+          : "mixed_selection",
+    goalText: parsed.goal_text,
+    constraints: parsed.constraints ?? null,
+    templates: proposalTemplates,
+    rationale: llmTemplates
+      ? [
+          ...llmTemplates.rationale,
+          `Tryb generowania: ${mode}.`,
+          `Gotowość startowa: ${trainingState.readiness_score}/100.`,
+        ]
+      : [
+          "Planner użył lokalnych template'ów heurystycznych jako fallbacku.",
+          `Tryb generowania: ${mode}.`,
+          `Gotowość startowa: ${trainingState.readiness_score}/100.`,
+        ],
+    assumptions: llmTemplates
+      ? [
+          ...llmTemplates.assumptions,
+          "Warm-up i cool-down powinny istnieć w każdej jednostce.",
+          "Przy niskiej gotowości objętość startowa powinna zostać ograniczona.",
+        ]
+      : [
+          "Warm-up i cool-down powinny istnieć w każdej jednostce.",
+          "Przy niskiej gotowości objętość startowa powinna zostać ograniczona.",
+          "Gdy planner LLM nie zwróci poprawnego JSON, system przełącza się na lokalne template'y.",
+        ],
+  });
+  const validation = validateProgramTemplates({
+    templates: plannerProposal.templates,
+    readinessScore: trainingState.readiness_score,
+  });
+  const repairedProposal = repairProgramTemplates({
+    templates: plannerProposal.templates,
+    violations: validation.violations,
+  });
+  const postRepairValidation = validateProgramTemplates({
+    templates: repairedProposal.templates,
+    readinessScore: trainingState.readiness_score,
+  });
+  const realism = scoreProgramTemplatesRealism({
+    templates: repairedProposal.templates,
+    violations: postRepairValidation.violations,
+    repairLog: repairedProposal.repairLog,
+    readinessScore: trainingState.readiness_score,
+  });
+  const repairedTemplatesByKey = new Map(
+    repairedProposal.templates.map((template) => [template.template_key, template]),
+  );
+  seedPlans = seedPlans.map((candidate) => {
+    if (!candidate.generated_plan) return candidate;
+    return {
+      ...candidate,
+      generated_plan:
+        repairedTemplatesByKey.get(candidate.generated_plan.template_key) ??
+        candidate.generated_plan,
+    };
+  });
   const capabilityCappedSeedPlans = applyCapabilityCapsToCandidates(
     seedPlans,
     trainingState,
@@ -1919,6 +2132,13 @@ export async function generateAIProgramService(
       mode,
       mixRatio,
     ),
+    planner_proposal: {
+      ...plannerProposal,
+      templates: repairedProposal.templates,
+    },
+    validation: postRepairValidation,
+    repair_log: repairedProposal.repairLog,
+    realism,
     guardrail_events: [
       ...capabilityCappedSeedPlans.guardrailEvents,
       ...sanitizedSeedPlans.guardrailEvents,
