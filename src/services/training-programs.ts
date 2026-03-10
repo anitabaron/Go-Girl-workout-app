@@ -62,6 +62,10 @@ import {
   resolveExercisePrescriptionConfig,
   type ExercisePrescriptionConfig,
 } from "@/lib/training/exercise-prescription";
+import {
+  buildExerciseTitleAliases,
+  resolveExerciseLibraryMatch,
+} from "@/lib/training/exercise-title-aliases";
 import { inferMovementKey } from "@/lib/training/movement-keys";
 import {
   createProgramPlannerProposal,
@@ -1357,27 +1361,6 @@ async function loadExerciseLibraryPreview(
   return (data ?? []) as ExerciseLibraryPreview[];
 }
 
-function buildExerciseTitleAliases(title: string): string[] {
-  const trimmed = title.trim();
-  if (!trimmed) return [];
-
-  const withoutParentheses = trimmed.replace(/\s*\([^)]*\)\s*/g, " ").trim();
-  const separatorUnified = trimmed.replace(/[+/,-]+/g, " ").replace(/\s+/g, " ").trim();
-  const withoutQuotes = trimmed.replace(/["'`]/g, "").trim();
-
-  return Array.from(
-    new Set(
-      [trimmed, withoutParentheses, separatorUnified, withoutQuotes]
-        .filter(Boolean)
-        .flatMap((value) => [
-          normalizeTitleForDbLookup(value),
-          normalizeTitle(value),
-        ])
-        .filter(Boolean),
-    ),
-  );
-}
-
 function buildExerciseLibraryAliasEntries(
   libraryExercises: ExerciseLibraryPreview[],
 ): ExerciseLibraryAliasEntry[] {
@@ -1411,24 +1394,14 @@ async function attachLibraryExercisesToGeneratedTemplate(params: {
   if (libraryExercises.length === 0) {
     return params.template;
   }
-
-  const libraryByAlias = new Map<string, ExerciseLibraryPreview>();
-  for (const exercise of libraryExercises) {
-    for (const alias of buildExerciseTitleAliases(exercise.title)) {
-      if (!libraryByAlias.has(alias)) {
-        libraryByAlias.set(alias, exercise);
-      }
-    }
-  }
-
   return {
     ...params.template,
     exercises: params.template.exercises.map((exercise) => {
       if (exercise.exercise_id) return exercise;
-      const titleAliases = buildExerciseTitleAliases(exercise.exercise_title);
-      const matched = titleAliases
-        .map((alias) => libraryByAlias.get(alias))
-        .find(Boolean);
+      const matched = resolveExerciseLibraryMatch(
+        exercise.exercise_title,
+        libraryExercises,
+      );
       if (!matched) return exercise;
       return {
         ...exercise,
