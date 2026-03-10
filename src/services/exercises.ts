@@ -9,6 +9,10 @@ import {
   validateExerciseBusinessRules,
 } from "@/lib/validation/exercises";
 import {
+  buildDefaultExercisePrescriptionConfig,
+  type ExercisePrescriptionConfig,
+} from "@/lib/training/exercise-prescription";
+import {
   assertUser,
   mapDbError as mapDbErrorBase,
   parseOrThrow,
@@ -51,6 +55,7 @@ export async function createExerciseService(
 ): Promise<ExerciseDTO> {
   assertUser(userId);
   const parsed = parseOrThrow(exerciseCreateSchema, payload);
+  const normalizedPayload = withNormalizedPrescriptionConfig(parsed);
   const domainErrors = validateExerciseBusinessRules(parsed);
 
   if (domainErrors.length) {
@@ -58,7 +63,7 @@ export async function createExerciseService(
   }
 
   const supabase = await createClient();
-  const titleNormalized = normalizeTitleForDbLookup(parsed.title);
+  const titleNormalized = normalizeTitleForDbLookup(normalizedPayload.title);
 
   const { data: existing, error: existingError } = await findByNormalizedTitle(
     supabase,
@@ -77,7 +82,7 @@ export async function createExerciseService(
     );
   }
 
-  const { data, error } = await insertExercise(supabase, userId, parsed);
+  const { data, error } = await insertExercise(supabase, userId, normalizedPayload);
 
   if (error) {
     throw mapDbError(error);
@@ -202,6 +207,7 @@ export async function updateExerciseService(
   }
 
   const merged = mergeExercise(existing, patch);
+  const normalizedPatch = withResolvedUpdatedPrescriptionConfig(existing, patch, merged);
   const domainErrors = validateExerciseBusinessRules(merged);
 
   if (domainErrors.length) {
@@ -229,7 +235,7 @@ export async function updateExerciseService(
     }
   }
 
-  const { data, error } = await updateExercise(supabase, userId, id, patch);
+  const { data, error } = await updateExercise(supabase, userId, id, normalizedPatch);
 
   if (error) {
     throw mapDbError(error);
@@ -272,31 +278,114 @@ export async function deleteExerciseService(userId: string, id: string) {
 function mergeExercise(
   existing: ExerciseRow,
   patch: ReturnType<typeof exerciseUpdateSchema.parse>,
-) {
+) : {
+  title: string;
+  types: ExerciseRow["types"];
+  parts: ExerciseRow["parts"];
+  level: string | null;
+  details: string | null;
+  reps: number | null;
+  duration_seconds: number | null;
+  series: number;
+  rest_in_between_seconds: number | null;
+  rest_after_series_seconds: number | null;
+  prescription_config: ExercisePrescriptionConfig;
+} {
+  const title = pickValue(patch, "title", existing.title) as string;
+  const reps = pickValue(patch, "reps", existing.reps) as number | null;
+  const durationSeconds = pickValue(
+    patch,
+    "duration_seconds",
+    existing.duration_seconds,
+  ) as number | null;
+  const series = pickValue(patch, "series", existing.series) as number;
+  const restInBetweenSeconds = pickValue(
+    patch,
+    "rest_in_between_seconds",
+    existing.rest_in_between_seconds,
+  ) as number | null;
+
   return {
-    title: pickValue(patch, "title", existing.title),
-    types: pickValue(patch, "types", existing.types ?? []),
-    parts: pickValue(patch, "parts", existing.parts ?? []),
-    level: pickValue(patch, "level", existing.level),
-    details: pickValue(patch, "details", existing.details),
-    reps: pickValue(patch, "reps", existing.reps),
-    duration_seconds: pickValue(
-      patch,
-      "duration_seconds",
-      existing.duration_seconds,
-    ),
-    series: pickValue(patch, "series", existing.series),
-    rest_in_between_seconds: pickValue(
-      patch,
-      "rest_in_between_seconds",
-      existing.rest_in_between_seconds,
-    ),
+    title,
+    types: pickValue(patch, "types", existing.types ?? []) as ExerciseRow["types"],
+    parts: pickValue(patch, "parts", existing.parts ?? []) as ExerciseRow["parts"],
+    level: pickValue(patch, "level", existing.level) as string | null,
+    details: pickValue(patch, "details", existing.details) as string | null,
+    reps,
+    duration_seconds: durationSeconds,
+    series,
+    rest_in_between_seconds: restInBetweenSeconds,
     rest_after_series_seconds: pickValue(
       patch,
       "rest_after_series_seconds",
       existing.rest_after_series_seconds,
+    ) as number | null,
+    prescription_config: resolvePrescriptionConfigPatch(
+      existing,
+      patch,
+      {
+        title,
+        reps,
+        duration_seconds: durationSeconds,
+        series,
+        rest_in_between_seconds: restInBetweenSeconds,
+      },
     ),
   };
+}
+
+function withNormalizedPrescriptionConfig(
+  payload: ReturnType<typeof exerciseCreateSchema.parse>,
+) {
+  return {
+    ...payload,
+    prescription_config:
+      payload.prescription_config ??
+      buildDefaultExercisePrescriptionConfig(payload),
+  };
+}
+
+function withResolvedUpdatedPrescriptionConfig(
+  existing: ExerciseRow,
+  patch: ReturnType<typeof exerciseUpdateSchema.parse>,
+  merged: ReturnType<typeof mergeExercise>,
+) {
+  return {
+    ...patch,
+    prescription_config: resolvePrescriptionConfigPatch(existing, patch, merged),
+  };
+}
+
+function resolvePrescriptionConfigPatch(
+  existing: Pick<
+    ExerciseRow,
+    | "title"
+    | "reps"
+    | "duration_seconds"
+    | "series"
+    | "rest_in_between_seconds"
+    | "prescription_config"
+  >,
+  patch: { prescription_config?: ExercisePrescriptionConfig | null },
+  merged: {
+    title: string;
+    reps: number | null;
+    duration_seconds: number | null;
+    series: number;
+    rest_in_between_seconds: number | null;
+  },
+): ExercisePrescriptionConfig {
+  if (Object.hasOwn(patch, "prescription_config")) {
+    return (
+      patch.prescription_config ??
+      buildDefaultExercisePrescriptionConfig(merged)
+    );
+  }
+
+  return (
+    (existing.prescription_config as ExercisePrescriptionConfig | null) ??
+    buildDefaultExercisePrescriptionConfig(existing)
+  );
 }
 
 function pickValue<T extends object, K extends keyof T, V>(

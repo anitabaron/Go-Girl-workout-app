@@ -24,7 +24,7 @@ type DbClient = SupabaseClient<Database>;
 type ExerciseRow = Database["public"]["Tables"]["exercises"]["Row"];
 
 const exerciseSelectColumns =
-  "id,title,types,parts,is_unilateral,is_save_to_pr,level,details,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds,created_at,updated_at,title_normalized,user_id";
+  "id,title,types,parts,is_unilateral,is_save_to_pr,level,details,reps,duration_seconds,series,rest_in_between_seconds,rest_after_series_seconds,estimated_set_time_seconds,prescription_config,created_at,updated_at,title_normalized,user_id";
 
 export async function findById(client: DbClient, userId: string, id: string) {
   const { data, error } = await client
@@ -283,7 +283,7 @@ export async function listExercises(
 
 export function mapToDTO(row: ExerciseRow): ExerciseDTO {
   /* eslint-disable @typescript-eslint/no-unused-vars -- destructuring to omit from rest */
-  const { user_id, title_normalized, types, parts, ...rest } = row;
+  const { user_id, title_normalized, types, parts, prescription_config, ...rest } = row;
   /* eslint-enable @typescript-eslint/no-unused-vars */
   return {
     ...rest,
@@ -291,6 +291,7 @@ export function mapToDTO(row: ExerciseRow): ExerciseDTO {
     parts: parts ?? [],
     type: types?.[0] ?? ("Main Workout" as const),
     part: parts?.[0] ?? ("Legs" as const),
+    prescription_config: prescription_config as ExerciseDTO["prescription_config"],
   };
 }
 

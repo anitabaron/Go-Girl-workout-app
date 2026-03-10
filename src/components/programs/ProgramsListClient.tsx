@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquarePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTranslations } from "@/i18n/client";
 import type { TrainingProgramDTO } from "@/types";
 
 type ProgramsListClientProps = {
@@ -25,6 +25,7 @@ type ProgramsListClientProps = {
 };
 
 export function ProgramsListClient({ items }: Readonly<ProgramsListClientProps>) {
+  const t = useTranslations("programsList");
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activatingId, setActivatingId] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export function ProgramsListClient({ items }: Readonly<ProgramsListClientProps>)
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-        Brak programów. Utwórz pierwszy program z poziomu Trenera AI.
+        {t("emptyDescription")}
       </div>
     );
   }
@@ -113,7 +114,17 @@ export function ProgramsListClient({ items }: Readonly<ProgramsListClientProps>)
         {items.map((program) => (
           <div
             key={program.id}
-            className="group relative rounded-xl border border-border bg-card p-4"
+            className="group relative cursor-pointer rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/40"
+            onClick={() => router.push(`/programs/${program.id}`)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                router.push(`/programs/${program.id}`);
+              }
+            }}
+            role="link"
+            tabIndex={0}
+            aria-label={`Otwórz szczegóły programu ${program.name}`}
           >
             <div className="absolute right-1 top-4 z-10 flex items-center gap-1 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100">
               <Button
@@ -121,7 +132,10 @@ export function ProgramsListClient({ items }: Readonly<ProgramsListClientProps>)
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-md border border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground"
-                onClick={() => handleSendProgramContextToAI(program)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleSendProgramContextToAI(program);
+                }}
                 aria-label={`Modyfikuj w Trenerze AI: ${program.name}`}
               >
                 <MessageSquarePlus className="h-4 w-4" />
@@ -131,7 +145,10 @@ export function ProgramsListClient({ items }: Readonly<ProgramsListClientProps>)
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-md border border-transparent text-destructive hover:border-destructive/30 hover:bg-destructive/15 hover:text-destructive"
-                onClick={() => setPendingDelete({ id: program.id, name: program.name })}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setPendingDelete({ id: program.id, name: program.name });
+                }}
                 aria-label={`Usuń program: ${program.name}`}
                 disabled={deletingId === program.id}
               >
@@ -156,25 +173,22 @@ export function ProgramsListClient({ items }: Readonly<ProgramsListClientProps>)
               <span>•</span>
               <span>{program.sessions.length} sesji</span>
             </div>
-
-            <div className="mt-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <Button asChild type="button" variant="outline" size="sm">
-                  <Link href={`/programs/${program.id}`}>Szczegóły programu</Link>
+            {program.status !== "active" ? (
+              <div className="mt-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={activatingId === program.id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void handleActivate(program.id);
+                  }}
+                >
+                  {activatingId === program.id ? "Aktywowanie..." : "Aktywuj"}
                 </Button>
-                {program.status !== "active" ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={activatingId === program.id}
-                    onClick={() => void handleActivate(program.id)}
-                  >
-                    {activatingId === program.id ? "Aktywowanie..." : "Aktywuj"}
-                  </Button>
-                ) : null}
               </div>
-            </div>
+            ) : null}
           </div>
         ))}
       </div>

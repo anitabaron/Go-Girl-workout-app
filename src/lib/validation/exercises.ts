@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { EXERCISE_PART_VALUES } from "@/lib/constants";
+import { exercisePrescriptionConfigSchema } from "@/lib/training/exercise-prescription";
 import type {
   ExerciseCreateCommand,
   ExerciseQueryParams,
@@ -60,6 +61,7 @@ const exerciseBaseSchema = z
     rest_in_between_seconds: restSchema,
     rest_after_series_seconds: restSchema,
     estimated_set_time_seconds: estimatedSetTimeSchema,
+    prescription_config: exercisePrescriptionConfigSchema.nullable().optional(),
   })
   .strict();
 

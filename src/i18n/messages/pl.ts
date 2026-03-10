@@ -164,6 +164,24 @@ export const plMessages = {
     "Przeglądaj i zarządzaj planami treningowymi.",
   "workoutPlansPage.countLabel": "planów",
   "workoutPlansPage.createCta": "Utwórz plan",
+  "programsList.emptyDescription":
+    "Brak programów. Utwórz pierwszy program z poziomu Trenera AI.",
+  "programDetailPage.backToPrograms": "Wróć do programów",
+  "programDetailPage.noGoalDescription": "Brak opisu celu programu.",
+  "programDetailPage.monthsShort": "mies.",
+  "programDetailPage.sessionsPerWeek": "treningi/tydz.",
+  "programDetailPage.sessionsCount": "sesji",
+  "programDetailPage.progressionTitle": "Progresja programu",
+  "programDetailPage.progressionStart": "Początek programu",
+  "programDetailPage.progressionEnd": "Koniec programu",
+  "programDetailPage.loadLabel": "Obciążenie",
+  "programDetailPage.volumeLabel": "Objętość",
+  "programDetailPage.weeklyBreakdown": "Tygodniowy rozkład",
+  "programDetailPage.weekLabel": "Tydzień",
+  "programDetailPage.loadDefinition":
+    "Obciążenie pokazuje, jak zmienia się trudność lub intensywność treningu w kolejnych tygodniach.",
+  "programDetailPage.volumeDefinition":
+    "Objętość pokazuje, jak zmienia się łączna ilość pracy treningowej, na przykład liczba serii, powtórzeń albo czasu pod napięciem.",
   "importPlanButton.fileMustBeJson": "Plik musi być w formacie JSON",
   "importPlanButton.importError": "Błąd podczas importu",
   "importPlanButton.planImportedWithMissing":
@@ -1041,6 +1059,7 @@ export const plMessages = {
   "aiAssistant.quickActionAdjustRecovery": "Dostosuj po zmęczeniu lub bólu",
   "aiAssistant.quickActionReviewGoal": "Sprawdź progres celu",
   "aiAssistant.remainingToday": "Zostało na dziś {count} pytań",
+  "aiAssistant.remainingUsage": "Pozostało {count} pytań",
   "aiAssistant.history": "Historia",
   "aiAssistant.newChat": "Nowa rozmowa",
   "aiAssistant.close": "Zamknij",
@@ -1065,6 +1084,7 @@ export const plMessages = {
   "aiAssistant.programMixRatioLabel": "Mix",
   "aiAssistant.programDaysLabel": "Dni",
   "aiAssistant.programGenerateButton": "Rozpisz program treningowy",
+  "aiAssistant.programGeneratingButton": "Generowanie programu...",
   "aiAssistant.programGenerateActionTitle": "Utwórz program treningowy",
   "aiAssistant.programGenerateActionDescription":
     "Użyje ustawień z modułu poniżej (miesiące + tryb + wybrane dni).",

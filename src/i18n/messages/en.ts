@@ -166,6 +166,24 @@ export const enMessages = {
   "workoutPlansPage.description": "Browse and manage your workout plans.",
   "workoutPlansPage.countLabel": "plans",
   "workoutPlansPage.createCta": "Create plan",
+  "programsList.emptyDescription":
+    "No programs yet. Create your first program from AI Trainer.",
+  "programDetailPage.backToPrograms": "Back to programs",
+  "programDetailPage.noGoalDescription": "No program goal description.",
+  "programDetailPage.monthsShort": "mo.",
+  "programDetailPage.sessionsPerWeek": "workouts/week",
+  "programDetailPage.sessionsCount": "sessions",
+  "programDetailPage.progressionTitle": "Program progression",
+  "programDetailPage.progressionStart": "Program start",
+  "programDetailPage.progressionEnd": "Program end",
+  "programDetailPage.loadLabel": "Load",
+  "programDetailPage.volumeLabel": "Volume",
+  "programDetailPage.weeklyBreakdown": "Weekly breakdown",
+  "programDetailPage.weekLabel": "Week",
+  "programDetailPage.loadDefinition":
+    "Load shows how training difficulty or intensity changes across the following weeks.",
+  "programDetailPage.volumeDefinition":
+    "Volume shows how the total amount of training work changes, for example sets, reps, or time under tension.",
   "importPlanButton.fileMustBeJson": "File must be in JSON format",
   "importPlanButton.importError": "Error during import",
   "importPlanButton.planImportedWithMissing":
@@ -1017,6 +1035,7 @@ export const enMessages = {
   "aiAssistant.quickActionAdjustRecovery": "Adjust after fatigue or pain",
   "aiAssistant.quickActionReviewGoal": "Review goal progress",
   "aiAssistant.remainingToday": "{count} questions left for today",
+  "aiAssistant.remainingUsage": "{count} questions left",
   "aiAssistant.history": "History",
   "aiAssistant.newChat": "New chat",
   "aiAssistant.close": "Close",
@@ -1041,6 +1060,7 @@ export const enMessages = {
   "aiAssistant.programMixRatioLabel": "Mix",
   "aiAssistant.programDaysLabel": "Days",
   "aiAssistant.programGenerateButton": "Generate training program",
+  "aiAssistant.programGeneratingButton": "Generating program...",
   "aiAssistant.programGenerateActionTitle": "Create training program",
   "aiAssistant.programGenerateActionDescription":
     "Uses settings from the module below (months + mode + selected days).",

@@ -8,6 +8,7 @@ import {
 } from "@/lib/service-utils";
 import {
   programCreateSchema,
+  generatedPlanTemplatesSchema,
   programGenerateSchema,
   programNoteCreateSchema,
   programNoteListQuerySchema,
@@ -16,6 +17,10 @@ import {
   programSessionUpdateSchema,
   programUpdateSchema,
 } from "@/lib/validation/training-programs";
+import {
+  normalizeTitle,
+  normalizeTitleForDbLookup,
+} from "@/lib/validation/exercises";
 import {
   deleteTrainingProgramById,
   findTrainingProgramById,
@@ -33,6 +38,10 @@ import {
   updateTrainingProgramById,
 } from "@/repositories/training-programs";
 import {
+  insertAIPlanDecision,
+  updateAIPlanDecisionById,
+} from "@/repositories/ai-plan-decisions";
+import {
   findWorkoutPlanById,
   insertWorkoutPlan,
   insertWorkoutPlanExercises,
@@ -40,11 +49,40 @@ import {
   updateWorkoutPlan,
 } from "@/repositories/workout-plans";
 import { getOrCreateAICoachProfileService } from "@/services/ai-coach-profiles";
+import { applyCapabilityFeedbackSignal } from "@/services/capability-profiles";
 import {
   getWorkoutSessionService,
   startWorkoutSessionService,
 } from "@/services/workout-sessions";
+import { buildTrainingStateSnapshotService } from "@/services/training-state";
+import { getOpenAIClient } from "@/lib/openai";
 import { calculatePlanEstimatedTotalTimeSeconds } from "@/lib/workout-plans/estimated-time";
+import {
+  buildDefaultExercisePrescriptionConfig,
+  resolveExercisePrescriptionConfig,
+  type ExercisePrescriptionConfig,
+} from "@/lib/training/exercise-prescription";
+import {
+  buildExerciseTitleAliases,
+  resolveExerciseLibraryMatch,
+} from "@/lib/training/exercise-title-aliases";
+import { inferMovementKey } from "@/lib/training/movement-keys";
+import {
+  createProgramPlannerProposal,
+  type ProgramPlannerProposal,
+} from "@/lib/training/program-planner-contract";
+import {
+  validateProgramTemplates,
+  type ProgramPlanValidationResult,
+} from "@/lib/training/program-plan-validator";
+import {
+  repairProgramTemplates,
+  type ProgramPlanRepairLog,
+} from "@/lib/training/program-plan-repairer";
+import {
+  scoreProgramTemplatesRealism,
+  type ProgramPlanRealismScore,
+} from "@/lib/training/program-plan-realism";
 import type {
   ExercisePart,
   ExerciseType,
@@ -67,6 +105,44 @@ type PlanPreview = {
   part: string | null;
   description?: string | null;
 };
+
+type ExerciseLibraryPreview = {
+  id: string;
+  title: string;
+  title_normalized: string;
+};
+
+type ExerciseLibraryAliasEntry = {
+  id: string;
+  title: string;
+  aliases: string[];
+};
+
+const AI_PROGRAM_WEEKLY_LIMIT = 5;
+
+function isLocalhostHost(hostname: string | null | undefined): boolean {
+  const host = (hostname ?? "").toLowerCase().trim();
+  return (
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.includes("[::1]") ||
+    host === "::1"
+  );
+}
+
+function isProgramGenerationLimitEnforced(hostname?: string | null): boolean {
+  if (process.env.DISABLE_AI_LIMITS === "1") return false;
+  return !isLocalhostHost(hostname);
+}
+
+function getCurrentWeekStartIso(date = new Date()): string {
+  const weekStart = new Date(date);
+  const day = weekStart.getDay();
+  const offset = day === 0 ? -6 : 1 - day;
+  weekStart.setDate(weekStart.getDate() + offset);
+  weekStart.setHours(0, 0, 0, 0);
+  return weekStart.toISOString();
+}
 
 type ProgramGeneratedSession = {
   workout_plan_id?: string;
@@ -92,6 +168,7 @@ type SchedulePlanCandidate = {
 };
 
 export type ProgramGenerateResponse = {
+  decision_log_id: string | null;
   program: {
     name: string;
     goal_text: string;
@@ -106,6 +183,39 @@ export type ProgramGenerateResponse = {
   };
   sessions: ProgramGeneratedSession[];
   recommendations: string[];
+  guardrail_events: ProgramGuardrailEvent[];
+  planner_proposal: ProgramPlannerProposal;
+  validation: ProgramPlanValidationResult;
+  repair_log: ProgramPlanRepairLog[];
+  realism: ProgramPlanRealismScore;
+  training_state: {
+    readiness_score: number;
+    readiness_drivers: string[];
+    external_workouts_last_7d: number;
+    external_duration_minutes_last_7d: number;
+    fatigue_notes_last_14d: number;
+  };
+};
+
+export type ProgramGuardrailEvent = {
+  template_key: string;
+  workout_plan_name: string;
+  exercise_title: string;
+  field:
+    | "planned_sets"
+    | "planned_reps"
+    | "planned_duration_seconds"
+    | "planned_rest_seconds";
+  from: number;
+  to: number;
+  reason_code:
+    | "exercise_min"
+    | "exercise_max"
+    | "main_workout_min"
+    | "main_workout_max"
+    | "capability_limit"
+    | "readiness_downscale";
+  reason: string;
 };
 
 const DEFAULT_WEEKDAY_MAP: Record<number, number[]> = {
@@ -177,13 +287,41 @@ function buildInterpretedGoalText(goalText: string, constraints?: string | null)
   return `Program ukierunkowany na ${topFocuses.join(", ")}.`;
 }
 
-function buildProgramNameFromInterpretation(interpretedGoalText: string): string {
-  const normalized = interpretedGoalText
-    .replace(/^Program ukierunkowany na /i, "")
-    .replace(/\.$/, "")
-    .trim();
-  const short = normalized.length > 56 ? `${normalized.slice(0, 53)}...` : normalized;
-  return `Program: ${short}`;
+function buildProgramName(goalText: string, constraints?: string | null): string {
+  const text = `${goalText} ${constraints ?? ""}`.toLowerCase();
+  const labels: string[] = [];
+
+  if (/\bl-?sit\b|kompres|unoszen|zginacz/.test(text)) {
+    labels.push("L-Sit i Kompresja");
+  }
+  if (/handstand|stanie na ręk|pike/.test(text)) {
+    labels.push("Handstand");
+  }
+  if (/pole|poledance|handspring|shouldermount/.test(text)) {
+    labels.push("Pole Strength");
+  }
+  if (/bark/.test(text) && !labels.includes("Handstand")) {
+    labels.push("Barki i Stabilizacja");
+  }
+  if (/core|brzuch|stabiliz/.test(text) && !labels.includes("L-Sit i Kompresja")) {
+    labels.push("Core i Stabilizacja");
+  }
+  if (/mobil|rozciag|stretch/.test(text)) {
+    labels.push("Mobilność");
+  }
+  if (/kontuz|ból|bol|przeciąż|przeciaz|kolano/.test(text)) {
+    labels.push("Powrót Bez Przeciążeń");
+  }
+  if (/sił|sila|strength/.test(text) && labels.length === 0) {
+    labels.push("Siła Bazowa");
+  }
+
+  const uniqueLabels = Array.from(new Set(labels)).slice(0, 2);
+  if (uniqueLabels.length > 0) {
+    return uniqueLabels.join(" · ");
+  }
+
+  return "Plan Treningowy";
 }
 
 function buildRecommendations(
@@ -484,6 +622,132 @@ function buildAIPlanTemplates(
     .filter(Boolean);
 }
 
+async function generateProgramTemplatesWithLLM(params: {
+  goalText: string;
+  constraints?: string | null;
+  sessionsPerWeek: number;
+  mode: ProgramGenerationMode;
+  readinessScore: number;
+  readinessDrivers: string[];
+  externalWorkoutsLast7d: number;
+  topMovementKeys: string[];
+  libraryExerciseTitles: string[];
+  coachProfile: {
+    persona_name: string;
+    focus: string | null;
+    risk_tolerance: string | null;
+    preferred_methodology: string | null;
+  };
+}): Promise<{
+  templates: ProgramGeneratedPlanTemplate[];
+  rationale: string[];
+  assumptions: string[];
+  sourceLabel: string;
+} | null> {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  const model =
+    process.env.OPENAI_PROGRAM_PLANNER_MODEL ??
+    process.env.OPENAI_MODEL ??
+    "gpt-4.1";
+  const openai = getOpenAIClient();
+  const readinessDrivers =
+    params.readinessDrivers.length > 0
+      ? params.readinessDrivers.join(", ")
+      : "brak istotnych sygnałów";
+  const topMovementKeys =
+    params.topMovementKeys.length > 0 ? params.topMovementKeys.join(", ") : "brak";
+  const libraryExerciseTitles =
+    params.libraryExerciseTitles.length > 0
+      ? params.libraryExerciseTitles.slice(0, 80).join(", ")
+      : "brak";
+  const prompt = [
+    "Zwróć wyłącznie poprawny JSON bez markdownu.",
+    "Tworzysz 1-3 szablony jednostek treningowych dla programu treningowego.",
+    "Każdy szablon musi zawierać warm-up, 2-5 ćwiczeń main workout i cool-down.",
+    "Używaj realistycznych zakresów:",
+    "- izometrie zwykle 10-45 s",
+    "- główne ćwiczenia zwykle 2-6 serii",
+    "- rest zwykle 30-120 s",
+    "Nie przekraczaj konserwatywnej objętości, jeśli readiness jest niskie.",
+    "Dla każdego ćwiczenia podaj albo planned_reps, albo planned_duration_seconds. Nie obu naraz.",
+    "Dozwolone section_type i exercise_type: Warm-up, Main Workout, Cool-down.",
+    "Dozwolone exercise_part: Arms, Legs, Back, Core, Full Body.",
+    "",
+    "Zwróć tablicę JSON szablonów o polach:",
+    "template_key, name, description, part, exercises[].",
+    "Każde exercises[] ma pola:",
+    "section_type, section_order, exercise_title, exercise_type, exercise_part, exercise_details, planned_sets, planned_reps, planned_duration_seconds, planned_rest_seconds.",
+    "",
+    "Kontekst:",
+    `goal_text: ${params.goalText}`,
+    `constraints: ${params.constraints ?? "brak"}`,
+    `mode: ${params.mode}`,
+    `sessions_per_week: ${params.sessionsPerWeek}`,
+    `readiness_score: ${params.readinessScore}/100`,
+    `readiness_drivers: ${readinessDrivers}`,
+    `external_workouts_last_7d: ${params.externalWorkoutsLast7d}`,
+    `top_movement_keys: ${topMovementKeys}`,
+    `exercise_library_titles: ${libraryExerciseTitles}`,
+    `coach_persona: ${params.coachProfile.persona_name}`,
+    `coach_focus: ${params.coachProfile.focus ?? "brak"}`,
+    `coach_risk_tolerance: ${params.coachProfile.risk_tolerance ?? "brak"}`,
+    `coach_methodology: ${params.coachProfile.preferred_methodology ?? "brak"}`,
+  ].join("\n");
+
+  const runPlannerAttempt = async (extraInstruction?: string) => {
+    const response = await openai.responses.create({
+      model,
+      input: [
+        {
+          role: "system",
+          content:
+            "Jesteś systemem planowania treningowego. Tworzysz tylko realistyczne propozycje treningowe w JSON. Nie zwracasz tekstu objaśniającego.",
+        },
+        {
+          role: "user",
+          content: extraInstruction ? `${prompt}\n\n${extraInstruction}` : prompt,
+        },
+      ],
+    });
+
+    const text = response.output_text?.trim();
+    if (!text) return null;
+
+    const parsed = JSON.parse(text);
+    const result = generatedPlanTemplatesSchema.safeParse(parsed);
+    return result.success ? result.data : null;
+  };
+
+  try {
+    const firstAttempt = await runPlannerAttempt();
+    const secondAttempt =
+      firstAttempt ??
+      (await runPlannerAttempt(
+        "Popraw format. Zwróć wyłącznie tablicę JSON 1-3 template'ów, bez komentarzy, bez markdownu, bez dodatkowych pól.",
+      ));
+    if (!secondAttempt) {
+      return null;
+    }
+
+    return {
+      templates: secondAttempt,
+      rationale: [
+        `Planner LLM użył modelu ${model}.`,
+        `Proposal uwzględniał readiness ${params.readinessScore}/100 i external load z 7 dni.`,
+      ],
+      assumptions: [
+        "Proposal z LLM jest tylko kandydatem i przechodzi lokalną walidację oraz repair.",
+      ],
+      sourceLabel: "llm",
+    };
+  } catch {
+    return null;
+  }
+}
+
 type PlanExerciseInsertShape = {
   exercise_id: string | null;
   snapshot_id: string | null;
@@ -503,10 +767,13 @@ type PlanExerciseInsertShape = {
   planned_rest_seconds: number | null;
   planned_rest_after_series_seconds: number | null;
   estimated_set_time_seconds: number | null;
+  exercise_prescription_config?: ExercisePrescriptionConfig | null;
 };
 
 const TARGET_PLAN_MIN_SECONDS = 50 * 60;
 const TARGET_PLAN_MAX_SECONDS = 60 * 60;
+const TARGET_WARMUP_MIN_SECONDS = 8 * 60;
+const TARGET_COOLDOWN_MIN_SECONDS = 5 * 60;
 const MAIN_WORKOUT_MIN_SETS = 1;
 const MAIN_WORKOUT_MAX_SETS = 6;
 const MAIN_WORKOUT_MIN_REPS = 5;
@@ -517,58 +784,352 @@ const MAIN_WORKOUT_MAX_DURATION_ISOMETRIC_SECONDS = 45;
 const MAIN_WORKOUT_MIN_REST_SECONDS = 30;
 const MAIN_WORKOUT_MAX_REST_SECONDS = 180;
 
-function isLikelyIsometricTitle(title: string | null | undefined): boolean {
-  if (!title) return false;
-  const normalized = title
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  return /(hold|isometric|plank|l-?sit|support|wall lean|hollow body)/.test(normalized);
+function getExercisePrescription(
+  exercise: PlanExerciseInsertShape,
+): ExercisePrescriptionConfig {
+  return resolveExercisePrescriptionConfig({
+    title: exercise.exercise_title,
+    reps: exercise.planned_reps,
+    duration_seconds: exercise.planned_duration_seconds,
+    series: exercise.planned_sets,
+    rest_in_between_seconds: exercise.planned_rest_seconds,
+    prescription_config: exercise.exercise_prescription_config ?? null,
+  });
 }
 
-function getMainWorkoutDurationCapSeconds(title: string | null | undefined): number {
-  return isLikelyIsometricTitle(title)
-    ? MAIN_WORKOUT_MAX_DURATION_ISOMETRIC_SECONDS
-    : MAIN_WORKOUT_MAX_DURATION_DYNAMIC_SECONDS;
-}
+function clampMainWorkoutExercisePrescription(
+  exercise: PlanExerciseInsertShape,
+): ProgramGuardrailEvent[] {
+  if (exercise.section_type !== "Main Workout") return [];
+  const guardrailEvents: ProgramGuardrailEvent[] = [];
+  const prescription = getExercisePrescription(exercise);
 
-function clampMainWorkoutExercisePrescription(exercise: PlanExerciseInsertShape): void {
-  if (exercise.section_type !== "Main Workout") return;
+  const clampField = (
+    field: ProgramGuardrailEvent["field"],
+    current: number | null | undefined,
+    min: number,
+    max: number,
+    minReason: ProgramGuardrailEvent["reason_code"],
+    maxReason: ProgramGuardrailEvent["reason_code"],
+  ): number | null => {
+    if (current === null || current === undefined) return null;
+    const next = clamp(current, min, max);
+    if (next !== current) {
+      guardrailEvents.push({
+        template_key: "",
+        workout_plan_name: "",
+        exercise_title: exercise.exercise_title ?? "Ćwiczenie",
+        field,
+        from: current,
+        to: next,
+        reason_code: next === min ? minReason : maxReason,
+        reason:
+          next === min
+            ? `Skorygowano do minimalnej wartości guardraila (${min}).`
+            : `Skorygowano do maksymalnej wartości guardraila (${max}).`,
+      });
+    }
+    return next;
+  };
 
-  if (exercise.planned_sets !== null && exercise.planned_sets !== undefined) {
-    exercise.planned_sets = clamp(
-      exercise.planned_sets,
-      MAIN_WORKOUT_MIN_SETS,
-      MAIN_WORKOUT_MAX_SETS,
-    );
-  }
+  exercise.planned_sets = clampField(
+    "planned_sets",
+    exercise.planned_sets,
+    Math.max(MAIN_WORKOUT_MIN_SETS, prescription.min_sets),
+    Math.min(MAIN_WORKOUT_MAX_SETS, prescription.max_sets),
+    "exercise_min",
+    "exercise_max",
+  );
 
-  if (exercise.planned_reps !== null && exercise.planned_reps !== undefined) {
-    exercise.planned_reps = clamp(
+  if (prescription.min_reps !== null && prescription.max_reps !== null) {
+    exercise.planned_reps = clampField(
+      "planned_reps",
       exercise.planned_reps,
-      MAIN_WORKOUT_MIN_REPS,
-      MAIN_WORKOUT_MAX_REPS,
+      Math.max(MAIN_WORKOUT_MIN_REPS, prescription.min_reps),
+      Math.min(MAIN_WORKOUT_MAX_REPS, prescription.max_reps),
+      "exercise_min",
+      "exercise_max",
     );
   }
 
   if (
-    exercise.planned_duration_seconds !== null &&
-    exercise.planned_duration_seconds !== undefined
+    prescription.min_duration_seconds !== null &&
+    prescription.max_duration_seconds !== null
   ) {
-    exercise.planned_duration_seconds = clamp(
+    exercise.planned_duration_seconds = clampField(
+      "planned_duration_seconds",
       exercise.planned_duration_seconds,
-      MAIN_WORKOUT_MIN_DURATION_SECONDS,
-      getMainWorkoutDurationCapSeconds(exercise.exercise_title),
+      Math.max(MAIN_WORKOUT_MIN_DURATION_SECONDS, prescription.min_duration_seconds),
+      Math.min(
+        prescription.max_duration_seconds,
+        prescription.prescription_mode === "duration_based_isometric"
+          ? MAIN_WORKOUT_MAX_DURATION_ISOMETRIC_SECONDS
+          : MAIN_WORKOUT_MAX_DURATION_DYNAMIC_SECONDS,
+      ),
+      "exercise_min",
+      "exercise_max",
     );
   }
 
-  if (exercise.planned_rest_seconds !== null && exercise.planned_rest_seconds !== undefined) {
-    exercise.planned_rest_seconds = clamp(
-      exercise.planned_rest_seconds,
-      MAIN_WORKOUT_MIN_REST_SECONDS,
-      MAIN_WORKOUT_MAX_REST_SECONDS,
-    );
-  }
+  exercise.planned_rest_seconds = clampField(
+    "planned_rest_seconds",
+    exercise.planned_rest_seconds,
+    Math.max(MAIN_WORKOUT_MIN_REST_SECONDS, prescription.min_rest_seconds),
+    Math.min(MAIN_WORKOUT_MAX_REST_SECONDS, prescription.max_rest_seconds),
+    "exercise_min",
+    "exercise_max",
+  );
+
+  return guardrailEvents;
+}
+
+function sanitizePlanTemplate(
+  template: ProgramGeneratedPlanTemplate,
+): { template: ProgramGeneratedPlanTemplate; guardrailEvents: ProgramGuardrailEvent[] } {
+  const exercises = template.exercises.map((exercise) => ({
+    ...exercise,
+    exercise_prescription_config: resolveExercisePrescriptionConfig({
+      title: exercise.exercise_title,
+      reps: exercise.planned_reps ?? null,
+      duration_seconds: exercise.planned_duration_seconds ?? null,
+      series: exercise.planned_sets ?? null,
+      rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
+      prescription_config: exercise.exercise_prescription_config ?? null,
+    }),
+  }));
+  const normalized = normalizePlanDuration(
+    enforceWarmupCooldownMinutes(
+      ensureWarmupAndCooldown(
+        exercises.map((exercise) => ({
+          exercise_id: exercise.exercise_id ?? null,
+          snapshot_id: null,
+          scope_id: null,
+          in_scope_nr: null,
+          scope_repeat_count: null,
+          exercise_title: exercise.exercise_title,
+          exercise_type: exercise.exercise_type ?? exercise.section_type,
+          exercise_part: exercise.exercise_part ?? template.part ?? null,
+          exercise_details: exercise.exercise_details ?? null,
+          exercise_is_unilateral: exercise.exercise_is_unilateral ?? null,
+          section_type: exercise.section_type,
+          section_order: exercise.section_order,
+          planned_sets: exercise.planned_sets ?? null,
+          planned_reps: exercise.planned_reps ?? null,
+          planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+          planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+          planned_rest_after_series_seconds:
+            exercise.planned_rest_after_series_seconds ?? null,
+          estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+          exercise_prescription_config: resolveExercisePrescriptionConfig({
+            title: exercise.exercise_title,
+            reps: exercise.planned_reps ?? null,
+            duration_seconds: exercise.planned_duration_seconds ?? null,
+            series: exercise.planned_sets ?? null,
+            rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
+            prescription_config: exercise.exercise_prescription_config ?? null,
+          }),
+        })),
+      ),
+    ),
+  ).map((exercise) => ({
+    ...exercise,
+    exercise_prescription_config: resolveExercisePrescriptionConfig({
+        title: exercise.exercise_title,
+        reps: exercise.planned_reps ?? null,
+        duration_seconds: exercise.planned_duration_seconds ?? null,
+        series: exercise.planned_sets ?? null,
+        rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
+        prescription_config: exercise.exercise_prescription_config ?? null,
+      }),
+  }));
+
+  const guardrailEvents: ProgramGuardrailEvent[] = [];
+  normalized.forEach((exercise, index) => {
+    const source = template.exercises[index];
+    if (!source) return;
+
+    const comparableFields: Array<ProgramGuardrailEvent["field"]> = [
+      "planned_sets",
+      "planned_reps",
+      "planned_duration_seconds",
+      "planned_rest_seconds",
+    ];
+
+    for (const field of comparableFields) {
+      const before = source[field];
+      const after = exercise[field];
+      if (typeof before !== "number" || typeof after !== "number" || before === after) {
+        continue;
+      }
+
+      guardrailEvents.push({
+        template_key: template.template_key,
+        workout_plan_name: template.name,
+        exercise_title: exercise.exercise_title ?? source.exercise_title,
+        field,
+        from: before,
+        to: after,
+        reason_code: after > before ? "exercise_min" : "exercise_max",
+        reason:
+          after > before
+            ? "Plan został podniesiony do minimalnego bezpiecznego zakresu dla ćwiczenia."
+            : "Plan został obniżony do maksymalnego bezpiecznego zakresu dla ćwiczenia.",
+      });
+    }
+  });
+
+  return {
+    template: {
+      ...template,
+      exercises: normalized.map((exercise, index) => ({
+        exercise_id: exercise.exercise_id ?? null,
+        section_type: exercise.section_type,
+        section_order: index + 1,
+        exercise_title: exercise.exercise_title ?? "Ćwiczenie",
+        exercise_type: exercise.exercise_type ?? exercise.section_type,
+        exercise_part: exercise.exercise_part ?? template.part ?? null,
+        exercise_details: exercise.exercise_details ?? null,
+        exercise_is_unilateral: exercise.exercise_is_unilateral ?? null,
+        planned_sets: exercise.planned_sets ?? null,
+        planned_reps: exercise.planned_reps ?? null,
+        planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+        planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+        planned_rest_after_series_seconds:
+          exercise.planned_rest_after_series_seconds ?? null,
+        estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+        exercise_prescription_config:
+          exercise.exercise_prescription_config ?? null,
+      })),
+    },
+    guardrailEvents,
+  };
+}
+
+function sanitizeSchedulePlanCandidates(
+  candidates: SchedulePlanCandidate[],
+): {
+  candidates: SchedulePlanCandidate[];
+  guardrailEvents: ProgramGuardrailEvent[];
+} {
+  const guardrailEvents: ProgramGuardrailEvent[] = [];
+
+  const sanitizedCandidates = candidates.map((candidate) => {
+    if (!candidate.generated_plan) return candidate;
+
+    const sanitized = sanitizePlanTemplate(candidate.generated_plan);
+    guardrailEvents.push(...sanitized.guardrailEvents);
+
+    return {
+      ...candidate,
+      workout_plan_name: sanitized.template.name,
+      generated_plan: sanitized.template,
+    };
+  });
+
+  return { candidates: sanitizedCandidates, guardrailEvents };
+}
+
+function applyCapabilityCapsToCandidates(
+  candidates: SchedulePlanCandidate[],
+  trainingState: Awaited<ReturnType<typeof buildTrainingStateSnapshotService>>,
+): {
+  candidates: SchedulePlanCandidate[];
+  guardrailEvents: ProgramGuardrailEvent[];
+} {
+  const events: ProgramGuardrailEvent[] = [];
+
+  const cappedCandidates = candidates.map((candidate) => {
+    if (!candidate.generated_plan) return candidate;
+
+    const nextExercises = candidate.generated_plan.exercises.map((exercise) => {
+      const movementKey = inferMovementKey({
+        title: exercise.exercise_title,
+        part: exercise.exercise_part ?? candidate.generated_plan?.part ?? null,
+      });
+      const capability = trainingState.capability_summary.find(
+        (item) => item.movement_key === movementKey,
+      );
+      if (!capability) return exercise;
+
+      const next = { ...exercise };
+      const title = exercise.exercise_title;
+
+      if (
+        typeof next.planned_reps === "number" &&
+        typeof capability.comfort_max_reps === "number"
+      ) {
+        const cap = Math.max(
+          capability.comfort_max_reps,
+          capability.comfort_max_reps + 1,
+        );
+        if (next.planned_reps > cap) {
+          events.push({
+            template_key: candidate.generated_plan!.template_key,
+            workout_plan_name: candidate.generated_plan!.name,
+            exercise_title: title,
+            field: "planned_reps",
+            from: next.planned_reps,
+            to: cap,
+            reason_code: "capability_limit",
+            reason: `Zastosowano limit możliwości dla wzorca ${movementKey}.`,
+          });
+          next.planned_reps = cap;
+        }
+      }
+
+      if (
+        typeof next.planned_duration_seconds === "number" &&
+        typeof capability.comfort_max_duration_seconds === "number"
+      ) {
+        const cap = Math.max(
+          capability.comfort_max_duration_seconds,
+          Math.floor(capability.comfort_max_duration_seconds * 1.15),
+        );
+        if (next.planned_duration_seconds > cap) {
+          events.push({
+            template_key: candidate.generated_plan!.template_key,
+            workout_plan_name: candidate.generated_plan!.name,
+            exercise_title: title,
+            field: "planned_duration_seconds",
+            from: next.planned_duration_seconds,
+            to: cap,
+            reason_code: "capability_limit",
+            reason: `Zastosowano limit możliwości dla wzorca ${movementKey}.`,
+          });
+          next.planned_duration_seconds = cap;
+        }
+      }
+
+      if (capability.pain_flag && typeof next.planned_sets === "number") {
+        const nextSets = Math.max(1, next.planned_sets - 1);
+        if (nextSets !== next.planned_sets) {
+          events.push({
+            template_key: candidate.generated_plan!.template_key,
+            workout_plan_name: candidate.generated_plan!.name,
+            exercise_title: title,
+            field: "planned_sets",
+            from: next.planned_sets,
+            to: nextSets,
+            reason_code: "capability_limit",
+            reason: `Obniżono objętość z powodu aktywnej flagi bólowej dla wzorca ${movementKey}.`,
+          });
+          next.planned_sets = nextSets;
+        }
+      }
+
+      return next;
+    });
+
+    return {
+      ...candidate,
+      generated_plan: {
+        ...candidate.generated_plan,
+        exercises: nextExercises,
+      },
+    };
+  });
+
+  return { candidates: cappedCandidates, guardrailEvents: events };
 }
 
 function clonePlanExercises(
@@ -583,46 +1144,101 @@ function getCycledItem<T>(items: T[], index: number): T | undefined {
 }
 
 function increaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
-  if (exercise.planned_reps && exercise.planned_reps > 0) {
-    exercise.planned_reps = Math.min(MAIN_WORKOUT_MAX_REPS, exercise.planned_reps + 1);
-    return;
-  }
+  const prescription = getExercisePrescription(exercise);
 
-  if (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) {
-    exercise.planned_duration_seconds = Math.min(
-      getMainWorkoutDurationCapSeconds(exercise.exercise_title),
-      exercise.planned_duration_seconds + 3,
+  if (
+    exercise.planned_reps &&
+    exercise.planned_reps > 0 &&
+    prescription.max_reps !== null
+  ) {
+    exercise.planned_reps = Math.min(
+      prescription.max_reps,
+      exercise.planned_reps + (prescription.progression_step_reps ?? 1),
     );
-    return;
-  }
-
-  if (exercise.planned_sets && exercise.planned_sets > 0) {
-    exercise.planned_sets = Math.min(MAIN_WORKOUT_MAX_SETS, exercise.planned_sets + 1);
-    return;
-  }
-
-  exercise.planned_reps = Math.max(8, MAIN_WORKOUT_MIN_REPS);
-  exercise.planned_sets = Math.max(MAIN_WORKOUT_MIN_SETS, exercise.planned_sets ?? 1);
-}
-
-function decreaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
-  if (exercise.planned_sets && exercise.planned_sets > MAIN_WORKOUT_MIN_SETS) {
-    exercise.planned_sets = Math.max(MAIN_WORKOUT_MIN_SETS, exercise.planned_sets - 1);
-    return;
-  }
-
-  if (exercise.planned_reps && exercise.planned_reps > MAIN_WORKOUT_MIN_REPS) {
-    exercise.planned_reps = Math.max(MAIN_WORKOUT_MIN_REPS, exercise.planned_reps - 1);
     return;
   }
 
   if (
     exercise.planned_duration_seconds &&
-    exercise.planned_duration_seconds > MAIN_WORKOUT_MIN_DURATION_SECONDS
+    exercise.planned_duration_seconds > 0 &&
+    prescription.max_duration_seconds !== null
+  ) {
+    exercise.planned_duration_seconds = Math.min(
+      prescription.max_duration_seconds,
+      exercise.planned_duration_seconds +
+        (prescription.progression_step_duration_seconds ?? 3),
+    );
+    return;
+  }
+
+  if (exercise.planned_sets && exercise.planned_sets > 0) {
+    exercise.planned_sets = Math.min(prescription.max_sets, exercise.planned_sets + 1);
+    return;
+  }
+
+  if (
+    exercise.planned_rest_seconds &&
+    exercise.planned_rest_seconds > 0 &&
+    exercise.planned_rest_seconds < prescription.max_rest_seconds
+  ) {
+    exercise.planned_rest_seconds = Math.min(
+      prescription.max_rest_seconds,
+      exercise.planned_rest_seconds + 15,
+    );
+    return;
+  }
+
+  exercise.planned_sets = Math.max(prescription.min_sets, exercise.planned_sets ?? 1);
+  if (prescription.min_reps !== null) {
+    exercise.planned_reps = prescription.min_reps;
+    exercise.planned_duration_seconds = null;
+    return;
+  }
+  if (prescription.min_duration_seconds !== null) {
+    exercise.planned_duration_seconds = prescription.min_duration_seconds;
+    exercise.planned_reps = null;
+  }
+}
+
+function decreaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
+  const prescription = getExercisePrescription(exercise);
+
+  if (
+    exercise.planned_rest_seconds &&
+    exercise.planned_rest_seconds > prescription.min_rest_seconds
+  ) {
+    exercise.planned_rest_seconds = Math.max(
+      prescription.min_rest_seconds,
+      exercise.planned_rest_seconds - 15,
+    );
+    return;
+  }
+
+  if (exercise.planned_sets && exercise.planned_sets > prescription.min_sets) {
+    exercise.planned_sets = Math.max(prescription.min_sets, exercise.planned_sets - 1);
+    return;
+  }
+
+  if (
+    exercise.planned_reps &&
+    exercise.planned_reps > (prescription.min_reps ?? MAIN_WORKOUT_MIN_REPS)
+  ) {
+    exercise.planned_reps = Math.max(
+      prescription.min_reps ?? MAIN_WORKOUT_MIN_REPS,
+      exercise.planned_reps - (prescription.progression_step_reps ?? 1),
+    );
+    return;
+  }
+
+  if (
+    exercise.planned_duration_seconds &&
+    exercise.planned_duration_seconds >
+      (prescription.min_duration_seconds ?? MAIN_WORKOUT_MIN_DURATION_SECONDS)
   ) {
     exercise.planned_duration_seconds = Math.max(
-      MAIN_WORKOUT_MIN_DURATION_SECONDS,
-      exercise.planned_duration_seconds - 3,
+      prescription.min_duration_seconds ?? MAIN_WORKOUT_MIN_DURATION_SECONDS,
+      exercise.planned_duration_seconds -
+        (prescription.progression_step_duration_seconds ?? 3),
     );
   }
 }
@@ -718,6 +1334,81 @@ function mapPlanExerciseToGeneratedInput(
     planned_rest_after_series_seconds:
       exercise.planned_rest_after_series_seconds ?? null,
     estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+    exercise_prescription_config:
+      exercise.exercise_prescription_config ?? null,
+  };
+}
+
+async function loadExerciseLibraryPreview(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  limit = 120,
+): Promise<ExerciseLibraryPreview[]> {
+  const { data, error } = await supabase
+    .from("exercises")
+    .select("id,title,title_normalized")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return [];
+    }
+    throw mapDbError(error);
+  }
+
+  return (data ?? []) as ExerciseLibraryPreview[];
+}
+
+function buildExerciseLibraryAliasEntries(
+  libraryExercises: ExerciseLibraryPreview[],
+): ExerciseLibraryAliasEntry[] {
+  return libraryExercises.map((exercise) => ({
+    id: exercise.id,
+    title: exercise.title,
+    aliases: buildExerciseTitleAliases(exercise.title),
+  }));
+}
+
+function buildExerciseLibraryPromptEntries(
+  libraryExercises: ExerciseLibraryPreview[],
+): string[] {
+  return buildExerciseLibraryAliasEntries(libraryExercises).map((exercise) => {
+    const aliases = exercise.aliases.filter((alias) => alias !== normalizeTitleForDbLookup(exercise.title));
+    return aliases.length > 0
+      ? `${exercise.title} | aliasy: ${aliases.slice(0, 3).join(" | ")}`
+      : exercise.title;
+  });
+}
+
+async function attachLibraryExercisesToGeneratedTemplate(params: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  template: ProgramGeneratedPlanTemplate;
+}): Promise<ProgramGeneratedPlanTemplate> {
+  const libraryExercises = await loadExerciseLibraryPreview(
+    params.supabase,
+    params.userId,
+  );
+  if (libraryExercises.length === 0) {
+    return params.template;
+  }
+  return {
+    ...params.template,
+    exercises: params.template.exercises.map((exercise) => {
+      if (exercise.exercise_id) return exercise;
+      const matched = resolveExerciseLibraryMatch(
+        exercise.exercise_title,
+        libraryExercises,
+      );
+      if (!matched) return exercise;
+      return {
+        ...exercise,
+        exercise_id: matched.id,
+        exercise_title: matched.title,
+      };
+    }),
   };
 }
 
@@ -874,8 +1565,8 @@ function enforceWarmupCooldownMinutes(
     const firstWarmup = next[firstWarmupIndex];
     if (firstWarmup) {
       const current = firstWarmup.planned_duration_seconds ?? 0;
-      if (current < 240) {
-        firstWarmup.planned_duration_seconds = 240;
+      if (current < TARGET_WARMUP_MIN_SECONDS) {
+        firstWarmup.planned_duration_seconds = TARGET_WARMUP_MIN_SECONDS;
         firstWarmup.planned_sets = 1;
         firstWarmup.planned_reps = null;
       }
@@ -887,8 +1578,8 @@ function enforceWarmupCooldownMinutes(
     const firstCooldown = next[firstCooldownIndex];
     if (firstCooldown) {
       const current = firstCooldown.planned_duration_seconds ?? 0;
-      if (current < 180) {
-        firstCooldown.planned_duration_seconds = 180;
+      if (current < TARGET_COOLDOWN_MIN_SECONDS) {
+        firstCooldown.planned_duration_seconds = TARGET_COOLDOWN_MIN_SECONDS;
         firstCooldown.planned_sets = 1;
         firstCooldown.planned_reps = null;
       }
@@ -1045,10 +1736,16 @@ async function createPlansFromGeneratedTemplates(
       throw new ServiceError("INTERNAL", "Nie udało się utworzyć planu z szablonu AI.");
     }
 
+    const libraryAttachedTemplate = await attachLibraryExercisesToGeneratedTemplate({
+      supabase,
+      userId,
+      template,
+    });
+
     const generatedExercises = normalizePlanDuration(
       enforceWarmupCooldownMinutes(
         ensureWarmupAndCooldown(
-      template.exercises.map((exercise) => ({
+      libraryAttachedTemplate.exercises.map((exercise) => ({
         exercise_id: exercise.exercise_id ?? null,
         snapshot_id: null,
         scope_id: null,
@@ -1056,7 +1753,7 @@ async function createPlansFromGeneratedTemplates(
         scope_repeat_count: null,
         exercise_title: exercise.exercise_title,
         exercise_type: exercise.exercise_type ?? exercise.section_type,
-        exercise_part: exercise.exercise_part ?? template.part ?? null,
+        exercise_part: exercise.exercise_part ?? libraryAttachedTemplate.part ?? null,
         exercise_details: exercise.exercise_details ?? null,
         exercise_is_unilateral: exercise.exercise_is_unilateral ?? null,
         section_type: exercise.section_type,
@@ -1068,6 +1765,8 @@ async function createPlansFromGeneratedTemplates(
         planned_rest_after_series_seconds:
           exercise.planned_rest_after_series_seconds ?? null,
         estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+        exercise_prescription_config:
+          exercise.exercise_prescription_config ?? null,
       })),
         ),
       ),
@@ -1214,6 +1913,7 @@ async function cloneProgramSourcePlan(params: {
     planned_rest_seconds: exercise.planned_rest_seconds ?? null,
     planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
     estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+    exercise_prescription_config: exercise.exercise_prescription_config ?? null,
   }));
   const clonedExercises = normalizePlanDuration(
     enforceWarmupCooldownMinutes(ensureWarmupAndCooldown(sourceMappedExercises)),
@@ -1359,23 +2059,32 @@ function buildSessionExerciseProgressionUpdate(
   const hasReps = exercise.planned_reps !== null;
   const hasDuration = !hasReps && exercise.planned_duration_seconds !== null;
   const hasSets = !hasReps && !hasDuration && exercise.planned_sets !== null;
-  const durationMax = getMainWorkoutDurationCapSeconds(exercise.exercise_title_at_time);
+  const prescription = buildDefaultExercisePrescriptionConfig({
+    title: exercise.exercise_title_at_time,
+    reps: exercise.planned_reps,
+    duration_seconds: exercise.planned_duration_seconds,
+    series: exercise.planned_sets,
+    rest_in_between_seconds: exercise.planned_rest_seconds,
+  });
+  const durationMax =
+    prescription.max_duration_seconds ??
+    MAIN_WORKOUT_MAX_DURATION_DYNAMIC_SECONDS;
 
   return {
     planned_sets: hasSets
       ? adjustSessionValue(
           exercise.planned_sets,
           volumePct,
-          MAIN_WORKOUT_MIN_SETS,
-          MAIN_WORKOUT_MAX_SETS,
+          prescription.min_sets,
+          prescription.max_sets,
         )
       : exercise.planned_sets,
     planned_reps: hasReps
       ? adjustSessionValue(
           exercise.planned_reps,
           volumePct,
-          MAIN_WORKOUT_MIN_REPS,
-          MAIN_WORKOUT_MAX_REPS,
+          prescription.min_reps ?? MAIN_WORKOUT_MIN_REPS,
+          prescription.max_reps ?? MAIN_WORKOUT_MAX_REPS,
         )
       : exercise.planned_reps,
     planned_duration_seconds: hasDuration
@@ -1393,10 +2102,32 @@ function buildSessionExerciseProgressionUpdate(
 export async function generateAIProgramService(
   userId: string,
   payload: unknown,
+  hostname?: string | null,
 ): Promise<ProgramGenerateResponse> {
   assertUser(userId);
   const parsed = parseOrThrow(programGenerateSchema, payload);
   const supabase = await createClient();
+
+  if (isProgramGenerationLimitEnforced(hostname)) {
+    const { count, error: programLimitError } = await supabase
+      .from("ai_plan_decisions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("request_type", "generate")
+      .gte("created_at", getCurrentWeekStartIso());
+
+    if (programLimitError) {
+      throw mapDbError(programLimitError);
+    }
+
+    const used = count ?? 0;
+    if (used >= AI_PROGRAM_WEEKLY_LIMIT) {
+      throw new ServiceError(
+        "FORBIDDEN",
+        `Wykorzystałaś tygodniowy limit generowania programów (${AI_PROGRAM_WEEKLY_LIMIT}/${AI_PROGRAM_WEEKLY_LIMIT}).`,
+      );
+    }
+  }
 
   const { data: plans, error: plansError } = await listWorkoutPlansForProgramGeneration(
     supabase,
@@ -1416,7 +2147,31 @@ export async function generateAIProgramService(
   }
 
   const coachProfile = await getOrCreateAICoachProfileService(userId);
-  const aiTemplates = buildAIPlanTemplates(parsed.goal_text, parsed.constraints);
+  const trainingState = await buildTrainingStateSnapshotService(userId);
+  const exerciseLibrary = await loadExerciseLibraryPreview(supabase, userId);
+  const fallbackAiTemplates = buildAIPlanTemplates(parsed.goal_text, parsed.constraints);
+  const llmTemplates = await generateProgramTemplatesWithLLM({
+    goalText: parsed.goal_text,
+    constraints: parsed.constraints ?? null,
+    sessionsPerWeek: parsed.sessions_per_week,
+    mode,
+    readinessScore: trainingState.readiness_score,
+    readinessDrivers: trainingState.readiness_drivers,
+    externalWorkoutsLast7d: trainingState.external_workouts_last_7d,
+    topMovementKeys: trainingState.capability_summary
+      .slice(0, 5)
+      .map((item) => item.movement_key),
+    libraryExerciseTitles: buildExerciseLibraryPromptEntries(exerciseLibrary),
+    coachProfile: {
+      persona_name: coachProfile.persona_name,
+      focus: coachProfile.focus ?? null,
+      risk_tolerance: coachProfile.risk_tolerance ?? null,
+      preferred_methodology: coachProfile.preferred_methodology ?? null,
+    },
+  });
+  const aiTemplates = llmTemplates?.templates?.length
+    ? llmTemplates.templates
+    : fallbackAiTemplates;
   const nonAICandidates = planRows.filter((plan) => !isAIAuthoredPlanCandidate(plan));
   const sourcePlansForExisting = nonAICandidates.length > 0 ? nonAICandidates : planRows;
   const existingCandidates: SchedulePlanCandidate[] = sourcePlansForExisting.map((plan) => ({
@@ -1469,12 +2224,102 @@ export async function generateAIProgramService(
       "Nie udało się zbudować programu. Dodaj plan treningowy lub doprecyzuj cel.",
     );
   }
-  const sessions = generateProgramSchedule(
+  const proposalTemplates = seedPlans
+    .map((candidate) => candidate.generated_plan)
+    .filter((template): template is ProgramGeneratedPlanTemplate => Boolean(template));
+  const plannerProposal = createProgramPlannerProposal({
+    source:
+      mode === "existing_only"
+        ? "existing_plan_selection"
+        : mode === "new_only"
+          ? "template_library"
+          : "mixed_selection",
+    goalText: parsed.goal_text,
+    constraints: parsed.constraints ?? null,
+    templates: proposalTemplates,
+    rationale: llmTemplates
+      ? [
+          ...llmTemplates.rationale,
+          `Tryb generowania: ${mode}.`,
+          `Gotowość startowa: ${trainingState.readiness_score}/100.`,
+        ]
+      : [
+          "Planner użył lokalnych template'ów heurystycznych jako fallbacku.",
+          `Tryb generowania: ${mode}.`,
+          `Gotowość startowa: ${trainingState.readiness_score}/100.`,
+        ],
+    assumptions: llmTemplates
+      ? [
+          ...llmTemplates.assumptions,
+          "Warm-up i cool-down powinny istnieć w każdej jednostce.",
+          "Przy niskiej gotowości objętość startowa powinna zostać ograniczona.",
+        ]
+      : [
+          "Warm-up i cool-down powinny istnieć w każdej jednostce.",
+          "Przy niskiej gotowości objętość startowa powinna zostać ograniczona.",
+          "Gdy planner LLM nie zwróci poprawnego JSON, system przełącza się na lokalne template'y.",
+        ],
+  });
+  const validation = validateProgramTemplates({
+    templates: plannerProposal.templates,
+    readinessScore: trainingState.readiness_score,
+  });
+  const repairedProposal = repairProgramTemplates({
+    templates: plannerProposal.templates,
+    violations: validation.violations,
+  });
+  const postRepairValidation = validateProgramTemplates({
+    templates: repairedProposal.templates,
+    readinessScore: trainingState.readiness_score,
+  });
+  const realism = scoreProgramTemplatesRealism({
+    templates: repairedProposal.templates,
+    violations: postRepairValidation.violations,
+    repairLog: repairedProposal.repairLog,
+    readinessScore: trainingState.readiness_score,
+  });
+  const repairedTemplatesByKey = new Map(
+    repairedProposal.templates.map((template) => [template.template_key, template]),
+  );
+  seedPlans = seedPlans.map((candidate) => {
+    if (!candidate.generated_plan) return candidate;
+    return {
+      ...candidate,
+      generated_plan:
+        repairedTemplatesByKey.get(candidate.generated_plan.template_key) ??
+        candidate.generated_plan,
+    };
+  });
+  const capabilityCappedSeedPlans = applyCapabilityCapsToCandidates(
     seedPlans,
+    trainingState,
+  );
+  const sanitizedSeedPlans = sanitizeSchedulePlanCandidates(
+    capabilityCappedSeedPlans.candidates,
+  );
+  const sessions = generateProgramSchedule(
+    sanitizedSeedPlans.candidates,
     parsed.duration_months,
     sessionsPerWeek,
     parsed.weekdays,
-  );
+  ).map((session) => {
+    if (trainingState.readiness_score >= 60) return session;
+    return {
+      ...session,
+      progression_overrides: {
+        ...session.progression_overrides,
+        load_adjustment_percent: Math.min(
+          session.progression_overrides.load_adjustment_percent,
+          -10,
+        ),
+        volume_adjustment_percent: Math.min(
+          session.progression_overrides.volume_adjustment_percent,
+          -10,
+        ),
+        emphasis: "conservative_start",
+      },
+    };
+  });
   const weeksCount = getWeeksCount(parsed.duration_months);
   const interpretedGoalText = buildInterpretedGoalText(
     parsed.goal_text,
@@ -1487,42 +2332,112 @@ export async function generateAIProgramService(
     resolvedMixRatio = 0;
   }
 
-  return {
-    program: {
-      name: buildProgramNameFromInterpretation(interpretedGoalText),
-      goal_text: interpretedGoalText,
-      duration_months: parsed.duration_months,
-      weeks_count: weeksCount,
-      sessions_per_week: sessionsPerWeek,
+  const programPayload = {
+    name: buildProgramName(parsed.goal_text, parsed.constraints ?? null),
+    goal_text: interpretedGoalText,
+    duration_months: parsed.duration_months,
+    weeks_count: weeksCount,
+    sessions_per_week: sessionsPerWeek,
+    program_mode: mode,
+    mix_ratio: resolvedMixRatio,
+    source: "ai" as const,
+    status: "draft" as const,
+    coach_profile_snapshot: {
+      profile_id: coachProfile.id,
+      persona_name: coachProfile.persona_name,
+      tone: coachProfile.tone,
+      strictness: coachProfile.strictness,
+      verbosity: coachProfile.verbosity,
+      focus: coachProfile.focus,
+      risk_tolerance: coachProfile.risk_tolerance,
+      contraindications: coachProfile.contraindications,
+      preferred_methodology: coachProfile.preferred_methodology,
+      rules: coachProfile.rules,
+      original_goal_text: parsed.goal_text,
       program_mode: mode,
-      mix_ratio: resolvedMixRatio,
-      source: "ai",
-      status: "draft",
-      coach_profile_snapshot: {
-        profile_id: coachProfile.id,
-        persona_name: coachProfile.persona_name,
-        tone: coachProfile.tone,
-        strictness: coachProfile.strictness,
-        verbosity: coachProfile.verbosity,
-        focus: coachProfile.focus,
-        risk_tolerance: coachProfile.risk_tolerance,
-        contraindications: coachProfile.contraindications,
-        preferred_methodology: coachProfile.preferred_methodology,
-        rules: coachProfile.rules,
-        original_goal_text: parsed.goal_text,
-        program_mode: mode,
-        mix_ratio: mode === "mix_existing_new" ? mixRatio : null,
-        constraints: parsed.constraints ?? null,
+      mix_ratio: mode === "mix_existing_new" ? mixRatio : null,
+      constraints: parsed.constraints ?? null,
+      training_state: {
+        readiness_score: trainingState.readiness_score,
+        readiness_drivers: trainingState.readiness_drivers,
+        external_workouts_last_7d: trainingState.external_workouts_last_7d,
+        external_duration_minutes_last_7d:
+          trainingState.external_duration_minutes_last_7d,
+        fatigue_notes_last_14d: trainingState.fatigue_notes_last_14d,
       },
     },
+  };
+
+  const guardrailEvents = [
+    ...capabilityCappedSeedPlans.guardrailEvents,
+    ...sanitizedSeedPlans.guardrailEvents,
+  ];
+  const plannerOutput = {
+    ...plannerProposal,
+    templates: repairedProposal.templates,
+  };
+  const trainingStatePreview = {
+    readiness_score: trainingState.readiness_score,
+    readiness_drivers: trainingState.readiness_drivers,
+    external_workouts_last_7d: trainingState.external_workouts_last_7d,
+    external_duration_minutes_last_7d:
+      trainingState.external_duration_minutes_last_7d,
+    fatigue_notes_last_14d: trainingState.fatigue_notes_last_14d,
+  };
+  const { data: decisionLog, error: decisionLogError } = await insertAIPlanDecision(
+    supabase,
+    userId,
+    {
+      request_type: "generate",
+      planner_source: llmTemplates?.sourceLabel ?? "fallback",
+      input_snapshot: {
+        goal_text: parsed.goal_text,
+        constraints: parsed.constraints ?? null,
+        duration_months: parsed.duration_months,
+        sessions_per_week: parsed.sessions_per_week,
+        weekdays: parsed.weekdays ?? null,
+        program_mode: parsed.program_mode,
+        mix_ratio: mixRatio,
+        training_state: trainingStatePreview,
+      } as Json,
+      planner_output: plannerOutput as Json,
+      validation_result: postRepairValidation as Json,
+      repair_log: repairedProposal.repairLog as Json,
+      final_output: {
+        program: programPayload,
+        sessions,
+        recommendations: buildRecommendations(
+          weeksCount,
+          sessionsPerWeek,
+          sanitizedSeedPlans.candidates,
+          mode,
+          mixRatio,
+        ),
+      } as Json,
+      guardrail_events: guardrailEvents as Json,
+      realism_score: realism.score,
+      accepted: postRepairValidation.valid,
+    },
+  );
+  if (decisionLogError) throw mapDbError(decisionLogError);
+
+  return {
+    decision_log_id: decisionLog?.id ?? null,
+    program: programPayload,
     sessions,
     recommendations: buildRecommendations(
       weeksCount,
       sessionsPerWeek,
-      seedPlans,
+      sanitizedSeedPlans.candidates,
       mode,
       mixRatio,
     ),
+    planner_proposal: plannerOutput,
+    validation: postRepairValidation,
+    repair_log: repairedProposal.repairLog,
+    realism,
+    guardrail_events: guardrailEvents,
+    training_state: trainingStatePreview,
   };
 }
 
@@ -1580,6 +2495,24 @@ export async function createTrainingProgramService(
     );
 
   if (insertSessionsError) throw mapDbError(insertSessionsError);
+
+  if (parsed.decision_log_id) {
+    const { error: updateDecisionError } = await updateAIPlanDecisionById(
+      supabase,
+      userId,
+      parsed.decision_log_id,
+      {
+        training_program_id: insertedProgram.id,
+        final_output: {
+          program_id: insertedProgram.id,
+          program_name: insertedProgram.name,
+          sessions_count: insertedSessions?.length ?? 0,
+        } as Json,
+        accepted: true,
+      },
+    );
+    if (updateDecisionError) throw mapDbError(updateDecisionError);
+  }
 
   return {
     ...insertedProgram,
@@ -1792,6 +2725,18 @@ async function createProgramNoteInternal(
   if (!data) {
     throw new ServiceError("INTERNAL", "Nie udało się zapisać uwagi do programu.");
   }
+
+  await applyCapabilityFeedbackSignal({
+    userId,
+    noteText: input.note_text,
+    fatigueLevel: input.fatigue_level ?? null,
+    vitalityLevel: input.vitality_level ?? null,
+  }).catch((error) => {
+    console.warn(
+      "[createProgramNoteInternal] capability feedback update skipped",
+      error,
+    );
+  });
 
   return data as ProgramNoteDTO;
 }

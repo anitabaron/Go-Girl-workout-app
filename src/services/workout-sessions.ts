@@ -50,6 +50,7 @@ import {
   preparePlannedUpdates,
 } from "@/lib/workout-sessions/aggregates";
 import { markProgramSessionCompletedByWorkoutSessionId } from "@/repositories/training-programs";
+import { applyCapabilitySessionResult } from "@/services/capability-profiles";
 
 export { ServiceError } from "@/lib/service-utils";
 
@@ -921,6 +922,40 @@ export async function autosaveWorkoutSessionExerciseService(
       throw mapDbError(updateError);
     }
   }
+
+  await applyCapabilitySessionResult({
+    userId,
+    exerciseTitle: exercise.exercise_title_at_time,
+    exercisePart: exercise.exercise_part_at_time,
+    plannedSets: exercise.planned_sets,
+    plannedReps: exercise.planned_reps,
+    plannedDurationSeconds: exercise.planned_duration_seconds,
+    actualSetCount: aggregates.actual_sets,
+    bestSetReps:
+      parsed.sets && parsed.sets.length > 0
+        ? Math.max(
+            ...parsed.sets
+              .map((set) => set.reps ?? 0)
+              .filter((value) => Number.isFinite(value)),
+          ) || null
+        : null,
+    bestSetDurationSeconds:
+      parsed.sets && parsed.sets.length > 0
+        ? Math.max(
+            ...parsed.sets
+              .map((set) => set.duration_seconds ?? 0)
+              .filter((value) => Number.isFinite(value)),
+          ) || null
+        : null,
+    actualReps: aggregates.actual_reps,
+    actualDurationSeconds: aggregates.actual_duration_seconds,
+    isSkipped: parsed.is_skipped ?? false,
+  }).catch((error) => {
+    console.warn(
+      "[autosaveWorkoutSessionExerciseService] capability session update skipped",
+      error,
+    );
+  });
 
   // Aktualizuj kursor tylko dla sesji in_progress (nie dla edycji completed)
   if (session.status === "in_progress") {

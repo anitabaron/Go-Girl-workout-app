@@ -3,6 +3,7 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
+import { exercisePrescriptionConfigSchema } from "@/lib/training/exercise-prescription";
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -35,7 +36,7 @@ export const programModeSchema = z.enum([
   "new_only",
 ]);
 
-const generatedPlanExerciseSchema = z
+export const generatedPlanExerciseSchema = z
   .object({
     exercise_id: z
       .string()
@@ -60,10 +61,13 @@ const generatedPlanExerciseSchema = z
       .optional()
       .nullable(),
     estimated_set_time_seconds: z.number().int().positive().optional().nullable(),
+    exercise_prescription_config: exercisePrescriptionConfigSchema
+      .optional()
+      .nullable(),
   })
   .strict();
 
-const generatedPlanTemplateSchema = z
+export const generatedPlanTemplateSchema = z
   .object({
     template_key: z.string().trim().min(1).max(80),
     name: z.string().trim().min(1).max(160),
@@ -72,6 +76,11 @@ const generatedPlanTemplateSchema = z
     exercises: z.array(generatedPlanExerciseSchema).min(1),
   })
   .strict();
+
+export const generatedPlanTemplatesSchema = z
+  .array(generatedPlanTemplateSchema)
+  .min(1)
+  .max(3);
 
 export const programSessionCreateSchema = z
   .object({
@@ -139,6 +148,11 @@ export const programCreateSchema = z
     sessions_per_week: sessionsPerWeekSchema,
     source: z.enum(["ai", "manual"]).default("ai"),
     status: z.enum(["draft", "active", "archived"]).default("draft"),
+    decision_log_id: z
+      .string()
+      .refine((val) => uuidRegex.test(val), "decision_log_id musi być UUID")
+      .nullable()
+      .optional(),
     coach_profile_snapshot: z
       .record(z.string(), z.unknown())
       .nullable()

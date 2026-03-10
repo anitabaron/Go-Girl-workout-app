@@ -234,6 +234,7 @@ export type Database = {
           is_unilateral: boolean;
           level: string | null;
           parts: Database["public"]["Enums"]["exercise_part"][];
+          prescription_config: Json | null;
           reps: number | null;
           rest_after_series_seconds: number | null;
           rest_in_between_seconds: number | null;
@@ -254,6 +255,7 @@ export type Database = {
           is_unilateral?: boolean;
           level?: string | null;
           parts: Database["public"]["Enums"]["exercise_part"][];
+          prescription_config?: Json | null;
           reps?: number | null;
           rest_after_series_seconds?: number | null;
           rest_in_between_seconds?: number | null;
@@ -274,6 +276,7 @@ export type Database = {
           is_unilateral?: boolean;
           level?: string | null;
           parts?: Database["public"]["Enums"]["exercise_part"][];
+          prescription_config?: Json | null;
           reps?: number | null;
           rest_after_series_seconds?: number | null;
           rest_in_between_seconds?: number | null;
@@ -764,6 +767,68 @@ export type Database = {
         };
         Relationships: [];
       };
+      ai_plan_decisions: {
+        Row: {
+          accepted: boolean;
+          created_at: string;
+          final_output: Json;
+          guardrail_events: Json;
+          id: string;
+          input_snapshot: Json;
+          planner_output: Json;
+          planner_source: string;
+          realism_score: number;
+          repair_log: Json;
+          request_type: Database["public"]["Enums"]["ai_request_type"];
+          training_program_id: string | null;
+          updated_at: string;
+          user_id: string;
+          validation_result: Json;
+        };
+        Insert: {
+          accepted?: boolean;
+          created_at?: string;
+          final_output: Json;
+          guardrail_events?: Json;
+          id?: string;
+          input_snapshot: Json;
+          planner_output: Json;
+          planner_source?: string;
+          realism_score: number;
+          repair_log?: Json;
+          request_type?: Database["public"]["Enums"]["ai_request_type"];
+          training_program_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+          validation_result: Json;
+        };
+        Update: {
+          accepted?: boolean;
+          created_at?: string;
+          final_output?: Json;
+          guardrail_events?: Json;
+          id?: string;
+          input_snapshot?: Json;
+          planner_output?: Json;
+          planner_source?: string;
+          realism_score?: number;
+          repair_log?: Json;
+          request_type?: Database["public"]["Enums"]["ai_request_type"];
+          training_program_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          validation_result?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_plan_decisions_training_program_id_fkey";
+            columns: ["training_program_id"];
+            isOneToOne: false;
+            referencedRelation: "training_programs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       program_sessions: {
         Row: {
           created_at: string;
@@ -827,6 +892,83 @@ export type Database = {
             columns: ["workout_plan_id"];
             isOneToOne: false;
             referencedRelation: "workout_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_capability_profiles: {
+        Row: {
+          best_recent_duration_seconds: number | null;
+          best_recent_load_kg: number | null;
+          best_recent_reps: number | null;
+          comfort_max_duration_seconds: number | null;
+          comfort_max_load_kg: number | null;
+          comfort_max_reps: number | null;
+          confidence_score: number;
+          created_at: string;
+          current_level: string | null;
+          exercise_id: string | null;
+          id: string;
+          movement_key: string;
+          pain_flag: boolean;
+          pain_notes: string | null;
+          per_session_progression_cap_duration_seconds: number | null;
+          per_session_progression_cap_reps: number | null;
+          updated_at: string;
+          updated_from: string;
+          user_id: string;
+          weekly_progression_cap_percent: number;
+        };
+        Insert: {
+          best_recent_duration_seconds?: number | null;
+          best_recent_load_kg?: number | null;
+          best_recent_reps?: number | null;
+          comfort_max_duration_seconds?: number | null;
+          comfort_max_load_kg?: number | null;
+          comfort_max_reps?: number | null;
+          confidence_score?: number;
+          created_at?: string;
+          current_level?: string | null;
+          exercise_id?: string | null;
+          id?: string;
+          movement_key: string;
+          pain_flag?: boolean;
+          pain_notes?: string | null;
+          per_session_progression_cap_duration_seconds?: number | null;
+          per_session_progression_cap_reps?: number | null;
+          updated_at?: string;
+          updated_from?: string;
+          user_id: string;
+          weekly_progression_cap_percent?: number;
+        };
+        Update: {
+          best_recent_duration_seconds?: number | null;
+          best_recent_load_kg?: number | null;
+          best_recent_reps?: number | null;
+          comfort_max_duration_seconds?: number | null;
+          comfort_max_load_kg?: number | null;
+          comfort_max_reps?: number | null;
+          confidence_score?: number;
+          created_at?: string;
+          current_level?: string | null;
+          exercise_id?: string | null;
+          id?: string;
+          movement_key?: string;
+          pain_flag?: boolean;
+          pain_notes?: string | null;
+          per_session_progression_cap_duration_seconds?: number | null;
+          per_session_progression_cap_reps?: number | null;
+          updated_at?: string;
+          updated_from?: string;
+          user_id?: string;
+          weekly_progression_cap_percent?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_capability_profiles_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
             referencedColumns: ["id"];
           },
         ];

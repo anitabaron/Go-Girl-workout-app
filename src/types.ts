@@ -4,6 +4,8 @@ import type {
   TablesInsert,
   TablesUpdate,
 } from "./db/database.types";
+import type { ExercisePrescriptionConfig } from "@/lib/training/exercise-prescription";
+import type { MovementKey } from "@/lib/training/movement-keys";
 
 /**
  * Shared DTOs, API contracts, and DB-derived types.
@@ -44,9 +46,11 @@ export type PersonalRecordEntity = Tables<"personal_records">;
 export type AIUsageEntity = Tables<"ai_usage">;
 export type AIRequestEntity = Tables<"ai_requests">;
 export type TrainingProgramEntity = Tables<"training_programs">;
+export type AIPlanDecisionEntity = Tables<"ai_plan_decisions">;
 export type ProgramSessionEntity = Tables<"program_sessions">;
 export type ProgramNoteEntity = Tables<"program_notes">;
 export type AICoachProfileEntity = Tables<"ai_coach_profiles">;
+export type UserCapabilityProfileEntity = Tables<"user_capability_profiles">;
 
 /**
  * API response helpers.
@@ -87,6 +91,7 @@ export type ExerciseCreateCommand = Pick<
   is_unilateral?: boolean;
   /** Gdy true, wyniki ćwiczenia zapisują się i pokazują w Personal Records. */
   is_save_to_pr?: boolean | null;
+  prescription_config?: ExercisePrescriptionConfig | null;
 };
 
 export type ExerciseUpdateCommand = Partial<ExerciseCreateCommand>;
@@ -104,7 +109,7 @@ export type ExerciseQueryParams = {
 
 export type ExerciseDTO = Omit<
   ExerciseEntity,
-  "user_id" | "title_normalized"
+  "user_id" | "title_normalized" | "prescription_config"
 > & {
   types: ExerciseType[];
   parts: ExercisePart[];
@@ -112,6 +117,7 @@ export type ExerciseDTO = Omit<
   type: ExerciseType;
   /** First part (for backward compat in display) */
   part: ExercisePart;
+  prescription_config?: ExercisePrescriptionConfig | null;
 };
 
 /**
@@ -173,6 +179,7 @@ export type WorkoutPlanExerciseDTO = Omit<
   exercise_details?: string | null; // Opis ćwiczenia (z JSON importu, przekazywany jako details przy tworzeniu)
   exercise_estimated_set_time_seconds?: number | null;
   exercise_rest_after_series_seconds?: number | null;
+  exercise_prescription_config?: ExercisePrescriptionConfig | null;
   planned_rest_after_series_seconds?: number | null;
   // Flaga wskazująca czy ćwiczenie istnieje w bazie
   is_exercise_in_library?: boolean;
@@ -235,6 +242,7 @@ export type ProgramGeneratedExerciseInput = {
   planned_rest_seconds?: number | null;
   planned_rest_after_series_seconds?: number | null;
   estimated_set_time_seconds?: number | null;
+  exercise_prescription_config?: ExercisePrescriptionConfig | null;
 };
 
 export type ProgramGeneratedPlanTemplate = {
@@ -253,6 +261,7 @@ export type ProgramCreateCommand = {
   source?: TrainingProgramSource;
   status?: TrainingProgramStatus;
   coach_profile_snapshot?: Record<string, unknown> | null;
+  decision_log_id?: string | null;
   sessions: ProgramSessionCreateCommand[];
 };
 
@@ -294,6 +303,20 @@ export type ProgramSessionListQueryParams = {
 export type ProgramSessionDTO = Omit<ProgramSessionEntity, "user_id">;
 export type ProgramNoteSource = "user" | "ai_action" | "ai_summary";
 export type ProgramNoteDTO = Omit<ProgramNoteEntity, "user_id">;
+export type AIPlanDecisionDTO = Omit<AIPlanDecisionEntity, "user_id">;
+
+export type UserCapabilityProfileDTO = Omit<UserCapabilityProfileEntity, "user_id"> & {
+  movement_key: MovementKey;
+};
+export type UserCapabilityProfilePatchCommand = Partial<
+  Omit<UserCapabilityProfileDTO, "id" | "created_at" | "updated_at" | "movement_key">
+> & {
+  movement_key?: MovementKey;
+};
+export type UserCapabilityProfileUpsertCommand = UserCapabilityProfilePatchCommand & {
+  movement_key: MovementKey;
+  exercise_id?: string | null;
+};
 export type ProgramNoteCreateCommand = {
   program_session_id?: ProgramSessionEntity["id"] | null;
   note_text: string;

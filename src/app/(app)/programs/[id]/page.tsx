@@ -3,12 +3,16 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { requireAuth } from "@/lib/auth";
+import { getTranslations } from "@/i18n/server";
 import {
   ServiceError,
   getTrainingProgramService,
   listProgramNotesService,
 } from "@/services/training-programs";
+import { listCapabilityProfilesService } from "@/services/capability-profiles";
+import { buildTrainingStateSnapshotService } from "@/services/training-state";
 import { getWorkoutPlanService } from "@/services/workout-plans";
+import { ProgramCapabilityPanel } from "@/components/programs/ProgramCapabilityPanel";
 import { ProgramNotesJournal } from "@/components/programs/ProgramNotesJournal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
@@ -89,6 +93,7 @@ function formatDurationWithUnits(seconds: number | null | undefined): string {
 }
 
 export default async function ProgramDetailPage({ params }: ProgramDetailPageProps) {
+  const t = await getTranslations("programDetailPage");
   const { id } = await params;
   if (!UUID_REGEX.test(id)) {
     redirect("/workout-plans?section=programs");
@@ -98,6 +103,28 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
 
   let program: Awaited<ReturnType<typeof getTrainingProgramService>>;
   let notes = { items: [] as Awaited<ReturnType<typeof listProgramNotesService>>["items"] };
+  const capabilityProfiles = await listCapabilityProfilesService(userId).catch((error) => {
+    console.warn(
+      "[ProgramDetailPage] Capability profiles unavailable, rendering without capability panel data",
+      error,
+    );
+    return [];
+  });
+  const trainingState = await buildTrainingStateSnapshotService(userId).catch((error) => {
+    console.warn(
+      "[ProgramDetailPage] Training state unavailable, rendering fallback state",
+      error,
+    );
+    return {
+      readiness_score: 100,
+      readiness_drivers: [] as string[],
+      external_workouts_last_7d: 0,
+      external_duration_minutes_last_7d: 0,
+      average_external_rpe_last_7d: null,
+      fatigue_notes_last_14d: 0,
+      capability_summary: [],
+    };
+  });
   try {
     program = await getTrainingProgramService(userId, id);
   } catch (error) {
@@ -206,62 +233,64 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
         <Button asChild variant="ghost" size="sm" className="-ml-2">
           <Link href="/workout-plans?section=programs" className="flex items-center gap-2">
             <ArrowLeft className="size-4" />
-            Wróć do programów
+            {t("backToPrograms")}
           </Link>
         </Button>
       </div>
 
       <PageHeader
         title={program.name}
-        description={program.goal_text ?? "Brak opisu celu programu."}
+        description={program.goal_text ?? t("noGoalDescription")}
       />
 
-      <Surface variant="high" className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{program.status}</Badge>
-          <Badge variant="outline">{program.source}</Badge>
-          <span className="text-xs text-muted-foreground">
-            {program.duration_months} mies. • {program.sessions_per_week} treningi/tydz. •{" "}
-            {program.sessions.length} sesji
-          </span>
-        </div>
-      </Surface>
+      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <Badge variant="secondary">{program.status}</Badge>
+        <Badge variant="outline">{program.source}</Badge>
+        <span>
+          {program.duration_months} {t("monthsShort")} • {program.sessions_per_week}{" "}
+          {t("sessionsPerWeek")} • {program.sessions.length} {t("sessionsCount")}
+        </span>
+      </div>
 
       <Surface variant="high" className="space-y-4">
-        <h2 className="text-base font-semibold">Progresja programu</h2>
+        <h2 className="text-base font-semibold">{t("progressionTitle")}</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Początek programu</p>
+            <p className="text-xs text-muted-foreground">{t("progressionStart")}</p>
             <p className="mt-1 text-sm">
-              Obciążenie: <strong>{formatPercent(firstProgression?.load ?? null)}</strong>
+              {t("loadLabel")}: <strong>{formatPercent(firstProgression?.load ?? null)}</strong>
             </p>
             <p className="text-sm">
-              Objętość: <strong>{formatPercent(firstProgression?.volume ?? null)}</strong>
+              {t("volumeLabel")}: <strong>{formatPercent(firstProgression?.volume ?? null)}</strong>
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Koniec programu</p>
+            <p className="text-xs text-muted-foreground">{t("progressionEnd")}</p>
             <p className="mt-1 text-sm">
-              Obciążenie: <strong>{formatPercent(lastProgression?.load ?? null)}</strong>
+              {t("loadLabel")}: <strong>{formatPercent(lastProgression?.load ?? null)}</strong>
             </p>
             <p className="text-sm">
-              Objętość: <strong>{formatPercent(lastProgression?.volume ?? null)}</strong>
+              {t("volumeLabel")}: <strong>{formatPercent(lastProgression?.volume ?? null)}</strong>
             </p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Tygodniowy rozkład</p>
+          <p className="text-xs font-medium text-muted-foreground">{t("weeklyBreakdown")}</p>
           <div className="space-y-2">
             {weeklyProgression.map((item) => (
               <div key={item.week} className="rounded-lg border border-border bg-card p-2">
                 <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="font-medium">Tydzień {item.week}</span>
+                  <span className="font-medium">
+                    {t("weekLabel")} {item.week}
+                  </span>
                   <span className="text-muted-foreground">{item.emphasis ?? "—"}</span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-16 text-[11px] text-muted-foreground">Obciążenie</span>
+                    <span className="w-16 text-[11px] text-muted-foreground">
+                      {t("loadLabel")}
+                    </span>
                     <div className="h-2 flex-1 rounded-full bg-muted">
                       <div
                         className="h-2 rounded-full bg-primary"
@@ -273,7 +302,9 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-16 text-[11px] text-muted-foreground">Objętość</span>
+                    <span className="w-16 text-[11px] text-muted-foreground">
+                      {t("volumeLabel")}
+                    </span>
                     <div className="h-2 flex-1 rounded-full bg-muted">
                       <div
                         className="h-2 rounded-full bg-secondary-foreground/70"
@@ -291,6 +322,15 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
             ))}
           </div>
         </div>
+
+        <div className="border-t border-border pt-3 text-xs text-muted-foreground">
+          <p>
+            {t("loadDefinition")}
+          </p>
+          <p className="mt-1">
+            {t("volumeDefinition")}
+          </p>
+        </div>
       </Surface>
 
       <Surface variant="high">
@@ -298,6 +338,13 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
           programId={program.id}
           sessions={program.sessions}
           initialNotes={notes.items}
+        />
+      </Surface>
+
+      <Surface variant="high">
+        <ProgramCapabilityPanel
+          initialProfiles={capabilityProfiles}
+          initialTrainingState={trainingState}
         />
       </Surface>
 
