@@ -1010,6 +1010,26 @@ export function AIAssistantShell() {
             external_duration_minutes_last_7d?: number;
             fatigue_notes_last_14d?: number;
           };
+          planner_proposal?: {
+            source?: string;
+            rationale?: string[];
+            assumptions?: string[];
+          };
+          validation?: {
+            valid?: boolean;
+            score?: number;
+            violations?: Array<{
+              severity?: "error" | "warning";
+              message?: string;
+            }>;
+          };
+          repair_log?: Array<{
+            reason_text?: string;
+          }>;
+          realism?: {
+            score?: number;
+            summary?: string;
+          };
           guardrail_events?: Array<{
             exercise_title: string;
             field:
@@ -1079,6 +1099,17 @@ export function AIAssistantShell() {
         const readinessDrivers = (data.training_state?.readiness_drivers ?? [])
           .slice(0, 2)
           .join(", ");
+        const validationPreview = (data.validation?.violations ?? [])
+          .slice(0, 3)
+          .map((violation) =>
+            `${violation.severity === "error" ? "Błąd" : "Uwaga"}: ${
+              violation.message ?? "problem walidacji"
+            }`,
+          )
+          .join("\n");
+        const plannerRationale = (data.planner_proposal?.rationale ?? [])
+          .slice(0, 2)
+          .join(", ");
 
         setMessages((prev) => [
           ...prev,
@@ -1106,10 +1137,24 @@ export function AIAssistantShell() {
               typeof data.training_state?.readiness_score === "number"
                 ? `Gotowość startowa: ${data.training_state.readiness_score}/100`
                 : "",
+              data.planner_proposal?.source
+                ? `Źródło proposal: ${data.planner_proposal.source}`
+                : "",
               readinessDrivers ? `Powody korekt: ${readinessDrivers}` : "",
+              plannerRationale ? `Racjonalizacja planera: ${plannerRationale}` : "",
+              typeof data.validation?.score === "number"
+                ? `Walidacja: ${data.validation.score}/100${data.validation.valid ? "" : " (wymagała korekt)"}`
+                : "",
+              typeof data.realism?.score === "number"
+                ? `Realism score: ${data.realism.score}/100`
+                : "",
+              (data.repair_log?.length ?? 0) > 0
+                ? `Auto-poprawki: ${data.repair_log?.length}`
+                : "",
               (data.guardrail_events?.length ?? 0) > 0
                 ? `Korekty systemowe: ${data.guardrail_events?.length}`
                 : "",
+              validationPreview ? `Walidator zgłosił:\n${validationPreview}` : "",
               guardrailPreview ? `Przykładowe korekty:\n${guardrailPreview}` : "",
               savedProgram.id ? `ID programu: ${savedProgram.id}` : "",
               preview ? `Podgląd sesji:\n${preview}` : "",
