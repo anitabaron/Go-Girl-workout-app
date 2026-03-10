@@ -25,7 +25,8 @@ export function RestAfterSeriesTimerM3({
   } else if (nextExerciseName?.trim()) {
     messageContent = (
       <>
-        {t("getReadyPrefix")} <span className="font-bold">{nextExerciseName}</span>
+        {t("getReadyPrefix")}{" "}
+        <span className="font-bold">{nextExerciseName}</span>
       </>
     );
   } else {
@@ -51,9 +52,6 @@ export function RestAfterSeriesTimerM3({
           <div className="flex flex-col items-center">
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
               {formatTimerSeconds(remainingTime)}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {t("remainingTime")}
             </div>
           </div>
         )}

@@ -51,9 +51,6 @@ export function RestBetweenSetsTimer({
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
               {formatTimerSeconds(remainingTime)}
             </div>
-            <div className="text-sm text-zinc-600 dark:text-zinc-400">
-              pozostały czas
-            </div>
           </div>
         )}
       </CountdownCircleTimer>

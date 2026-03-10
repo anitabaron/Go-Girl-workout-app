@@ -37,9 +37,6 @@ export function RestBetweenSetsTimerM3({
             <div className="text-6xl font-bold text-destructive sm:text-7xl md:text-8xl">
               {formatTimerSeconds(remainingTime)}
             </div>
-            <div className="text-sm text-muted-foreground">
-              {t("remainingTime")}
-            </div>
           </div>
         )}
       </CountdownCircleTimer>

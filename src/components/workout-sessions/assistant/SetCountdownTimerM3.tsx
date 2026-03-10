@@ -39,12 +39,9 @@ export function SetCountdownTimerM3({
               {formatTimerSeconds(remainingTime)}
             </div>
             <div className="text-sm text-muted-foreground">
-              {t("remainingTime")}
               {sideLabel
                 ? ` (${
-                    sideLabel === "one_side"
-                      ? t("firstSide")
-                      : t("secondSide")
+                    sideLabel === "one_side" ? t("firstSide") : t("secondSide")
                   })`
                 : ""}
             </div>
