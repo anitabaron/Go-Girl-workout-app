@@ -1,5 +1,43 @@
 import { test, expect, type Page } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+import { config } from "dotenv";
+import { resolve } from "node:path";
 import { authenticateUser, createWorkoutPlan } from "../fixtures";
+import type { Database } from "../../src/db/database.types";
+
+config({ path: resolve(process.cwd(), ".env.test") });
+
+function createTestSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error("Missing Supabase test env for statistics E2E isolation.");
+  }
+  return createClient<Database>(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+function buildIsolatedSessionDate(dayOfMonth: number): Date {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), dayOfMonth, 12, 0, 0, 0),
+  );
+}
+
+async function moveWorkoutSessionToDate(sessionId: string, startedAt: Date) {
+  const supabase = createTestSupabaseClient();
+  const completedAt = new Date(startedAt.getTime() + 30 * 60 * 1000);
+  const { error } = await supabase
+    .from("workout_sessions")
+    .update({
+      started_at: startedAt.toISOString(),
+      completed_at: completedAt.toISOString(),
+    })
+    .eq("id", sessionId);
+
+  expect(error).toBeNull();
+}
 
 async function createCompletedSessionFromPlan(page: Page, planId: string) {
   let startedId: string | undefined;
@@ -28,6 +66,8 @@ async function createCompletedSessionFromPlan(page: Page, planId: string) {
     },
   );
   expect(completeResponse.ok()).toBe(true);
+
+  return startedId!;
 }
 
 test.describe("Statistics", () => {
@@ -49,7 +89,7 @@ test.describe("Statistics", () => {
     await page.waitForLoadState("networkidle", { timeout: 30000 });
 
     await expect(
-      page.getByRole("heading", { name: "Statystyki", level: 1 }),
+      page.getByRole("heading", { name: "Kalendarz", level: 1 }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Kalendarz treningów", level: 2 }),
@@ -72,7 +112,7 @@ test.describe("Statistics", () => {
     await page.waitForLoadState("networkidle", { timeout: 30000 });
 
     await expect(
-      page.getByRole("heading", { name: "Statistics", level: 1 }),
+      page.getByRole("heading", { name: "Calendar", level: 1 }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Workout calendar", level: 2 }),
@@ -84,7 +124,7 @@ test.describe("Statistics", () => {
     await page.getByRole("button", { name: "Polish" }).click();
     await page.waitForLoadState("networkidle", { timeout: 30000 });
     await expect(
-      page.getByRole("heading", { name: "Statystyki", level: 1 }),
+      page.getByRole("heading", { name: "Kalendarz", level: 1 }),
     ).toBeVisible();
   });
 
@@ -101,7 +141,8 @@ test.describe("Statistics", () => {
         { part: "Legs", series: 1, reps: 1 },
       ],
     });
-    await createCompletedSessionFromPlan(page, planId);
+    const sessionId = await createCompletedSessionFromPlan(page, planId);
+    await moveWorkoutSessionToDate(sessionId, buildIsolatedSessionDate(25));
 
     await page.goto("/statistics");
     await page.waitForLoadState("networkidle", { timeout: 30000 });
@@ -138,7 +179,8 @@ test.describe("Statistics", () => {
         { part: "Core", series: 1, reps: 1 },
       ],
     });
-    await createCompletedSessionFromPlan(page, planId);
+    const sessionId = await createCompletedSessionFromPlan(page, planId);
+    await moveWorkoutSessionToDate(sessionId, buildIsolatedSessionDate(26));
 
     await page.goto("/statistics");
     await page.waitForLoadState("networkidle", { timeout: 30000 });
@@ -150,7 +192,7 @@ test.describe("Statistics", () => {
 
     await page
       .getByRole("button", {
-        name: /Wykonaj ten plan jeszcze raz|Do this plan again/i,
+        name: /Wykonaj plan|Start plan/i,
       })
       .click();
 
@@ -245,7 +287,7 @@ test.describe("Statistics", () => {
     await page.getByRole("button", { name: "Angielski" }).click();
     await page.waitForLoadState("networkidle", { timeout: 30000 });
     await expect(
-      page.getByRole("heading", { name: "Statistics", level: 1 }),
+      page.getByRole("heading", { name: "Calendar", level: 1 }),
     ).toBeVisible();
 
     await page.goto("/exercises");
@@ -253,12 +295,12 @@ test.describe("Statistics", () => {
     await page.goto("/statistics");
     await page.waitForLoadState("networkidle", { timeout: 30000 });
     await expect(
-      page.getByRole("heading", { name: "Statistics", level: 1 }),
+      page.getByRole("heading", { name: "Calendar", level: 1 }),
     ).toBeVisible();
 
     await page.reload({ waitUntil: "networkidle" });
     await expect(
-      page.getByRole("heading", { name: "Statistics", level: 1 }),
+      page.getByRole("heading", { name: "Calendar", level: 1 }),
     ).toBeVisible();
   });
 });
