@@ -85,25 +85,26 @@ export function ProgramNotesJournal({
   };
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <h2 className="text-base font-semibold">Dziennik programu</h2>
 
-      <div className="space-y-3 rounded-xl border border-border bg-card p-3">
+      <div className="space-y-2 rounded-xl border border-border bg-card p-3">
         <Textarea
           value={noteText}
           onChange={(event) => setNoteText(event.target.value)}
           placeholder="Jak się czujesz, co było trudne, co chcesz zmienić..."
-          rows={3}
+          rows={1}
           disabled={isSaving}
+          className="min-h-10 resize-none bg-white"
         />
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
           <label className="space-y-1 text-xs text-muted-foreground">
-            Sesja (opcjonalnie)
+            <span className="block leading-none">Sesja (opcjonalnie)</span>
             <select
               value={selectedSessionId}
               onChange={(event) => setSelectedSessionId(event.target.value)}
               disabled={isSaving}
-              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-9 w-full rounded-md border border-input bg-white px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <option value="">Cały program</option>
               {sessionOptions.map((session) => (
@@ -114,7 +115,7 @@ export function ProgramNotesJournal({
             </select>
           </label>
           <label className="space-y-1 text-xs text-muted-foreground">
-            Zmęczenie (1-10)
+            <span className="block leading-none">Zmęczenie (1-10)</span>
             <Input
               type="number"
               min={1}
@@ -123,10 +124,11 @@ export function ProgramNotesJournal({
               value={fatigueLevel}
               onChange={(event) => setFatigueLevel(event.target.value)}
               disabled={isSaving}
+              className="!bg-white"
             />
           </label>
           <label className="space-y-1 text-xs text-muted-foreground">
-            Witalność (1-10)
+            <span className="block leading-none">Witalność (1-10)</span>
             <Input
               type="number"
               min={1}
@@ -135,11 +137,15 @@ export function ProgramNotesJournal({
               value={vitalityLevel}
               onChange={(event) => setVitalityLevel(event.target.value)}
               disabled={isSaving}
+              className="!bg-white"
             />
           </label>
-        </div>
-        <div className="flex justify-end">
-          <Button type="button" onClick={() => void handleAddNote()} disabled={isSaving}>
+          <Button
+            type="button"
+            onClick={() => void handleAddNote()}
+            disabled={isSaving}
+            className="w-full md:w-auto"
+          >
             {isSaving ? "Zapisywanie..." : "Dodaj uwagę"}
           </Button>
         </div>

@@ -221,8 +221,8 @@ export function ProgramCapabilityPanel({
         </div>
       </div>
 
-      <div className="rounded-xl border border-dashed border-border bg-card/70 p-3 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">Legenda</p>
+      <div className="rounded-xl border border-dashed border-border bg-card/70 p-3 text-xs text-muted-foreground">
+        <p className="font-medium text-xs text-foreground">Legenda</p>
         <div className="mt-2 space-y-1">
           <p>
             <strong>Gotowość 0-100</strong>: ogólna ocena, czy AI powinna zacząć
@@ -273,16 +273,24 @@ export function ProgramCapabilityPanel({
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-border bg-card p-3">
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="space-y-1 text-xs text-muted-foreground">
-            Dodaj wzorzec
+      <div className="mb-3 rounded-xl border border-border bg-card p-3">
+        <div className="space-y-2">
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <span className="block">Dodaj wzorzec</span>
+            <span className="block text-[11px] leading-relaxed text-muted-foreground/90">
+              To kategoria ruchu lub zdolności, np. core hold albo handstand
+              support. AI używa jej do pilnowania limitów i progresji. Przykład:
+              jeśli dodasz handstand support i zaznaczysz ból barku, AI powinna
+              obniżyć objętość ćwiczeń pod stanie na rękach.
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
             <select
               value={newMovementKey}
               onChange={(event) =>
                 setNewMovementKey(event.target.value as MovementKey)
               }
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-[220px]"
             >
               {movementKeyValues.map((value) => (
                 <option key={value} value={value}>
@@ -290,10 +298,10 @@ export function ProgramCapabilityPanel({
                 </option>
               ))}
             </select>
-          </label>
-          <Button type="button" variant="outline" size="sm" onClick={handleAddMovement}>
-            Dodaj
-          </Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleAddMovement}>
+              Dodaj
+            </Button>
+          </div>
         </div>
       </div>
 

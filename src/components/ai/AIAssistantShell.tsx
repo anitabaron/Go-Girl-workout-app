@@ -236,7 +236,7 @@ function AIAssistantPanel({
           <h2 className="text-sm font-semibold tracking-wide uppercase">{t("title")}</h2>
           {usage ? (
             <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
-              {t("remainingToday").replace("{count}", String(usage.remaining))}
+              {t("remainingUsage").replace("{count}", String(usage.remaining))}
             </span>
           ) : null}
         </div>

@@ -18,6 +18,10 @@ import {
   programUpdateSchema,
 } from "@/lib/validation/training-programs";
 import {
+  normalizeTitle,
+  normalizeTitleForDbLookup,
+} from "@/lib/validation/exercises";
+import {
   deleteTrainingProgramById,
   findTrainingProgramById,
   findProgramSessionById,
@@ -97,6 +101,44 @@ type PlanPreview = {
   part: string | null;
   description?: string | null;
 };
+
+type ExerciseLibraryPreview = {
+  id: string;
+  title: string;
+  title_normalized: string;
+};
+
+type ExerciseLibraryAliasEntry = {
+  id: string;
+  title: string;
+  aliases: string[];
+};
+
+const AI_PROGRAM_WEEKLY_LIMIT = 5;
+
+function isLocalhostHost(hostname: string | null | undefined): boolean {
+  const host = (hostname ?? "").toLowerCase().trim();
+  return (
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.includes("[::1]") ||
+    host === "::1"
+  );
+}
+
+function isProgramGenerationLimitEnforced(hostname?: string | null): boolean {
+  if (process.env.DISABLE_AI_LIMITS === "1") return false;
+  return !isLocalhostHost(hostname);
+}
+
+function getCurrentWeekStartIso(date = new Date()): string {
+  const weekStart = new Date(date);
+  const day = weekStart.getDay();
+  const offset = day === 0 ? -6 : 1 - day;
+  weekStart.setDate(weekStart.getDate() + offset);
+  weekStart.setHours(0, 0, 0, 0);
+  return weekStart.toISOString();
+}
 
 type ProgramGeneratedSession = {
   workout_plan_id?: string;
@@ -585,6 +627,7 @@ async function generateProgramTemplatesWithLLM(params: {
   readinessDrivers: string[];
   externalWorkoutsLast7d: number;
   topMovementKeys: string[];
+  libraryExerciseTitles: string[];
   coachProfile: {
     persona_name: string;
     focus: string | null;
@@ -601,7 +644,10 @@ async function generateProgramTemplatesWithLLM(params: {
     return null;
   }
 
-  const model = process.env.OPENAI_PROGRAM_PLANNER_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+  const model =
+    process.env.OPENAI_PROGRAM_PLANNER_MODEL ??
+    process.env.OPENAI_MODEL ??
+    "gpt-4.1";
   const openai = getOpenAIClient();
   const readinessDrivers =
     params.readinessDrivers.length > 0
@@ -609,6 +655,10 @@ async function generateProgramTemplatesWithLLM(params: {
       : "brak istotnych sygnałów";
   const topMovementKeys =
     params.topMovementKeys.length > 0 ? params.topMovementKeys.join(", ") : "brak";
+  const libraryExerciseTitles =
+    params.libraryExerciseTitles.length > 0
+      ? params.libraryExerciseTitles.slice(0, 80).join(", ")
+      : "brak";
   const prompt = [
     "Zwróć wyłącznie poprawny JSON bez markdownu.",
     "Tworzysz 1-3 szablony jednostek treningowych dla programu treningowego.",
@@ -636,13 +686,14 @@ async function generateProgramTemplatesWithLLM(params: {
     `readiness_drivers: ${readinessDrivers}`,
     `external_workouts_last_7d: ${params.externalWorkoutsLast7d}`,
     `top_movement_keys: ${topMovementKeys}`,
+    `exercise_library_titles: ${libraryExerciseTitles}`,
     `coach_persona: ${params.coachProfile.persona_name}`,
     `coach_focus: ${params.coachProfile.focus ?? "brak"}`,
     `coach_risk_tolerance: ${params.coachProfile.risk_tolerance ?? "brak"}`,
     `coach_methodology: ${params.coachProfile.preferred_methodology ?? "brak"}`,
   ].join("\n");
 
-  try {
+  const runPlannerAttempt = async (extraInstruction?: string) => {
     const response = await openai.responses.create({
       model,
       input: [
@@ -651,7 +702,10 @@ async function generateProgramTemplatesWithLLM(params: {
           content:
             "Jesteś systemem planowania treningowego. Tworzysz tylko realistyczne propozycje treningowe w JSON. Nie zwracasz tekstu objaśniającego.",
         },
-        { role: "user", content: prompt },
+        {
+          role: "user",
+          content: extraInstruction ? `${prompt}\n\n${extraInstruction}` : prompt,
+        },
       ],
     });
 
@@ -660,12 +714,22 @@ async function generateProgramTemplatesWithLLM(params: {
 
     const parsed = JSON.parse(text);
     const result = generatedPlanTemplatesSchema.safeParse(parsed);
-    if (!result.success) {
+    return result.success ? result.data : null;
+  };
+
+  try {
+    const firstAttempt = await runPlannerAttempt();
+    const secondAttempt =
+      firstAttempt ??
+      (await runPlannerAttempt(
+        "Popraw format. Zwróć wyłącznie tablicę JSON 1-3 template'ów, bez komentarzy, bez markdownu, bez dodatkowych pól.",
+      ));
+    if (!secondAttempt) {
       return null;
     }
 
     return {
-      templates: result.data,
+      templates: secondAttempt,
       rationale: [
         `Planner LLM użył modelu ${model}.`,
         `Proposal uwzględniał readiness ${params.readinessScore}/100 i external load z 7 dni.`,
@@ -1271,6 +1335,110 @@ function mapPlanExerciseToGeneratedInput(
   };
 }
 
+async function loadExerciseLibraryPreview(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  limit = 120,
+): Promise<ExerciseLibraryPreview[]> {
+  const { data, error } = await supabase
+    .from("exercises")
+    .select("id,title,title_normalized")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return [];
+    }
+    throw mapDbError(error);
+  }
+
+  return (data ?? []) as ExerciseLibraryPreview[];
+}
+
+function buildExerciseTitleAliases(title: string): string[] {
+  const trimmed = title.trim();
+  if (!trimmed) return [];
+
+  const withoutParentheses = trimmed.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+  const separatorUnified = trimmed.replace(/[+/,-]+/g, " ").replace(/\s+/g, " ").trim();
+  const withoutQuotes = trimmed.replace(/["'`]/g, "").trim();
+
+  return Array.from(
+    new Set(
+      [trimmed, withoutParentheses, separatorUnified, withoutQuotes]
+        .filter(Boolean)
+        .flatMap((value) => [
+          normalizeTitleForDbLookup(value),
+          normalizeTitle(value),
+        ])
+        .filter(Boolean),
+    ),
+  );
+}
+
+function buildExerciseLibraryAliasEntries(
+  libraryExercises: ExerciseLibraryPreview[],
+): ExerciseLibraryAliasEntry[] {
+  return libraryExercises.map((exercise) => ({
+    id: exercise.id,
+    title: exercise.title,
+    aliases: buildExerciseTitleAliases(exercise.title),
+  }));
+}
+
+function buildExerciseLibraryPromptEntries(
+  libraryExercises: ExerciseLibraryPreview[],
+): string[] {
+  return buildExerciseLibraryAliasEntries(libraryExercises).map((exercise) => {
+    const aliases = exercise.aliases.filter((alias) => alias !== normalizeTitleForDbLookup(exercise.title));
+    return aliases.length > 0
+      ? `${exercise.title} | aliasy: ${aliases.slice(0, 3).join(" | ")}`
+      : exercise.title;
+  });
+}
+
+async function attachLibraryExercisesToGeneratedTemplate(params: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  template: ProgramGeneratedPlanTemplate;
+}): Promise<ProgramGeneratedPlanTemplate> {
+  const libraryExercises = await loadExerciseLibraryPreview(
+    params.supabase,
+    params.userId,
+  );
+  if (libraryExercises.length === 0) {
+    return params.template;
+  }
+
+  const libraryByAlias = new Map<string, ExerciseLibraryPreview>();
+  for (const exercise of libraryExercises) {
+    for (const alias of buildExerciseTitleAliases(exercise.title)) {
+      if (!libraryByAlias.has(alias)) {
+        libraryByAlias.set(alias, exercise);
+      }
+    }
+  }
+
+  return {
+    ...params.template,
+    exercises: params.template.exercises.map((exercise) => {
+      if (exercise.exercise_id) return exercise;
+      const titleAliases = buildExerciseTitleAliases(exercise.exercise_title);
+      const matched = titleAliases
+        .map((alias) => libraryByAlias.get(alias))
+        .find(Boolean);
+      if (!matched) return exercise;
+      return {
+        ...exercise,
+        exercise_id: matched.id,
+        exercise_title: matched.title,
+      };
+    }),
+  };
+}
+
 async function buildMixedTemplatesFromExistingAndAI(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
@@ -1595,10 +1763,16 @@ async function createPlansFromGeneratedTemplates(
       throw new ServiceError("INTERNAL", "Nie udało się utworzyć planu z szablonu AI.");
     }
 
+    const libraryAttachedTemplate = await attachLibraryExercisesToGeneratedTemplate({
+      supabase,
+      userId,
+      template,
+    });
+
     const generatedExercises = normalizePlanDuration(
       enforceWarmupCooldownMinutes(
         ensureWarmupAndCooldown(
-      template.exercises.map((exercise) => ({
+      libraryAttachedTemplate.exercises.map((exercise) => ({
         exercise_id: exercise.exercise_id ?? null,
         snapshot_id: null,
         scope_id: null,
@@ -1606,7 +1780,7 @@ async function createPlansFromGeneratedTemplates(
         scope_repeat_count: null,
         exercise_title: exercise.exercise_title,
         exercise_type: exercise.exercise_type ?? exercise.section_type,
-        exercise_part: exercise.exercise_part ?? template.part ?? null,
+        exercise_part: exercise.exercise_part ?? libraryAttachedTemplate.part ?? null,
         exercise_details: exercise.exercise_details ?? null,
         exercise_is_unilateral: exercise.exercise_is_unilateral ?? null,
         section_type: exercise.section_type,
@@ -1955,10 +2129,32 @@ function buildSessionExerciseProgressionUpdate(
 export async function generateAIProgramService(
   userId: string,
   payload: unknown,
+  hostname?: string | null,
 ): Promise<ProgramGenerateResponse> {
   assertUser(userId);
   const parsed = parseOrThrow(programGenerateSchema, payload);
   const supabase = await createClient();
+
+  if (isProgramGenerationLimitEnforced(hostname)) {
+    const { count, error: programLimitError } = await supabase
+      .from("ai_plan_decisions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("request_type", "generate")
+      .gte("created_at", getCurrentWeekStartIso());
+
+    if (programLimitError) {
+      throw mapDbError(programLimitError);
+    }
+
+    const used = count ?? 0;
+    if (used >= AI_PROGRAM_WEEKLY_LIMIT) {
+      throw new ServiceError(
+        "FORBIDDEN",
+        `Wykorzystałaś tygodniowy limit generowania programów (${AI_PROGRAM_WEEKLY_LIMIT}/${AI_PROGRAM_WEEKLY_LIMIT}).`,
+      );
+    }
+  }
 
   const { data: plans, error: plansError } = await listWorkoutPlansForProgramGeneration(
     supabase,
@@ -1979,6 +2175,7 @@ export async function generateAIProgramService(
 
   const coachProfile = await getOrCreateAICoachProfileService(userId);
   const trainingState = await buildTrainingStateSnapshotService(userId);
+  const exerciseLibrary = await loadExerciseLibraryPreview(supabase, userId);
   const fallbackAiTemplates = buildAIPlanTemplates(parsed.goal_text, parsed.constraints);
   const llmTemplates = await generateProgramTemplatesWithLLM({
     goalText: parsed.goal_text,
@@ -1991,6 +2188,7 @@ export async function generateAIProgramService(
     topMovementKeys: trainingState.capability_summary
       .slice(0, 5)
       .map((item) => item.movement_key),
+    libraryExerciseTitles: buildExerciseLibraryPromptEntries(exerciseLibrary),
     coachProfile: {
       persona_name: coachProfile.persona_name,
       focus: coachProfile.focus ?? null,

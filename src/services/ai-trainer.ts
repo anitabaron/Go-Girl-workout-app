@@ -42,6 +42,8 @@ export type AITrainerChatResponse = {
     attachments_count: number;
     attached_program_ids: string[];
     attached_program_names: string[];
+    includes_conversation_history: boolean;
+    conversation_messages_used: number;
     includes_recent_performance: boolean;
     includes_recent_feedback: boolean;
   };
@@ -139,12 +141,28 @@ type AIProgramAttachmentContext = {
   }>;
 };
 
+type ConversationPromptMessage = {
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+};
+
 const AI_DAILY_LIMIT = 20;
 const DEV_AI_LIMIT = 999;
 
-function isUsageLimitEnforced(): boolean {
+function isLocalhostHost(hostname: string | null | undefined): boolean {
+  const host = (hostname ?? "").toLowerCase().trim();
+  return (
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.includes("[::1]") ||
+    host === "::1"
+  );
+}
+
+function isUsageLimitEnforced(hostname?: string | null): boolean {
   if (process.env.DISABLE_AI_LIMITS === "1") return false;
-  return process.env.NODE_ENV === "production";
+  return !isLocalhostHost(hostname);
 }
 
 function isMissingDbObjectError(error: {
@@ -221,16 +239,40 @@ function getDayIso(date = new Date()): string {
   ).padStart(2, "0")}`;
 }
 
+function getUsagePolicy(hostname?: string | null): {
+  enforced: boolean;
+  limit: number;
+  bucketKey: string;
+  periodLabel: "day" | "dev";
+} {
+  const enforced = isUsageLimitEnforced(hostname);
+  if (!enforced) {
+    return {
+      enforced: false,
+      limit: DEV_AI_LIMIT,
+      bucketKey: "dev",
+      periodLabel: "dev",
+    };
+  }
+
+  return {
+    enforced: true,
+    limit: AI_DAILY_LIMIT,
+    bucketKey: getDayIso(),
+    periodLabel: "day",
+  };
+}
+
 async function getCurrentAIUsage(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
+  usagePolicy: { bucketKey: string },
 ): Promise<{ rowId: string | null; used: number }> {
-  const dayKey = getDayIso();
   const { data, error } = await supabase
     .from("ai_usage")
     .select("id,usage_count")
     .eq("user_id", userId)
-    .eq("month_year", dayKey)
+    .eq("month_year", usagePolicy.bucketKey)
     .maybeSingle();
 
   if (error) {
@@ -245,9 +287,8 @@ async function incrementAIUsage(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   current: { rowId: string | null; used: number },
+  usagePolicy: { bucketKey: string; limit: number; periodLabel: "day" | "dev" },
 ): Promise<number> {
-  const dayKey = getDayIso();
-
   if (current.rowId) {
     const { error } = await supabase
       .from("ai_usage")
@@ -268,7 +309,7 @@ async function incrementAIUsage(
 
   const { error } = await supabase.from("ai_usage").insert({
     user_id: userId,
-    month_year: dayKey,
+    month_year: usagePolicy.bucketKey,
     usage_count: 1,
   });
 
@@ -283,14 +324,14 @@ async function incrementAIUsage(
 
   // Row might have been created concurrently.
   if (error.code === "23505") {
-    const fresh = await getCurrentAIUsage(supabase, userId);
+    const fresh = await getCurrentAIUsage(supabase, userId, usagePolicy);
     if (!fresh.rowId) {
       throw new ServiceError("INTERNAL", "Nie udało się odczytać limitu AI.");
     }
-    if (fresh.used >= AI_DAILY_LIMIT) {
+    if (fresh.used >= usagePolicy.limit) {
       throw new ServiceError(
         "FORBIDDEN",
-        `Wykorzystałaś dzienny limit Trenera AI (${AI_DAILY_LIMIT}/${AI_DAILY_LIMIT}).`,
+        `Wykorzystałaś dzienny limit Trenera AI (${usagePolicy.limit}/${usagePolicy.limit}).`,
       );
     }
     const { error: updateError } = await supabase
@@ -425,13 +466,63 @@ function formatRulesForPrompt(
   }
 }
 
+function toSingleLine(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function truncateForPrompt(text: string, maxChars: number): string {
+  if (text.length <= maxChars) return text;
+  return `${text.slice(0, Math.max(0, maxChars - 3))}...`;
+}
+
+function formatConversationHistoryForPrompt(
+  messages: ConversationPromptMessage[],
+): string[] {
+  if (messages.length === 0) return [];
+  return messages.map((message) => {
+    const label = message.role === "user" ? "Użytkowniczka" : "AI";
+    const compact = truncateForPrompt(toSingleLine(message.content), 260);
+    return `- ${label}: ${compact}`;
+  });
+}
+
+async function loadConversationHistoryForPrompt(params: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  conversationId: string | null;
+}): Promise<ConversationPromptMessage[]> {
+  if (!params.conversationId) return [];
+
+  const { data, error } = await params.supabase
+    .from("ai_chat_messages")
+    .select("role,content,created_at")
+    .eq("conversation_id", params.conversationId)
+    .eq("user_id", params.userId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    if (isMissingDbObjectError(error)) {
+      console.warn(
+        "[aiTrainerChatService] ai_chat_messages unavailable, skipping conversation context",
+        error,
+      );
+      return [];
+    }
+    throw mapDbError(error);
+  }
+
+  return ((data ?? []) as ConversationPromptMessage[]).reverse();
+}
+
 async function generateAIReply(
   input: AITrainerChatCommand,
   context: AITrainerChatResponse["context"],
   profile: AICoachProfilePreview | null,
   attachmentContextLines: string[],
+  conversationContextLines: string[],
 ): Promise<string> {
-  const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+  const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
   const openai = getOpenAIClient();
 
   const plansPreview =
@@ -472,6 +563,8 @@ async function generateAIReply(
       ? `- preferowana metodologia: ${profile.preferred_methodology}`
       : "",
     rulesForPrompt ? `- dodatkowe zasady/profil: ${rulesForPrompt}` : "",
+    conversationContextLines.length > 0 ? "Ostatni kontekst rozmowy:" : "",
+    ...conversationContextLines,
     attachmentContextLines.length > 0 ? "Kontekst z załączników:" : "",
     ...attachmentContextLines.map((line) => `- ${line}`),
     "",
@@ -1251,20 +1344,22 @@ async function loadAttachedNotesContext(
 export async function aiTrainerChatService(
   userId: string,
   payload: unknown,
+  hostname?: string | null,
 ): Promise<AITrainerChatResponse> {
   assertUser(userId);
   const parsed = parseOrThrow(aiTrainerChatSchema, payload);
   const supabase = await createClient();
-  const usageLimitEnforced = isUsageLimitEnforced();
+  const usagePolicy = getUsagePolicy(hostname);
+  const usageLimitEnforced = usagePolicy.enforced;
   let usageBefore = { rowId: null as string | null, used: 0 };
   let usageTrackingEnabled = usageLimitEnforced;
   if (usageLimitEnforced) {
     try {
-      usageBefore = await getCurrentAIUsage(supabase, userId);
-      if (usageBefore.used >= AI_DAILY_LIMIT) {
+      usageBefore = await getCurrentAIUsage(supabase, userId, usagePolicy);
+      if (usageBefore.used >= usagePolicy.limit) {
         throw new ServiceError(
           "FORBIDDEN",
-          `Wykorzystałaś dzienny limit Trenera AI (${AI_DAILY_LIMIT}/${AI_DAILY_LIMIT}).`,
+          `Wykorzystałaś dzienny limit Trenera AI (${usagePolicy.limit}/${usagePolicy.limit}).`,
         );
       }
     } catch (error) {
@@ -1314,6 +1409,14 @@ export async function aiTrainerChatService(
     programNameById,
   );
   const attachmentContextLines = mapProgramContextToPromptLines(attachedProgramsContext);
+  const conversationContextMessages = await loadConversationHistoryForPrompt({
+    supabase,
+    userId,
+    conversationId,
+  });
+  const conversationContextLines = formatConversationHistoryForPrompt(
+    conversationContextMessages,
+  );
 
   let reply = "";
   let recommendations: string[] = [];
@@ -1329,6 +1432,7 @@ export async function aiTrainerChatService(
       context,
       coachProfileRow,
       [...attachmentContextLines, ...attachedNotesContextLines],
+      conversationContextLines,
     );
     recommendations = extractRecommendations(reply);
     if (recommendations.length === 0) {
@@ -1357,7 +1461,7 @@ export async function aiTrainerChatService(
   let usageAfter = usageBefore.used;
   if (!isSystemError && usageTrackingEnabled && usageLimitEnforced) {
     try {
-      usageAfter = await incrementAIUsage(supabase, userId, usageBefore);
+      usageAfter = await incrementAIUsage(supabase, userId, usageBefore, usagePolicy);
     } catch (error) {
       if (
         error &&
@@ -1378,11 +1482,9 @@ export async function aiTrainerChatService(
   const response: AITrainerChatResponse = {
     conversation_id: canPersistConversation ? conversationId : null,
     usage: {
-      limit: usageLimitEnforced ? AI_DAILY_LIMIT : DEV_AI_LIMIT,
+      limit: usagePolicy.limit,
       used: usageAfter,
-      remaining: usageLimitEnforced
-        ? Math.max(0, AI_DAILY_LIMIT - usageAfter)
-        : DEV_AI_LIMIT,
+      remaining: Math.max(0, usagePolicy.limit - usageAfter),
     },
     reply,
     recommendations,
@@ -1393,6 +1495,8 @@ export async function aiTrainerChatService(
       attachments_count: parsed.attachments?.length ?? 0,
       attached_program_ids: attachedProgramsContext.map((item) => item.id),
       attached_program_names: attachedProgramsContext.map((item) => item.name),
+      includes_conversation_history: conversationContextMessages.length > 1,
+      conversation_messages_used: conversationContextMessages.length,
       includes_recent_performance: true,
       includes_recent_feedback: attachedNotesContextLines.length > 0,
     },
@@ -1445,13 +1549,17 @@ export async function aiTrainerChatService(
   return response;
 }
 
-export async function getAITrainerUsageService(userId: string): Promise<{
+export async function getAITrainerUsageService(
+  userId: string,
+  hostname?: string | null,
+): Promise<{
   limit: number;
   used: number;
   remaining: number;
 }> {
   assertUser(userId);
-  if (!isUsageLimitEnforced()) {
+  const usagePolicy = getUsagePolicy(hostname);
+  if (!usagePolicy.enforced) {
     return {
       limit: DEV_AI_LIMIT,
       used: 0,
@@ -1459,11 +1567,11 @@ export async function getAITrainerUsageService(userId: string): Promise<{
     };
   }
   const supabase = await createClient();
-  const usage = await getCurrentAIUsage(supabase, userId);
+  const usage = await getCurrentAIUsage(supabase, userId, usagePolicy);
   return {
-    limit: AI_DAILY_LIMIT,
+    limit: usagePolicy.limit,
     used: usage.used,
-    remaining: Math.max(0, AI_DAILY_LIMIT - usage.used),
+    remaining: Math.max(0, usagePolicy.limit - usage.used),
   };
 }
 
