@@ -118,7 +118,7 @@ type ExerciseLibraryAliasEntry = {
   aliases: string[];
 };
 
-const AI_PROGRAM_WEEKLY_LIMIT = 5;
+const AI_PROGRAM_WEEKLY_LIMIT = 15;
 
 function isLocalhostHost(hostname: string | null | undefined): boolean {
   const host = (hostname ?? "").toLowerCase().trim();
