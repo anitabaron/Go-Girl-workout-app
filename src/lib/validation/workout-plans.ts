@@ -298,6 +298,19 @@ export const workoutPlanQuerySchema = z
   })
   .strict();
 
+export const recoverWorkoutPlansFromSessionsSchema = z
+  .object({
+    session_ids: z
+      .array(
+        z
+          .string()
+          .refine((val) => uuidRegex.test(val), "session_id musi być UUID"),
+      )
+      .min(1, "session_ids musi zawierać co najmniej 1 element")
+      .max(20, "session_ids może zawierać maksymalnie 20 elementów"),
+  })
+  .strict();
+
 function getDuplicateOrderErrors(
   exercises: WorkoutPlanExerciseInput[],
 ): string[] {

@@ -9,9 +9,10 @@ export const enMessages = {
   "nav.home": "Home",
   "nav.exercises": "Exercises",
   "nav.plans": "Plans",
+  "nav.programs": "Programs",
   "nav.sessions": "Sessions",
   "nav.records": "Records",
-  "nav.statistics": "Statistics",
+  "nav.statistics": "Calendar",
   "nav.start": "Start",
   "nav.menu": "Menu",
   "nav.menuClose": "Close menu",
@@ -130,7 +131,7 @@ export const enMessages = {
   "home.feature.personalRecords.title": "Personal records",
   "home.feature.personalRecords.description":
     "Track personal records across metrics. Hit new PRs and monitor your progress over time.",
-  "home.feature.statistics.title": "Statistics",
+  "home.feature.statistics.title": "Calendar",
   "home.feature.statistics.description":
     "Analyze weekly summaries, streaks, and activity trends. Use the workout calendar and a fast progress overview.",
   "home.feature.assistant.title": "Workout assistant",
@@ -761,6 +762,7 @@ export const enMessages = {
   "assistantCurrentExercise.plannedRestAfter": "Planned rest after",
   "assistantTimers.seconds": "seconds",
   "assistantTimers.secondsRest": "seconds rest",
+  "assistantTimers.remainingTime": "time remaining",
   "assistantTimers.skipBreak": "Skip break",
   "assistantTimers.getReadyPrefix": "Get ready:",
   "assistantTimers.getReadyNext": "Get ready for the next exercise",
@@ -853,10 +855,10 @@ export const enMessages = {
   "workoutPlanDetailContent.unilateral": "Unilateral",
   "workoutPlanDetailContent.sets": "Sets",
   "workoutPlanDetailContent.reps": "Reps",
-  "workoutPlanDetailContent.duration": "Duration (s)",
-  "workoutPlanDetailContent.restBetween": "Rest between sets (s)",
-  "workoutPlanDetailContent.restAfter": "Rest after sets (s)",
-  "workoutPlanDetailContent.estimatedSetTime": "Estimated set time (s)",
+  "workoutPlanDetailContent.duration": "Duration",
+  "workoutPlanDetailContent.restBetween": "Rest between sets",
+  "workoutPlanDetailContent.restAfter": "Rest after sets",
+  "workoutPlanDetailContent.estimatedSetTime": "Estimated set time",
   "workoutPlanDetailContent.details": "Details",
   "workoutTimer.secondsRest": "seconds rest",
   "workoutTimer.setLabel": "Set",
@@ -871,7 +873,7 @@ export const enMessages = {
     "You don't have any records for this exercise yet. Start a workout to set your first record!",
   "personalRecordDetail.emptyAction": "Start workout",
   "workoutSessionExercisesList.empty": "No exercises in session.",
-  "statisticsPage.title": "Statistics",
+  "statisticsPage.title": "Calendar",
   "statisticsPage.description":
     "Workout calendar, progress charts, and a dedicated place for integrations.",
   "statisticsPage.calendarTitle": "Workout calendar",
@@ -910,9 +912,11 @@ export const enMessages = {
   "statisticsPage.manualWorkoutUpdate": "Save changes",
   "statisticsPage.manualWorkoutSaving": "Saving...",
   "statisticsPage.manualWorkoutEdit": "Edit workout",
+  "statisticsPage.manualWorkoutDuplicate": "Duplicate workout",
   "statisticsPage.manualWorkoutSessionName": "External workout",
   "statisticsPage.manualWorkoutSaveSuccess": "Workout saved in calendar.",
-  "statisticsPage.manualWorkoutUpdateSuccess": "Workout changes have been saved.",
+  "statisticsPage.manualWorkoutUpdateSuccess":
+    "Workout changes have been saved.",
   "statisticsPage.manualWorkoutSaveFailed":
     "Could not save workout. Please try again.",
   "statisticsPage.manualWorkoutUpdateFailed":
@@ -931,8 +935,7 @@ export const enMessages = {
   "statisticsPage.manualWorkoutInvalidDate": "Provide a valid workout date.",
   "statisticsPage.manualWorkoutInvalidDuration":
     "Duration must be a positive number of minutes.",
-  "statisticsPage.manualWorkoutInvalidSportType":
-    "Provide a sport type.",
+  "statisticsPage.manualWorkoutInvalidSportType": "Provide a sport type.",
   "statisticsPage.manualWorkoutInvalidCalories":
     "Calories must be an integer (0 or higher).",
   "statisticsPage.manualWorkoutInvalidAvgHeartRate":
@@ -957,7 +960,7 @@ export const enMessages = {
   "statisticsPage.openDayDetails": "Show workouts for this day",
   "statisticsPage.deletedPlan": "Deleted plan",
   "statisticsPage.openDetails": "Session details",
-  "statisticsPage.repeatPlan": "Do this plan again",
+  "statisticsPage.repeatPlan": "Start plan",
   "statisticsPage.startingPlan": "Starting...",
   "statisticsPage.repeatPlanMissing":
     "This plan cannot be started again (missing plan id).",
@@ -1008,7 +1011,9 @@ export const enMessages = {
     "Build your plan around goals and update it from workouts and recovery feedback.",
   "aiAssistant.quickActions": "Quick actions",
   "aiAssistant.quickActionPlanToday": "Plan today workout",
-  "aiAssistant.quickActionPlanWeek": "Plan this week",
+  "aiAssistant.quickActionPlanWeek": "Create training program",
+  "aiAssistant.quickActionProgramKickoffPrompt":
+    "I want to create a training program. First ask me to describe goals, constraints and preferred training days, then propose the program.",
   "aiAssistant.quickActionAdjustRecovery": "Adjust after fatigue or pain",
   "aiAssistant.quickActionReviewGoal": "Review goal progress",
   "aiAssistant.remainingToday": "{count} questions left for today",
@@ -1028,6 +1033,27 @@ export const enMessages = {
     "The assistant will propose a plan direction and recommendations for upcoming workouts.",
   "aiAssistant.responseError":
     "Could not get assistant response. Please try again.",
+  "aiAssistant.programMonthsLabel": "Months",
+  "aiAssistant.programModeLabel": "Mode",
+  "aiAssistant.programModeExisting": "Yours",
+  "aiAssistant.programModeMix": "Mix",
+  "aiAssistant.programModeNewOnly": "AI new",
+  "aiAssistant.programMixRatioLabel": "Mix",
+  "aiAssistant.programDaysLabel": "Days",
+  "aiAssistant.programGenerateButton": "Generate training program",
+  "aiAssistant.programGenerateActionTitle": "Create training program",
+  "aiAssistant.programGenerateActionDescription":
+    "Uses settings from the module below (months + mode + selected days).",
+  "aiAssistant.programGenerateConfirmDescription":
+    "It will generate a {months}-month draft for days: {days}.",
+  "aiAssistant.programDefaultGoalText": "General development program",
+  "aiAssistant.weekdayMon": "Mon",
+  "aiAssistant.weekdayTue": "Tue",
+  "aiAssistant.weekdayWed": "Wed",
+  "aiAssistant.weekdayThu": "Thu",
+  "aiAssistant.weekdayFri": "Fri",
+  "aiAssistant.weekdaySat": "Sat",
+  "aiAssistant.weekdaySun": "Sun",
   "importInstructionPage.backToPlans": "Back to plans",
   "importInstructionPage.title": "Workout plan import guide",
   "importInstructionPage.description":

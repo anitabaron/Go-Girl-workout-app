@@ -10,6 +10,7 @@ import type {
   PersonalRecordMetricViewModel,
   SeriesValues,
 } from "@/lib/personal-records/view-model";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 import { EditPersonalRecordDialogM3 } from "./EditPersonalRecordDialogM3";
 
 function formatSeriesValue(
@@ -20,7 +21,7 @@ function formatSeriesValue(
     case "total_reps":
       return value.toString();
     case "max_duration":
-      return `${value}s`;
+      return formatCompactSeconds(value);
     case "max_weight":
       return `${value} kg`;
     default:

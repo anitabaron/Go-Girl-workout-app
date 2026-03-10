@@ -14,6 +14,7 @@ import {
   workoutPlanCreateSchema,
   workoutPlanUpdateSchema,
   workoutPlanImportSchema,
+  recoverWorkoutPlansFromSessionsSchema,
 } from "@/lib/validation/workout-plans";
 import { DEFAULT_EXERCISE_VALUE } from "@/lib/constants";
 import {
@@ -654,6 +655,36 @@ export async function deleteWorkoutPlanService(userId: string, id: string) {
     );
   }
 
+  const { data: linkedProgramSession, error: linkedProgramSessionError } =
+    await supabase
+      .from("program_sessions")
+      .select("training_program_id")
+      .eq("user_id", userId)
+      .eq("workout_plan_id", id)
+      .limit(1)
+      .maybeSingle();
+  if (linkedProgramSessionError) {
+    throw mapDbError(linkedProgramSessionError);
+  }
+
+  if (linkedProgramSession?.training_program_id) {
+    const { data: linkedProgram, error: linkedProgramError } = await supabase
+      .from("training_programs")
+      .select("name")
+      .eq("user_id", userId)
+      .eq("id", linkedProgramSession.training_program_id)
+      .maybeSingle();
+    if (linkedProgramError) {
+      throw mapDbError(linkedProgramError);
+    }
+
+    const programName = linkedProgram?.name ?? "programie treningowym";
+    throw new ServiceError(
+      "CONFLICT",
+      `Nie można usunąć planu, bo jest używany w programie „${programName}”. Najpierw usuń program albo odpnij plan od programu.`,
+    );
+  }
+
   // Usunięcie planu automatycznie usuwa ćwiczenia (CASCADE)
   const { error } = await supabase
     .from("workout_plans")
@@ -664,6 +695,158 @@ export async function deleteWorkoutPlanService(userId: string, id: string) {
   if (error) {
     throw mapDbError(error);
   }
+}
+
+type RecoverWorkoutPlansPayload = z.infer<typeof recoverWorkoutPlansFromSessionsSchema>;
+
+export async function recoverWorkoutPlansFromSessionsService(
+  userId: string,
+  payload: unknown,
+): Promise<{
+  restored: Array<{ session_id: string; plan_id: string; plan_name: string }>;
+  skipped: Array<{ session_id: string; reason: string }>;
+}> {
+  assertUser(userId);
+  const parsed = parseOrThrow(recoverWorkoutPlansFromSessionsSchema, payload);
+  const supabase = await createClient();
+
+  const restored: Array<{ session_id: string; plan_id: string; plan_name: string }> = [];
+  const skipped: Array<{ session_id: string; reason: string }> = [];
+
+  for (const sessionId of parsed.session_ids as RecoverWorkoutPlansPayload["session_ids"]) {
+    const { data: session, error: sessionError } = await supabase
+      .from("workout_sessions")
+      .select("id,plan_name_at_time,started_at,user_id")
+      .eq("id", sessionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (sessionError) throw mapDbError(sessionError);
+    if (!session) {
+      skipped.push({
+        session_id: sessionId,
+        reason: "Sesja nie istnieje albo nie należy do użytkownika.",
+      });
+      continue;
+    }
+
+    const { data: sessionExercises, error: exercisesError } = await supabase
+      .from("workout_session_exercises")
+      .select(
+        "exercise_id,exercise_order,exercise_title_at_time,exercise_type_at_time,exercise_part_at_time,exercise_is_unilateral_at_time,planned_sets,planned_reps,planned_duration_seconds,planned_rest_seconds,planned_rest_after_series_seconds,actual_sets,actual_reps,actual_duration_seconds,actual_rest_seconds",
+      )
+      .eq("session_id", sessionId)
+      .order("exercise_order", { ascending: true });
+
+    if (exercisesError) throw mapDbError(exercisesError);
+    if (!sessionExercises || sessionExercises.length === 0) {
+      skipped.push({
+        session_id: sessionId,
+        reason: "Brak ćwiczeń w sesji, nie da się odtworzyć planu.",
+      });
+      continue;
+    }
+
+    const partCounts = new Map<string, number>();
+    for (const row of sessionExercises) {
+      const part = row.exercise_part_at_time;
+      partCounts.set(part, (partCounts.get(part) ?? 0) + 1);
+    }
+    const dominantPart =
+      Array.from(partCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+    const date = new Date(session.started_at);
+    const dateTag = Number.isNaN(date.getTime())
+      ? "odzyskany"
+      : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+          date.getDate(),
+        ).padStart(2, "0")}`;
+    const baseName = (session.plan_name_at_time?.trim() || "Plan treningowy").slice(0, 100);
+    const recoveredPlanName = `${baseName} (odzyskany ${dateTag})`;
+
+    const { data: insertedPlan, error: insertPlanError } = await insertWorkoutPlan(
+      supabase,
+      userId,
+      {
+        name: recoveredPlanName,
+        description: `Odzyskane z sesji: ${sessionId}`,
+        part: dominantPart as Database["public"]["Enums"]["exercise_part"] | null,
+        estimated_total_time_seconds: null,
+      },
+    );
+    if (insertPlanError) throw mapDbError(insertPlanError);
+    if (!insertedPlan) {
+      skipped.push({
+        session_id: sessionId,
+        reason: "Nie udało się utworzyć planu.",
+      });
+      continue;
+    }
+
+    const { error: insertExercisesError } = await insertWorkoutPlanExercises(
+      supabase,
+      insertedPlan.id,
+      sessionExercises.map((row) => ({
+        exercise_id: row.exercise_id ?? null,
+        snapshot_id: null,
+        scope_id: null,
+        in_scope_nr: null,
+        scope_repeat_count: null,
+        exercise_title: row.exercise_title_at_time,
+        exercise_type: row.exercise_type_at_time,
+        exercise_part: row.exercise_part_at_time,
+        exercise_details: null,
+        exercise_is_unilateral: row.exercise_is_unilateral_at_time,
+        section_type: row.exercise_type_at_time,
+        section_order: row.exercise_order,
+        planned_sets: row.planned_sets ?? row.actual_sets ?? null,
+        planned_reps: row.planned_reps ?? row.actual_reps ?? null,
+        planned_duration_seconds:
+          row.planned_duration_seconds ?? row.actual_duration_seconds ?? null,
+        planned_rest_seconds: row.planned_rest_seconds ?? row.actual_rest_seconds ?? null,
+        planned_rest_after_series_seconds: row.planned_rest_after_series_seconds ?? null,
+        estimated_set_time_seconds: null,
+      })),
+    );
+    if (insertExercisesError) throw mapDbError(insertExercisesError);
+
+    restored.push({
+      session_id: sessionId,
+      plan_id: insertedPlan.id,
+      plan_name: insertedPlan.name,
+    });
+  }
+
+  return { restored, skipped };
+}
+
+export async function recoverWorkoutPlansFromRecentSessionsService(
+  userId: string,
+  limit = 2,
+): Promise<{
+  restored: Array<{ session_id: string; plan_id: string; plan_name: string }>;
+  skipped: Array<{ session_id: string; reason: string }>;
+}> {
+  assertUser(userId);
+  const supabase = await createClient();
+  const boundedLimit = Math.min(Math.max(1, Math.trunc(limit)), 20);
+
+  const { data: sessions, error } = await supabase
+    .from("workout_sessions")
+    .select("id")
+    .eq("user_id", userId)
+    .order("started_at", { ascending: false })
+    .limit(boundedLimit);
+
+  if (error) throw mapDbError(error);
+  const sessionIds = (sessions ?? []).map((row) => row.id);
+  if (sessionIds.length === 0) {
+    return { restored: [], skipped: [] };
+  }
+
+  return await recoverWorkoutPlansFromSessionsService(userId, {
+    session_ids: sessionIds,
+  });
 }
 
 type WorkoutPlanImportPayload = z.infer<typeof workoutPlanImportSchema>;

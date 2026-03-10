@@ -22,7 +22,7 @@ import type {
   ExternalWorkoutSource,
   ExternalWorkoutSportType,
 } from "@/types";
-import { useTranslations } from "@/i18n/client";
+import { useLocale, useTranslations } from "@/i18n/client";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
 import { Badge } from "@/components/ui/badge";
@@ -58,8 +58,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 type StatisticsSession = {
   id: string;
-  entry_type: "session" | "external";
+  entry_type: "session" | "external" | "planned";
   external_workout_id?: string;
+  program_session_id?: string;
   workout_plan_id: string | null;
   plan_name_at_time: string | null;
   started_at: string;
@@ -192,6 +193,9 @@ function getSessionTitle(
   session: StatisticsSession,
   t: (key: string) => string,
 ): string {
+  if (session.entry_type === "planned") {
+    return `${session.plan_name_at_time ?? t("deletedPlan")} (planowane)`;
+  }
   if (session.entry_type === "external") {
     const sport = getExternalWorkoutSportLabel(
       session.external_sport_type ?? "other",
@@ -206,6 +210,9 @@ function getCalendarSessionLabel(
   session: StatisticsSession,
   t: (key: string) => string,
 ): string {
+  if (session.entry_type === "planned") {
+    return `Plan: ${session.plan_name_at_time ?? t("deletedPlan")}`;
+  }
   if (session.entry_type === "external") {
     return getExternalWorkoutSportLabel(session.external_sport_type ?? "other", t);
   }
@@ -246,11 +253,15 @@ export function StatisticsDashboardM3({
   availableExternalSportTypes,
 }: Readonly<StatisticsDashboardM3Props>) {
   const t = useTranslations("statisticsPage");
+  const { locale } = useLocale();
   const router = useRouter();
   const [monthCursor, setMonthCursor] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
   const [startingPlanId, setStartingPlanId] = useState<string | null>(null);
+  const [startingProgramSessionId, setStartingProgramSessionId] = useState<
+    string | null
+  >(null);
   const [selectedSession, setSelectedSession] = useState<StatisticsSession | null>(
     null,
   );
@@ -305,6 +316,10 @@ export function StatisticsDashboardM3({
       ),
     [sessions],
   );
+  const completedOrExternalSessions = useMemo(
+    () => normalizedSessions.filter((session) => session.entry_type !== "planned"),
+    [normalizedSessions],
+  );
 
   const sessionsByDate = useMemo(() => {
     const map = new Map<string, StatisticsSession[]>();
@@ -345,7 +360,7 @@ export function StatisticsDashboardM3({
   }, [selectedDateKey, sessionsByDate, todayKey]);
 
   const monthGrid = useMemo(() => buildMonthGrid(monthCursor), [monthCursor]);
-  const locale = "pl-PL";
+  const localeTag = locale === "pl" ? "pl-PL" : "en-US";
 
   const dayLabels = [
     t("weekdayMon"),
@@ -361,12 +376,12 @@ export function StatisticsDashboardM3({
   const nextWeekStart = addDays(currentWeekStart, 7);
   const previousWeekStart = addDays(currentWeekStart, -7);
 
-  const sessionsThisWeek = normalizedSessions.filter((session) => {
+  const sessionsThisWeek = completedOrExternalSessions.filter((session) => {
     const startedAt = new Date(session.started_at);
     return startedAt >= currentWeekStart && startedAt < nextWeekStart;
   });
 
-  const sessionsPreviousWeek = normalizedSessions.filter((session) => {
+  const sessionsPreviousWeek = completedOrExternalSessions.filter((session) => {
     const startedAt = new Date(session.started_at);
     return startedAt >= previousWeekStart && startedAt < currentWeekStart;
   });
@@ -393,7 +408,7 @@ export function StatisticsDashboardM3({
       ? Math.round(weeklyTotalDurationMinutes / sessionsThisWeek.length)
       : 0;
 
-  const sessionsLast30Days = normalizedSessions.filter((session) => {
+  const sessionsLast30Days = completedOrExternalSessions.filter((session) => {
     const startedAt = new Date(session.started_at);
     return startedAt >= addDays(atStartOfDay(now), -30);
   });
@@ -427,7 +442,7 @@ export function StatisticsDashboardM3({
     return Array.from({ length: 8 }, (_, idx) => {
       const start = addDays(currentWeekStart, (idx - 7) * 7);
       const end = addDays(start, 7);
-      const count = normalizedSessions.filter((session) => {
+      const count = completedOrExternalSessions.filter((session) => {
         const startedAt = new Date(session.started_at);
         return startedAt >= start && startedAt < end;
       }).length;
@@ -437,7 +452,7 @@ export function StatisticsDashboardM3({
         count,
       };
     });
-  }, [currentWeekStart, normalizedSessions]);
+  }, [completedOrExternalSessions, currentWeekStart]);
 
   const weeklyTrendMax = Math.max(1, ...weeklyTrend.map((item) => item.count));
 
@@ -484,13 +499,54 @@ export function StatisticsDashboardM3({
     }
   };
 
+  const handleStartProgramSession = async (programSessionId: string | undefined) => {
+    if (!programSessionId) return;
+    setStartingProgramSessionId(programSessionId);
+
+    try {
+      const response = await fetch(`/api/program-sessions/${programSessionId}/start`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json().catch(() => ({}))) as {
+          message?: string;
+        };
+        toast.error(errorData.message ?? t("repeatPlanFailed"));
+        return;
+      }
+
+      const data = (await response.json()) as {
+        workout_session?: { id?: string };
+      };
+      const sessionId = data.workout_session?.id;
+      if (!sessionId) {
+        toast.error(t("repeatPlanFailed"));
+        return;
+      }
+
+      toast.success(t("repeatPlanSuccess"));
+      router.push(`/workout-sessions/${sessionId}/active`);
+    } catch (error) {
+      console.error("Error starting program session", error);
+      toast.error(t("repeatPlanFailed"));
+    } finally {
+      setStartingProgramSessionId(null);
+    }
+  };
+
   const selectedSessionDurationMinutes = selectedSession
     ? Math.round(getSessionDurationSeconds(selectedSession) / 60)
     : 0;
   const selectedSessionHasPlan = Boolean(selectedSession?.workout_plan_id);
   const isStartingSelectedPlan =
+    selectedSession?.entry_type === "session" &&
     Boolean(selectedSession?.workout_plan_id) &&
     startingPlanId === selectedSession?.workout_plan_id;
+  const isStartingSelectedProgramSession =
+    selectedSession?.entry_type === "planned" &&
+    Boolean(selectedSession?.program_session_id) &&
+    startingProgramSessionId === selectedSession?.program_session_id;
 
   const resetExternalWorkoutForm = () => {
     setEditingExternalWorkoutId(null);
@@ -513,6 +569,43 @@ export function StatisticsDashboardM3({
 
     const startedAt = new Date(session.started_at);
     setEditingExternalWorkoutId(session.external_workout_id);
+    setExternalWorkoutDate(toDateKey(startedAt));
+    setExternalWorkoutDurationMinutes(
+      String(Math.max(1, Math.round(getSessionDurationSeconds(session) / 60))),
+    );
+    setExternalWorkoutSportType(
+      getExternalWorkoutSportLabel(session.external_sport_type ?? "other", t),
+    );
+    setExternalWorkoutCalories(
+      typeof session.external_calories === "number"
+        ? String(session.external_calories)
+        : "",
+    );
+    setExternalWorkoutAvgHeartRate(
+      typeof session.external_hr_avg === "number" ? String(session.external_hr_avg) : "",
+    );
+    setExternalWorkoutMaxHeartRate(
+      typeof session.external_hr_max === "number" ? String(session.external_hr_max) : "",
+    );
+    setExternalWorkoutRpe(
+      typeof session.external_intensity_rpe === "number"
+        ? String(session.external_intensity_rpe)
+        : "",
+    );
+    setExternalWorkoutNotes(session.external_notes ?? "");
+    setExternalWorkoutSource(session.external_source ?? "manual");
+    setSelectedSession(null);
+    setIsExternalDialogOpen(true);
+  };
+
+  const openDuplicateExternalWorkoutDialog = (session: StatisticsSession) => {
+    if (session.entry_type !== "external") {
+      toast.error(t("manualWorkoutEditUnavailable"));
+      return;
+    }
+
+    const startedAt = new Date(session.started_at);
+    setEditingExternalWorkoutId(null);
     setExternalWorkoutDate(toDateKey(startedAt));
     setExternalWorkoutDurationMinutes(
       String(Math.max(1, Math.round(getSessionDurationSeconds(session) / 60))),
@@ -741,7 +834,7 @@ export function StatisticsDashboardM3({
               </Button>
               <p className="min-w-32 text-center text-[10px] font-semibold capitalize sm:min-w-36 sm:text-xs md:text-sm">
                 <span data-test-id="statistics-calendar-month-label">
-                {formatMonthLabel(monthCursor, locale)}
+                {formatMonthLabel(monthCursor, localeTag)}
                 </span>
               </p>
               <Button
@@ -779,6 +872,8 @@ export function StatisticsDashboardM3({
             const dayPrimarySession = daySessions[0];
             const isExternalPrimarySession =
               dayPrimarySession?.entry_type === "external";
+            const isPlannedPrimarySession =
+              dayPrimarySession?.entry_type === "planned";
             const dayPrimarySessionTitle = dayPrimarySession
               ? getSessionTitle(dayPrimarySession, t)
               : "";
@@ -821,9 +916,11 @@ export function StatisticsDashboardM3({
                       type="button"
                       className={[
                         "flex w-full cursor-pointer items-center rounded-md px-0.5 py-px text-left text-[7px] font-medium leading-tight sm:hidden",
-                        isExternalPrimarySession
-                          ? "bg-secondary/80 text-primary"
-                          : "bg-primary/10 text-primary",
+                        isPlannedPrimarySession
+                          ? "border border-dashed border-primary/50 bg-secondary/80 text-primary"
+                          : isExternalPrimarySession
+                            ? "bg-secondary/80 text-primary"
+                            : "bg-primary/10 text-primary",
                       ].join(" ")}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -843,9 +940,11 @@ export function StatisticsDashboardM3({
                       type="button"
                       className={[
                         "hidden w-full cursor-pointer rounded-md px-1.5 py-0.5 text-left text-[10px] font-medium sm:block",
-                        isExternalPrimarySession
-                          ? "bg-secondary/80 text-primary hover:bg-secondary"
-                          : "bg-primary/10 text-primary hover:bg-primary/20",
+                        isPlannedPrimarySession
+                          ? "border border-dashed border-primary/60 bg-secondary/80 text-primary hover:bg-secondary"
+                          : isExternalPrimarySession
+                            ? "bg-secondary/80 text-primary hover:bg-secondary"
+                            : "bg-primary/10 text-primary hover:bg-primary/20",
                       ].join(" ")}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -1244,6 +1343,11 @@ export function StatisticsDashboardM3({
                   event.stopPropagation();
                   openEditExternalWorkoutDialog(selectedSession);
                 }}
+                onDuplicate={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  openDuplicateExternalWorkoutDialog(selectedSession);
+                }}
                 onDelete={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -1256,8 +1360,10 @@ export function StatisticsDashboardM3({
                   setSessionPendingDelete(selectedSession);
                 }}
                 editAriaLabel={t("manualWorkoutEdit")}
+                duplicateAriaLabel={t("manualWorkoutDuplicate")}
                 deleteAriaLabel={t("manualWorkoutDelete")}
                 editDisabled={isDeletingExternalWorkout}
+                duplicateDisabled={isDeletingExternalWorkout}
                 deleteDisabled={isDeletingExternalWorkout}
                 alwaysVisible
                 positionClassName="right-14 top-4"
@@ -1276,12 +1382,14 @@ export function StatisticsDashboardM3({
                     {formatShortDate(new Date(selectedSession.started_at))}
                   </span>
                 </div>
-                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-muted-foreground">{t("sessionDurationLabel")}</span>
-                  <span className="font-medium">
-                    {formatMinutes(selectedSessionDurationMinutes, t)}
-                  </span>
-                </div>
+                {selectedSession.entry_type !== "planned" && (
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{t("sessionDurationLabel")}</span>
+                    <span className="font-medium">
+                      {formatMinutes(selectedSessionDurationMinutes, t)}
+                    </span>
+                  </div>
+                )}
                 {selectedSession.entry_type === "session" && (
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-muted-foreground">{t("sessionExercisesLabel")}</span>
@@ -1384,6 +1492,21 @@ export function StatisticsDashboardM3({
                     disabled={!selectedSessionHasPlan || isStartingSelectedPlan}
                   >
                     {isStartingSelectedPlan ? t("startingPlan") : t("repeatPlan")}
+                  </Button>
+                )}
+                {selectedSession.entry_type === "planned" && (
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      handleStartProgramSession(selectedSession.program_session_id)
+                    }
+                    disabled={
+                      !selectedSession.program_session_id || isStartingSelectedProgramSession
+                    }
+                  >
+                    {isStartingSelectedProgramSession
+                      ? t("startingPlan")
+                      : t("repeatPlan")}
                   </Button>
                 )}
               </div>

@@ -270,7 +270,7 @@ test.describe("Workout Session Flow E2E", () => {
         has: page.getByRole("heading", { level: 3, name: manualDurationTitle }),
       });
     await expect(manualDurationCard.locator("tbody tr").first().locator("td").nth(1)).toHaveText(
-      "13",
+      "13 s",
     );
   });
 });

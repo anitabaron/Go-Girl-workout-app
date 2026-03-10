@@ -3,9 +3,10 @@ export const plMessages = {
   "nav.home": "Start",
   "nav.exercises": "Ćwiczenia",
   "nav.plans": "Plany",
+  "nav.programs": "Programy",
   "nav.sessions": "Sesje",
   "nav.records": "Rekordy",
-  "nav.statistics": "Statystyki",
+  "nav.statistics": "Kalendarz",
   "nav.start": "Start",
   "nav.menu": "Menu",
   "nav.menuClose": "Zamknij menu",
@@ -125,7 +126,7 @@ export const plMessages = {
   "home.feature.personalRecords.title": "Rekordy osobiste",
   "home.feature.personalRecords.description":
     "Śledź swoje rekordy osobiste w różnych metrykach. Osiągaj nowe PR i obserwuj swoje postępy w czasie.",
-  "home.feature.statistics.title": "Statystyki",
+  "home.feature.statistics.title": "Kalendarz",
   "home.feature.statistics.description":
     "Analizuj tygodniowe podsumowania, serie treningowe i trend aktywności. Korzystaj z kalendarza treningów i szybkiego wglądu w postęp.",
   "home.feature.assistant.title": "Asystent treningowy",
@@ -775,6 +776,7 @@ export const plMessages = {
   "assistantCurrentExercise.plannedRestAfter": "Planowana przerwa po seriach",
   "assistantTimers.seconds": "sekund",
   "assistantTimers.secondsRest": "sekund przerwy",
+  "assistantTimers.remainingTime": "pozostały czas",
   "assistantTimers.skipBreak": "Pomiń przerwę",
   "assistantTimers.getReadyPrefix": "Przygotuj się:",
   "assistantTimers.getReadyNext": "Przygotuj się na kolejne ćwiczenie",
@@ -872,10 +874,10 @@ export const plMessages = {
   "workoutPlanDetailContent.unilateral": "Jednostronne",
   "workoutPlanDetailContent.sets": "Serie",
   "workoutPlanDetailContent.reps": "Powtórzenia",
-  "workoutPlanDetailContent.duration": "Czas (s)",
-  "workoutPlanDetailContent.restBetween": "Przerwa między seriami (s)",
-  "workoutPlanDetailContent.restAfter": "Przerwa po seriach (s)",
-  "workoutPlanDetailContent.estimatedSetTime": "Szacowany czas serii (s)",
+  "workoutPlanDetailContent.duration": "Czas  ",
+  "workoutPlanDetailContent.restBetween": "Przerwa między seriami",
+  "workoutPlanDetailContent.restAfter": "Przerwa po seriach",
+  "workoutPlanDetailContent.estimatedSetTime": "Szacowany czas serii",
   "workoutPlanDetailContent.details": "Szczegóły",
   "workoutTimer.secondsRest": "sekund przerwy",
   "workoutTimer.setLabel": "Seria",
@@ -890,7 +892,7 @@ export const plMessages = {
     "Nie masz jeszcze żadnych rekordów dla tego ćwiczenia. Rozpocznij trening, aby ustanowić pierwszy rekord!",
   "personalRecordDetail.emptyAction": "Rozpocznij trening",
   "workoutSessionExercisesList.empty": "Brak ćwiczeń w sesji.",
-  "statisticsPage.title": "Statystyki",
+  "statisticsPage.title": "Kalendarz",
   "statisticsPage.description":
     "Kalendarz treningów, wykresy postępów i miejsce na integracje.",
   "statisticsPage.calendarTitle": "Kalendarz treningów",
@@ -907,7 +909,8 @@ export const plMessages = {
   "statisticsPage.manualWorkoutDialogTitle": "Dodaj trening spoza aplikacji",
   "statisticsPage.manualWorkoutDialogDescription":
     "Wpisz ręcznie trening wykonany poza aplikacją (np. z zegarka).",
-  "statisticsPage.manualWorkoutEditDialogTitle": "Edytuj trening spoza aplikacji",
+  "statisticsPage.manualWorkoutEditDialogTitle":
+    "Edytuj trening spoza aplikacji",
   "statisticsPage.manualWorkoutEditDialogDescription":
     "Zaktualizuj dane treningu dodanego ręcznie lub z importu.",
   "statisticsPage.manualWorkoutDateLabel": "Data treningu",
@@ -917,10 +920,11 @@ export const plMessages = {
     "np. Pole dance, Kalistenika, Joga",
   "statisticsPage.manualWorkoutCaloriesLabel": "Kalorie (kcal, opcjonalnie)",
   "statisticsPage.manualWorkoutSourceLabel": "Źródło (opcjonalnie)",
-  "statisticsPage.manualWorkoutSourcePlaceholder":
-    "np. Ręcznie",
-  "statisticsPage.manualWorkoutAvgHeartRateLabel": "Średnie tętno (opcjonalnie)",
-  "statisticsPage.manualWorkoutMaxHeartRateLabel": "Maksymalne tętno (opcjonalnie)",
+  "statisticsPage.manualWorkoutSourcePlaceholder": "np. Ręcznie",
+  "statisticsPage.manualWorkoutAvgHeartRateLabel":
+    "Średnie tętno (opcjonalnie)",
+  "statisticsPage.manualWorkoutMaxHeartRateLabel":
+    "Maksymalne tętno (opcjonalnie)",
   "statisticsPage.manualWorkoutRpeLabel":
     "Intensywność RPE (subiektywna skala wysiłku) 1-10 (opcjonalnie)",
   "statisticsPage.manualWorkoutNotesLabel": "Notatki (opcjonalnie)",
@@ -931,6 +935,7 @@ export const plMessages = {
   "statisticsPage.manualWorkoutUpdate": "Zapisz zmiany",
   "statisticsPage.manualWorkoutSaving": "Zapisywanie...",
   "statisticsPage.manualWorkoutEdit": "Edytuj trening",
+  "statisticsPage.manualWorkoutDuplicate": "Duplikuj trening",
   "statisticsPage.manualWorkoutSessionName": "Inny trening",
   "statisticsPage.manualWorkoutSaveSuccess": "Trening zapisany w kalendarzu.",
   "statisticsPage.manualWorkoutUpdateSuccess":
@@ -950,12 +955,10 @@ export const plMessages = {
     "Nie udało się usunąć treningu. Spróbuj ponownie.",
   "statisticsPage.manualWorkoutDeleteUnavailable":
     "Nie można usunąć tego wpisu treningowego.",
-  "statisticsPage.manualWorkoutInvalidDate":
-    "Podaj prawidłową datę treningu.",
+  "statisticsPage.manualWorkoutInvalidDate": "Podaj prawidłową datę treningu.",
   "statisticsPage.manualWorkoutInvalidDuration":
     "Czas trwania musi być dodatnią liczbą minut.",
-  "statisticsPage.manualWorkoutInvalidSportType":
-    "Podaj typ sportu.",
+  "statisticsPage.manualWorkoutInvalidSportType": "Podaj typ sportu.",
   "statisticsPage.manualWorkoutInvalidCalories":
     "Kalorie muszą być liczbą całkowitą (0 lub więcej).",
   "statisticsPage.manualWorkoutInvalidAvgHeartRate":
@@ -980,7 +983,7 @@ export const plMessages = {
   "statisticsPage.openDayDetails": "Pokaż treningi z tego dnia",
   "statisticsPage.deletedPlan": "Plan usunięty",
   "statisticsPage.openDetails": "Szczegóły sesji",
-  "statisticsPage.repeatPlan": "Wykonaj ten plan jeszcze raz",
+  "statisticsPage.repeatPlan": "Wykonaj plan",
   "statisticsPage.startingPlan": "Uruchamianie...",
   "statisticsPage.repeatPlanMissing":
     "Nie można uruchomić tego planu ponownie (brak identyfikatora planu).",
@@ -1032,7 +1035,9 @@ export const plMessages = {
     "Ułóż plan pod Twoje cele i aktualizuj go na bazie treningów oraz samopoczucia.",
   "aiAssistant.quickActions": "Szybkie akcje",
   "aiAssistant.quickActionPlanToday": "Ułóż dzisiejszy trening",
-  "aiAssistant.quickActionPlanWeek": "Rozpisz plan na ten tydzień",
+  "aiAssistant.quickActionPlanWeek": "Rozpisz program treningowy",
+  "aiAssistant.quickActionProgramKickoffPrompt":
+    "Chcę rozpisać program treningowy. Najpierw poproś mnie o opis celów, ograniczeń i preferencji (dni treningowe), a dopiero potem zaproponuj program.",
   "aiAssistant.quickActionAdjustRecovery": "Dostosuj po zmęczeniu lub bólu",
   "aiAssistant.quickActionReviewGoal": "Sprawdź progres celu",
   "aiAssistant.remainingToday": "Zostało na dziś {count} pytań",
@@ -1052,6 +1057,27 @@ export const plMessages = {
     "Asystent przygotuje kierunek planu i rekomendacje do kolejnych treningów.",
   "aiAssistant.responseError":
     "Nie udało się uzyskać odpowiedzi od asystenta. Spróbuj ponownie.",
+  "aiAssistant.programMonthsLabel": "Miesiące",
+  "aiAssistant.programModeLabel": "Tryb",
+  "aiAssistant.programModeExisting": "Twoje",
+  "aiAssistant.programModeMix": "Mix",
+  "aiAssistant.programModeNewOnly": "Nowe AI",
+  "aiAssistant.programMixRatioLabel": "Mix",
+  "aiAssistant.programDaysLabel": "Dni",
+  "aiAssistant.programGenerateButton": "Rozpisz program treningowy",
+  "aiAssistant.programGenerateActionTitle": "Utwórz program treningowy",
+  "aiAssistant.programGenerateActionDescription":
+    "Użyje ustawień z modułu poniżej (miesiące + tryb + wybrane dni).",
+  "aiAssistant.programGenerateConfirmDescription":
+    "Wygeneruje draft programu na {months} mies. dla dni: {days}.",
+  "aiAssistant.programDefaultGoalText": "Program ogólnorozwojowy",
+  "aiAssistant.weekdayMon": "Pon",
+  "aiAssistant.weekdayTue": "Wt",
+  "aiAssistant.weekdayWed": "Śr",
+  "aiAssistant.weekdayThu": "Czw",
+  "aiAssistant.weekdayFri": "Pt",
+  "aiAssistant.weekdaySat": "Sob",
+  "aiAssistant.weekdaySun": "Nd",
   "importInstructionPage.backToPlans": "Powrót do planów",
   "importInstructionPage.title": "Instrukcja importu planów treningowych",
   "importInstructionPage.description":

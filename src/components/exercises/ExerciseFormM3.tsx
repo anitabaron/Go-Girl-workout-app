@@ -43,6 +43,7 @@ import {
   calculateEstimatedSetTimeSeconds,
   getEstimatedSetTimeLabel,
 } from "@/lib/exercises/estimated-set-time";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
 import type { ExerciseDTO } from "@/types";
 
@@ -631,6 +632,10 @@ function ExerciseFormM3Fields({
               estimatedResult != null &&
               Number.isFinite(estimatedResult) &&
               estimatedResult >= 1;
+            const estimatedResultLabel =
+              canApplySuggested && estimatedResult != null
+                ? formatCompactSeconds(estimatedResult)
+                : null;
             return (
               <FormNumberInput
                 id="estimated_set_time_seconds"
@@ -649,8 +654,8 @@ function ExerciseFormM3Fields({
                         }
                         disabled={disabled}
                         className="cursor-pointer inline-flex shrink-0 items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                        title={`${t("estimatedUse")} (${estimatedResult} s)`}
-                        aria-label={`${t("estimatedUse")} ${estimatedResult} s`}
+                        title={`${t("estimatedUse")} (${estimatedResultLabel})`}
+                        aria-label={`${t("estimatedUse")} ${estimatedResultLabel}`}
                       >
                         <ArrowDown className="size-3.5" />
                       </button>

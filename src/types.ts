@@ -23,6 +23,12 @@ export type PRMetricType = Enums<"pr_metric_type">;
 export type AIRequestType = Enums<"ai_request_type">;
 export type ExternalWorkoutSportType = string;
 export type ExternalWorkoutSource = Enums<"external_workout_source">;
+export type TrainingProgramStatus = Enums<"training_program_status">;
+export type TrainingProgramSource = Enums<"training_program_source">;
+export type ProgramSessionStatus = Enums<"program_session_status">;
+export type CoachProfileTone = Enums<"coach_profile_tone">;
+export type CoachProfileStrictness = Enums<"coach_profile_strictness">;
+export type CoachProfileVerbosity = Enums<"coach_profile_verbosity">;
 
 /**
  * Base entity aliases for convenience.
@@ -37,6 +43,10 @@ export type ExternalWorkoutEntity = Tables<"external_workouts">;
 export type PersonalRecordEntity = Tables<"personal_records">;
 export type AIUsageEntity = Tables<"ai_usage">;
 export type AIRequestEntity = Tables<"ai_requests">;
+export type TrainingProgramEntity = Tables<"training_programs">;
+export type ProgramSessionEntity = Tables<"program_sessions">;
+export type ProgramNoteEntity = Tables<"program_notes">;
+export type AICoachProfileEntity = Tables<"ai_coach_profiles">;
 
 /**
  * API response helpers.
@@ -194,6 +204,124 @@ export type PlanQueryParams = {
   order?: "asc" | "desc";
   limit?: number;
   cursor?: string | null;
+};
+
+/**
+ * Training Programs
+ */
+export type ProgramGenerateCommand = {
+  goal_text: string;
+  duration_months?: 1 | 2 | 3;
+  sessions_per_week?: number;
+  weekdays?: Array<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun">;
+  program_mode?: "existing_only" | "mix_existing_new" | "new_only";
+  mix_ratio?: number;
+  constraints?: string | null;
+  profile_id?: string | null;
+};
+
+export type ProgramGeneratedExerciseInput = {
+  section_type: ExerciseType;
+  section_order: number;
+  exercise_id?: string | null;
+  exercise_title: string;
+  exercise_type?: ExerciseType | null;
+  exercise_part?: ExercisePart | null;
+  exercise_details?: string | null;
+  exercise_is_unilateral?: boolean | null;
+  planned_sets?: number | null;
+  planned_reps?: number | null;
+  planned_duration_seconds?: number | null;
+  planned_rest_seconds?: number | null;
+  planned_rest_after_series_seconds?: number | null;
+  estimated_set_time_seconds?: number | null;
+};
+
+export type ProgramGeneratedPlanTemplate = {
+  template_key: string;
+  name: string;
+  description?: string | null;
+  part?: ExercisePart | null;
+  exercises: ProgramGeneratedExerciseInput[];
+};
+
+export type ProgramCreateCommand = {
+  name: string;
+  goal_text?: string | null;
+  duration_months: 1 | 2 | 3;
+  sessions_per_week: number;
+  source?: TrainingProgramSource;
+  status?: TrainingProgramStatus;
+  coach_profile_snapshot?: Record<string, unknown> | null;
+  sessions: ProgramSessionCreateCommand[];
+};
+
+export type ProgramUpdateCommand = Partial<
+  Pick<TrainingProgramEntity, "name" | "goal_text" | "sessions_per_week" | "status">
+> & {
+  duration_months?: 1 | 2 | 3;
+  coach_profile_snapshot?: Record<string, unknown> | null;
+};
+
+export type ProgramSessionCreateCommand = {
+  workout_plan_id?: WorkoutPlanEntity["id"];
+  generated_plan?: ProgramGeneratedPlanTemplate;
+  scheduled_date: string;
+  week_index: number;
+  session_index: number;
+  status?: ProgramSessionStatus;
+  progression_overrides?: Record<string, unknown> | null;
+};
+
+export type ProgramSessionUpdateCommand = Partial<
+  Pick<ProgramSessionEntity, "scheduled_date" | "status">
+> & {
+  progression_overrides?: Record<string, unknown> | null;
+};
+
+export type ProgramListQueryParams = {
+  status?: TrainingProgramStatus;
+  source?: TrainingProgramSource;
+  limit?: number;
+};
+
+export type ProgramSessionListQueryParams = {
+  from?: string;
+  to?: string;
+  status?: ProgramSessionStatus;
+};
+
+export type ProgramSessionDTO = Omit<ProgramSessionEntity, "user_id">;
+export type ProgramNoteSource = "user" | "ai_action" | "ai_summary";
+export type ProgramNoteDTO = Omit<ProgramNoteEntity, "user_id">;
+export type ProgramNoteCreateCommand = {
+  program_session_id?: ProgramSessionEntity["id"] | null;
+  note_text: string;
+  fatigue_level?: number | null;
+  vitality_level?: number | null;
+  source?: ProgramNoteSource;
+};
+export type ProgramNoteListQueryParams = {
+  program_session_id?: ProgramSessionEntity["id"];
+  limit?: number;
+};
+
+export type TrainingProgramDTO = Omit<TrainingProgramEntity, "user_id"> & {
+  sessions: ProgramSessionDTO[];
+};
+
+export type AICoachProfileDTO = Omit<AICoachProfileEntity, "user_id">;
+
+export type AICoachProfilePatchCommand = {
+  persona_name?: string;
+  tone?: CoachProfileTone;
+  strictness?: CoachProfileStrictness;
+  verbosity?: CoachProfileVerbosity;
+  focus?: string | null;
+  risk_tolerance?: string | null;
+  contraindications?: string | null;
+  preferred_methodology?: string | null;
+  rules?: Record<string, unknown> | null;
 };
 
 /**

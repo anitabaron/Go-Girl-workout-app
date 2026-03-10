@@ -175,6 +175,54 @@ export type Database = {
           },
         ];
       };
+      ai_coach_profiles: {
+        Row: {
+          contraindications: string | null;
+          created_at: string;
+          focus: string | null;
+          id: string;
+          persona_name: string;
+          preferred_methodology: string | null;
+          risk_tolerance: string | null;
+          rules: Json | null;
+          strictness: Database["public"]["Enums"]["coach_profile_strictness"];
+          tone: Database["public"]["Enums"]["coach_profile_tone"];
+          updated_at: string;
+          user_id: string;
+          verbosity: Database["public"]["Enums"]["coach_profile_verbosity"];
+        };
+        Insert: {
+          contraindications?: string | null;
+          created_at?: string;
+          focus?: string | null;
+          id?: string;
+          persona_name?: string;
+          preferred_methodology?: string | null;
+          risk_tolerance?: string | null;
+          rules?: Json | null;
+          strictness?: Database["public"]["Enums"]["coach_profile_strictness"];
+          tone?: Database["public"]["Enums"]["coach_profile_tone"];
+          updated_at?: string;
+          user_id: string;
+          verbosity?: Database["public"]["Enums"]["coach_profile_verbosity"];
+        };
+        Update: {
+          contraindications?: string | null;
+          created_at?: string;
+          focus?: string | null;
+          id?: string;
+          persona_name?: string;
+          preferred_methodology?: string | null;
+          risk_tolerance?: string | null;
+          rules?: Json | null;
+          strictness?: Database["public"]["Enums"]["coach_profile_strictness"];
+          tone?: Database["public"]["Enums"]["coach_profile_tone"];
+          updated_at?: string;
+          user_id?: string;
+          verbosity?: Database["public"]["Enums"]["coach_profile_verbosity"];
+        };
+        Relationships: [];
+      };
       exercises: {
         Row: {
           created_at: string;
@@ -671,6 +719,172 @@ export type Database = {
           },
         ];
       };
+      training_programs: {
+        Row: {
+          coach_profile_snapshot: Json | null;
+          created_at: string;
+          duration_months: number;
+          goal_text: string | null;
+          id: string;
+          name: string;
+          sessions_per_week: number;
+          source: Database["public"]["Enums"]["training_program_source"];
+          status: Database["public"]["Enums"]["training_program_status"];
+          updated_at: string;
+          user_id: string;
+          weeks_count: number;
+        };
+        Insert: {
+          coach_profile_snapshot?: Json | null;
+          created_at?: string;
+          duration_months: number;
+          goal_text?: string | null;
+          id?: string;
+          name: string;
+          sessions_per_week: number;
+          source?: Database["public"]["Enums"]["training_program_source"];
+          status?: Database["public"]["Enums"]["training_program_status"];
+          updated_at?: string;
+          user_id: string;
+          weeks_count: number;
+        };
+        Update: {
+          coach_profile_snapshot?: Json | null;
+          created_at?: string;
+          duration_months?: number;
+          goal_text?: string | null;
+          id?: string;
+          name?: string;
+          sessions_per_week?: number;
+          source?: Database["public"]["Enums"]["training_program_source"];
+          status?: Database["public"]["Enums"]["training_program_status"];
+          updated_at?: string;
+          user_id?: string;
+          weeks_count?: number;
+        };
+        Relationships: [];
+      };
+      program_sessions: {
+        Row: {
+          created_at: string;
+          id: string;
+          linked_workout_session_id: string | null;
+          progression_overrides: Json | null;
+          scheduled_date: string;
+          session_index: number;
+          status: Database["public"]["Enums"]["program_session_status"];
+          training_program_id: string;
+          updated_at: string;
+          user_id: string;
+          week_index: number;
+          workout_plan_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          linked_workout_session_id?: string | null;
+          progression_overrides?: Json | null;
+          scheduled_date: string;
+          session_index: number;
+          status?: Database["public"]["Enums"]["program_session_status"];
+          training_program_id: string;
+          updated_at?: string;
+          user_id: string;
+          week_index: number;
+          workout_plan_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          linked_workout_session_id?: string | null;
+          progression_overrides?: Json | null;
+          scheduled_date?: string;
+          session_index?: number;
+          status?: Database["public"]["Enums"]["program_session_status"];
+          training_program_id?: string;
+          updated_at?: string;
+          user_id?: string;
+          week_index?: number;
+          workout_plan_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "program_sessions_linked_workout_session_id_fkey";
+            columns: ["linked_workout_session_id"];
+            isOneToOne: false;
+            referencedRelation: "workout_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "program_sessions_training_program_id_fkey";
+            columns: ["training_program_id"];
+            isOneToOne: false;
+            referencedRelation: "training_programs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "program_sessions_workout_plan_id_fkey";
+            columns: ["workout_plan_id"];
+            isOneToOne: false;
+            referencedRelation: "workout_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      program_notes: {
+        Row: {
+          created_at: string;
+          fatigue_level: number | null;
+          id: string;
+          note_text: string;
+          program_session_id: string | null;
+          source: string;
+          training_program_id: string;
+          updated_at: string;
+          user_id: string;
+          vitality_level: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          fatigue_level?: number | null;
+          id?: string;
+          note_text: string;
+          program_session_id?: string | null;
+          source?: string;
+          training_program_id: string;
+          updated_at?: string;
+          user_id: string;
+          vitality_level?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          fatigue_level?: number | null;
+          id?: string;
+          note_text?: string;
+          program_session_id?: string | null;
+          source?: string;
+          training_program_id?: string;
+          updated_at?: string;
+          user_id?: string;
+          vitality_level?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "program_notes_program_session_id_fkey";
+            columns: ["program_session_id"];
+            isOneToOne: false;
+            referencedRelation: "program_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "program_notes_training_program_id_fkey";
+            columns: ["training_program_id"];
+            isOneToOne: false;
+            referencedRelation: "training_programs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -697,11 +911,17 @@ export type Database = {
     };
     Enums: {
       ai_request_type: "generate" | "optimize";
+      coach_profile_strictness: "low" | "medium" | "high";
+      coach_profile_tone: "calm" | "motivating" | "direct";
+      coach_profile_verbosity: "short" | "balanced" | "detailed";
       external_workout_source: "manual" | "garmin" | "apple_health";
       external_workout_sport_type: "pole_dance" | "calisthenics" | "other";
       exercise_part: "Legs" | "Core" | "Back" | "Arms" | "Chest" | "Glutes";
       exercise_type: "Warm-up" | "Main Workout" | "Cool-down";
+      program_session_status: "planned" | "completed";
       pr_metric_type: "total_reps" | "max_duration" | "max_weight";
+      training_program_source: "ai" | "manual";
+      training_program_status: "draft" | "active" | "archived";
       workout_session_status: "in_progress" | "completed";
     };
     CompositeTypes: {

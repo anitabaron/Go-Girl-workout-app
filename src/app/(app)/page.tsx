@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 import {
   Dumbbell,
   Calendar,
+  CalendarDays,
   History,
   Trophy,
-  BarChart3,
   Sparkles,
   ClipboardClock,
   FileJson,
@@ -51,8 +51,8 @@ const FEATURES = [
     id: "statistics",
     titleKey: "feature.statistics.title",
     descriptionKey: "feature.statistics.description",
-    icon: BarChart3,
-    href: "/statistics",
+    icon: CalendarDays,
+    href: "/calendar",
   },
   {
     id: "assistant",
@@ -73,7 +73,7 @@ const FEATURES = [
     titleKey: "feature.comingSoon.title",
     descriptionKey: "feature.comingSoon.description",
     icon: Sparkles,
-    href: "/statistics",
+    href: "/calendar",
   },
 ] as const;
 

@@ -24,6 +24,7 @@ import {
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
 import { calculateEstimatedSetTimeSeconds } from "@/lib/exercises/estimated-set-time";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 import type { ExerciseFormValues } from "@/lib/validation/exercise-form";
 
 function createCheckboxGroupChangeHandler(
@@ -519,7 +520,7 @@ export function ExerciseFormFields({
         label:
           estimatedResult === null
             ? ESTIMATED_SET_FIELD.label
-            : `${ESTIMATED_SET_FIELD.label} ≈ ${estimatedResult} s`,
+            : `${ESTIMATED_SET_FIELD.label} ≈ ${formatCompactSeconds(estimatedResult)}`,
       })}
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bot, History, Plus, Send, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,33 +9,40 @@ import { useTranslations } from "@/i18n/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet";
 
-type AssistantPanelProps = {
-  messages: ChatMessage[];
-  conversationHistory: ConversationHistoryItem[];
-  isHistoryOpen: boolean;
-  usage: AIUsage | null;
-  input: string;
-  isSending: boolean;
-  onInputChange: (value: string) => void;
-  onSend: () => Promise<void>;
-  onToggleHistory: () => void;
-  onSelectHistory: (conversationId: string) => void;
-  onQuickAction: (prompt: string) => Promise<void>;
-  onResetConversation: () => void;
-  onClose?: () => void;
-  mobile?: boolean;
+type ChatAction = {
+  id: string;
+  type:
+    | "APPLY_LIGHT_VERSION"
+    | "ADD_DELOAD_WEEK"
+    | "ADD_RECOVERY_DAY"
+    | "GENERATE_PROGRAM";
+  label: string;
+  description: string;
+  requires_confirmation: boolean;
+  payload: Record<string, unknown>;
 };
 
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  actions?: ChatAction[];
 };
 
 type ConversationHistoryItem = {
@@ -51,19 +58,137 @@ type AIUsage = {
   remaining: number;
 };
 
+type ChatAttachment = {
+  type: "plan" | "program" | "date_range" | "session" | "metric_pack";
+  value: Record<string, unknown>;
+  label: string;
+};
+
+type AIContextEventDetail = {
+  attachment?: {
+    type: ChatAttachment["type"];
+    value: Record<string, unknown>;
+    label?: string;
+  };
+  suggestedMessage?: string;
+};
+
+type WeekdayCode = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+type ProgramMode = "existing_only" | "mix_existing_new" | "new_only";
+
+// Program generation defaults (intentionally hardcoded for product consistency).
+// You can change these values directly in code.
+const DEFAULT_PROGRAM_MODE: ProgramMode = "mix_existing_new";
+const DEFAULT_MIX_RATIO: 50 | 60 | 70 = 60;
+
+const WEEKDAY_OPTIONS: ReadonlyArray<{ code: WeekdayCode; labelKey: string }> = [
+  { code: "mon", labelKey: "weekdayMon" },
+  { code: "tue", labelKey: "weekdayTue" },
+  { code: "wed", labelKey: "weekdayWed" },
+  { code: "thu", labelKey: "weekdayThu" },
+  { code: "fri", labelKey: "weekdayFri" },
+  { code: "sat", labelKey: "weekdaySat" },
+  { code: "sun", labelKey: "weekdaySun" },
+] as const;
+
+function formatWeekdayLabels(
+  weekdays: WeekdayCode[],
+  t: (key: string) => string,
+): string {
+  const labels = WEEKDAY_OPTIONS.filter((item) => weekdays.includes(item.code)).map(
+    (item) => t(item.labelKey),
+  );
+  return labels.join(", ");
+}
+
+function isActionConfirmationMessage(message: string): boolean {
+  const text = message.toLowerCase();
+  return (
+    /\b(ok|okej|zgoda|jasne|super|dzialaj|działaj|wprowadz|wprowadź|zastosuj|zrob|zrób)\b/.test(
+      text,
+    ) ||
+    text.includes("mozesz") ||
+    text.includes("możesz")
+  );
+}
+
+function pickSuggestedActionForConfirmation(
+  message: string,
+  actions: ChatAction[],
+): ChatAction | null {
+  const nonGenerate = actions.filter((action) => action.type !== "GENERATE_PROGRAM");
+  if (nonGenerate.length === 0) return null;
+
+  const text = message.toLowerCase();
+  if (text.includes("deload")) {
+    return nonGenerate.find((action) => action.type === "ADD_DELOAD_WEEK") ?? nonGenerate[0]!;
+  }
+  if (text.includes("regener")) {
+    return (
+      nonGenerate.find((action) => action.type === "ADD_RECOVERY_DAY") ?? nonGenerate[0]!
+    );
+  }
+  if (
+    text.includes("lze") ||
+    text.includes("lżej") ||
+    text.includes("zmec") ||
+    text.includes("zmęc")
+  ) {
+    return (
+      nonGenerate.find((action) => action.type === "APPLY_LIGHT_VERSION") ??
+      nonGenerate[0]!
+    );
+  }
+
+  return nonGenerate[0]!;
+}
+
+type AssistantPanelProps = {
+  messages: ChatMessage[];
+  conversationHistory: ConversationHistoryItem[];
+  isHistoryOpen: boolean;
+  usage: AIUsage | null;
+  input: string;
+  attachments: ChatAttachment[];
+  isSending: boolean;
+  onInputChange: (value: string) => void;
+  onRemoveAttachment: (index: number) => void;
+  onSend: () => Promise<void>;
+  onToggleHistory: () => void;
+  onSelectHistory: (conversationId: string) => void;
+  onQuickAction: (prompt: string) => Promise<void>;
+  selectedDurationMonths: 1 | 2 | 3;
+  selectedWeekdays: WeekdayCode[];
+  onSelectDurationMonths: (value: 1 | 2 | 3) => void;
+  onToggleWeekday: (value: WeekdayCode) => void;
+  onGenerateProgramFromPreset: () => Promise<void>;
+  onResetConversation: () => void;
+  onActionClick: (action: ChatAction) => Promise<void>;
+  onClose?: () => void;
+  mobile?: boolean;
+};
+
 function AIAssistantPanel({
   messages,
   conversationHistory,
   isHistoryOpen,
   usage,
   input,
+  attachments,
   isSending,
   onInputChange,
+  onRemoveAttachment,
   onSend,
   onToggleHistory,
   onSelectHistory,
   onQuickAction,
+  selectedDurationMonths,
+  selectedWeekdays,
+  onSelectDurationMonths,
+  onToggleWeekday,
+  onGenerateProgramFromPreset,
   onResetConversation,
+  onActionClick,
   onClose,
   mobile = false,
 }: Readonly<AssistantPanelProps>) {
@@ -71,10 +196,26 @@ function AIAssistantPanel({
 
   const quickActions = useMemo(
     () => [
-      t("quickActionPlanToday"),
-      t("quickActionPlanWeek"),
-      t("quickActionAdjustRecovery"),
-      t("quickActionReviewGoal"),
+      {
+        id: "plan-today",
+        label: t("quickActionPlanToday"),
+        prompt: t("quickActionPlanToday"),
+      },
+      {
+        id: "program-kickoff",
+        label: t("quickActionPlanWeek"),
+        prompt: t("quickActionProgramKickoffPrompt"),
+      },
+      {
+        id: "adjust-recovery",
+        label: t("quickActionAdjustRecovery"),
+        prompt: t("quickActionAdjustRecovery"),
+      },
+      {
+        id: "review-goal",
+        label: t("quickActionReviewGoal"),
+        prompt: t("quickActionReviewGoal"),
+      },
     ],
     [t],
   );
@@ -98,11 +239,7 @@ function AIAssistantPanel({
             size="icon-sm"
             aria-label={t("history")}
             onClick={onToggleHistory}
-            className={
-              isHistoryOpen
-                ? "ai-history-active"
-                : undefined
-            }
+            className={isHistoryOpen ? "ai-history-active" : undefined}
           >
             <History className="size-4" />
           </Button>
@@ -171,30 +308,124 @@ function AIAssistantPanel({
         ) : messages.length > 0 ? (
           <section className="space-y-2">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={[
-                  "max-w-[90%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap",
-                  message.role === "user"
-                    ? "ml-auto bg-primary text-primary-foreground"
-                    : "mr-auto border border-border bg-card text-foreground",
-                ].join(" ")}
-              >
-                {message.content}
+              <div key={message.id} className="space-y-2">
+                <div
+                  className={[
+                    "max-w-[90%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap",
+                    message.role === "user"
+                      ? "ml-auto bg-primary text-primary-foreground"
+                      : "mr-auto border border-border bg-card text-foreground",
+                  ].join(" ")}
+                >
+                  {message.content}
+                </div>
+                {message.role === "assistant" && (message.actions?.length ?? 0) > 0 ? (
+                  <div className="mr-auto grid max-w-[90%] grid-cols-1 gap-2">
+                    {message.actions?.map((action) => {
+                      const isGenerateProgramAction = action.type === "GENERATE_PROGRAM";
+                      if (isGenerateProgramAction) {
+                        return (
+                          <section
+                            key={`${message.id}-${action.id}`}
+                            className="space-y-2 rounded-xl border border-border bg-card p-2.5"
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-end gap-2">
+                                <label className="space-y-1 text-[11px] text-muted-foreground">
+                                  <span className="block">{t("programMonthsLabel")}</span>
+                                  <select
+                                    value={selectedDurationMonths}
+                                    onChange={(event) =>
+                                      onSelectDurationMonths(
+                                        Number(event.target.value) as 1 | 2 | 3,
+                                      )
+                                    }
+                                    disabled={isSending || (usage?.remaining ?? 1) <= 0}
+                                    className="h-7 w-14 rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                  >
+                                    <option value={1}>1</option>
+                                    <option value={2}>2</option>
+                                    <option value={3}>3</option>
+                                  </select>
+                                </label>
+                                <div className="min-w-0 flex-1 space-y-1">
+                                  <span className="block text-[11px] text-muted-foreground">
+                                    {t("programDaysLabel")}
+                                  </span>
+                                  <div className="flex flex-wrap items-center gap-1">
+                                    {WEEKDAY_OPTIONS.map((weekday) => {
+                                      const checked = selectedWeekdays.includes(weekday.code);
+                                      const weekdayLabel = t(weekday.labelKey);
+                                      return (
+                                        <label
+                                          key={weekday.code}
+                                          className="inline-flex cursor-pointer items-center gap-1"
+                                          title={weekdayLabel}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={() => onToggleWeekday(weekday.code)}
+                                            disabled={isSending || (usage?.remaining ?? 1) <= 0}
+                                            className="sr-only"
+                                          />
+                                          <span
+                                            className={[
+                                              "inline-flex h-7 min-w-8 items-center justify-center rounded-md border px-1 text-[11px]",
+                                              checked
+                                                ? "border-primary bg-primary text-primary-foreground"
+                                                : "border-input bg-background text-foreground",
+                                            ].join(" ")}
+                                          >
+                                            {weekdayLabel}
+                                          </span>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                onClick={() => void onGenerateProgramFromPreset()}
+                                size="sm"
+                                className="h-8 w-full px-3 text-xs"
+                                disabled={
+                                  isSending ||
+                                  (usage?.remaining ?? 1) <= 0 ||
+                                  selectedWeekdays.length === 0
+                                }
+                              >
+                                {t("programGenerateButton")}
+                              </Button>
+                            </div>
+                          </section>
+                        );
+                      }
+                      return (
+                        <button
+                          key={`${message.id}-${action.id}`}
+                          type="button"
+                          className="rounded-lg border border-border bg-card px-3 py-2 text-left text-xs transition-colors hover:bg-accent"
+                          onClick={() => void onActionClick(action)}
+                          title={action.description}
+                        >
+                          <p className="font-semibold">{action.label}</p>
+                          <p className="mt-0.5 text-muted-foreground">{action.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
             ))}
             {isSending ? (
-              <div className="mr-auto rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+              <div className="mr-auto px-1 text-sm text-muted-foreground">
                 {t("thinking")}
               </div>
             ) : null}
           </section>
-        ) : (
-          <section className="space-y-2 rounded-xl border border-dashed border-border bg-card/60 p-3 text-sm text-muted-foreground">
-            <p>{t("emptyStateTitle")}</p>
-            <p>{t("emptyStateDescription")}</p>
-          </section>
-        )}
+        ) : null}
 
         {!isHistoryOpen ? (
           <section className="space-y-3">
@@ -204,21 +435,43 @@ function AIAssistantPanel({
             <div className="grid grid-cols-1 gap-2">
               {quickActions.map((action) => (
                 <button
-                  key={action}
+                  key={action.id}
                   type="button"
-                  className="rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent"
-                  onClick={() => void onQuickAction(action)}
+                  className="rounded-xl border border-border bg-card px-3 py-1.5 text-left text-xs transition-colors hover:bg-accent"
+                  onClick={() => void onQuickAction(action.prompt)}
                   disabled={isSending || (usage?.remaining ?? 1) <= 0}
                 >
-                  {action}
+                  {action.label}
                 </button>
               ))}
             </div>
           </section>
         ) : null}
+
+        
       </div>
 
       <div className="border-t border-border p-4">
+        {attachments.length > 0 ? (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {attachments.map((attachment, index) => (
+              <span
+                key={`${attachment.type}-${index}`}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground"
+              >
+                {attachment.type}: {attachment.label}
+                <button
+                  type="button"
+                  className="rounded-full p-0.5 transition-colors hover:bg-accent"
+                  onClick={() => onRemoveAttachment(index)}
+                  aria-label={`Usuń kontekst: ${attachment.label}`}
+                >
+                  <X className="size-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
         <div className="flex items-center gap-2">
           <Textarea
             placeholder={t("inputPlaceholder")}
@@ -240,7 +493,9 @@ function AIAssistantPanel({
             size="icon-sm"
             aria-label={t("sendAria")}
             onClick={() => void onSend()}
-            disabled={isSending || input.trim().length === 0 || (usage?.remaining ?? 1) <= 0}
+            disabled={
+              isSending || input.trim().length === 0 || (usage?.remaining ?? 1) <= 0
+            }
           >
             <Send className="size-4" />
           </Button>
@@ -253,6 +508,7 @@ function AIAssistantPanel({
 export function AIAssistantShell() {
   const t = useTranslations("aiAssistant");
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpenMobile, setIsOpenMobile] = useState(false);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -262,7 +518,18 @@ export function AIAssistantShell() {
     ConversationHistoryItem[]
   >([]);
   const [usage, setUsage] = useState<AIUsage | null>(null);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  const [selectedDurationMonths, setSelectedDurationMonths] = useState<1 | 2 | 3>(2);
+  const [selectedWeekdays, setSelectedWeekdays] = useState<WeekdayCode[]>([
+    "thu",
+    "sat",
+  ]);
+  const [pendingAction, setPendingAction] = useState<ChatAction | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
+    null,
+  );
+  const [lastProgramContextId, setLastProgramContextId] = useState<string | null>(
     null,
   );
   const isWorkoutSessionActivePage = useMemo(
@@ -321,6 +588,91 @@ export function AIAssistantShell() {
       };
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
+
+      const latestAssistantWithActions = [...messages]
+        .reverse()
+        .find(
+          (message) =>
+            message.role === "assistant" && (message.actions?.length ?? 0) > 0,
+        );
+      const confirmedAction =
+        latestAssistantWithActions && isActionConfirmationMessage(trimmed)
+          ? pickSuggestedActionForConfirmation(
+              trimmed,
+              latestAssistantWithActions.actions ?? [],
+            )
+          : null;
+      const fallbackConfirmedAction: ChatAction | null =
+        !confirmedAction &&
+        isActionConfirmationMessage(trimmed) &&
+        lastProgramContextId
+          ? {
+              id: `fallback-light-${Date.now()}`,
+              type: "APPLY_LIGHT_VERSION",
+              label: "Zastosuj lżejszą wersję planu",
+              description: "Fallback: wdrożenie lżejszej wersji na podpiętym programie.",
+              requires_confirmation: false,
+              payload: {
+                reduction_percent: 20,
+                based_on: "confirmation_fallback",
+                target_program_id: lastProgramContextId,
+                apply_scope: "whole_program",
+              },
+            }
+          : null;
+      const actionToExecute = confirmedAction ?? fallbackConfirmedAction;
+
+      if (actionToExecute) {
+        setIsSending(true);
+        try {
+          const response = await fetch("/api/ai/trainer/actions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: actionToExecute.type,
+              payload: actionToExecute.payload ?? {},
+              conversation_id: activeConversationId,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = (await response.json().catch(() => ({}))) as {
+              message?: string;
+              details?: string;
+            };
+            const baseMessage = errorData.message ?? t("responseError");
+            throw new Error(
+              errorData.details
+                ? `${baseMessage}\nSzczegóły: ${errorData.details}`
+                : baseMessage,
+            );
+          }
+
+          const data = (await response.json()) as { message?: string };
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `assistant-action-${Date.now()}`,
+              role: "assistant",
+              content:
+                data.message ??
+                "Wdrożyłam zmianę w programie. Sprawdź szczegóły programu i kalendarz.",
+              actions: [],
+            },
+          ]);
+          router.refresh();
+          return;
+        } catch (error) {
+          console.error("[AIAssistantShell] Failed to execute confirmed action", error);
+          toast.error(error instanceof Error ? error.message : t("responseError"));
+          return;
+        } finally {
+          setIsSending(false);
+        }
+      }
+
+      const requestAttachments = attachments.map(({ type, value }) => ({ type, value }));
+      setAttachments([]);
       setIsSending(true);
 
       try {
@@ -332,20 +684,26 @@ export function AIAssistantShell() {
           body: JSON.stringify({
             message: trimmed,
             conversation_id: activeConversationId,
+            attachments: requestAttachments,
           }),
         });
 
         if (!response.ok) {
           const errorData = (await response.json().catch(() => ({}))) as {
             message?: string;
+            details?: string;
           };
-          throw new Error(errorData.message ?? t("responseError"));
+          const baseMessage = errorData.message ?? t("responseError");
+          throw new Error(
+            errorData.details ? `${baseMessage}\nSzczegóły: ${errorData.details}` : baseMessage,
+          );
         }
 
         const data = (await response.json()) as {
           conversation_id?: string;
           usage?: AIUsage;
           reply?: string;
+          actions?: ChatAction[];
         };
         if (data.conversation_id) {
           setActiveConversationId(data.conversation_id);
@@ -359,6 +717,7 @@ export function AIAssistantShell() {
           id: `assistant-${Date.now()}`,
           role: "assistant",
           content: data.reply ?? t("responseError"),
+          actions: data.actions ?? [],
         };
         setMessages((prev) => [...prev, assistantMessage]);
         void fetchConversationHistory();
@@ -369,13 +728,91 @@ export function AIAssistantShell() {
         setIsSending(false);
       }
     },
-    [activeConversationId, fetchConversationHistory, fetchUsage, isSending, t, usage?.remaining],
+    [
+      activeConversationId,
+      attachments,
+      fetchConversationHistory,
+      fetchUsage,
+      isSending,
+      lastProgramContextId,
+      messages,
+      router,
+      t,
+      usage?.remaining,
+      usage?.limit,
+    ],
   );
 
   useEffect(() => {
     void fetchConversationHistory();
     void fetchUsage();
   }, [fetchConversationHistory, fetchUsage]);
+
+  useEffect(() => {
+    const handleAddContext = (event: Event) => {
+      const detail = (event as CustomEvent<AIContextEventDetail>).detail;
+      if (!detail) return;
+
+      if (detail.attachment) {
+        if (detail.attachment.type === "program") {
+          const rawProgramId =
+            typeof detail.attachment.value.program_id === "string"
+              ? detail.attachment.value.program_id
+              : typeof detail.attachment.value.id === "string"
+                ? detail.attachment.value.id
+                : null;
+          if (rawProgramId) {
+            setLastProgramContextId(rawProgramId);
+          }
+        }
+
+        const nextAttachment: ChatAttachment = {
+          type: detail.attachment.type,
+          value: detail.attachment.value,
+          label:
+            detail.attachment.label ??
+            String(
+              detail.attachment.value.program_name ??
+                detail.attachment.value.plan_name ??
+                detail.attachment.value.program_id ??
+                detail.attachment.value.plan_id ??
+                "Kontekst",
+            ),
+        };
+        const signature = JSON.stringify({
+          type: nextAttachment.type,
+          value: nextAttachment.value,
+        });
+        setAttachments((prev) => {
+          if (
+            prev.some(
+              (attachment) =>
+                JSON.stringify({
+                  type: attachment.type,
+                  value: attachment.value,
+                }) === signature,
+            )
+          ) {
+            return prev;
+          }
+          return [...prev, nextAttachment];
+        });
+      }
+
+      if (detail.suggestedMessage) {
+        setInput((prev) => (prev.trim().length > 0 ? prev : detail.suggestedMessage ?? ""));
+      }
+
+      if (window.innerWidth < 1280) {
+        setIsOpenMobile(true);
+      }
+    };
+
+    window.addEventListener("ai:add-context", handleAddContext as EventListener);
+    return () => {
+      window.removeEventListener("ai:add-context", handleAddContext as EventListener);
+    };
+  }, []);
 
   const handleSend = useCallback(async () => sendMessage(input), [input, sendMessage]);
   const handleQuickAction = useCallback(
@@ -386,12 +823,314 @@ export function AIAssistantShell() {
     setMessages([]);
     setActiveConversationId(null);
     setInput("");
+    setAttachments([]);
     setIsHistoryOpen(false);
   }, []);
 
   const handleToggleHistory = useCallback(() => {
     setIsHistoryOpen((prev) => !prev);
   }, []);
+
+  const handleRemoveAttachment = useCallback((indexToRemove: number) => {
+    setAttachments((prev) => prev.filter((_, index) => index !== indexToRemove));
+  }, []);
+
+  const handleToggleWeekday = useCallback((weekday: WeekdayCode) => {
+    setSelectedWeekdays((prev) => {
+      if (prev.includes(weekday)) {
+        if (prev.length === 1) return prev;
+        return prev.filter((item) => item !== weekday);
+      }
+      return WEEKDAY_OPTIONS.map((item) => item.code).filter((code) =>
+        [...prev, weekday].includes(code),
+      );
+    });
+  }, []);
+
+  const withProgramPreset = useCallback(
+    (action: ChatAction): ChatAction => {
+      if (action.type !== "GENERATE_PROGRAM") return action;
+      const sessionsPerWeek = Math.max(1, selectedWeekdays.length);
+      const weekdaysText = formatWeekdayLabels(selectedWeekdays, t);
+      return {
+        ...action,
+        label: t("programGenerateActionTitle"),
+        description: t("programGenerateConfirmDescription")
+          .replace("{months}", String(selectedDurationMonths))
+          .replace("{days}", weekdaysText),
+        payload: {
+          ...action.payload,
+          duration_months: selectedDurationMonths,
+          sessions_per_week: sessionsPerWeek,
+          weekdays: selectedWeekdays,
+          program_mode: DEFAULT_PROGRAM_MODE,
+          mix_ratio: DEFAULT_MIX_RATIO,
+        },
+      };
+    },
+    [selectedDurationMonths, selectedWeekdays, t],
+  );
+
+  const executeAction = useCallback(
+    async (action: ChatAction) => {
+      if (action.type !== "GENERATE_PROGRAM") {
+        try {
+          const response = await fetch("/api/ai/trainer/actions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: action.type,
+              payload: action.payload ?? {},
+              conversation_id: activeConversationId,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = (await response.json().catch(() => ({}))) as {
+              message?: string;
+            };
+            throw new Error(errorData.message ?? t("responseError"));
+          }
+
+          const data = (await response.json()) as { message?: string };
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `assistant-action-${Date.now()}`,
+              role: "assistant",
+              content:
+                data.message ??
+                "Wdrożono zmianę w programie. Sprawdź kalendarz i szczegóły programu.",
+              actions: [],
+            },
+          ]);
+          router.refresh();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : t("responseError"));
+        }
+        return;
+      }
+
+      try {
+        const actionWeekdays = Array.isArray(action.payload.weekdays)
+          ? (action.payload.weekdays.filter((day): day is WeekdayCode =>
+              typeof day === "string" &&
+              WEEKDAY_OPTIONS.some((option) => option.code === day),
+            ) as WeekdayCode[])
+          : [];
+        const resolvedWeekdays =
+          actionWeekdays.length > 0 ? actionWeekdays : selectedWeekdays;
+        const resolvedSessionsPerWeek = Math.max(1, resolvedWeekdays.length);
+        const goalFromPayload =
+          typeof action.payload.goal_text === "string"
+            ? action.payload.goal_text.trim()
+            : "";
+        const latestUserMessage = [...messages]
+          .reverse()
+          .find((message) => message.role === "user")
+          ?.content?.trim();
+        const resolvedGoalText =
+          goalFromPayload ||
+          (latestUserMessage && latestUserMessage.length > 0
+            ? latestUserMessage
+            : t("programDefaultGoalText"));
+        const generateBody = {
+          goal_text: resolvedGoalText,
+          duration_months:
+            typeof action.payload.duration_months === "number"
+              ? action.payload.duration_months
+              : 1,
+          sessions_per_week:
+            typeof action.payload.sessions_per_week === "number"
+              ? action.payload.sessions_per_week
+              : resolvedSessionsPerWeek,
+          weekdays: resolvedWeekdays,
+          program_mode:
+            typeof action.payload.program_mode === "string"
+              ? action.payload.program_mode
+              : DEFAULT_PROGRAM_MODE,
+          mix_ratio:
+            typeof action.payload.mix_ratio === "number"
+              ? action.payload.mix_ratio
+              : DEFAULT_MIX_RATIO,
+        };
+        const sendGenerateRequest = async () =>
+          await fetch("/api/ai/programs/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(generateBody),
+          });
+
+        let response = await sendGenerateRequest();
+
+        if (!response.ok) {
+          const err = (await response.json().catch(() => ({}))) as { message?: string };
+          const noPlansError = err.message?.includes("Brak planów treningowych");
+          if (noPlansError) {
+            const recoverResponse = await fetch(
+              "/api/workout-plans/recover-from-sessions?recent=2",
+              {
+                method: "GET",
+                cache: "no-store",
+              },
+            );
+            if (recoverResponse.ok) {
+              const recovered = (await recoverResponse.json()) as {
+                restored?: Array<{ plan_id: string }>;
+              };
+              if ((recovered.restored?.length ?? 0) > 0) {
+                response = await sendGenerateRequest();
+              }
+            }
+          }
+          if (!response.ok) {
+            const retryErr = (await response.json().catch(() => ({}))) as {
+              message?: string;
+            };
+            throw new Error(retryErr.message ?? err.message ?? t("responseError"));
+          }
+        }
+
+        const data = (await response.json()) as {
+          program?: {
+            name?: string;
+            goal_text?: string;
+            duration_months?: number;
+            sessions_per_week?: number;
+            program_mode?: ProgramMode;
+            mix_ratio?: number;
+            source?: "ai" | "manual";
+            status?: "draft" | "active" | "archived";
+            coach_profile_snapshot?: Record<string, unknown> | null;
+          };
+          sessions?: Array<{
+            workout_plan_id?: string;
+            workout_plan_name: string;
+            generated_plan?: Record<string, unknown>;
+            scheduled_date: string;
+            week_index: number;
+            session_index: number;
+            status: "planned" | "completed";
+            progression_overrides?: Record<string, unknown>;
+          }>;
+        };
+
+        const saveResponse = await fetch("/api/ai/programs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.program?.name ?? "Program AI",
+            goal_text: data.program?.goal_text ?? "Program wygenerowany przez AI",
+            duration_months: data.program?.duration_months ?? 1,
+            sessions_per_week: data.program?.sessions_per_week ?? 2,
+            source: data.program?.source ?? "ai",
+            status: data.program?.status ?? "draft",
+            coach_profile_snapshot: data.program?.coach_profile_snapshot ?? null,
+            sessions: (data.sessions ?? []).map((session) => ({
+              workout_plan_id: session.workout_plan_id,
+              generated_plan: session.generated_plan ?? undefined,
+              scheduled_date: session.scheduled_date,
+              week_index: session.week_index,
+              session_index: session.session_index,
+              status: session.status,
+              progression_overrides: session.progression_overrides ?? null,
+            })),
+          }),
+        });
+
+        if (!saveResponse.ok) {
+          const saveErr = (await saveResponse.json().catch(() => ({}))) as {
+            message?: string;
+          };
+          throw new Error(saveErr.message ?? "Nie udało się zapisać programu.");
+        }
+
+        const savedProgram = (await saveResponse.json()) as { id?: string; name?: string };
+
+        const preview = (data.sessions ?? [])
+          .slice(0, 3)
+          .map((session) => `${session.scheduled_date}: ${session.workout_plan_name}`)
+          .join("\n");
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-action-${Date.now()}`,
+            role: "assistant",
+            content: [
+              "Wygenerowałam i zapisałam program treningowy.",
+              `Nazwa: ${savedProgram.name ?? data.program?.name ?? "Program AI"}`,
+              `Czas: ${data.program?.duration_months ?? 1} mies.`,
+              `Treningi/tydz.: ${data.program?.sessions_per_week ?? 2}`,
+              `Tryb: ${
+                data.program?.program_mode === "existing_only"
+                      ? t("programModeExisting")
+                    : data.program?.program_mode === "new_only"
+                      ? t("programModeNewOnly")
+                    : t("programModeMix")
+              }${
+                data.program?.program_mode === "mix_existing_new"
+                  ? ` (${data.program?.mix_ratio ?? DEFAULT_MIX_RATIO}/${
+                      100 - (data.program?.mix_ratio ?? DEFAULT_MIX_RATIO)
+                    })`
+                  : ""
+              }`,
+              savedProgram.id ? `ID programu: ${savedProgram.id}` : "",
+              preview ? `Podgląd sesji:\n${preview}` : "",
+              "Program znajdziesz w zakładce „Programy” i sesje planned w kalendarzu.",
+            ]
+              .filter(Boolean)
+              .join("\n"),
+            actions: [],
+          },
+        ]);
+
+        if (pathname !== "/workout-plans") {
+          router.push("/workout-plans?section=programs");
+        }
+        router.refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : t("responseError"));
+      }
+    },
+    [activeConversationId, messages, pathname, router, selectedWeekdays, t],
+  );
+
+  const handleActionClick = useCallback(
+    async (action: ChatAction) => {
+      const resolvedAction = withProgramPreset(action);
+      if (!resolvedAction.requires_confirmation) {
+        await executeAction(resolvedAction);
+        return;
+      }
+      setPendingAction(resolvedAction);
+      setIsConfirmOpen(true);
+    },
+    [executeAction, withProgramPreset],
+  );
+
+  const handleGenerateProgramFromPreset = useCallback(async () => {
+    const sessionsPerWeek = Math.max(1, selectedWeekdays.length);
+    const weekdaysText = formatWeekdayLabels(selectedWeekdays, t);
+    const presetAction: ChatAction = {
+      id: `generate-program-preset-${Date.now()}`,
+      type: "GENERATE_PROGRAM",
+      label: t("programGenerateActionTitle"),
+      description: t("programGenerateConfirmDescription")
+        .replace("{months}", String(selectedDurationMonths))
+        .replace("{days}", weekdaysText),
+      requires_confirmation: true,
+      payload: {
+        duration_months: selectedDurationMonths,
+        sessions_per_week: sessionsPerWeek,
+        weekdays: selectedWeekdays,
+        program_mode: DEFAULT_PROGRAM_MODE,
+        mix_ratio: DEFAULT_MIX_RATIO,
+      },
+    };
+    setPendingAction(presetAction);
+    setIsConfirmOpen(true);
+  }, [selectedDurationMonths, selectedWeekdays, t]);
 
   const handleSelectHistory = useCallback(
     async (conversationId: string) => {
@@ -420,6 +1159,7 @@ export function AIAssistantShell() {
             id: message.id,
             role: message.role,
             content: message.content,
+            actions: [],
           })),
         );
         setIsHistoryOpen(false);
@@ -442,13 +1182,21 @@ export function AIAssistantShell() {
           isHistoryOpen={isHistoryOpen}
           usage={usage}
           input={input}
+          attachments={attachments}
           isSending={isSending}
           onInputChange={setInput}
+          onRemoveAttachment={handleRemoveAttachment}
           onSend={handleSend}
           onToggleHistory={handleToggleHistory}
           onSelectHistory={handleSelectHistory}
           onQuickAction={handleQuickAction}
+          selectedDurationMonths={selectedDurationMonths}
+          selectedWeekdays={selectedWeekdays}
+          onSelectDurationMonths={setSelectedDurationMonths}
+          onToggleWeekday={handleToggleWeekday}
+          onGenerateProgramFromPreset={handleGenerateProgramFromPreset}
           onResetConversation={handleResetConversation}
+          onActionClick={handleActionClick}
         />
       </aside>
 
@@ -480,18 +1228,56 @@ export function AIAssistantShell() {
             isHistoryOpen={isHistoryOpen}
             usage={usage}
             input={input}
+            attachments={attachments}
             isSending={isSending}
             onInputChange={setInput}
+            onRemoveAttachment={handleRemoveAttachment}
             onSend={handleSend}
             onToggleHistory={handleToggleHistory}
             onSelectHistory={handleSelectHistory}
             onQuickAction={handleQuickAction}
+            selectedDurationMonths={selectedDurationMonths}
+            selectedWeekdays={selectedWeekdays}
+            onSelectDurationMonths={setSelectedDurationMonths}
+            onToggleWeekday={handleToggleWeekday}
+            onGenerateProgramFromPreset={handleGenerateProgramFromPreset}
             onResetConversation={handleResetConversation}
+            onActionClick={handleActionClick}
             mobile
             onClose={() => setIsOpenMobile(false)}
           />
         </SheetContent>
       </Sheet>
+
+      <AlertDialog
+        open={isConfirmOpen}
+        onOpenChange={(open) => {
+          setIsConfirmOpen(open);
+          if (!open) setPendingAction(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingAction?.label ?? "Potwierdź akcję"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction?.description ?? "Czy na pewno chcesz kontynuować?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingAction) return;
+                void executeAction(pendingAction);
+              }}
+            >
+              Kontynuuj
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
