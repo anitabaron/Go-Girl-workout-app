@@ -1188,9 +1188,6 @@ export function AIAssistantShell() {
                 ? `Gotowość startowa: ${data.training_state.readiness_score}/100`
                 : "",
               readinessDrivers ? `Uwzględniono: ${readinessDrivers}` : "",
-              (data.guardrail_events?.length ?? 0) > 0
-                ? "Plan został automatycznie skorygowany do bezpiecznych i bardziej realistycznych zakresów."
-                : "",
               "Program znajdziesz w zakładce „Programy”, a zaplanowane sesje w kalendarzu.",
             ]
               .filter(Boolean)
