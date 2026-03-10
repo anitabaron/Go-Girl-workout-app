@@ -3,6 +3,7 @@ import {
   exercisePartValues,
   exerciseTypeValues,
 } from "@/lib/validation/exercises";
+import { exercisePrescriptionConfigSchema } from "@/lib/training/exercise-prescription";
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -60,6 +61,9 @@ const generatedPlanExerciseSchema = z
       .optional()
       .nullable(),
     estimated_set_time_seconds: z.number().int().positive().optional().nullable(),
+    exercise_prescription_config: exercisePrescriptionConfigSchema
+      .optional()
+      .nullable(),
   })
   .strict();
 

@@ -4,6 +4,7 @@ import type {
   TablesInsert,
   TablesUpdate,
 } from "./db/database.types";
+import type { ExercisePrescriptionConfig } from "@/lib/training/exercise-prescription";
 
 /**
  * Shared DTOs, API contracts, and DB-derived types.
@@ -87,6 +88,7 @@ export type ExerciseCreateCommand = Pick<
   is_unilateral?: boolean;
   /** Gdy true, wyniki ćwiczenia zapisują się i pokazują w Personal Records. */
   is_save_to_pr?: boolean | null;
+  prescription_config?: ExercisePrescriptionConfig | null;
 };
 
 export type ExerciseUpdateCommand = Partial<ExerciseCreateCommand>;
@@ -104,7 +106,7 @@ export type ExerciseQueryParams = {
 
 export type ExerciseDTO = Omit<
   ExerciseEntity,
-  "user_id" | "title_normalized"
+  "user_id" | "title_normalized" | "prescription_config"
 > & {
   types: ExerciseType[];
   parts: ExercisePart[];
@@ -112,6 +114,7 @@ export type ExerciseDTO = Omit<
   type: ExerciseType;
   /** First part (for backward compat in display) */
   part: ExercisePart;
+  prescription_config?: ExercisePrescriptionConfig | null;
 };
 
 /**
@@ -173,6 +176,7 @@ export type WorkoutPlanExerciseDTO = Omit<
   exercise_details?: string | null; // Opis ćwiczenia (z JSON importu, przekazywany jako details przy tworzeniu)
   exercise_estimated_set_time_seconds?: number | null;
   exercise_rest_after_series_seconds?: number | null;
+  exercise_prescription_config?: ExercisePrescriptionConfig | null;
   planned_rest_after_series_seconds?: number | null;
   // Flaga wskazująca czy ćwiczenie istnieje w bazie
   is_exercise_in_library?: boolean;
@@ -235,6 +239,7 @@ export type ProgramGeneratedExerciseInput = {
   planned_rest_seconds?: number | null;
   planned_rest_after_series_seconds?: number | null;
   estimated_set_time_seconds?: number | null;
+  exercise_prescription_config?: ExercisePrescriptionConfig | null;
 };
 
 export type ProgramGeneratedPlanTemplate = {

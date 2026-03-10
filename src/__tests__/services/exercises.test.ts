@@ -113,7 +113,12 @@ describe("createExerciseService", () => {
       expect(exercisesRepo.insertExercise).toHaveBeenCalledWith(
         mockSupabase,
         mockUserId,
-        { ...validPayload, is_unilateral: false, is_save_to_pr: true },
+        expect.objectContaining({
+          ...validPayload,
+          is_unilateral: false,
+          is_save_to_pr: true,
+          prescription_config: expect.any(Object),
+        }),
       );
     });
 
@@ -375,7 +380,12 @@ describe("createExerciseService", () => {
       expect(exercisesRepo.insertExercise).toHaveBeenCalledWith(
         mockSupabase,
         mockUserId,
-        { ...fullPayload, is_unilateral: false, is_save_to_pr: true },
+        expect.objectContaining({
+          ...fullPayload,
+          is_unilateral: false,
+          is_save_to_pr: true,
+          prescription_config: expect.any(Object),
+        }),
       );
     });
 

@@ -45,6 +45,11 @@ import {
   startWorkoutSessionService,
 } from "@/services/workout-sessions";
 import { calculatePlanEstimatedTotalTimeSeconds } from "@/lib/workout-plans/estimated-time";
+import {
+  buildDefaultExercisePrescriptionConfig,
+  resolveExercisePrescriptionConfig,
+  type ExercisePrescriptionConfig,
+} from "@/lib/training/exercise-prescription";
 import type {
   ExercisePart,
   ExerciseType,
@@ -106,6 +111,26 @@ export type ProgramGenerateResponse = {
   };
   sessions: ProgramGeneratedSession[];
   recommendations: string[];
+  guardrail_events: ProgramGuardrailEvent[];
+};
+
+export type ProgramGuardrailEvent = {
+  template_key: string;
+  workout_plan_name: string;
+  exercise_title: string;
+  field:
+    | "planned_sets"
+    | "planned_reps"
+    | "planned_duration_seconds"
+    | "planned_rest_seconds";
+  from: number;
+  to: number;
+  reason_code:
+    | "exercise_min"
+    | "exercise_max"
+    | "main_workout_min"
+    | "main_workout_max";
+  reason: string;
 };
 
 const DEFAULT_WEEKDAY_MAP: Record<number, number[]> = {
@@ -503,6 +528,7 @@ type PlanExerciseInsertShape = {
   planned_rest_seconds: number | null;
   planned_rest_after_series_seconds: number | null;
   estimated_set_time_seconds: number | null;
+  exercise_prescription_config?: ExercisePrescriptionConfig | null;
 };
 
 const TARGET_PLAN_MIN_SECONDS = 50 * 60;
@@ -517,58 +543,234 @@ const MAIN_WORKOUT_MAX_DURATION_ISOMETRIC_SECONDS = 45;
 const MAIN_WORKOUT_MIN_REST_SECONDS = 30;
 const MAIN_WORKOUT_MAX_REST_SECONDS = 180;
 
-function isLikelyIsometricTitle(title: string | null | undefined): boolean {
-  if (!title) return false;
-  const normalized = title
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  return /(hold|isometric|plank|l-?sit|support|wall lean|hollow body)/.test(normalized);
+function getExercisePrescription(
+  exercise: PlanExerciseInsertShape,
+): ExercisePrescriptionConfig {
+  return resolveExercisePrescriptionConfig({
+    title: exercise.exercise_title,
+    reps: exercise.planned_reps,
+    duration_seconds: exercise.planned_duration_seconds,
+    series: exercise.planned_sets,
+    rest_in_between_seconds: exercise.planned_rest_seconds,
+    prescription_config: exercise.exercise_prescription_config ?? null,
+  });
 }
 
-function getMainWorkoutDurationCapSeconds(title: string | null | undefined): number {
-  return isLikelyIsometricTitle(title)
-    ? MAIN_WORKOUT_MAX_DURATION_ISOMETRIC_SECONDS
-    : MAIN_WORKOUT_MAX_DURATION_DYNAMIC_SECONDS;
-}
+function clampMainWorkoutExercisePrescription(
+  exercise: PlanExerciseInsertShape,
+): ProgramGuardrailEvent[] {
+  if (exercise.section_type !== "Main Workout") return [];
+  const guardrailEvents: ProgramGuardrailEvent[] = [];
+  const prescription = getExercisePrescription(exercise);
 
-function clampMainWorkoutExercisePrescription(exercise: PlanExerciseInsertShape): void {
-  if (exercise.section_type !== "Main Workout") return;
+  const clampField = (
+    field: ProgramGuardrailEvent["field"],
+    current: number | null | undefined,
+    min: number,
+    max: number,
+    minReason: ProgramGuardrailEvent["reason_code"],
+    maxReason: ProgramGuardrailEvent["reason_code"],
+  ): number | null => {
+    if (current === null || current === undefined) return null;
+    const next = clamp(current, min, max);
+    if (next !== current) {
+      guardrailEvents.push({
+        template_key: "",
+        workout_plan_name: "",
+        exercise_title: exercise.exercise_title ?? "Ćwiczenie",
+        field,
+        from: current,
+        to: next,
+        reason_code: next === min ? minReason : maxReason,
+        reason:
+          next === min
+            ? `Skorygowano do minimalnej wartości guardraila (${min}).`
+            : `Skorygowano do maksymalnej wartości guardraila (${max}).`,
+      });
+    }
+    return next;
+  };
 
-  if (exercise.planned_sets !== null && exercise.planned_sets !== undefined) {
-    exercise.planned_sets = clamp(
-      exercise.planned_sets,
-      MAIN_WORKOUT_MIN_SETS,
-      MAIN_WORKOUT_MAX_SETS,
-    );
-  }
+  exercise.planned_sets = clampField(
+    "planned_sets",
+    exercise.planned_sets,
+    Math.max(MAIN_WORKOUT_MIN_SETS, prescription.min_sets),
+    Math.min(MAIN_WORKOUT_MAX_SETS, prescription.max_sets),
+    "exercise_min",
+    "exercise_max",
+  );
 
-  if (exercise.planned_reps !== null && exercise.planned_reps !== undefined) {
-    exercise.planned_reps = clamp(
+  if (prescription.min_reps !== null && prescription.max_reps !== null) {
+    exercise.planned_reps = clampField(
+      "planned_reps",
       exercise.planned_reps,
-      MAIN_WORKOUT_MIN_REPS,
-      MAIN_WORKOUT_MAX_REPS,
+      Math.max(MAIN_WORKOUT_MIN_REPS, prescription.min_reps),
+      Math.min(MAIN_WORKOUT_MAX_REPS, prescription.max_reps),
+      "exercise_min",
+      "exercise_max",
     );
   }
 
   if (
-    exercise.planned_duration_seconds !== null &&
-    exercise.planned_duration_seconds !== undefined
+    prescription.min_duration_seconds !== null &&
+    prescription.max_duration_seconds !== null
   ) {
-    exercise.planned_duration_seconds = clamp(
+    exercise.planned_duration_seconds = clampField(
+      "planned_duration_seconds",
       exercise.planned_duration_seconds,
-      MAIN_WORKOUT_MIN_DURATION_SECONDS,
-      getMainWorkoutDurationCapSeconds(exercise.exercise_title),
+      Math.max(MAIN_WORKOUT_MIN_DURATION_SECONDS, prescription.min_duration_seconds),
+      Math.min(
+        prescription.max_duration_seconds,
+        prescription.prescription_mode === "duration_based_isometric"
+          ? MAIN_WORKOUT_MAX_DURATION_ISOMETRIC_SECONDS
+          : MAIN_WORKOUT_MAX_DURATION_DYNAMIC_SECONDS,
+      ),
+      "exercise_min",
+      "exercise_max",
     );
   }
 
-  if (exercise.planned_rest_seconds !== null && exercise.planned_rest_seconds !== undefined) {
-    exercise.planned_rest_seconds = clamp(
-      exercise.planned_rest_seconds,
-      MAIN_WORKOUT_MIN_REST_SECONDS,
-      MAIN_WORKOUT_MAX_REST_SECONDS,
-    );
-  }
+  exercise.planned_rest_seconds = clampField(
+    "planned_rest_seconds",
+    exercise.planned_rest_seconds,
+    Math.max(MAIN_WORKOUT_MIN_REST_SECONDS, prescription.min_rest_seconds),
+    Math.min(MAIN_WORKOUT_MAX_REST_SECONDS, prescription.max_rest_seconds),
+    "exercise_min",
+    "exercise_max",
+  );
+
+  return guardrailEvents;
+}
+
+function sanitizePlanTemplate(
+  template: ProgramGeneratedPlanTemplate,
+): { template: ProgramGeneratedPlanTemplate; guardrailEvents: ProgramGuardrailEvent[] } {
+  const exercises = template.exercises.map((exercise) => ({
+    ...exercise,
+    exercise_prescription_config:
+      exercise.exercise_prescription_config ??
+      buildDefaultExercisePrescriptionConfig({
+        title: exercise.exercise_title,
+        reps: exercise.planned_reps ?? null,
+        duration_seconds: exercise.planned_duration_seconds ?? null,
+        series: exercise.planned_sets ?? null,
+        rest_in_between_seconds: exercise.planned_rest_seconds ?? null,
+      }),
+  }));
+  const normalized = normalizePlanDuration(
+    enforceWarmupCooldownMinutes(
+      ensureWarmupAndCooldown(
+        exercises.map((exercise) => ({
+          exercise_id: exercise.exercise_id ?? null,
+          snapshot_id: null,
+          scope_id: null,
+          in_scope_nr: null,
+          scope_repeat_count: null,
+          exercise_title: exercise.exercise_title,
+          exercise_type: exercise.exercise_type ?? exercise.section_type,
+          exercise_part: exercise.exercise_part ?? template.part ?? null,
+          exercise_details: exercise.exercise_details ?? null,
+          exercise_is_unilateral: exercise.exercise_is_unilateral ?? null,
+          section_type: exercise.section_type,
+          section_order: exercise.section_order,
+          planned_sets: exercise.planned_sets ?? null,
+          planned_reps: exercise.planned_reps ?? null,
+          planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+          planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+          planned_rest_after_series_seconds:
+            exercise.planned_rest_after_series_seconds ?? null,
+          estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+          exercise_prescription_config:
+            exercise.exercise_prescription_config ?? null,
+        })),
+      ),
+    ),
+  );
+
+  const guardrailEvents: ProgramGuardrailEvent[] = [];
+  normalized.forEach((exercise, index) => {
+    const source = template.exercises[index];
+    if (!source) return;
+
+    const comparableFields: Array<ProgramGuardrailEvent["field"]> = [
+      "planned_sets",
+      "planned_reps",
+      "planned_duration_seconds",
+      "planned_rest_seconds",
+    ];
+
+    for (const field of comparableFields) {
+      const before = source[field];
+      const after = exercise[field];
+      if (typeof before !== "number" || typeof after !== "number" || before === after) {
+        continue;
+      }
+
+      guardrailEvents.push({
+        template_key: template.template_key,
+        workout_plan_name: template.name,
+        exercise_title: exercise.exercise_title ?? source.exercise_title,
+        field,
+        from: before,
+        to: after,
+        reason_code: after > before ? "exercise_min" : "exercise_max",
+        reason:
+          after > before
+            ? "Plan został podniesiony do minimalnego bezpiecznego zakresu dla ćwiczenia."
+            : "Plan został obniżony do maksymalnego bezpiecznego zakresu dla ćwiczenia.",
+      });
+    }
+  });
+
+  return {
+    template: {
+      ...template,
+      exercises: normalized.map((exercise, index) => ({
+        exercise_id: exercise.exercise_id ?? null,
+        section_type: exercise.section_type,
+        section_order: index + 1,
+        exercise_title: exercise.exercise_title ?? "Ćwiczenie",
+        exercise_type: exercise.exercise_type ?? exercise.section_type,
+        exercise_part: exercise.exercise_part ?? template.part ?? null,
+        exercise_details: exercise.exercise_details ?? null,
+        exercise_is_unilateral: exercise.exercise_is_unilateral ?? null,
+        planned_sets: exercise.planned_sets ?? null,
+        planned_reps: exercise.planned_reps ?? null,
+        planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+        planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+        planned_rest_after_series_seconds:
+          exercise.planned_rest_after_series_seconds ?? null,
+        estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+        exercise_prescription_config:
+          exercise.exercise_prescription_config ?? null,
+      })),
+    },
+    guardrailEvents,
+  };
+}
+
+function sanitizeSchedulePlanCandidates(
+  candidates: SchedulePlanCandidate[],
+): {
+  candidates: SchedulePlanCandidate[];
+  guardrailEvents: ProgramGuardrailEvent[];
+} {
+  const guardrailEvents: ProgramGuardrailEvent[] = [];
+
+  const sanitizedCandidates = candidates.map((candidate) => {
+    if (!candidate.generated_plan) return candidate;
+
+    const sanitized = sanitizePlanTemplate(candidate.generated_plan);
+    guardrailEvents.push(...sanitized.guardrailEvents);
+
+    return {
+      ...candidate,
+      workout_plan_name: sanitized.template.name,
+      generated_plan: sanitized.template,
+    };
+  });
+
+  return { candidates: sanitizedCandidates, guardrailEvents };
 }
 
 function clonePlanExercises(
@@ -583,46 +785,78 @@ function getCycledItem<T>(items: T[], index: number): T | undefined {
 }
 
 function increaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
-  if (exercise.planned_reps && exercise.planned_reps > 0) {
-    exercise.planned_reps = Math.min(MAIN_WORKOUT_MAX_REPS, exercise.planned_reps + 1);
-    return;
-  }
+  const prescription = getExercisePrescription(exercise);
 
-  if (exercise.planned_duration_seconds && exercise.planned_duration_seconds > 0) {
-    exercise.planned_duration_seconds = Math.min(
-      getMainWorkoutDurationCapSeconds(exercise.exercise_title),
-      exercise.planned_duration_seconds + 3,
+  if (
+    exercise.planned_reps &&
+    exercise.planned_reps > 0 &&
+    prescription.max_reps !== null
+  ) {
+    exercise.planned_reps = Math.min(
+      prescription.max_reps,
+      exercise.planned_reps + (prescription.progression_step_reps ?? 1),
     );
-    return;
-  }
-
-  if (exercise.planned_sets && exercise.planned_sets > 0) {
-    exercise.planned_sets = Math.min(MAIN_WORKOUT_MAX_SETS, exercise.planned_sets + 1);
-    return;
-  }
-
-  exercise.planned_reps = Math.max(8, MAIN_WORKOUT_MIN_REPS);
-  exercise.planned_sets = Math.max(MAIN_WORKOUT_MIN_SETS, exercise.planned_sets ?? 1);
-}
-
-function decreaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
-  if (exercise.planned_sets && exercise.planned_sets > MAIN_WORKOUT_MIN_SETS) {
-    exercise.planned_sets = Math.max(MAIN_WORKOUT_MIN_SETS, exercise.planned_sets - 1);
-    return;
-  }
-
-  if (exercise.planned_reps && exercise.planned_reps > MAIN_WORKOUT_MIN_REPS) {
-    exercise.planned_reps = Math.max(MAIN_WORKOUT_MIN_REPS, exercise.planned_reps - 1);
     return;
   }
 
   if (
     exercise.planned_duration_seconds &&
-    exercise.planned_duration_seconds > MAIN_WORKOUT_MIN_DURATION_SECONDS
+    exercise.planned_duration_seconds > 0 &&
+    prescription.max_duration_seconds !== null
+  ) {
+    exercise.planned_duration_seconds = Math.min(
+      prescription.max_duration_seconds,
+      exercise.planned_duration_seconds +
+        (prescription.progression_step_duration_seconds ?? 3),
+    );
+    return;
+  }
+
+  if (exercise.planned_sets && exercise.planned_sets > 0) {
+    exercise.planned_sets = Math.min(prescription.max_sets, exercise.planned_sets + 1);
+    return;
+  }
+
+  exercise.planned_sets = Math.max(prescription.min_sets, exercise.planned_sets ?? 1);
+  if (prescription.min_reps !== null) {
+    exercise.planned_reps = prescription.min_reps;
+    exercise.planned_duration_seconds = null;
+    return;
+  }
+  if (prescription.min_duration_seconds !== null) {
+    exercise.planned_duration_seconds = prescription.min_duration_seconds;
+    exercise.planned_reps = null;
+  }
+}
+
+function decreaseMainExerciseVolume(exercise: PlanExerciseInsertShape): void {
+  const prescription = getExercisePrescription(exercise);
+
+  if (exercise.planned_sets && exercise.planned_sets > prescription.min_sets) {
+    exercise.planned_sets = Math.max(prescription.min_sets, exercise.planned_sets - 1);
+    return;
+  }
+
+  if (
+    exercise.planned_reps &&
+    exercise.planned_reps > (prescription.min_reps ?? MAIN_WORKOUT_MIN_REPS)
+  ) {
+    exercise.planned_reps = Math.max(
+      prescription.min_reps ?? MAIN_WORKOUT_MIN_REPS,
+      exercise.planned_reps - (prescription.progression_step_reps ?? 1),
+    );
+    return;
+  }
+
+  if (
+    exercise.planned_duration_seconds &&
+    exercise.planned_duration_seconds >
+      (prescription.min_duration_seconds ?? MAIN_WORKOUT_MIN_DURATION_SECONDS)
   ) {
     exercise.planned_duration_seconds = Math.max(
-      MAIN_WORKOUT_MIN_DURATION_SECONDS,
-      exercise.planned_duration_seconds - 3,
+      prescription.min_duration_seconds ?? MAIN_WORKOUT_MIN_DURATION_SECONDS,
+      exercise.planned_duration_seconds -
+        (prescription.progression_step_duration_seconds ?? 3),
     );
   }
 }
@@ -718,6 +952,8 @@ function mapPlanExerciseToGeneratedInput(
     planned_rest_after_series_seconds:
       exercise.planned_rest_after_series_seconds ?? null,
     estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+    exercise_prescription_config:
+      exercise.exercise_prescription_config ?? null,
   };
 }
 
@@ -1068,6 +1304,8 @@ async function createPlansFromGeneratedTemplates(
         planned_rest_after_series_seconds:
           exercise.planned_rest_after_series_seconds ?? null,
         estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+        exercise_prescription_config:
+          exercise.exercise_prescription_config ?? null,
       })),
         ),
       ),
@@ -1214,6 +1452,7 @@ async function cloneProgramSourcePlan(params: {
     planned_rest_seconds: exercise.planned_rest_seconds ?? null,
     planned_rest_after_series_seconds: exercise.planned_rest_after_series_seconds ?? null,
     estimated_set_time_seconds: exercise.estimated_set_time_seconds ?? null,
+    exercise_prescription_config: exercise.exercise_prescription_config ?? null,
   }));
   const clonedExercises = normalizePlanDuration(
     enforceWarmupCooldownMinutes(ensureWarmupAndCooldown(sourceMappedExercises)),
@@ -1359,23 +1598,32 @@ function buildSessionExerciseProgressionUpdate(
   const hasReps = exercise.planned_reps !== null;
   const hasDuration = !hasReps && exercise.planned_duration_seconds !== null;
   const hasSets = !hasReps && !hasDuration && exercise.planned_sets !== null;
-  const durationMax = getMainWorkoutDurationCapSeconds(exercise.exercise_title_at_time);
+  const prescription = buildDefaultExercisePrescriptionConfig({
+    title: exercise.exercise_title_at_time,
+    reps: exercise.planned_reps,
+    duration_seconds: exercise.planned_duration_seconds,
+    series: exercise.planned_sets,
+    rest_in_between_seconds: exercise.planned_rest_seconds,
+  });
+  const durationMax =
+    prescription.max_duration_seconds ??
+    MAIN_WORKOUT_MAX_DURATION_DYNAMIC_SECONDS;
 
   return {
     planned_sets: hasSets
       ? adjustSessionValue(
           exercise.planned_sets,
           volumePct,
-          MAIN_WORKOUT_MIN_SETS,
-          MAIN_WORKOUT_MAX_SETS,
+          prescription.min_sets,
+          prescription.max_sets,
         )
       : exercise.planned_sets,
     planned_reps: hasReps
       ? adjustSessionValue(
           exercise.planned_reps,
           volumePct,
-          MAIN_WORKOUT_MIN_REPS,
-          MAIN_WORKOUT_MAX_REPS,
+          prescription.min_reps ?? MAIN_WORKOUT_MIN_REPS,
+          prescription.max_reps ?? MAIN_WORKOUT_MAX_REPS,
         )
       : exercise.planned_reps,
     planned_duration_seconds: hasDuration
@@ -1469,8 +1717,9 @@ export async function generateAIProgramService(
       "Nie udało się zbudować programu. Dodaj plan treningowy lub doprecyzuj cel.",
     );
   }
+  const sanitizedSeedPlans = sanitizeSchedulePlanCandidates(seedPlans);
   const sessions = generateProgramSchedule(
-    seedPlans,
+    sanitizedSeedPlans.candidates,
     parsed.duration_months,
     sessionsPerWeek,
     parsed.weekdays,
@@ -1519,10 +1768,11 @@ export async function generateAIProgramService(
     recommendations: buildRecommendations(
       weeksCount,
       sessionsPerWeek,
-      seedPlans,
+      sanitizedSeedPlans.candidates,
       mode,
       mixRatio,
     ),
+    guardrail_events: sanitizedSeedPlans.guardrailEvents,
   };
 }
 

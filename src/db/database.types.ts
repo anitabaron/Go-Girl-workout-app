@@ -234,6 +234,7 @@ export type Database = {
           is_unilateral: boolean;
           level: string | null;
           parts: Database["public"]["Enums"]["exercise_part"][];
+          prescription_config: Json | null;
           reps: number | null;
           rest_after_series_seconds: number | null;
           rest_in_between_seconds: number | null;
@@ -254,6 +255,7 @@ export type Database = {
           is_unilateral?: boolean;
           level?: string | null;
           parts: Database["public"]["Enums"]["exercise_part"][];
+          prescription_config?: Json | null;
           reps?: number | null;
           rest_after_series_seconds?: number | null;
           rest_in_between_seconds?: number | null;
@@ -274,6 +276,7 @@ export type Database = {
           is_unilateral?: boolean;
           level?: string | null;
           parts?: Database["public"]["Enums"]["exercise_part"][];
+          prescription_config?: Json | null;
           reps?: number | null;
           rest_after_series_seconds?: number | null;
           rest_in_between_seconds?: number | null;

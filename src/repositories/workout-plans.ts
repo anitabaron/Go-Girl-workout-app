@@ -617,7 +617,8 @@ export async function listWorkoutPlanExercises(
         is_unilateral,
         details,
         estimated_set_time_seconds,
-        rest_after_series_seconds
+        rest_after_series_seconds,
+        prescription_config
       )
     `,
     )
@@ -640,6 +641,7 @@ export async function listWorkoutPlanExercises(
       details: string | null;
       estimated_set_time_seconds: number | null;
       rest_after_series_seconds: number | null;
+      prescription_config?: Database["public"]["Tables"]["exercises"]["Row"]["prescription_config"];
     } | null;
 
     // Type assertion dla pól snapshot (dodanych w migracji, ale jeszcze nie w typach)
@@ -711,6 +713,9 @@ export async function listWorkoutPlanExercises(
       exercise_estimated_set_time_seconds: finalEstimatedSetTime,
       exercise_rest_after_series_seconds:
         exercise?.rest_after_series_seconds ?? null,
+      exercise_prescription_config:
+        (exercise?.prescription_config as WorkoutPlanExerciseDTO["exercise_prescription_config"]) ??
+        null,
       planned_rest_after_series_seconds: finalRestAfterSeries,
       is_exercise_in_library: row.exercise_id !== null,
     };
