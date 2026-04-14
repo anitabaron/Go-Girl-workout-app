@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { NotebookText, Pencil, Trash2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useTranslations } from "@/i18n/client";
 import type {
   PersonalRecordMetricViewModel,
@@ -12,6 +17,7 @@ import type {
 } from "@/lib/personal-records/view-model";
 import { formatCompactSeconds } from "@/lib/utils/time-format";
 import { EditPersonalRecordDialogM3 } from "./EditPersonalRecordDialogM3";
+import { DeletePersonalRecordsDialogM3 } from "./DeletePersonalRecordsDialogM3";
 
 function formatSeriesValue(
   metricType: PersonalRecordMetricViewModel["metricType"],
@@ -48,13 +54,19 @@ function getSortedSeriesKeys(seriesValues: SeriesValues): string[] {
 
 type PersonalRecordMetricCardM3Props = {
   record: PersonalRecordMetricViewModel;
+  exerciseId: string;
+  exerciseTitle: string;
 };
 
 export function PersonalRecordMetricCardM3({
   record,
+  exerciseId,
+  exerciseTitle,
 }: Readonly<PersonalRecordMetricCardM3Props>) {
   const t = useTranslations("personalRecordMetricCard");
+  const router = useRouter();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const hasSeriesValues =
     record.seriesValues && Object.keys(record.seriesValues).length > 0;
   const sortedKeys = hasSeriesValues
@@ -66,30 +78,90 @@ export function PersonalRecordMetricCardM3({
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsEditDialogOpen(true);
   };
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  };
+  const handleViewSessionClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!record.sessionId) return;
+    router.push(`/workout-sessions/${record.sessionId}`);
+  };
+  const iconButtonClass =
+    "size-7 rounded-full text-muted-foreground hover:bg-[var(--m3-surface-container-high)] hover:text-foreground";
 
   return (
     <>
-      <Card className="rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)]">
-        <CardHeader className="flex flex-row items-start justify-between gap-2">
+      <Card className="gap-4 rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] py-0">
+        <CardHeader className="relative px-6 py-6 pb-0 pr-24">
           <CardTitle className="m3-title">{record.label}</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="m3-label inline-flex items-center gap-1.5 text-primary hover:underline shrink-0 h-auto py-1"
-            onClick={handleEditClick}
-            aria-label={t("editAria")}
-          >
-            <Pencil className="size-4" />
-            {t("edit")}
-          </Button>
+          <div className="absolute top-4 right-4 flex items-center gap-0.5">
+            {record.sessionId && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={iconButtonClass}
+                    onClick={handleViewSessionClick}
+                    aria-label={t("viewSessionAria")}
+                  >
+                    <NotebookText className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t("viewSession")}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={iconButtonClass}
+                  onClick={handleEditClick}
+                  aria-label={t("editAria")}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("edit")}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={iconButtonClass}
+                  onClick={handleDeleteClick}
+                  aria-label={t("deleteAria")}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("delete")}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="m3-hero-sm text-primary">{record.valueDisplay}</p>
+        <CardContent className="space-y-4 pb-6">
+          <p className="text-4xl font-semibold leading-none text-primary sm:text-5xl">
+            {record.valueDisplay}
+          </p>
           {hasSeriesValues && (
             <div className="m3-body text-muted-foreground text-sm">
-              <span className="font-medium">{t("series")} </span>
+              <span className="m3-label text-sm font-semibold">
+                {t("series")}
+              </span>{" "}
               {sortedKeys.map((key, index) => {
                 const value = record.seriesValues![key] ?? 0;
                 const formatted = formatSeriesValue(record.metricType, value);
@@ -103,7 +175,7 @@ export function PersonalRecordMetricCardM3({
                           : ""
                       }
                     >
-                      {key} {formatted}
+                      {formatted}
                     </span>
                     {index < sortedKeys.length - 1 && ", "}
                   </span>
@@ -114,21 +186,18 @@ export function PersonalRecordMetricCardM3({
           <p className="m3-body text-muted-foreground text-sm">
             {t("achievedAt")} {record.achievedAt}
           </p>
-          {record.sessionId && (
-            <Link
-              href={`/workout-sessions/${record.sessionId}`}
-              className="m3-label inline-flex items-center gap-2 text-primary hover:underline"
-              aria-label={t("viewSessionAria")}
-            >
-              {t("viewSession")}
-            </Link>
-          )}
         </CardContent>
       </Card>
       <EditPersonalRecordDialogM3
         metric={record}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
+      />
+      <DeletePersonalRecordsDialogM3
+        exerciseId={exerciseId}
+        exerciseTitle={exerciseTitle}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
       />
     </>
   );

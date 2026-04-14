@@ -15,6 +15,7 @@ import { calculateTimerUpdates } from "@/lib/workout-sessions/timer";
 type DbClient = SupabaseClient<Database>;
 type WorkoutSessionRow =
   Database["public"]["Tables"]["workout_sessions"]["Row"];
+type PersonalRecordRow = Database["public"]["Tables"]["personal_records"]["Row"];
 
 const sessionSelectColumns =
   "id,workout_plan_id,status,plan_name_at_time,started_at,completed_at,current_position,user_id,last_action_at,active_duration_seconds,last_timer_started_at,last_timer_stopped_at";
@@ -429,7 +430,9 @@ export async function findWorkoutSessionExercises(
 ) {
   const { data, error } = await client
     .from("workout_session_exercises")
-    .select("*, exercises(rest_in_between_seconds, rest_after_series_seconds)")
+    .select(
+      "*, exercises(rest_in_between_seconds, rest_after_series_seconds, is_save_to_pr)",
+    )
     .eq("session_id", sessionId)
     .order("exercise_order", { ascending: true });
 
@@ -468,6 +471,29 @@ export async function findWorkoutSessionSets(
   return {
     data: data ?? [],
     error: null,
+  };
+}
+
+export async function findPersonalRecordsAchievedInSession(
+  client: DbClient,
+  userId: string,
+  sessionId: string,
+  exerciseIds: string[],
+) {
+  if (exerciseIds.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const { data, error } = await client
+    .from("personal_records")
+    .select("exercise_id, metric_type")
+    .eq("user_id", userId)
+    .eq("achieved_in_session_id", sessionId)
+    .in("exercise_id", exerciseIds);
+
+  return {
+    data: (data ?? []) as Pick<PersonalRecordRow, "exercise_id" | "metric_type">[],
+    error,
   };
 }
 
@@ -510,7 +536,9 @@ export async function findWorkoutSessionExerciseByOrder(
 ) {
   const { data, error } = await client
     .from("workout_session_exercises")
-    .select("*, exercises(rest_in_between_seconds, rest_after_series_seconds)")
+    .select(
+      "*, exercises(rest_in_between_seconds, rest_after_series_seconds, is_save_to_pr)",
+    )
     .eq("session_id", sessionId)
     .eq("exercise_order", order)
     .maybeSingle();

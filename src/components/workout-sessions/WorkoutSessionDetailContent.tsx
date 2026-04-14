@@ -101,13 +101,14 @@ export function WorkoutSessionDetailContent({
     <div className="space-y-8">
       <Card data-test-id="workout-session-details-metadata">
         <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <h2 className="m3-title">{t("sessionInfoTitle")}</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
               {isEditMode && (
                 <Button
                   variant="outline"
                   size="sm"
+                  className="min-w-0"
                   onClick={handleCancelEdit}
                   aria-label={t("cancelEditAria")}
                 >
@@ -119,6 +120,7 @@ export function WorkoutSessionDetailContent({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="min-w-0"
                   onClick={handleExportJson}
                   aria-label={t("exportSessionAria")}
                 >
@@ -130,6 +132,7 @@ export function WorkoutSessionDetailContent({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="min-w-0"
                   onClick={() => setUserToggledEdit(true)}
                   aria-label={t("editSessionAria")}
                 >
@@ -140,13 +143,14 @@ export function WorkoutSessionDetailContent({
               {isInProgress ? (
                 <Badge
                   variant="default"
-                  className="bg-primary text-primary-foreground"
+                  className="max-w-full bg-primary text-primary-foreground"
                 >
                   {t("inProgress")}
                 </Badge>
               ) : (
                 <Badge
                   variant="secondary"
+                  className="max-w-full"
                   data-test-id="workout-session-status-completed"
                 >
                   {t("completed")}

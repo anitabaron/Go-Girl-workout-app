@@ -46,6 +46,7 @@ export function mapToDetailDTO(
       exercises?: {
         rest_in_between_seconds: number | null;
         rest_after_series_seconds: number | null;
+        is_save_to_pr: boolean | null;
       } | null;
     }
   >,
@@ -93,6 +94,7 @@ export function mapToDetailDTO(
       actual_count_sets: actual_sets,
       actual_sum_reps: actual_reps,
       sets: setDTOs,
+      is_save_to_pr: exerciseData?.is_save_to_pr ?? null,
       rest_in_between_seconds: restInBetweenSeconds,
       rest_after_series_seconds: restAfterSeriesSeconds,
     };
@@ -112,6 +114,7 @@ export function mapExerciseToDTO(
     exercises?: {
       rest_in_between_seconds: number | null;
       rest_after_series_seconds: number | null;
+      is_save_to_pr: boolean | null;
     } | null;
   },
   sets: WorkoutSessionSetRow[],
@@ -146,6 +149,7 @@ export function mapExerciseToDTO(
     actual_count_sets: actual_sets,
     actual_sum_reps: actual_reps,
     sets: setDTOs,
+    is_save_to_pr: exerciseData?.is_save_to_pr ?? null,
     rest_in_between_seconds: restInBetweenSeconds,
     rest_after_series_seconds: restAfterSeriesSeconds,
   };

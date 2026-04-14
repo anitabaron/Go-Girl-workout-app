@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { NotebookText, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { PersonalRecordGroupVM } from "@/lib/personal-records/view-model";
 import { DeletePersonalRecordsDialogM3 } from "./DeletePersonalRecordsDialogM3";
 import { EditPersonalRecordDialogM3 } from "./EditPersonalRecordDialogM3";
@@ -51,7 +56,18 @@ export function M3PersonalRecordCard({
     }
   };
 
+  const handleViewSessionClick = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    sessionId: string,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/workout-sessions/${sessionId}`);
+  };
+
   const singleMetric = recordGroup.metrics[0];
+  const iconButtonClass =
+    "size-7 rounded-full text-muted-foreground hover:bg-[var(--m3-surface-container-high)] hover:text-foreground";
 
   const handleDeleted = () => {
     onDeleted?.();
@@ -71,9 +87,9 @@ export function M3PersonalRecordCard({
           }
         }}
       >
-        <CardHeader className="relative px-4 py-2.5 pb-0 gap-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-m font-semibold truncate">
+        <CardHeader className="relative gap-0 px-4 py-2.5 pb-0 pr-18">
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="min-w-0 flex-1 text-m font-semibold leading-tight">
               {recordGroup.title}
             </h2>
             {hasNewRecords && (
@@ -84,24 +100,57 @@ export function M3PersonalRecordCard({
           </div>
 
           <div className="absolute top-2 right-2 flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 text-muted-foreground hover:text-primary"
-              onClick={handleEditClick}
-              aria-label={t("editAria").replace("{title}", recordGroup.title)}
-            >
-              <Pencil className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 text-muted-foreground hover:text-destructive"
-              onClick={handleDeleteClick}
-              aria-label={t("deleteAria").replace("{title}", recordGroup.title)}
-            >
-              <Trash2 className="size-4" />
-            </Button>
+            {singleMetric?.sessionId && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`${iconButtonClass} sm:hidden`}
+                    onClick={(e) =>
+                      handleViewSessionClick(e, singleMetric.sessionId!)
+                    }
+                  >
+                    <NotebookText className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t("viewSession")}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={iconButtonClass}
+                  onClick={handleEditClick}
+                  aria-label={t("editAria").replace("{title}", recordGroup.title)}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("edit")}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={iconButtonClass}
+                  onClick={handleDeleteClick}
+                  aria-label={t("deleteAria").replace("{title}", recordGroup.title)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("delete")}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </CardHeader>
         <CardContent className="px-4 py-2 pt-0">

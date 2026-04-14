@@ -518,6 +518,11 @@ export const enMessages = {
   "editPersonalRecordsModal.title": "Edit records: {title}",
   "editPersonalRecordsModal.editMetricAria": "Edit {metricLabel}",
   "m3PersonalRecordCard.new": "New",
+  "m3PersonalRecordCard.edit": "Edit",
+  "m3PersonalRecordCard.delete": "Delete",
+  "m3PersonalRecordCard.viewSession": "View session",
+  "m3PersonalRecordCard.viewSessionAria":
+    "View workout session details where this record was achieved",
   "m3PersonalRecordCard.editAria": "Edit records for: {title}",
   "m3PersonalRecordCard.deleteAria": "Delete records for: {title}",
   "m3PersonalRecordCard.emptyMetrics": "No records available for this exercise",
@@ -527,12 +532,15 @@ export const enMessages = {
   "personalRecordMetricItem.viewSessionAria":
     "View workout session details where this record was achieved",
   "personalRecordMetricCard.editAria": "Edit record inline",
-  "personalRecordMetricCard.edit": "Edit",
   "personalRecordMetricCard.series": "Series:",
   "personalRecordMetricCard.achievedAt": "Achieved:",
   "personalRecordMetricCard.viewSession": "View session",
   "personalRecordMetricCard.viewSessionAria":
     "View workout session details where this record was achieved",
+  "personalRecordMetricCard.edit": "Edit",
+  "personalRecordMetricCard.delete": "Delete",
+  "personalRecordMetricCard.deleteAria":
+    "Delete records for this exercise",
   "resumeSessionCard.title": "Active workout session",
   "resumeSessionCard.description":
     "You have an ongoing session that you can resume.",
@@ -820,7 +828,9 @@ export const enMessages = {
   "workoutSessionExerciseItem.sets": "Sets",
   "workoutSessionExerciseItem.set": "Set",
   "workoutSessionExerciseItem.reps": "Reps",
+  "workoutSessionExerciseItem.repsShort": "Reps",
   "workoutSessionExerciseItem.totalReps": "Total reps",
+  "workoutSessionExerciseItem.totalShort": "Total",
   "workoutSessionExerciseItem.duration": "Duration",
   "workoutSessionExerciseItem.rest": "Rest",
   "workoutSessionExerciseItem.time": "Time",

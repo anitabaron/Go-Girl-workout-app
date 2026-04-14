@@ -79,13 +79,32 @@ export function WorkoutSessionExerciseItemM3({
     exercise.planned_duration_seconds != null &&
     exercise.planned_duration_seconds !== undefined &&
     !showReps;
+  const achievedMetrics = new Set(exercise.achieved_pr_metrics ?? []);
+  const highlightReps =
+    exercise.is_save_to_pr === true && achievedMetrics.has("total_reps");
+  const highlightDuration =
+    exercise.is_save_to_pr === true && achievedMetrics.has("max_duration");
+  const highlightWeight =
+    exercise.is_save_to_pr === true && achievedMetrics.has("max_weight");
+  const repsLabel = (
+    <>
+      <span className="sm:hidden">{t("repsShort")}</span>
+      <span className="hidden sm:inline">{t("reps")}</span>
+    </>
+  );
+  const totalRepsLabel = (
+    <>
+      <span className="sm:hidden">{t("totalShort")}</span>
+      <span className="hidden sm:inline">{t("totalReps")}</span>
+    </>
+  );
 
   return (
     <Card data-test-id="workout-session-exercise-item">
       <CardHeader>
         <div className="mb-3 flex items-start justify-between">
-          <h3 className="m3-title">{title}</h3>
-          <span className="text-sm text-muted-foreground">
+          <h3 className="m3-title min-w-0 flex-1">{title}</h3>
+          <span className="shrink-0 whitespace-nowrap pl-3 text-sm text-muted-foreground">
             {exerciseIndex + 1} {t("of")} {totalExercises}
           </span>
         </div>
@@ -121,13 +140,13 @@ export function WorkoutSessionExerciseItemM3({
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <dt className="text-xs text-muted-foreground">
-                        {t("reps")}
+                        {repsLabel}
                       </dt>
                       <dd className="font-semibold">{exercise.planned_reps}</dd>
                     </div>
                     <div>
                       <dt className="text-xs text-muted-foreground">
-                        {t("totalReps")}
+                        {totalRepsLabel}
                       </dt>
                       <dd className="font-semibold">
                         {exercise.planned_reps * exercise.planned_sets}
@@ -180,7 +199,7 @@ export function WorkoutSessionExerciseItemM3({
                 {exercise.planned_reps != null && (
                   <div>
                     <dt className="text-xs text-muted-foreground">
-                      {t("totalReps")}
+                      {totalRepsLabel}
                     </dt>
                     <dd
                       className={`flex items-center font-semibold ${getComparisonClass(
@@ -223,7 +242,7 @@ export function WorkoutSessionExerciseItemM3({
                   </th>
                   {showReps && (
                     <th className="px-3 py-2 text-center font-medium">
-                      {t("reps")}
+                      {repsLabel}
                     </th>
                   )}
                   {showDuration && (
@@ -265,13 +284,32 @@ export function WorkoutSessionExerciseItemM3({
                   const isBestWeight = (weight: number | null) =>
                     weight != null && weight > 0 && weight === maxWeight;
                   const recordRowClass = "bg-primary/10";
-                  const recordCellClass = "font-bold text-[var(--m3-primary)]";
-
                   return sortedSets.map((set) => {
                     const bestReps = isBestReps(set.reps);
                     const bestDuration = isBestDuration(set.duration_seconds);
                     const bestWeight = isBestWeight(set.weight_kg);
-                    const hasHighlight = bestReps || bestDuration || bestWeight;
+                    const hasHighlight =
+                      (highlightReps && bestReps) ||
+                      (highlightDuration && bestDuration) ||
+                      (highlightWeight && bestWeight);
+                    const repsClass =
+                      highlightReps && bestReps
+                        ? "font-bold text-[var(--m3-primary)]"
+                        : bestReps
+                          ? "font-normal text-foreground"
+                          : "";
+                    const durationClass =
+                      highlightDuration && bestDuration
+                        ? "font-bold text-[var(--m3-primary)]"
+                        : bestDuration
+                          ? "font-normal text-foreground"
+                          : "";
+                    const weightClass =
+                      highlightWeight && bestWeight
+                        ? "font-bold text-[var(--m3-primary)]"
+                        : bestWeight
+                          ? "font-normal text-foreground"
+                          : "";
 
                     return (
                       <tr
@@ -283,26 +321,20 @@ export function WorkoutSessionExerciseItemM3({
                         <td className="px-3 py-2">{set.set_number}</td>
                         {showReps && (
                           <td
-                            className={`px-3 py-2 text-center ${
-                              bestReps ? recordCellClass : ""
-                            }`}
+                            className={`px-3 py-2 text-center ${repsClass}`}
                           >
                             {set.reps ?? "-"}
                           </td>
                         )}
                         {showDuration && (
                           <td
-                            className={`px-3 py-2 text-center ${
-                              bestDuration ? recordCellClass : ""
-                            }`}
+                            className={`px-3 py-2 text-center ${durationClass}`}
                           >
                             {formatDuration(set.duration_seconds)}
                           </td>
                         )}
                         <td
-                          className={`px-3 py-2 text-center ${
-                            bestWeight ? recordCellClass : ""
-                          }`}
+                          className={`px-3 py-2 text-center ${weightClass}`}
                         >
                           {set.weight_kg == null ? "-" : `${set.weight_kg} kg`}
                         </td>

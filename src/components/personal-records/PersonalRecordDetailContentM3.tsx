@@ -7,10 +7,14 @@ import { EmptyState } from "@/components/layout/EmptyState";
 import { PersonalRecordMetricCardM3 } from "./PersonalRecordMetricCardM3";
 
 type PersonalRecordDetailContentM3Props = {
+  exerciseId: string;
+  exerciseTitle: string;
   records: PersonalRecordMetricViewModel[];
 };
 
 export function PersonalRecordDetailContentM3({
+  exerciseId,
+  exerciseTitle,
   records,
 }: Readonly<PersonalRecordDetailContentM3Props>) {
   const t = useTranslations("personalRecordDetail");
@@ -30,7 +34,12 @@ export function PersonalRecordDetailContentM3({
   return (
     <div className="space-y-4">
       {records.map((record) => (
-        <PersonalRecordMetricCardM3 key={record.id} record={record} />
+        <PersonalRecordMetricCardM3
+          key={record.id}
+          record={record}
+          exerciseId={exerciseId}
+          exerciseTitle={exerciseTitle}
+        />
       ))}
     </div>
   );

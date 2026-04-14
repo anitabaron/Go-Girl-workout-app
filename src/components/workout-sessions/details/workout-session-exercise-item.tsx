@@ -15,6 +15,8 @@ export function WorkoutSessionExerciseItem({
   exerciseIndex,
   totalExercises,
 }: WorkoutSessionExerciseItemProps) {
+  const achievedMetrics = new Set(exercise.achieved_pr_metrics ?? []);
+
   return (
     <Card
       data-test-id="workout-session-exercise-item"
@@ -47,6 +49,18 @@ export function WorkoutSessionExerciseItem({
           <SetLogsTable
             sets={exercise.sets}
             isSkipped={exercise.is_skipped}
+            highlightReps={
+              exercise.is_save_to_pr === true &&
+              achievedMetrics.has("total_reps")
+            }
+            highlightDuration={
+              exercise.is_save_to_pr === true &&
+              achievedMetrics.has("max_duration")
+            }
+            highlightWeight={
+              exercise.is_save_to_pr === true &&
+              achievedMetrics.has("max_weight")
+            }
             plannedReps={exercise.planned_reps}
             plannedDurationSeconds={exercise.planned_duration_seconds}
           />

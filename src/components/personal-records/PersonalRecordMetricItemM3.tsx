@@ -76,7 +76,9 @@ export function PersonalRecordMetricItemM3({
             <>
               <span className="text-muted-foreground">·</span>
               <span className="m3-body text-muted-foreground text-xs">
-                {t("series")}{" "}
+                <span className="m3-label text-xs font-semibold">
+                  {t("series")}
+                </span>{" "}
                 {sortedKeys.map((key, index) => {
                   const value = metric.seriesValues![key] ?? 0;
                   const formatted = formatSeriesValue(metric.metricType, value);
@@ -112,14 +114,14 @@ export function PersonalRecordMetricItemM3({
         </div>
       </div>
       {metric.sessionId && (
-        <Link
-          href={`/workout-sessions/${metric.sessionId}`}
-          className="ml-2 shrink-0 m3-label text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded text-xs"
-          aria-label={t("viewSessionAria")}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {t("viewSession")}
-        </Link>
+          <Link
+            href={`/workout-sessions/${metric.sessionId}`}
+            className="ml-2 hidden shrink-0 m3-label rounded text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:inline-flex text-xs"
+            aria-label={t("viewSessionAria")}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {t("viewSession")}
+          </Link>
       )}
     </div>
   );

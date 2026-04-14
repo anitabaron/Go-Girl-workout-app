@@ -411,6 +411,10 @@ export type SessionExerciseDTO = Omit<
   actual_count_sets: number | null; // Liczba wykonanych serii
   actual_sum_reps: number | null; // Suma reps ze wszystkich serii
   sets: SessionExerciseSetDTO[];
+  /** Gdy true, najlepsze wyniki mogą być wyróżniane jako kandydaci do PR. */
+  is_save_to_pr?: boolean | null;
+  /** Metryki PR faktycznie osiągnięte w tej sesji dla tego ćwiczenia. */
+  achieved_pr_metrics?: PRMetricType[];
   // Planned rest after series (from workout plan or exercise default)
   planned_rest_after_series_seconds?: number | null;
   // Rest values from exercise (snapshot at session start)

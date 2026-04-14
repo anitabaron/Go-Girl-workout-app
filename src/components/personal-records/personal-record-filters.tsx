@@ -13,7 +13,7 @@ import type { PRMetricType } from "@/types";
 import { prMetricTypeValues } from "@/lib/validation/personal-records";
 
 const metricTypeLabels: Record<PRMetricType, string> = {
-  total_reps: "Maks. powtórzenia",
+  total_reps: "Maks. suma",
   max_duration: "Maks. czas",
   max_weight: "Maks. ciężar",
 };

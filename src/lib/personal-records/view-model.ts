@@ -13,7 +13,7 @@ export type SeriesValues = Record<string, number>;
 export type PersonalRecordMetricVM = {
   id: string; // UUID rekordu (do edycji)
   metricType: PRMetricType;
-  label: string; // Etykieta metryki (przetłumaczona: "Maks. powtórzenia", "Maks. czas", "Maks. ciężar")
+  label: string; // Etykieta metryki (przetłumaczona: "Maks. suma", "Maks. czas", "Maks. ciężar")
   value: number; // Wartość surowa (do edycji)
   valueDisplay: string; // Wartość sformatowana do wyświetlenia (np. "15", "02:30", "50 kg")
   seriesValues: SeriesValues | null; // Wartości per seria (S1, S2, S3...) lub null
@@ -42,7 +42,7 @@ export type ExercisePersonalRecordsViewModel = {
 export type PersonalRecordMetricViewModel = {
   id: string; // UUID rekordu (do edycji)
   metricType: PRMetricType;
-  label: string; // Etykieta metryki (przetłumaczona: "Maks. powtórzenia", "Maks. czas", "Maks. ciężar")
+  label: string; // Etykieta metryki (przetłumaczona: "Maks. suma", "Maks. czas", "Maks. ciężar")
   value: number; // Wartość surowa (do edycji)
   valueDisplay: string; // Wartość sformatowana do wyświetlenia (np. "15", "02:30", "50 kg")
   seriesValues: SeriesValues | null; // Wartości per seria (S1, S2, S3...) lub null
@@ -72,7 +72,7 @@ export type PersonalRecordsPageResponse = {
 };
 
 const metricTypeLabels: Record<PRMetricType, string> = {
-  total_reps: "Maks. powtórzenia",
+  total_reps: "Maks. suma",
   max_duration: "Maks. czas",
   max_weight: "Maks. ciężar",
 };

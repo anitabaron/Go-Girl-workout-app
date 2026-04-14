@@ -4,6 +4,9 @@ import { formatDuration } from "@/lib/utils/time-format";
 type SetLogsTableProps = {
   readonly sets: SessionExerciseSetDTO[];
   readonly isSkipped?: boolean;
+  readonly highlightReps?: boolean;
+  readonly highlightDuration?: boolean;
+  readonly highlightWeight?: boolean;
   readonly plannedReps?: number | null;
   readonly plannedDurationSeconds?: number | null;
 };
@@ -11,6 +14,9 @@ type SetLogsTableProps = {
 export function SetLogsTable({
   sets,
   isSkipped = false,
+  highlightReps = false,
+  highlightDuration = false,
+  highlightWeight = false,
   plannedReps,
   plannedDurationSeconds,
 }: SetLogsTableProps) {
@@ -88,9 +94,29 @@ export function SetLogsTable({
             const bestReps = isBestReps(set.reps);
             const bestDuration = isBestDuration(set.duration_seconds);
             const bestWeight = isBestWeight(set.weight_kg);
-            const hasHighlight = bestReps || bestDuration || bestWeight;
+            const hasHighlight =
+              (highlightReps && bestReps) ||
+              (highlightDuration && bestDuration) ||
+              (highlightWeight && bestWeight);
             const rowHighlightClass = hasHighlight ? "bg-destructive/10" : "";
-            const cellHighlightClass = "font-bold text-destructive";
+            const repsClass =
+              highlightReps && bestReps
+                ? "font-bold text-destructive"
+                : bestReps
+                  ? "font-normal text-foreground"
+                  : "";
+            const durationClass =
+              highlightDuration && bestDuration
+                ? "font-bold text-destructive"
+                : bestDuration
+                  ? "font-normal text-foreground"
+                  : "";
+            const weightClass =
+              highlightWeight && bestWeight
+                ? "font-bold text-destructive"
+                : bestWeight
+                  ? "font-normal text-foreground"
+                  : "";
             return (
               <tr
                 key={set.set_number}
@@ -101,26 +127,20 @@ export function SetLogsTable({
                 </td>
                 {showReps && (
                   <td
-                    className={`px-4 text-center text-sm ${
-                      bestReps ? cellHighlightClass : ""
-                    }`}
+                    className={`px-4 text-center text-sm ${repsClass}`}
                   >
                     {set.reps ?? "-"}
                   </td>
                 )}
                 {showDuration && (
                   <td
-                    className={`px-4 text-center text-sm ${
-                      bestDuration ? cellHighlightClass : ""
-                    }`}
+                    className={`px-4 text-center text-sm ${durationClass}`}
                   >
                     {formatDuration(set.duration_seconds)}
                   </td>
                 )}
                 <td
-                  className={`px-4 text-center text-sm ${
-                    bestWeight ? cellHighlightClass : ""
-                  }`}
+                  className={`px-4 text-center text-sm ${weightClass}`}
                 >
                   {set.weight_kg === null ? "-" : `${set.weight_kg} kg`}
                 </td>

@@ -31,6 +31,7 @@ import {
   updateWorkoutSessionTimer,
   findWorkoutSessionExercises,
   findWorkoutSessionSets,
+  findPersonalRecordsAchievedInSession,
   mapToDetailDTO,
   findExercisesByIdsForSnapshots,
   findWorkoutSessionExerciseByOrder,
@@ -483,12 +484,46 @@ async function getWorkoutSessionDetail(
   const exerciseNames = exercises
     .map((ex) => ex.exercise_title_at_time)
     .filter((name): name is string => name !== null && name !== undefined);
+  const libraryExerciseIds = exercises
+    .map((exercise) => exercise.exercise_id)
+    .filter((exerciseId): exerciseId is string => exerciseId !== null);
+  const { data: achievedPrs, error: achievedPrsError } =
+    await findPersonalRecordsAchievedInSession(
+      supabase,
+      userId,
+      sessionId,
+      libraryExerciseIds,
+    );
 
-  return mapToDetailDTO(session, exercises, sets ?? [], {
+  if (achievedPrsError) {
+    throw mapDbError(achievedPrsError);
+  }
+
+  const achievedPrMetricsByExerciseId = new Map<string, Set<Database["public"]["Enums"]["pr_metric_type"]>>();
+  for (const record of achievedPrs ?? []) {
+    const metrics = achievedPrMetricsByExerciseId.get(record.exercise_id) ?? new Set();
+    metrics.add(record.metric_type);
+    achievedPrMetricsByExerciseId.set(record.exercise_id, metrics);
+  }
+
+  const detail = mapToDetailDTO(session, exercises, sets ?? [], {
     exercise_count: exerciseNames.length,
     exercise_names: exerciseNames,
     estimated_total_time_seconds: estimatedTotalTimeSeconds,
   });
+
+  return {
+    ...detail,
+    exercises: detail.exercises.map((exercise) => ({
+      ...exercise,
+      achieved_pr_metrics:
+        exercise.exercise_id != null
+          ? Array.from(
+              achievedPrMetricsByExerciseId.get(exercise.exercise_id) ?? [],
+            )
+          : [],
+    })),
+  };
 }
 
 /**

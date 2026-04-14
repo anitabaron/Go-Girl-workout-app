@@ -97,11 +97,15 @@ export default async function ExercisePersonalRecordsPage({
         </div>
       </header>
 
-      <Surface variant="high">
-        <div className="mb-6">
+      <Surface variant="high" className="pt-3 sm:pt-4">
+        <div className="mb-4">
           <ExerciseInfoM3 exercise={viewModel.exercise} />
         </div>
-        <PersonalRecordDetailContentM3 records={viewModel.records} />
+        <PersonalRecordDetailContentM3
+          exerciseId={viewModel.exercise.id}
+          exerciseTitle={viewModel.exercise.title}
+          records={viewModel.records}
+        />
       </Surface>
     </div>
   );
