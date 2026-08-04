@@ -6,6 +6,8 @@ import {
   encodeCursor as encodeCursorBase,
   type CursorPayload,
 } from "@/lib/cursor-utils";
+import { exercisePartValues } from "@/lib/validation/exercises";
+import { workoutPlanExerciseImportSchema } from "@/lib/validation/workout-plans";
 
 export const SESSION_MAX_LIMIT = 100;
 export const SESSION_DEFAULT_LIMIT = 30;
@@ -255,6 +257,34 @@ export const sessionExerciseAutosaveSchema = z
       message: "set_number musi być unikalne w tablicy sets",
     },
   );
+
+/**
+ * Schema dla ćwiczenia w imporcie sesji treningowej (ukończonego treningu).
+ * Ponownie wykorzystuje unię identyfikacji ćwiczenia z importu planów
+ * (exercise_id / match_by_name / exercise_title-snapshot) - patrz
+ * `workoutPlanExerciseImportSchema` w `@/lib/validation/workout-plans`.
+ * Pola dotyczące "scope" (scope_id, in_scope_nr, scope_repeat_count) są
+ * akceptowane dla kompatybilności z tym samym JSON co plan, ale ignorowane -
+ * sesja to płaska, już wykonana lista ćwiczeń w kolejności z JSON.
+ */
+export const workoutSessionImportExerciseSchema =
+  workoutPlanExerciseImportSchema;
+
+/**
+ * Schema dla importu ukończonej sesji treningowej z JSON.
+ * W przeciwieństwie do importu planu, wynik to `workout_sessions` ze
+ * statusem 'completed' - nie tworzy się `workout_plans`.
+ */
+export const workoutSessionImportSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120),
+    description: z.string().trim().max(1000).optional().nullable(),
+    part: z.enum(exercisePartValues).optional().nullable(),
+    exercises: z
+      .array(workoutSessionImportExerciseSchema)
+      .min(1, "Sesja treningowa musi zawierać co najmniej jedno ćwiczenie"),
+  })
+  .strict();
 
 /**
  * Enkoduje kursor paginacji do base64url string.

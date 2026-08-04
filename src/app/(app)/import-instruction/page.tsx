@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import workoutPlanImportExample from "@/lib/json/workout-plan-import-example.json";
+import workoutSessionImportExample from "@/lib/json/workout-session-import-example.json";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
 import { getTranslations } from "@/i18n/server";
@@ -379,6 +380,42 @@ export default async function ImportInstructionPage() {
               <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-4 overflow-x-auto">
                 <pre className="text-xs font-mono leading-relaxed">
                   {JSON.stringify(workoutPlanImportExample, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </Surface>
+
+        {/* Step 5: Import as a completed session */}
+        <Surface variant="high">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-semibold">
+                5
+              </div>
+              <h2 className="m3-headline">{t("step5Title")}</h2>
+            </div>
+            <div className="ml-11 space-y-4">
+              <p className="m3-body text-muted-foreground text-xs">
+                {t("step5Description")}
+              </p>
+              <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-2 text-xs">
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
+                  <li>{t("step5Point1")}</li>
+                  <li>{t("step5Point2")}</li>
+                  <li>{t("step5Point3")}</li>
+                  <li>{t("step5Point4")}</li>
+                </ul>
+              </div>
+              <p className="m3-body text-muted-foreground text-xs">
+                {t("step5EndpointLabel")}{" "}
+                <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                  POST /api/workout-sessions/import
+                </code>
+              </p>
+              <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-4 overflow-x-auto">
+                <pre className="text-xs font-mono leading-relaxed">
+                  {JSON.stringify(workoutSessionImportExample, null, 2)}
                 </pre>
               </div>
             </div>

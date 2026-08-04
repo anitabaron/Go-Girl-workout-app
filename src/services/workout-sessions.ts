@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import { createClient } from "@/db/supabase.server";
 import type { Database } from "@/db/database.types";
 import type {
@@ -13,6 +14,7 @@ import {
   sessionStatusUpdateSchema,
   sessionExerciseAutosaveSchema,
   sessionTimerUpdateSchema,
+  workoutSessionImportSchema,
 } from "@/lib/validation/workout-sessions";
 import {
   assertUser,
@@ -26,7 +28,10 @@ import {
   findWorkoutSessionById,
   findWorkoutSessionsByUserId,
   insertWorkoutSession,
+  insertCompletedWorkoutSession,
   insertWorkoutSessionExercises,
+  insertWorkoutSessionSets,
+  callRecalculatePrForExercise,
   updateWorkoutSessionStatus,
   updateWorkoutSessionTimer,
   findWorkoutSessionExercises,
@@ -52,6 +57,9 @@ import {
 } from "@/lib/workout-sessions/aggregates";
 import { markProgramSessionCompletedByWorkoutSessionId } from "@/repositories/training-programs";
 import { applyCapabilitySessionResult } from "@/services/capability-profiles";
+import { findByNormalizedTitle } from "@/repositories/exercises";
+import { normalizeTitleForDbLookup } from "@/lib/validation/exercises";
+import { DEFAULT_EXERCISE_VALUE } from "@/lib/constants";
 
 export { ServiceError } from "@/lib/service-utils";
 
@@ -1043,5 +1051,304 @@ export async function deleteWorkoutSessionService(userId: string, id: string) {
 
   if (error) {
     throw mapDbError(error);
+  }
+}
+
+// ============================================================================
+// IMPORT UKOŃCZONEJ SESJI TRENINGOWEJ Z JSON
+// ============================================================================
+// Patrz: openspec/changes/import-workout-session/design.md dla uzasadnienia
+// decyzji projektowych (mapowanie planned -> actual, brak wagi, PR recalculation).
+//
+// Logika identyfikacji ćwiczeń (exercise_id / match_by_name / exercise_title
+// snapshot) jest analogiczna do importWorkoutPlanService w
+// @/services/workout-plans (resolveOneMatchByName, enrichExerciseFromLibrary,
+// convertMissingExerciseToSnapshot) - celowo zduplikowana zamiast wydzielona,
+// bo tamte helpery są prywatne i ściśle powiązane z WorkoutPlanImportPayload.
+
+type WorkoutSessionImportPayload = z.infer<typeof workoutSessionImportSchema>;
+type SessionImportExercise = WorkoutSessionImportPayload["exercises"][number];
+
+const DEFAULT_EXERCISE_TYPE: Database["public"]["Enums"]["exercise_type"] =
+  DEFAULT_EXERCISE_VALUE.section_type as Database["public"]["Enums"]["exercise_type"];
+const DEFAULT_EXERCISE_PART: Database["public"]["Enums"]["exercise_part"] =
+  "Legs";
+
+type SessionLibraryExerciseData = {
+  id: string;
+  title: string;
+  types: Database["public"]["Enums"]["exercise_type"][];
+  parts: Database["public"]["Enums"]["exercise_part"][];
+  is_unilateral?: boolean;
+  reps: number | null;
+  duration_seconds: number | null;
+  series: number;
+  rest_in_between_seconds: number | null;
+  rest_after_series_seconds: number | null;
+};
+
+/**
+ * Resolves match_by_name -> exercise_id (jeśli znaleziono w bibliotece) albo
+ * konwertuje na snapshot (jeśli nie znaleziono). Mirror: resolveOneMatchByName
+ * w @/services/workout-plans.
+ */
+async function resolveSessionMatchByName(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  parsed: WorkoutSessionImportPayload,
+): Promise<void> {
+  for (const exercise of parsed.exercises) {
+    if (!exercise.match_by_name || exercise.exercise_id) continue;
+
+    const normalizedName = normalizeTitleForDbLookup(exercise.match_by_name);
+    const { data: foundExercise, error: findError } =
+      await findByNormalizedTitle(supabase, userId, normalizedName);
+    if (findError) throw mapDbError(findError);
+
+    if (foundExercise?.id) {
+      exercise.exercise_id = foundExercise.id;
+      exercise.match_by_name = undefined;
+      continue;
+    }
+
+    // Nie znaleziono - konwersja na snapshot
+    exercise.exercise_title = exercise.match_by_name;
+    exercise.exercise_type ??= DEFAULT_EXERCISE_TYPE;
+    exercise.exercise_part ??= parsed.part ?? undefined;
+    exercise.planned_sets ??= DEFAULT_EXERCISE_VALUE.planned_sets;
+    exercise.match_by_name = undefined;
+  }
+}
+
+/**
+ * Wzbogaca planned_* z danych biblioteki ćwiczeń (gdy exercise_id istnieje)
+ * lub konwertuje na snapshot (gdy exercise_id nie istnieje/nie należy do
+ * użytkownika). Mirror: enrichExerciseFromLibrary + convertMissingExerciseToSnapshot
+ * w @/services/workout-plans.
+ */
+function enrichOrConvertSessionExercise(
+  exercise: SessionImportExercise,
+  libraryDataMap: Map<string, SessionLibraryExerciseData>,
+): void {
+  if (!exercise.exercise_id) {
+    // Snapshot bez exercise_id (podany bezpośrednio exercise_title)
+    exercise.exercise_type ??= DEFAULT_EXERCISE_TYPE;
+    exercise.planned_sets ??= DEFAULT_EXERCISE_VALUE.planned_sets;
+    return;
+  }
+
+  const libraryData = libraryDataMap.get(exercise.exercise_id);
+  if (!libraryData) {
+    // exercise_id podany, ale nie istnieje/nie należy do użytkownika - snapshot
+    const missingId = exercise.exercise_id;
+    exercise.exercise_id = null;
+    if (!exercise.exercise_title) {
+      exercise.exercise_title = `Ćwiczenie (ID: ${missingId})`;
+    }
+    exercise.exercise_type ??= DEFAULT_EXERCISE_TYPE;
+    exercise.planned_sets ??= DEFAULT_EXERCISE_VALUE.planned_sets;
+    return;
+  }
+
+  exercise.planned_sets ??= libraryData.series;
+  exercise.planned_reps ??= libraryData.reps;
+  exercise.planned_duration_seconds ??= libraryData.duration_seconds;
+  exercise.planned_rest_seconds ??= libraryData.rest_in_between_seconds;
+  exercise.planned_rest_after_series_seconds ??=
+    libraryData.rest_after_series_seconds;
+}
+
+/**
+ * Waliduje, że każde ćwiczenie ma co najmniej jedną metrykę (planned_reps lub
+ * planned_duration_seconds) po wzbogaceniu - inaczej nie da się utworzyć
+ * wiersza workout_session_sets (DB constraint wymaga >=1 metryki).
+ */
+function validateSessionExercisesHaveMetric(
+  parsed: WorkoutSessionImportPayload,
+): void {
+  parsed.exercises.forEach((exercise, index) => {
+    const hasReps =
+      exercise.planned_reps !== undefined && exercise.planned_reps !== null;
+    const hasDuration =
+      exercise.planned_duration_seconds !== undefined &&
+      exercise.planned_duration_seconds !== null;
+    if (!hasReps && !hasDuration) {
+      const label =
+        exercise.exercise_title ?? exercise.match_by_name ?? `#${index + 1}`;
+      throw new ServiceError(
+        "BAD_REQUEST",
+        `Ćwiczenie "${label}" musi mieć planned_reps lub planned_duration_seconds ` +
+          `(bezpośrednio lub przez dane z biblioteki ćwiczeń).`,
+      );
+    }
+  });
+}
+
+/**
+ * Buduje wiersze do wstawienia do workout_session_exercises z parsed exercises.
+ * actual_* = planned_* (patrz design.md - JSON zawiera tylko dane planowane).
+ */
+function buildSessionExerciseRows(
+  parsed: WorkoutSessionImportPayload,
+  libraryDataMap: Map<string, SessionLibraryExerciseData>,
+): Array<{
+  exercise_id: string | null;
+  exercise_title_at_time: string;
+  exercise_type_at_time: Database["public"]["Enums"]["exercise_type"];
+  exercise_part_at_time: Database["public"]["Enums"]["exercise_part"];
+  exercise_is_unilateral_at_time: boolean;
+  planned_sets: number | null;
+  planned_reps: number | null;
+  planned_duration_seconds: number | null;
+  planned_rest_seconds: number | null;
+  planned_rest_after_series_seconds: number | null;
+  exercise_order: number;
+}> {
+  return parsed.exercises.map((exercise, index) => {
+    const libraryData = exercise.exercise_id
+      ? libraryDataMap.get(exercise.exercise_id)
+      : undefined;
+
+    const title =
+      libraryData?.title ?? exercise.exercise_title ?? "Nieznane ćwiczenie";
+    const type =
+      libraryData?.types?.[0] ?? exercise.exercise_type ?? DEFAULT_EXERCISE_TYPE;
+    const part =
+      libraryData?.parts?.[0] ??
+      exercise.exercise_part ??
+      parsed.part ??
+      DEFAULT_EXERCISE_PART;
+    const isUnilateral =
+      exercise.exercise_is_unilateral ?? libraryData?.is_unilateral ?? false;
+
+    return {
+      exercise_id: exercise.exercise_id ?? null,
+      exercise_title_at_time: title,
+      exercise_type_at_time: type,
+      exercise_part_at_time: part,
+      exercise_is_unilateral_at_time: isUnilateral,
+      planned_sets: exercise.planned_sets ?? null,
+      planned_reps: exercise.planned_reps ?? null,
+      planned_duration_seconds: exercise.planned_duration_seconds ?? null,
+      planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+      planned_rest_after_series_seconds:
+        exercise.planned_rest_after_series_seconds ?? null,
+      exercise_order: index + 1,
+    };
+  });
+}
+
+/**
+ * Importuje ukończoną sesję treningową z JSON (nie tworzy workout_plans).
+ * Obsługuje ćwiczenia istniejące w bazie (exercise_id / match_by_name) oraz
+ * nowe (przez snapshot exercise_title). actual_* = planned_* (patrz design.md).
+ */
+export async function importWorkoutSessionService(
+  userId: string,
+  payload: unknown,
+): Promise<SessionDetailDTO> {
+  assertUser(userId);
+
+  const parsed = parseOrThrow(workoutSessionImportSchema, payload);
+  const supabase = await createClient();
+
+  let createdSessionId: string | null = null;
+
+  try {
+    await resolveSessionMatchByName(supabase, userId, parsed);
+
+    const exerciseIds = parsed.exercises
+      .map((e) => e.exercise_id)
+      .filter((id): id is string => Boolean(id));
+
+    const { data: libraryExercises, error: libraryError } =
+      await findExercisesByIdsForSnapshots(supabase, userId, exerciseIds);
+    if (libraryError) throw mapDbError(libraryError);
+
+    const libraryDataMap = new Map<string, SessionLibraryExerciseData>(
+      (libraryExercises ?? []).map((e) => [e.id, e]),
+    );
+
+    for (const exercise of parsed.exercises) {
+      enrichOrConvertSessionExercise(exercise, libraryDataMap);
+    }
+
+    validateSessionExercisesHaveMetric(parsed);
+
+    const { data: session, error: sessionError } =
+      await insertCompletedWorkoutSession(supabase, userId, {
+        name: parsed.name,
+      });
+    if (sessionError) throw mapDbError(sessionError);
+    if (!session) {
+      throw new ServiceError(
+        "INTERNAL",
+        "Nie udało się utworzyć sesji treningowej.",
+      );
+    }
+    createdSessionId = session.id;
+
+    const exerciseRows = buildSessionExerciseRows(parsed, libraryDataMap);
+    const { data: insertedExercises, error: exercisesInsertError } =
+      await insertWorkoutSessionExercises(supabase, session.id, exerciseRows);
+    if (exercisesInsertError) throw mapDbError(exercisesInsertError);
+
+    const insertedRows = insertedExercises ?? [];
+    const recalcExerciseIds = new Set<string>();
+
+    for (const row of insertedRows) {
+      const sourceExercise = exerciseRows.find(
+        (e) => e.exercise_order === row.exercise_order,
+      );
+      const plannedSets = sourceExercise?.planned_sets ?? 1;
+      const setsToInsert = Array.from(
+        { length: Math.max(1, plannedSets) },
+        (_, i) => ({
+          set_number: i + 1,
+          reps: sourceExercise?.planned_reps ?? null,
+          duration_seconds: sourceExercise?.planned_duration_seconds ?? null,
+          weight_kg: null,
+        }),
+      );
+
+      const { error: setsError } = await insertWorkoutSessionSets(
+        supabase,
+        row.id,
+        setsToInsert,
+      );
+      if (setsError) throw mapDbError(setsError);
+
+      if (row.exercise_id) {
+        recalcExerciseIds.add(row.exercise_id);
+      }
+    }
+
+    for (const exerciseId of recalcExerciseIds) {
+      const { error: recalcError } = await callRecalculatePrForExercise(
+        supabase,
+        userId,
+        exerciseId,
+      );
+      if (recalcError) {
+        // Nie przerywamy importu, jeśli przeliczenie PR się nie powiedzie -
+        // sesja i dane treningowe są już zapisane poprawnie.
+        console.error(
+          "[importWorkoutSessionService] Failed to recalculate PR for exercise",
+          exerciseId,
+          recalcError,
+        );
+      }
+    }
+
+    return await getWorkoutSessionService(userId, session.id);
+  } catch (error) {
+    if (createdSessionId) {
+      await supabase
+        .from("workout_sessions")
+        .delete()
+        .eq("id", createdSessionId);
+    }
+    console.error("[importWorkoutSessionService] Error:", error);
+    throw error;
   }
 }

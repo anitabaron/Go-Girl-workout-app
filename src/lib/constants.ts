@@ -11,6 +11,9 @@ export const EXERCISE_PART_VALUES = [
   "Arms",
   "Chest",
   "Glutes",
+  "Cardio",
+  "Shoulders",
+  "Full Body",
 ] as const satisfies ExercisePart[];
 
 /**

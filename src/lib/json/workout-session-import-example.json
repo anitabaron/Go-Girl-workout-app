@@ -1,0 +1,103 @@
+{
+  "name": "Trening całego ciała - siła + kalistenika",
+  "description": "Ukończony trening: siła dolnej i górnej partii ciała, kalistenika, core",
+  "part": "Full Body",
+  "exercises": [
+    {
+      "exercise_title": "Air Bike",
+      "exercise_part": "Cardio",
+      "exercise_type": "Warm-up",
+      "planned_sets": 3,
+      "planned_duration_seconds": 30,
+      "planned_rest_seconds": 20,
+      "planned_rest_after_series_seconds": 30
+    },
+    {
+      "exercise_title": "Band Overhead Press",
+      "exercise_part": "Shoulders",
+      "exercise_type": "Main Workout",
+      "planned_sets": 3,
+      "planned_reps": 12,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60
+    },
+    {
+      "exercise_title": "Bulgarian Split Squat with Resistance Band",
+      "exercise_part": "Legs",
+      "exercise_type": "Main Workout",
+      "exercise_is_unilateral": true,
+      "planned_sets": 3,
+      "planned_reps": 10,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60
+    },
+    {
+      "match_by_name": "Dips",
+      "planned_sets": 3,
+      "planned_reps": 8,
+      "planned_rest_seconds": 60,
+      "planned_rest_after_series_seconds": 60
+    },
+    {
+      "exercise_title": "Hanging Leg Raise",
+      "exercise_part": "Core",
+      "exercise_type": "Main Workout",
+      "planned_sets": 3,
+      "planned_reps": 12,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60
+    },
+    {
+      "exercise_title": "Assisted Pull-up",
+      "exercise_part": "Back",
+      "exercise_type": "Main Workout",
+      "planned_sets": 3,
+      "planned_reps": 8,
+      "planned_rest_seconds": 60,
+      "planned_rest_after_series_seconds": 60
+    },
+    {
+      "match_by_name": "Romanian Deadlift",
+      "planned_sets": 4,
+      "planned_reps": 10,
+      "planned_rest_seconds": 60,
+      "planned_rest_after_series_seconds": 90
+    },
+    {
+      "exercise_title": "Kettlebell Clean",
+      "exercise_part": "Full Body",
+      "exercise_type": "Main Workout",
+      "exercise_is_unilateral": true,
+      "planned_sets": 3,
+      "planned_reps": 8,
+      "planned_rest_seconds": 60,
+      "planned_rest_after_series_seconds": 60
+    },
+    {
+      "match_by_name": "Hip Thrust",
+      "planned_sets": 3,
+      "planned_reps": 12,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60
+    },
+    {
+      "exercise_title": "Single Leg Cable Glute Kickback",
+      "exercise_part": "Glutes",
+      "exercise_type": "Main Workout",
+      "exercise_is_unilateral": true,
+      "planned_sets": 3,
+      "planned_reps": 12,
+      "planned_rest_seconds": 30,
+      "planned_rest_after_series_seconds": 60
+    },
+    {
+      "exercise_title": "Bench Leg Raise to Candlestick",
+      "exercise_part": "Core",
+      "exercise_type": "Cool-down",
+      "planned_sets": 2,
+      "planned_reps": 10,
+      "planned_rest_seconds": 20,
+      "planned_rest_after_series_seconds": 30
+    }
+  ]
+}

@@ -44,6 +44,9 @@ export function WorkoutPlanExerciseItemM3({
     if (value === "Arms") return t("partOption.arms");
     if (value === "Chest") return t("partOption.chest");
     if (value === "Glutes") return t("partOption.glutes");
+    if (value === "Cardio") return t("partOption.cardio");
+    if (value === "Shoulders") return t("partOption.shoulders");
+    if (value === "Full Body") return t("partOption.fullbody");
     return value;
   };
   const exerciseKey = `exercise_${index}`;

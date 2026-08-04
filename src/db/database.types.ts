@@ -1058,7 +1058,16 @@ export type Database = {
       coach_profile_verbosity: "short" | "balanced" | "detailed";
       external_workout_source: "manual" | "garmin" | "apple_health";
       external_workout_sport_type: "pole_dance" | "calisthenics" | "other";
-      exercise_part: "Legs" | "Core" | "Back" | "Arms" | "Chest" | "Glutes";
+      exercise_part:
+        | "Legs"
+        | "Core"
+        | "Back"
+        | "Arms"
+        | "Chest"
+        | "Glutes"
+        | "Cardio"
+        | "Shoulders"
+        | "Full Body";
       exercise_type: "Warm-up" | "Main Workout" | "Cool-down";
       program_session_status: "planned" | "completed";
       pr_metric_type: "total_reps" | "max_duration" | "max_weight";
@@ -1209,7 +1218,17 @@ export const Constants = {
   public: {
     Enums: {
       ai_request_type: ["generate", "optimize"],
-      exercise_part: ["Legs", "Core", "Back", "Arms", "Chest", "Glutes"],
+      exercise_part: [
+        "Legs",
+        "Core",
+        "Back",
+        "Arms",
+        "Chest",
+        "Glutes",
+        "Cardio",
+        "Shoulders",
+        "Full Body",
+      ],
       exercise_type: ["Warm-up", "Main Workout", "Cool-down"],
       pr_metric_type: ["total_reps", "max_duration", "max_weight"],
       workout_session_status: ["in_progress", "completed"],

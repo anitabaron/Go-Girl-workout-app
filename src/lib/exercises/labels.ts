@@ -11,6 +11,9 @@ const PART_KEY_MAP: Record<ExercisePart, string> = {
   Arms: "part.arms",
   Chest: "part.chest",
   Glutes: "part.glutes",
+  Cardio: "part.cardio",
+  Shoulders: "part.shoulders",
+  "Full Body": "part.fullbody",
 };
 
 const TYPE_KEY_MAP: Record<ExerciseType, string> = {

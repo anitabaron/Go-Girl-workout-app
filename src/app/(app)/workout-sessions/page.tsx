@@ -8,6 +8,7 @@ import type { SessionListQueryParams } from "@/types";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Surface } from "@/components/layout/Surface";
 import { WorkoutSessionsListM3 } from "@/components/workout-sessions/WorkoutSessionsListM3";
+import { ImportSessionButtonM3 } from "@/components/workout-sessions/ImportSessionButtonM3";
 import { getTranslations } from "@/i18n/server";
 
 export default async function WorkoutSessionsPage({
@@ -54,6 +55,7 @@ export default async function WorkoutSessionsPage({
             <span className="m3-chip">
               {sessions.length} {t("countLabel")}
             </span>
+            <ImportSessionButtonM3 />
             <Button asChild className="m3-cta">
               <Link href="/workout-sessions/start">
                 <Play className="mr-2 size-4" />

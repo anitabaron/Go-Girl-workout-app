@@ -282,6 +282,93 @@ export async function insertWorkoutSessionExercises(
 }
 
 /**
+ * Wstawia nową, JUŻ UKOŃCZONĄ sesję treningową (import z JSON).
+ * W przeciwieństwie do insertWorkoutSession (status 'in_progress', bez planu),
+ * ta funkcja tworzy sesję ze status='completed', started_at/completed_at ustawione
+ * na czas importu i bez powiązania z workout_plans (workout_plan_id = null).
+ */
+export async function insertCompletedWorkoutSession(
+  client: DbClient,
+  userId: string,
+  input: {
+    name: string;
+  },
+) {
+  const now = new Date().toISOString();
+  const { data, error } = await client
+    .from("workout_sessions")
+    .insert({
+      user_id: userId,
+      workout_plan_id: null,
+      plan_name_at_time: input.name,
+      status: "completed",
+      started_at: now,
+      completed_at: now,
+      current_position: 0,
+      last_action_at: now,
+    })
+    .select(sessionSelectColumns)
+    .single();
+
+  return {
+    data: data ? mapToSummaryDTO(data as WorkoutSessionRow) : null,
+    error,
+  };
+}
+
+/**
+ * Wstawia serie (workout_session_sets) dla ćwiczenia sesji (batch insert).
+ * Używane przy imporcie sesji - jedna seria na każde planned_sets, z
+ * reps/duration_seconds = planned, weight_kg zawsze null (JSON importu nie ma wagi).
+ */
+export async function insertWorkoutSessionSets(
+  client: DbClient,
+  sessionExerciseId: string,
+  sets: Array<{
+    set_number: number;
+    reps: number | null;
+    duration_seconds: number | null;
+    weight_kg: number | null;
+  }>,
+) {
+  if (sets.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const { data, error } = await client
+    .from("workout_session_sets")
+    .insert(
+      sets.map((set) => ({
+        session_exercise_id: sessionExerciseId,
+        set_number: set.set_number,
+        reps: set.reps,
+        duration_seconds: set.duration_seconds,
+        weight_kg: set.weight_kg,
+      })),
+    )
+    .select();
+
+  return { data, error };
+}
+
+/**
+ * Wywołuje funkcję DB recalculate_pr_for_exercise przez Supabase RPC.
+ * Używane po imporcie sesji - dla każdego unikalnego exercise_id (nie null).
+ */
+export async function callRecalculatePrForExercise(
+  client: DbClient,
+  userId: string,
+  exerciseId: string,
+) {
+  const { error } = await client.rpc("recalculate_pr_for_exercise", {
+    p_user_id: userId,
+    p_exercise_id: exerciseId,
+  });
+
+  return { error };
+}
+
+/**
  * Aktualizuje status sesji treningowej.
  */
 export async function updateWorkoutSessionStatus(

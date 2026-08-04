@@ -74,6 +74,9 @@ function getExercisePartLabel(
   if (opt === "Arms") return t("partOption.arms");
   if (opt === "Chest") return t("partOption.chest");
   if (opt === "Glutes") return t("partOption.glutes");
+  if (opt === "Cardio") return t("partOption.cardio");
+  if (opt === "Shoulders") return t("partOption.shoulders");
+  if (opt === "Full Body") return t("partOption.fullbody");
   return opt;
 }
 

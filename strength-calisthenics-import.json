@@ -1,0 +1,128 @@
+{
+  "name": "Strength + Calisthenics",
+  "description": "Trening siłowy ukierunkowany na rozwój siły, rzeźbę mięśni oraz przygotowanie do Pole Dance i kalisteniki.",
+  "part": null,
+  "exercises": [
+    {
+      "exercise_title": "Air Bike",
+      "exercise_part": null,
+      "exercise_details": "Rozgrzewka 200 W",
+      "section_type": "Warm-up",
+      "exercise_is_unilateral": false,
+      "section_order": 1,
+      "planned_sets": 1,
+      "planned_reps": null,
+      "planned_duration_seconds": 240,
+      "planned_rest_seconds": 0,
+      "planned_rest_after_series_seconds": 60,
+      "estimated_set_time_seconds": 240
+    },
+    {
+      "exercise_title": "Band Overhead Press",
+      "exercise_part": "Arms",
+      "exercise_details": "Wyciskanie gumy nad głowę",
+      "section_type": "Main Workout",
+      "exercise_is_unilateral": false,
+      "section_order": 1,
+      "planned_sets": 3,
+      "planned_reps": 10,
+      "planned_duration_seconds": null,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60,
+      "estimated_set_time_seconds": 300
+    },
+    {
+      "exercise_title": "Bulgarian Split Squat with Resistance Band",
+      "exercise_part": "Legs",
+      "exercise_details": "Bułgarski przysiad z gumą",
+      "section_type": "Main Workout",
+      "exercise_is_unilateral": true,
+      "section_order": 2,
+      "planned_sets": 3,
+      "planned_reps": 10,
+      "planned_duration_seconds": null,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60,
+      "estimated_set_time_seconds": 300
+    },
+    {
+      "match_by_name": "Dips"
+    },
+    {
+      "exercise_title": "Hanging Leg Raise",
+      "exercise_part": "Core",
+      "exercise_details": "Wznosy prostych nóg na poręczach",
+      "section_type": "Main Workout",
+      "exercise_is_unilateral": false,
+      "section_order": 4,
+      "planned_sets": 3,
+      "planned_reps": 10,
+      "planned_duration_seconds": null,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60,
+      "estimated_set_time_seconds": 300
+    },
+    {
+      "exercise_title": "Assisted Pull-up",
+      "exercise_part": "Back",
+      "exercise_details": "Podciąganie z gumą 25 kg",
+      "section_type": "Main Workout",
+      "exercise_is_unilateral": false,
+      "section_order": 5,
+      "planned_sets": 3,
+      "planned_reps": 10,
+      "planned_duration_seconds": null,
+      "planned_rest_seconds": 60,
+      "planned_rest_after_series_seconds": 90,
+      "estimated_set_time_seconds": 300
+    },
+    {
+      "match_by_name": "Romanian Deadlift"
+    },
+    {
+      "exercise_title": "Kettlebell Clean",
+      "exercise_part": "Legs",
+      "exercise_details": "12 kg",
+      "section_type": "Main Workout",
+      "exercise_is_unilateral": false,
+      "section_order": 7,
+      "planned_sets": 3,
+      "planned_reps": 10,
+      "planned_duration_seconds": null,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60,
+      "estimated_set_time_seconds": 300
+    },
+    {
+      "match_by_name": "Hip Thrust"
+    },
+    {
+      "exercise_title": "Single Leg Cable Glute Kickback",
+      "exercise_part": "Glutes",
+      "exercise_details": "Wyciąg jedną nogą 14 kg",
+      "section_type": "Main Workout",
+      "exercise_is_unilateral": true,
+      "section_order": 9,
+      "planned_sets": 3,
+      "planned_reps": 10,
+      "planned_duration_seconds": null,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60,
+      "estimated_set_time_seconds": 300
+    },
+    {
+      "exercise_title": "Bench Leg Raise to Candlestick",
+      "exercise_part": "Core",
+      "exercise_details": "Wznosy nóg do świecy na ławce",
+      "section_type": "Main Workout",
+      "exercise_is_unilateral": false,
+      "section_order": 10,
+      "planned_sets": 3,
+      "planned_reps": 10,
+      "planned_duration_seconds": null,
+      "planned_rest_seconds": 45,
+      "planned_rest_after_series_seconds": 60,
+      "estimated_set_time_seconds": 300
+    }
+  ]
+}
