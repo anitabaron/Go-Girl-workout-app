@@ -283,6 +283,7 @@ export function WorkoutSessionDetailContent({
           isEditMode={isEditMode}
           onExerciseSaved={() => router.refresh()}
           onExerciseDeleted={() => router.refresh()}
+          onExerciseMoved={() => router.refresh()}
         />
       </div>
     </div>

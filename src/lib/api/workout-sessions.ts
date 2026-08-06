@@ -217,6 +217,41 @@ export async function deleteWorkoutSessionExercise(
 }
 
 /**
+ * POST /api/workout-sessions/{id}/exercises/{order}/move
+ * Przesuwa ćwiczenie w sesji o jedną pozycję w górę lub w dół.
+ */
+export async function moveWorkoutSessionExercise(
+  sessionId: string,
+  exerciseOrder: number,
+  direction: "up" | "down",
+): Promise<void> {
+  const url = `/api/workout-sessions/${sessionId}/exercises/${exerciseOrder}/move`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ direction }),
+  });
+
+  if (!response.ok) {
+    let errorData: { message?: string; details?: string; code?: string } = {};
+    try {
+      const text = await response.text();
+      if (text) {
+        errorData = JSON.parse(text) as typeof errorData;
+      }
+    } catch {
+      // ignore parse error
+    }
+    const msg =
+      errorData.message || `Błąd zmiany kolejności ćwiczenia (${response.status})`;
+    const fullMsg = errorData.details ? `${msg} ${errorData.details}` : msg;
+    throw new Error(fullMsg);
+  }
+}
+
+/**
  * PATCH /api/workout-sessions/{id}/exercises/{order}
  * Wersja z keepalive dla zapisu przy zamknięciu strony.
  */

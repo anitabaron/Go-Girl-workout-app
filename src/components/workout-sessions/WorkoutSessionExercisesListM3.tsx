@@ -9,6 +9,7 @@ type WorkoutSessionExercisesListM3Props = {
   readonly isEditMode?: boolean;
   readonly onExerciseSaved?: () => void;
   readonly onExerciseDeleted?: () => void;
+  readonly onExerciseMoved?: () => void;
 };
 
 export function WorkoutSessionExercisesListM3({
@@ -17,6 +18,7 @@ export function WorkoutSessionExercisesListM3({
   isEditMode = false,
   onExerciseSaved,
   onExerciseDeleted,
+  onExerciseMoved,
 }: WorkoutSessionExercisesListM3Props) {
   const t = useTranslations("workoutSessionExercisesList");
   if (exercises.length === 0) {
@@ -43,6 +45,7 @@ export function WorkoutSessionExercisesListM3({
             sessionId={sessionId}
             onSaved={onExerciseSaved}
             onDeleted={onExerciseDeleted}
+            onMoved={onExerciseMoved}
           />
         ) : (
           <WorkoutSessionExerciseItemM3

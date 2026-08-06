@@ -894,6 +894,10 @@ export const enMessages = {
   "workoutSessionExerciseItemEditable.deletedSuccess": "Exercise deleted",
   "workoutSessionExerciseItemEditable.deleteFailed":
     "Failed to delete exercise",
+  "workoutSessionExerciseItemEditable.moveUp": "Move up",
+  "workoutSessionExerciseItemEditable.moveDown": "Move down",
+  "workoutSessionExerciseItemEditable.moveFailed":
+    "Failed to reorder exercise",
   "workoutPlanDetailContent.exportSuccess": "Plan exported to JSON",
   "workoutPlanDetailContent.planNotFound": "Workout plan not found",
   "workoutPlanDetailContent.unauthorized": "Unauthorized. Please log in again.",

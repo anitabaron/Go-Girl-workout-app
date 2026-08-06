@@ -650,6 +650,7 @@ export async function updateWorkoutSessionExercise(
     planned_duration_seconds?: number | null;
     planned_rest_seconds?: number | null;
     exercise_id?: string | null;
+    exercise_type_at_time?: Database["public"]["Enums"]["exercise_type"];
   },
 ) {
   const { data, error } = await client
@@ -660,6 +661,42 @@ export async function updateWorkoutSessionExercise(
     .single();
 
   return { data, error };
+}
+
+/**
+ * Zamienia exercise_order dwóch ćwiczeń w sesji (przesunięcie w górę/w dół).
+ * exercise_order ma unikalny constraint (session_id, exercise_order) i musi
+ * być > 0, więc zamiana przechodzi przez bezpieczną wartość tymczasową
+ * (poza zakresem realistycznych numerów porządkowych), żeby nigdy nie
+ * kolidować z drugim rekordem w trakcie operacji.
+ */
+export async function swapWorkoutSessionExerciseOrder(
+  client: DbClient,
+  exerciseAId: string,
+  orderA: number,
+  exerciseBId: string,
+  orderB: number,
+) {
+  const tempOrder = Math.max(orderA, orderB) + 1000;
+
+  const { error: tempError } = await client
+    .from("workout_session_exercises")
+    .update({ exercise_order: tempOrder })
+    .eq("id", exerciseAId);
+  if (tempError) return { error: tempError };
+
+  const { error: bError } = await client
+    .from("workout_session_exercises")
+    .update({ exercise_order: orderA })
+    .eq("id", exerciseBId);
+  if (bError) return { error: bError };
+
+  const { error: aError } = await client
+    .from("workout_session_exercises")
+    .update({ exercise_order: orderB })
+    .eq("id", exerciseAId);
+
+  return { error: aError };
 }
 
 /**

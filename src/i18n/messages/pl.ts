@@ -911,6 +911,10 @@ export const plMessages = {
   "workoutSessionExerciseItemEditable.deletedSuccess": "Ćwiczenie usunięte",
   "workoutSessionExerciseItemEditable.deleteFailed":
     "Nie udało się usunąć ćwiczenia",
+  "workoutSessionExerciseItemEditable.moveUp": "Przesuń wyżej",
+  "workoutSessionExerciseItemEditable.moveDown": "Przesuń niżej",
+  "workoutSessionExerciseItemEditable.moveFailed":
+    "Nie udało się zmienić kolejności ćwiczenia",
   "workoutPlanDetailContent.exportSuccess": "Plan wyeksportowano do JSON",
   "workoutPlanDetailContent.planNotFound": "Nie znaleziono planu treningowego",
   "workoutPlanDetailContent.unauthorized":

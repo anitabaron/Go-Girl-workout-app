@@ -447,6 +447,8 @@ export type SessionExerciseAutosaveCommand = {
   sets?: SessionExerciseSetCommand[];
   // Flaga przesunięcia kursora
   advance_cursor_to_next?: boolean;
+  // Edycja typu sekcji zapisanego ćwiczenia (snapshot exercise_type_at_time)
+  exercise_type_at_time?: ExerciseType;
 };
 
 export type SessionExerciseAutosaveResponse = SessionExerciseDTO & {

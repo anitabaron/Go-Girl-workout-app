@@ -6,7 +6,10 @@ import {
   encodeCursor as encodeCursorBase,
   type CursorPayload,
 } from "@/lib/cursor-utils";
-import { exercisePartValues } from "@/lib/validation/exercises";
+import {
+  exercisePartValues,
+  exerciseTypeValues,
+} from "@/lib/validation/exercises";
 import { workoutPlanExerciseImportSchema } from "@/lib/validation/workout-plans";
 
 export const SESSION_MAX_LIMIT = 100;
@@ -241,6 +244,10 @@ export const sessionExerciseAutosaveSchema = z
       .string()
       .uuid("exercise_id musi być prawidłowym UUID")
       .optional(),
+
+    // Edycja typu sekcji zapisanego ćwiczenia (snapshot exercise_type_at_time),
+    // np. gdy trening był oryginalnie w innej sekcji niż faktycznie wykonany.
+    exercise_type_at_time: z.enum(exerciseTypeValues).optional(),
   })
   .strict()
   .refine(

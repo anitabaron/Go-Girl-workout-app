@@ -49,6 +49,7 @@ import {
   mapExerciseToDTO,
   deleteWorkoutSession,
   deleteWorkoutSessionExercise,
+  swapWorkoutSessionExerciseOrder,
 } from "@/repositories/workout-sessions";
 import {
   findWorkoutPlanById,
@@ -1000,6 +1001,19 @@ export async function autosaveWorkoutSessionExerciseService(
     }
   }
 
+  // Edycja typu sekcji zapisanego ćwiczenia (np. trening wykonany w innej
+  // sekcji niż oryginalnie zaimportowano/zaplanowano).
+  if (parsed.exercise_type_at_time !== undefined) {
+    const { error: typeUpdateError } = await updateWorkoutSessionExercise(
+      supabase,
+      sessionExerciseId,
+      { exercise_type_at_time: parsed.exercise_type_at_time },
+    );
+    if (typeUpdateError) {
+      throw mapDbError(typeUpdateError);
+    }
+  }
+
   await applyCapabilitySessionResult({
     userId,
     exerciseTitle: exercise.exercise_title_at_time,
@@ -1095,6 +1109,59 @@ export async function deleteWorkoutSessionExerciseService(
       );
     }
   }
+}
+
+/**
+ * Przesuwa ćwiczenie w sesji o jedną pozycję w górę lub w dół (zamienia
+ * exercise_order z sąsiadem). No-op (bez błędu), jeśli ćwiczenie jest już na
+ * krawędzi listy.
+ */
+export async function moveWorkoutSessionExerciseService(
+  userId: string,
+  sessionId: string,
+  order: number,
+  direction: "up" | "down",
+): Promise<void> {
+  assertUser(userId);
+  validateAutosavePathParams(sessionId, order);
+
+  const supabase = await createClient();
+
+  await validateSessionForAutosave(supabase, userId, sessionId);
+  const exercise = await validateExerciseForAutosave(supabase, sessionId, order);
+
+  const { data: allExercises, error: allError } = await findWorkoutSessionExercises(
+    supabase,
+    sessionId,
+  );
+  if (allError) throw mapDbError(allError);
+
+  const sorted = [...(allExercises ?? [])].sort(
+    (a, b) => a.exercise_order - b.exercise_order,
+  );
+  const currentIndex = sorted.findIndex((e) => e.id === exercise.id);
+  if (currentIndex === -1) {
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Ćwiczenie nie zostało znalezione w sesji.",
+    );
+  }
+
+  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= sorted.length) {
+    return;
+  }
+
+  const target = sorted[targetIndex];
+
+  const { error: swapError } = await swapWorkoutSessionExerciseOrder(
+    supabase,
+    exercise.id,
+    exercise.exercise_order,
+    target.id,
+    target.exercise_order,
+  );
+  if (swapError) throw mapDbError(swapError);
 }
 
 /**

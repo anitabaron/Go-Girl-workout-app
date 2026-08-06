@@ -1,22 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { exerciseTypeValues } from "@/lib/validation/exercises";
 import {
   EXERCISE_LABELS_NAMESPACE,
   getExercisePartLabel,
+  getExerciseTypeLabel,
 } from "@/lib/exercises/labels";
 import { SetLogsListM3 } from "./assistant/SetLogsListM3";
 import { useExerciseExecutionForm } from "@/hooks/use-exercise-execution-form";
 import {
   patchWorkoutSessionExercise,
   deleteWorkoutSessionExercise,
+  moveWorkoutSessionExercise,
 } from "@/lib/api/workout-sessions";
 import { formDataToAutosaveCommand } from "@/types/workout-session-assistant";
 import type { SessionExerciseDTO } from "@/types";
@@ -30,6 +39,7 @@ type WorkoutSessionExerciseItemEditableM3Props = {
   readonly sessionId: string;
   readonly onSaved?: (updatedExercise: SessionExerciseDTO) => void;
   readonly onDeleted?: () => void;
+  readonly onMoved?: () => void;
 };
 
 export function WorkoutSessionExerciseItemEditableM3({
@@ -39,11 +49,13 @@ export function WorkoutSessionExerciseItemEditableM3({
   sessionId,
   onSaved,
   onDeleted,
+  onMoved,
 }: WorkoutSessionExerciseItemEditableM3Props) {
   const t = useTranslations("workoutSessionExerciseItemEditable");
   const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
 
   const {
     formData,
@@ -64,14 +76,19 @@ export function WorkoutSessionExerciseItemEditableM3({
   const hasActualDuration =
     exercise.actual_duration_seconds != null ||
     (exercise.sets ?? []).some((set) => set.duration_seconds != null);
-  const showReps =
+  const hasRepsSignal =
     (exercise.planned_reps !== null && exercise.planned_reps > 0) ||
     hasActualReps;
-  const showDuration =
-    ((exercise.planned_duration_seconds !== null &&
+  const hasDurationSignal =
+    (exercise.planned_duration_seconds !== null &&
       exercise.planned_duration_seconds > 0) ||
-      hasActualDuration) &&
-    !showReps;
+    hasActualDuration;
+  // Gdy ćwiczenie nie ma jeszcze żadnych danych (ani powtórzeń, ani czasu -
+  // np. dodane właśnie do sesji albo bez konkretnej metryki w oryginalnym
+  // opisie), pokaż oba pola, żeby dało się wpisać którekolwiek z nich.
+  const noSignalYet = !hasRepsSignal && !hasDurationSignal;
+  const showReps = hasRepsSignal || noSignalYet;
+  const showDuration = hasDurationSignal || noSignalYet;
 
   const title =
     exercise.exercise_title_at_time ??
@@ -114,6 +131,35 @@ export function WorkoutSessionExerciseItemEditableM3({
     }
   };
 
+  const handleMove = async (direction: "up" | "down") => {
+    setIsMoving(true);
+    try {
+      await moveWorkoutSessionExercise(sessionId, order, direction);
+      onMoved?.();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t("moveFailed");
+      toast.error(message);
+    } finally {
+      setIsMoving(false);
+    }
+  };
+
+  const handleTypeChange = async (
+    value: SessionExerciseDTO["exercise_type_at_time"],
+  ) => {
+    try {
+      const response = await patchWorkoutSessionExercise(sessionId, order, {
+        exercise_type_at_time: value,
+      });
+      onSaved?.(response.data);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t("saveFailed");
+      toast.error(message);
+    }
+  };
+
   return (
     <Card data-test-id="workout-session-exercise-item-editable">
       <CardHeader>
@@ -123,6 +169,30 @@ export function WorkoutSessionExerciseItemEditableM3({
             <span className="text-sm text-muted-foreground">
               {exerciseIndex + 1} {t("of")} {totalExercises}
             </span>
+            <div className="flex gap-0.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => handleMove("up")}
+                disabled={isMoving || exerciseIndex === 0}
+                className="size-8 shrink-0"
+                aria-label={t("moveUp")}
+              >
+                <ChevronUp className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => handleMove("down")}
+                disabled={isMoving || exerciseIndex === totalExercises - 1}
+                className="size-8 shrink-0"
+                aria-label={t("moveDown")}
+              >
+                <ChevronDown className="size-4" />
+              </Button>
+            </div>
             <Button
               type="button"
               variant="ghost"
@@ -137,9 +207,27 @@ export function WorkoutSessionExerciseItemEditableM3({
             </Button>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {exercise.exercise_type_at_time && (
-            <ExerciseTypeBadge type={exercise.exercise_type_at_time} />
+            <Select
+              value={exercise.exercise_type_at_time}
+              onValueChange={(value) =>
+                handleTypeChange(
+                  value as SessionExerciseDTO["exercise_type_at_time"],
+                )
+              }
+            >
+              <SelectTrigger size="sm" className="h-8 w-auto text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {exerciseTypeValues.map((typeValue) => (
+                  <SelectItem key={typeValue} value={typeValue}>
+                    {getExerciseTypeLabel(tExerciseLabel, typeValue)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           {exercise.exercise_part_at_time && (
             <Badge variant="outline">
