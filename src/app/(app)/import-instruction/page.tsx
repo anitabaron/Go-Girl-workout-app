@@ -1,6 +1,3 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import workoutPlanImportExample from "@/lib/json/workout-plan-import-example.json";
 import workoutSessionImportExample from "@/lib/json/workout-session-import-example.json";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -12,12 +9,6 @@ export default async function ImportInstructionPage() {
   return (
     <div className="space-y-8">
       <header className="flex flex-col gap-4">
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link href="/workout-plans" className="flex items-center gap-2">
-            <ArrowLeft className="size-4" />
-            {t("backToPlans")}
-          </Link>
-        </Button>
         <PageHeader
           title={t("title")}
           description={t("description")}

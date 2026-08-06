@@ -1144,9 +1144,9 @@ export const plMessages = {
   "aiAssistant.weekdaySat": "Sob",
   "aiAssistant.weekdaySun": "Nd",
   "importInstructionPage.backToPlans": "Powrót do planów",
-  "importInstructionPage.title": "Instrukcja importu planów treningowych",
+  "importInstructionPage.title": "Instrukcja importu treningów",
   "importInstructionPage.description":
-    "Utwórz plik JSON zgodny z poniższym schematem, aby zaimportować plan treningowy do aplikacji.",
+    "Zaimportuj plan treningowy do wykonania później albo trening, który już wykonałaś.",
   "importInstructionPage.sectionPlanTitle": "Import planów treningowych",
   "importInstructionPage.sectionPlanDescription":
     "Wgraj plan treningowy, który chcesz później wykonać krok po kroku. Plan pojawia się na liście Planów treningowych, a nie w historii Sesji.",
@@ -1161,10 +1161,9 @@ export const plMessages = {
   "importInstructionPage.step3OptionA": "Opcja A: Istniejące ćwiczenie",
   "importInstructionPage.step3OptionB": "Opcja B: Nowe ćwiczenie (snapshot)",
   "importInstructionPage.step4Title": "Przykładowy plik JSON",
-  "importInstructionPage.step5Title":
-    "Alternatywa: import jako już ukończona sesja treningowa",
+  "importInstructionPage.step5Title": "Import jako ukończona sesja treningowa",
   "importInstructionPage.step5Description":
-    "Jeśli trening już wykonałaś i chcesz go tylko zapisać, użyj importu sesji zamiast importu planu. Format JSON jest ten sam (name, description, part, exercises z exercise_id / match_by_name / exercise_title), ale wynik pojawia się od razu w historii Sesji treningowych jako ukończony - nie tworzy się plan, nie trzeba przechodzić przez trening krok po kroku.",
+    "Jeśli trening już wykonałaś i chcesz go tylko zapisać, użyj tego endpointu. Format JSON jest ten sam co przy imporcie planu (name, description, part, exercises z exercise_id / match_by_name / exercise_title), ale wynik pojawia się od razu w historii Sesji treningowych jako ukończony - nie tworzy się plan, nie trzeba przechodzić przez trening krok po kroku.",
   "importInstructionPage.step5Point1":
     "planned_reps / planned_duration_seconds są traktowane jako to, co faktycznie wykonałaś (JSON nie ma osobnego pola na wartości \"actual\").",
   "importInstructionPage.step5Point2":

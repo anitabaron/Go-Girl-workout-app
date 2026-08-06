@@ -1119,9 +1119,9 @@ export const enMessages = {
   "aiAssistant.weekdaySat": "Sat",
   "aiAssistant.weekdaySun": "Sun",
   "importInstructionPage.backToPlans": "Back to plans",
-  "importInstructionPage.title": "Workout plan import guide",
+  "importInstructionPage.title": "Workout import guide",
   "importInstructionPage.description":
-    "Create a JSON file matching the schema below to import a workout plan into the app.",
+    "Import a workout plan to follow later, or a workout you already did.",
   "importInstructionPage.sectionPlanTitle": "Importing workout plans",
   "importInstructionPage.sectionPlanDescription":
     "Upload a plan you want to work through step by step later. It shows up in your Workout Plans list, not in the Sessions history.",
@@ -1137,9 +1137,9 @@ export const enMessages = {
   "importInstructionPage.step3OptionB": "Option B: New exercise (snapshot)",
   "importInstructionPage.step4Title": "Example JSON file",
   "importInstructionPage.step5Title":
-    "Alternative: import as an already-completed workout session",
+    "Import as an already-completed workout session",
   "importInstructionPage.step5Description":
-    "If you already did the workout and just want to log it, use the session import endpoint instead of plan import. It uses the same JSON shape (name, description, part, exercises with exercise_id / match_by_name / exercise_title), but the result shows up immediately in your Workout Sessions history as completed - no plan is created, and you don't need to click through the workout.",
+    "If you already did the workout and just want to log it, use this endpoint. It uses the same JSON shape as a plan import (name, description, part, exercises with exercise_id / match_by_name / exercise_title), but the result shows up immediately in your Workout Sessions history as completed - no plan is created, and you don't need to click through the workout.",
   "importInstructionPage.step5Point1":
     "planned_reps / planned_duration_seconds are treated as what you actually did (there's no separate 'actual' field in the JSON).",
   "importInstructionPage.step5Point2":
