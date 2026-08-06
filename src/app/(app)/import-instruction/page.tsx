@@ -24,7 +24,18 @@ export default async function ImportInstructionPage() {
         />
       </header>
 
-      <div className="space-y-6">
+      <div className="space-y-10">
+        {/* Section: Workout plan import */}
+        <section className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="m3-display text-lg font-semibold">
+              {t("sectionPlanTitle")}
+            </h2>
+            <p className="m3-body text-muted-foreground text-sm">
+              {t("sectionPlanDescription")}
+            </p>
+          </div>
+
         {/* Step 1: Plan Information */}
         <Surface variant="high">
           <div className="space-y-4">
@@ -385,42 +396,56 @@ export default async function ImportInstructionPage() {
             </div>
           </div>
         </Surface>
+        </section>
 
-        {/* Step 5: Import as a completed session */}
-        <Surface variant="high">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-semibold">
-                5
-              </div>
-              <h2 className="m3-headline">{t("step5Title")}</h2>
-            </div>
-            <div className="ml-11 space-y-4">
-              <p className="m3-body text-muted-foreground text-xs">
-                {t("step5Description")}
-              </p>
-              <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-2 text-xs">
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
-                  <li>{t("step5Point1")}</li>
-                  <li>{t("step5Point2")}</li>
-                  <li>{t("step5Point3")}</li>
-                  <li>{t("step5Point4")}</li>
-                </ul>
-              </div>
-              <p className="m3-body text-muted-foreground text-xs">
-                {t("step5EndpointLabel")}{" "}
-                <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
-                  POST /api/workout-sessions/import
-                </code>
-              </p>
-              <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-4 overflow-x-auto">
-                <pre className="text-xs font-mono leading-relaxed">
-                  {JSON.stringify(workoutSessionImportExample, null, 2)}
-                </pre>
-              </div>
-            </div>
+        {/* Section: Completed session import */}
+        <section className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="m3-display text-lg font-semibold">
+              {t("sectionSessionTitle")}
+            </h2>
+            <p className="m3-body text-muted-foreground text-sm">
+              {t("sectionSessionDescription")}
+            </p>
           </div>
-        </Surface>
+
+          {/* Step 5: Import as a completed session */}
+          <Surface variant="high">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-semibold">
+                  5
+                </div>
+                <h2 className="m3-headline">{t("step5Title")}</h2>
+              </div>
+              <div className="ml-11 space-y-4">
+                <p className="m3-body text-muted-foreground text-xs">
+                  {t("step5Description")}
+                </p>
+                <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-3 space-y-2 text-xs">
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2 text-[inherit]">
+                    <li>{t("step5Point1")}</li>
+                    <li>{t("step5Point2")}</li>
+                    <li>{t("step5Point3")}</li>
+                    <li>{t("step5Point4")}</li>
+                    <li>{t("step5Point5")}</li>
+                  </ul>
+                </div>
+                <p className="m3-body text-muted-foreground text-xs">
+                  {t("step5EndpointLabel")}{" "}
+                  <code className="rounded bg-[var(--m3-surface-container)] px-1 py-0.5 font-mono">
+                    POST /api/workout-sessions/import
+                  </code>
+                </p>
+                <div className="rounded-[var(--m3-radius-md)] bg-[var(--m3-surface-container-highest)] p-4 overflow-x-auto">
+                  <pre className="text-xs font-mono leading-relaxed">
+                    {JSON.stringify(workoutSessionImportExample, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </Surface>
+        </section>
       </div>
     </div>
   );

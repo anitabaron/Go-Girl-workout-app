@@ -249,6 +249,11 @@ export async function insertWorkoutSessionExercises(
     planned_rest_seconds: number | null;
     planned_rest_after_series_seconds: number | null;
     exercise_order: number;
+    // Opcjonalne: używane przy imporcie już ukończonej sesji (brak "planu" —
+    // wartości idą wprost do actual_*, patrz importWorkoutSessionService).
+    actual_sets?: number | null;
+    actual_reps?: number | null;
+    actual_duration_seconds?: number | null;
   }>,
 ) {
   const exercisesToInsert = exercises.map((exercise) => ({
@@ -266,9 +271,9 @@ export async function insertWorkoutSessionExercises(
     planned_rest_after_series_seconds:
       exercise.planned_rest_after_series_seconds,
     exercise_order: exercise.exercise_order,
-    actual_sets: null,
-    actual_reps: null,
-    actual_duration_seconds: null,
+    actual_sets: exercise.actual_sets ?? null,
+    actual_reps: exercise.actual_reps ?? null,
+    actual_duration_seconds: exercise.actual_duration_seconds ?? null,
     actual_rest_seconds: null,
     is_skipped: false,
   }));

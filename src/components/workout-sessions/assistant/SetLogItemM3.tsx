@@ -105,6 +105,13 @@ export function SetLogItemM3({
                   error ? `error-${set.set_number}` : undefined
                 }
               />
+              {set.duration_seconds != null && set.duration_seconds > 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {set.duration_seconds >= 60
+                    ? `= ${Math.floor(set.duration_seconds / 60)} min${set.duration_seconds % 60 > 0 ? ` ${set.duration_seconds % 60} s` : ""}`
+                    : `= ${set.duration_seconds} s`}
+                </p>
+              )}
             </div>
           )}
 
@@ -118,7 +125,6 @@ export function SetLogItemM3({
             <Input
               id={`weight-${set.set_number}`}
               type="number"
-              min="0"
               step="0.1"
               value={set.weight_kg ?? ""}
               onChange={(e) => handleChange("weight_kg", e.target.value)}

@@ -33,7 +33,8 @@ function validateForm(data: ExerciseFormData): FormErrors {
     const hasReps = set.reps !== null && set.reps >= 0;
     const hasDuration =
       set.duration_seconds !== null && set.duration_seconds >= 0;
-    const hasWeight = set.weight_kg !== null && set.weight_kg >= 0;
+    // weight_kg może być ujemne (np. odciążenie przy Assisted Pull-up)
+    const hasWeight = set.weight_kg !== null;
 
     if (!hasReps && !hasDuration && !hasWeight) {
       setErrors[index] =

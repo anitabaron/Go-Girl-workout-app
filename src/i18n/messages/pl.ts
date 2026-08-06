@@ -1138,6 +1138,12 @@ export const plMessages = {
   "importInstructionPage.title": "Instrukcja importu planów treningowych",
   "importInstructionPage.description":
     "Utwórz plik JSON zgodny z poniższym schematem, aby zaimportować plan treningowy do aplikacji.",
+  "importInstructionPage.sectionPlanTitle": "Import planów treningowych",
+  "importInstructionPage.sectionPlanDescription":
+    "Wgraj plan treningowy, który chcesz później wykonać krok po kroku. Plan pojawia się na liście Planów treningowych, a nie w historii Sesji.",
+  "importInstructionPage.sectionSessionTitle": "Import ukończonych treningów",
+  "importInstructionPage.sectionSessionDescription":
+    "Wgraj trening, który już wykonałaś. Zamiast planu do odbycia, w historii Sesji treningowych pojawia się od razu ukończony trening z wynikami.",
   "importInstructionPage.requiredLabel": "Wymagane:",
   "importInstructionPage.optionalLabel": "Opcjonalne:",
   "importInstructionPage.step1Title": "Informacje ogólne o planie treningowym",
@@ -1158,6 +1164,8 @@ export const plMessages = {
     "Czas rozpoczęcia i zakończenia sesji to moment importu (nie data z pliku).",
   "importInstructionPage.step5Point4":
     "Rekordy życiowe (suma powtórzeń / max czas) są nadal przeliczane automatycznie dla ćwiczeń dopasowanych do Twojej biblioteki.",
+  "importInstructionPage.step5Point5":
+    "\"Suma powtórzeń\" po stronie Rzeczywiste to suma powtórzeń ze wszystkich serii danego ćwiczenia (np. 3 serie x 10 powtórzeń = 30), nie wartość jednej serii.",
   "importInstructionPage.step5EndpointLabel": "Endpoint:",
   "privacyPolicyPage.title": "Polityka prywatności",
   "privacyPolicyPage.lastUpdated": "Ostatnia aktualizacja: luty 2026",

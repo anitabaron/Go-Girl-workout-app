@@ -1115,6 +1115,12 @@ export const enMessages = {
   "importInstructionPage.title": "Workout plan import guide",
   "importInstructionPage.description":
     "Create a JSON file matching the schema below to import a workout plan into the app.",
+  "importInstructionPage.sectionPlanTitle": "Importing workout plans",
+  "importInstructionPage.sectionPlanDescription":
+    "Upload a plan you want to work through step by step later. It shows up in your Workout Plans list, not in the Sessions history.",
+  "importInstructionPage.sectionSessionTitle": "Importing completed workouts",
+  "importInstructionPage.sectionSessionDescription":
+    "Upload a workout you already did. Instead of a plan to follow, it shows up immediately in Workout Sessions history as a completed workout with results.",
   "importInstructionPage.requiredLabel": "Required:",
   "importInstructionPage.optionalLabel": "Optional:",
   "importInstructionPage.step1Title": "General workout plan information",
@@ -1135,6 +1141,8 @@ export const enMessages = {
     "The session's start and finish time are set to the moment you import it (not a date from the file).",
   "importInstructionPage.step5Point4":
     "Personal records (total reps / max duration) are still recalculated automatically for exercises matched to your library.",
+  "importInstructionPage.step5Point5":
+    "The \"total reps\" shown on the Actual side is the sum of reps across all sets of that exercise (e.g. 3 sets x 10 reps = 30), not a single set's value.",
   "importInstructionPage.step5EndpointLabel": "Endpoint:",
   "privacyPolicyPage.title": "Privacy Policy",
   "privacyPolicyPage.lastUpdated": "Last updated: February 2026",

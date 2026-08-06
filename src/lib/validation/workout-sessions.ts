@@ -141,11 +141,9 @@ const sessionExerciseSetSchema = z
       .nonnegative("duration_seconds musi być >= 0")
       .nullable()
       .optional(),
-    weight_kg: z
-      .number()
-      .nonnegative("weight_kg musi być >= 0")
-      .nullable()
-      .optional(),
+    // weight_kg może być ujemne — np. odciążenie przy asystowanych
+    // podciąganiach (Assisted Pull-up) zapisujemy jako wartość ujemną.
+    weight_kg: z.number().finite("weight_kg musi być liczbą").nullable().optional(),
   })
   .refine(
     (data) =>

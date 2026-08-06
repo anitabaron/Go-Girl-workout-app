@@ -103,7 +103,6 @@ export function SetLogItem({ set, onChange, onRemove, error, showDuration, showR
               <Input
                 id={`weight-${set.set_number}`}
                 type="number"
-                min="0"
                 step="0.1"
                 value={set.weight_kg ?? ""}
                 onChange={(e) => handleChange("weight_kg", e.target.value)}

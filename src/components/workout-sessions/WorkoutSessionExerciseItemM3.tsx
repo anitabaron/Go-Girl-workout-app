@@ -73,11 +73,19 @@ export function WorkoutSessionExerciseItemM3({
     exercise.actual_duration_seconds,
   );
 
-  const showReps =
-    exercise.planned_reps != null && exercise.planned_reps !== undefined;
+  // Sesje zaimportowane jako już ukończone nie mają "planu" (planned_* = null,
+  // patrz importWorkoutSessionService) — więc o tym, którą kolumnę/metrykę
+  // pokazać, decyduje obecność danych rzeczywistych (sets / actual_*), a nie
+  // tylko planned_*.
+  const hasActualReps =
+    exercise.actual_sum_reps != null ||
+    (exercise.sets ?? []).some((set) => set.reps != null);
+  const hasActualDuration =
+    exercise.actual_duration_seconds != null ||
+    (exercise.sets ?? []).some((set) => set.duration_seconds != null);
+  const showReps = exercise.planned_reps != null || hasActualReps;
   const showDuration =
-    exercise.planned_duration_seconds != null &&
-    exercise.planned_duration_seconds !== undefined &&
+    (exercise.planned_duration_seconds != null || hasActualDuration) &&
     !showReps;
   const achievedMetrics = new Set(exercise.achieved_pr_metrics ?? []);
   const highlightReps =
@@ -196,7 +204,7 @@ export function WorkoutSessionExerciseItemM3({
                     {getArrowIcon(setsComparison)}
                   </dd>
                 </div>
-                {exercise.planned_reps != null && (
+                {showReps && (
                   <div>
                     <dt className="text-xs text-muted-foreground">
                       {totalRepsLabel}
@@ -211,8 +219,7 @@ export function WorkoutSessionExerciseItemM3({
                     </dd>
                   </div>
                 )}
-                {exercise.planned_duration_seconds != null &&
-                  exercise.planned_reps == null && (
+                {showDuration && (
                     <div>
                       <dt className="text-xs text-muted-foreground">
                         {t("duration")}

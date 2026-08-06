@@ -1197,11 +1197,13 @@ function buildSessionExerciseRows(
   exercise_type_at_time: Database["public"]["Enums"]["exercise_type"];
   exercise_part_at_time: Database["public"]["Enums"]["exercise_part"];
   exercise_is_unilateral_at_time: boolean;
-  planned_sets: number | null;
-  planned_reps: number | null;
-  planned_duration_seconds: number | null;
-  planned_rest_seconds: number | null;
-  planned_rest_after_series_seconds: number | null;
+  // Zaimportowana sesja to zapis tego, co się wydarzyło — nie ma "planu",
+  // więc planned_* pozostaje null (patrz design.md). Te wartości ze źródłowego
+  // JSON-a służą tylko do zbudowania serii (workout_session_sets) i agregatów
+  // actual_* poniżej.
+  source_sets: number | null;
+  source_reps: number | null;
+  source_duration_seconds: number | null;
   exercise_order: number;
 }> {
   return parsed.exercises.map((exercise, index) => {
@@ -1227,12 +1229,9 @@ function buildSessionExerciseRows(
       exercise_type_at_time: type,
       exercise_part_at_time: part,
       exercise_is_unilateral_at_time: isUnilateral,
-      planned_sets: exercise.planned_sets ?? null,
-      planned_reps: exercise.planned_reps ?? null,
-      planned_duration_seconds: exercise.planned_duration_seconds ?? null,
-      planned_rest_seconds: exercise.planned_rest_seconds ?? null,
-      planned_rest_after_series_seconds:
-        exercise.planned_rest_after_series_seconds ?? null,
+      source_sets: exercise.planned_sets ?? null,
+      source_reps: exercise.planned_reps ?? null,
+      source_duration_seconds: exercise.planned_duration_seconds ?? null,
       exercise_order: index + 1,
     };
   });
@@ -1241,7 +1240,8 @@ function buildSessionExerciseRows(
 /**
  * Importuje ukończoną sesję treningową z JSON (nie tworzy workout_plans).
  * Obsługuje ćwiczenia istniejące w bazie (exercise_id / match_by_name) oraz
- * nowe (przez snapshot exercise_title). actual_* = planned_* (patrz design.md).
+ * nowe (przez snapshot exercise_title). Zaimportowana sesja nie ma "planu" —
+ * wartości z JSON-a zapisujemy wyłącznie jako actual_* (patrz design.md).
  */
 export async function importWorkoutSessionService(
   userId: string,
@@ -1289,8 +1289,34 @@ export async function importWorkoutSessionService(
     createdSessionId = session.id;
 
     const exerciseRows = buildSessionExerciseRows(parsed, libraryDataMap);
+    const exercisesToInsert = exerciseRows.map((row) => {
+      const sets = row.source_sets ?? 1;
+      const reps = row.source_reps ?? null;
+      return {
+        exercise_id: row.exercise_id,
+        exercise_title_at_time: row.exercise_title_at_time,
+        exercise_type_at_time: row.exercise_type_at_time,
+        exercise_part_at_time: row.exercise_part_at_time,
+        exercise_is_unilateral_at_time: row.exercise_is_unilateral_at_time,
+        exercise_order: row.exercise_order,
+        // Zaimportowana sesja nie ma "planu" — planned_* zostaje null, żeby
+        // UI nie porównywał actual do wartości, które nigdy nie były planem.
+        planned_sets: null,
+        planned_reps: null,
+        planned_duration_seconds: null,
+        planned_rest_seconds: null,
+        planned_rest_after_series_seconds: null,
+        actual_sets: sets,
+        actual_reps: reps != null ? reps * sets : null,
+        actual_duration_seconds: row.source_duration_seconds ?? null,
+      };
+    });
     const { data: insertedExercises, error: exercisesInsertError } =
-      await insertWorkoutSessionExercises(supabase, session.id, exerciseRows);
+      await insertWorkoutSessionExercises(
+        supabase,
+        session.id,
+        exercisesToInsert,
+      );
     if (exercisesInsertError) throw mapDbError(exercisesInsertError);
 
     const insertedRows = insertedExercises ?? [];
@@ -1300,13 +1326,13 @@ export async function importWorkoutSessionService(
       const sourceExercise = exerciseRows.find(
         (e) => e.exercise_order === row.exercise_order,
       );
-      const plannedSets = sourceExercise?.planned_sets ?? 1;
+      const plannedSets = sourceExercise?.source_sets ?? 1;
       const setsToInsert = Array.from(
         { length: Math.max(1, plannedSets) },
         (_, i) => ({
           set_number: i + 1,
-          reps: sourceExercise?.planned_reps ?? null,
-          duration_seconds: sourceExercise?.planned_duration_seconds ?? null,
+          reps: sourceExercise?.source_reps ?? null,
+          duration_seconds: sourceExercise?.source_duration_seconds ?? null,
           weight_kg: null,
         }),
       );
