@@ -1139,38 +1139,65 @@ export const enMessages = {
   "aiAssistant.weekdaySat": "Sat",
   "aiAssistant.weekdaySun": "Sun",
   "importInstructionPage.backToPlans": "Back to plans",
-  "importInstructionPage.title": "Workout import guide",
+  "importInstructionPage.title": "Import a workout from JSON",
   "importInstructionPage.description":
-    "Import a workout plan to follow later, or a workout you already did.",
-  "importInstructionPage.sectionPlanTitle": "Importing workout plans",
-  "importInstructionPage.sectionPlanDescription":
-    "Upload a plan you want to work through step by step later. It shows up in your Workout Plans list, not in the Sessions history.",
-  "importInstructionPage.sectionSessionTitle": "Importing completed workouts",
-  "importInstructionPage.sectionSessionDescription":
-    "Upload a workout you already did. Instead of a plan to follow, it shows up immediately in Workout Sessions history as a completed workout with results.",
+    "Import a workout plan to follow later, or a workout you already did — pick one of the two paths below.",
   "importInstructionPage.requiredLabel": "Required:",
   "importInstructionPage.optionalLabel": "Optional:",
-  "importInstructionPage.step1Title": "General workout plan information",
-  "importInstructionPage.step2Title": "Exercise structure",
-  "importInstructionPage.step3Title": "Exercise adding options",
-  "importInstructionPage.step3OptionA": "Option A: Existing exercise",
-  "importInstructionPage.step3OptionB": "Option B: New exercise (snapshot)",
-  "importInstructionPage.step4Title": "Example JSON file",
-  "importInstructionPage.step5Title":
-    "Import as an already-completed workout session",
-  "importInstructionPage.step5Description":
-    "If you already did the workout and just want to log it, use this endpoint. It uses the same JSON shape as a plan import (name, description, part, exercises with exercise_id / match_by_name / exercise_title), but the result shows up immediately in your Workout Sessions history as completed - no plan is created, and you don't need to click through the workout.",
-  "importInstructionPage.step5Point1":
-    "planned_reps / planned_duration_seconds are treated as what you actually did (there's no separate 'actual' field in the JSON).",
-  "importInstructionPage.step5Point2":
-    "Weight is always left empty - the JSON format has no weight field, so max weight personal records are never affected by import.",
-  "importInstructionPage.step5Point3":
-    "The session's start and finish time are set to the moment you import it (not a date from the file).",
-  "importInstructionPage.step5Point4":
-    "Personal records (total reps / max duration) are still recalculated automatically for exercises matched to your library.",
-  "importInstructionPage.step5Point5":
-    "The \"total reps\" shown on the Actual side is the sum of reps across all sets of that exercise (e.g. 3 sets x 10 reps = 30), not a single set's value.",
-  "importInstructionPage.step5EndpointLabel": "Endpoint:",
+  "importInstructionPage.orLabel": "or",
+  "importInstructionPage.endpointLabel": "Endpoint:",
+
+  "importInstructionPage.commonTitle": "How to identify an exercise",
+  "importInstructionPage.commonDescription":
+    "Applies to both paths below — identify each item in the exercises array one of two ways:",
+  "importInstructionPage.commonLibraryTitle": "An exercise from your library",
+  "importInstructionPage.commonLibraryDescription":
+    "Provide exercise_id or match_by_name. Every other field (type, part, sets, reps, rest) is filled in from your library unless you override it.",
+  "importInstructionPage.commonNewTitle": "A new exercise (not in your library yet)",
+  "importInstructionPage.commonNewDescription":
+    "Provide exercise_title — the rest of the fields are optional.",
+
+  "importInstructionPage.planTitle": "Workout plan",
+  "importInstructionPage.planDescription":
+    "A workout to follow later, step by step. After import it shows up in your Workout Plans list.",
+  "importInstructionPage.planFieldsTitle": "Plan fields",
+  "importInstructionPage.planSectionsTitle": "Plan sections",
+  "importInstructionPage.planSectionsDescription":
+    "Assign each exercise to one of three sections via section_type:",
+  "importInstructionPage.planWarmupDescription":
+    "Warm-up exercises at the start of the workout",
+  "importInstructionPage.planMainDescription": "The main exercises",
+  "importInstructionPage.planCooldownDescription":
+    "Stretching exercises at the end of the workout",
+  "importInstructionPage.planOrderNote":
+    "section_order sets the order within a section - if you skip it, we use the order from the JSON file. Without section_type, an exercise goes into Main Workout.",
+  "importInstructionPage.planParamsTitle": "Exercise parameters",
+  "importInstructionPage.planParamsDescription":
+    "What you're planning to do. For exercises from your library, defaults come from the sets/reps/rest saved there - you can override them:",
+  "importInstructionPage.planExampleTitle": "Example JSON",
+
+  "importInstructionPage.workoutTitle": "Completed workout",
+  "importInstructionPage.workoutDescription":
+    "A workout you already did. It's saved immediately as completed in your Workout Sessions history - no plan is created, and there's nothing to click through.",
+  "importInstructionPage.workoutFieldsNote":
+    "The top-level fields are the same as for a plan: name and exercises are required, description and part are optional.",
+  "importInstructionPage.workoutPerformanceTitle": "Performance",
+  "importInstructionPage.workoutPerformanceDescription":
+    "These fields are the numbers you actually did - the JSON has one field for these values and doesn't separate a plan from a result:",
+  "importInstructionPage.workoutRestNote":
+    "planned_rest_seconds and planned_rest_after_series_seconds are rest times; if you skip them, we default to 30s between sets and 90s after the exercise.",
+  "importInstructionPage.workoutOrderNote":
+    "Exercise order follows the order in the JSON array. section_type, section_order, and the scope fields have no effect here.",
+  "importInstructionPage.workoutResultTitle": "After import",
+  "importInstructionPage.workoutResultPoint1":
+    "The workout shows up immediately in your Sessions history with status Completed.",
+  "importInstructionPage.workoutResultPoint2":
+    "Start and finish time are set to the moment of import.",
+  "importInstructionPage.workoutResultPoint3":
+    "Personal records (total reps / max duration) are recalculated automatically for exercises from your library.",
+  "importInstructionPage.workoutResultPoint4":
+    "\"Total reps\" is the sum across all sets of that exercise (e.g. 3 sets x 10 reps = 30), not a single set's value.",
+  "importInstructionPage.workoutExampleTitle": "Example JSON",
   "privacyPolicyPage.title": "Privacy Policy",
   "privacyPolicyPage.lastUpdated": "Last updated: February 2026",
   "privacyPolicyPage.backToHome": "Back to home",

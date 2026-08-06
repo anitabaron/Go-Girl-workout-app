@@ -1164,37 +1164,65 @@ export const plMessages = {
   "aiAssistant.weekdaySat": "Sob",
   "aiAssistant.weekdaySun": "Nd",
   "importInstructionPage.backToPlans": "Powrót do planów",
-  "importInstructionPage.title": "Instrukcja importu treningów",
+  "importInstructionPage.title": "Import treningu z JSON",
   "importInstructionPage.description":
-    "Zaimportuj plan treningowy do wykonania później albo trening, który już wykonałaś.",
-  "importInstructionPage.sectionPlanTitle": "Import planów treningowych",
-  "importInstructionPage.sectionPlanDescription":
-    "Wgraj plan treningowy, który chcesz później wykonać krok po kroku. Plan pojawia się na liście Planów treningowych, a nie w historii Sesji.",
-  "importInstructionPage.sectionSessionTitle": "Import ukończonych treningów",
-  "importInstructionPage.sectionSessionDescription":
-    "Wgraj trening, który już wykonałaś. Zamiast planu do wykonania, w historii Sesji treningowych pojawia się od razu ukończony trening z wynikami.",
+    "Zaimportuj plan treningowy do wykonania później albo trening, który już wykonałaś — wybierz jedną z dwóch ścieżek poniżej.",
   "importInstructionPage.requiredLabel": "Wymagane:",
   "importInstructionPage.optionalLabel": "Opcjonalne:",
-  "importInstructionPage.step1Title": "Informacje ogólne o planie treningowym",
-  "importInstructionPage.step2Title": "Struktura ćwiczeń",
-  "importInstructionPage.step3Title": "Opcje dodawania ćwiczeń",
-  "importInstructionPage.step3OptionA": "Opcja A: Istniejące ćwiczenie",
-  "importInstructionPage.step3OptionB": "Opcja B: Nowe ćwiczenie (snapshot)",
-  "importInstructionPage.step4Title": "Przykładowy plik JSON",
-  "importInstructionPage.step5Title": "Import jako ukończona sesja treningowa",
-  "importInstructionPage.step5Description":
-    "Jeśli trening już wykonałaś i chcesz go tylko zapisać, użyj tego endpointu. Format JSON jest ten sam co przy imporcie planu (name, description, part, exercises z exercise_id / match_by_name / exercise_title), ale wynik pojawia się od razu w historii Sesji treningowych jako ukończony - nie tworzy się plan, nie trzeba przechodzić przez trening krok po kroku.",
-  "importInstructionPage.step5Point1":
-    "planned_reps / planned_duration_seconds są traktowane jako to, co faktycznie wykonałaś (JSON nie ma osobnego pola na wartości \"actual\").",
-  "importInstructionPage.step5Point2":
-    "Waga zawsze pozostaje pusta - format JSON nie ma pola na wagę, więc import nigdy nie wpływa na rekord max weight.",
-  "importInstructionPage.step5Point3":
-    "Czas rozpoczęcia i zakończenia sesji to moment importu (nie data z pliku).",
-  "importInstructionPage.step5Point4":
-    "Rekordy życiowe (suma powtórzeń / max czas) są nadal przeliczane automatycznie dla ćwiczeń dopasowanych do Twojej biblioteki.",
-  "importInstructionPage.step5Point5":
-    "\"Suma powtórzeń\" po stronie Wykonane to suma powtórzeń ze wszystkich serii danego ćwiczenia (np. 3 serie x 10 powtórzeń = 30), nie wartość jednej serii.",
-  "importInstructionPage.step5EndpointLabel": "Endpoint:",
+  "importInstructionPage.orLabel": "lub",
+  "importInstructionPage.endpointLabel": "Endpoint:",
+
+  "importInstructionPage.commonTitle": "Jak wskazać ćwiczenie",
+  "importInstructionPage.commonDescription":
+    "Dotyczy obu ścieżek poniżej — każdy element tablicy exercises identyfikujesz jednym z dwóch sposobów:",
+  "importInstructionPage.commonLibraryTitle": "Ćwiczenie z biblioteki",
+  "importInstructionPage.commonLibraryDescription":
+    "Podaj exercise_id albo match_by_name. Pozostałe pola (typ, partia, serie, powtórzenia, przerwy) uzupełnią się automatycznie z biblioteki, o ile nie podasz własnych.",
+  "importInstructionPage.commonNewTitle": "Nowe ćwiczenie (jeszcze nie w bibliotece)",
+  "importInstructionPage.commonNewDescription":
+    "Podaj exercise_title — resztę pól dodajesz opcjonalnie.",
+
+  "importInstructionPage.planTitle": "Plan treningu",
+  "importInstructionPage.planDescription":
+    "Trening do wykonania później, krok po kroku. Po imporcie trafia na listę Planów treningowych.",
+  "importInstructionPage.planFieldsTitle": "Pola treningu",
+  "importInstructionPage.planSectionsTitle": "Sekcje treningu",
+  "importInstructionPage.planSectionsDescription":
+    "Każde ćwiczenie przypisujesz do jednej z trzech sekcji przez section_type:",
+  "importInstructionPage.planWarmupDescription":
+    "Ćwiczenia rozgrzewkowe na początku treningu",
+  "importInstructionPage.planMainDescription": "Główne ćwiczenia treningowe",
+  "importInstructionPage.planCooldownDescription":
+    "Ćwiczenia rozciągające na końcu treningu",
+  "importInstructionPage.planOrderNote":
+    "section_order ustala kolejność w ramach sekcji — jeśli nie podasz, użyjemy kolejności z pliku JSON. Bez section_type ćwiczenie trafia do Main Workout.",
+  "importInstructionPage.planParamsTitle": "Parametry ćwiczenia",
+  "importInstructionPage.planParamsDescription":
+    "To, co planujesz wykonać. Dla ćwiczeń z biblioteki wartości domyślne pochodzą z zapisanych tam serii, powtórzeń i przerw — możesz je nadpisać:",
+  "importInstructionPage.planExampleTitle": "Przykładowy JSON",
+
+  "importInstructionPage.workoutTitle": "Wykonany trening",
+  "importInstructionPage.workoutDescription":
+    "Trening, który już wykonałaś. Zapisuje się od razu jako ukończony w historii Sesji treningowych — bez tworzenia planu i bez przechodzenia przez trening krok po kroku.",
+  "importInstructionPage.workoutFieldsNote":
+    "Pola treningu są takie same jak w planie: name i exercises są wymagane, description i part opcjonalne.",
+  "importInstructionPage.workoutPerformanceTitle": "Wykonanie",
+  "importInstructionPage.workoutPerformanceDescription":
+    "Te pola to liczby, które faktycznie wykonałaś — JSON ma jedno pole na te wartości i nie rozdziela planu od wyniku:",
+  "importInstructionPage.workoutRestNote":
+    "planned_rest_seconds i planned_rest_after_series_seconds to przerwy; jeśli nie podasz, przyjmiemy domyślnie 30 s między seriami i 90 s po ćwiczeniu.",
+  "importInstructionPage.workoutOrderNote":
+    "Kolejność ćwiczeń to kolejność w tablicy JSON. section_type, section_order i pola obwodu (scope) nie mają tu znaczenia.",
+  "importInstructionPage.workoutResultTitle": "Po imporcie",
+  "importInstructionPage.workoutResultPoint1":
+    "Trening pojawia się od razu w historii Sesji ze statusem Zakończona.",
+  "importInstructionPage.workoutResultPoint2":
+    "Czas rozpoczęcia i zakończenia to moment importu.",
+  "importInstructionPage.workoutResultPoint3":
+    "Rekordy (suma powtórzeń / max czas) przeliczają się automatycznie dla ćwiczeń z biblioteki.",
+  "importInstructionPage.workoutResultPoint4":
+    "\"Suma powtórzeń\" to suma ze wszystkich serii ćwiczenia (np. 3 serie × 10 powtórzeń = 30), nie wartość jednej serii.",
+  "importInstructionPage.workoutExampleTitle": "Przykładowy JSON",
   "privacyPolicyPage.title": "Polityka prywatności",
   "privacyPolicyPage.lastUpdated": "Ostatnia aktualizacja: luty 2026",
   "privacyPolicyPage.backToHome": "Powrót do strony głównej",
