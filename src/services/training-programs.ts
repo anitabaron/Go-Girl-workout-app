@@ -651,7 +651,7 @@ async function generateProgramTemplatesWithLLM(params: {
   const model =
     process.env.OPENAI_PROGRAM_PLANNER_MODEL ??
     process.env.OPENAI_MODEL ??
-    "gpt-4.1";
+    "gpt-5";
   const openai = getOpenAIClient();
   const readinessDrivers =
     params.readinessDrivers.length > 0

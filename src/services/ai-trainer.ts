@@ -180,7 +180,10 @@ function isMissingDbObjectError(error: {
   );
 }
 
-function isUsageLimitConstraintError(error: { code?: string; message?: string }): boolean {
+function isUsageLimitConstraintError(error: {
+  code?: string;
+  message?: string;
+}): boolean {
   if (error.code !== "23514") return false;
   return (error.message ?? "").includes("ai_usage_usage_count_check");
 }
@@ -188,7 +191,8 @@ function isUsageLimitConstraintError(error: { code?: string; message?: string })
 function isProgramNotesUnavailableError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const maybe = error as { message?: string; details?: string };
-  const combined = `${maybe.message ?? ""} ${maybe.details ?? ""}`.toLowerCase();
+  const combined =
+    `${maybe.message ?? ""} ${maybe.details ?? ""}`.toLowerCase();
   return (
     combined.includes("program_notes") &&
     (combined.includes("does not exist") ||
@@ -522,11 +526,13 @@ async function generateAIReply(
   attachmentContextLines: string[],
   conversationContextLines: string[],
 ): Promise<string> {
-  const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
+  const model = process.env.OPENAI_MODEL ?? "gpt-5";
   const openai = getOpenAIClient();
 
   const plansPreview =
-    context.plans_preview.length > 0 ? context.plans_preview.join(", ") : "brak";
+    context.plans_preview.length > 0
+      ? context.plans_preview.join(", ")
+      : "brak";
   const rulesForPrompt = formatRulesForPrompt(profile?.rules);
   const prompt = [
     "Jesteś trenerem AI w aplikacji treningowej.",
@@ -596,9 +602,7 @@ function buildSuggestedActions(
   targetProgramId: string | null,
 ): AITrainerChatResponse["actions"] {
   const text = input.message.toLowerCase();
-  const normalized = text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const actions: AITrainerChatResponse["actions"] = [];
 
   if (
@@ -660,8 +664,7 @@ function buildSuggestedActions(
       id: "add-recovery-day",
       type: "ADD_RECOVERY_DAY",
       label: "Wpisz dzień regeneracji do kalendarza",
-      description:
-        "Doda planowany dzień regeneracji bez obciążenia siłowego.",
+      description: "Doda planowany dzień regeneracji bez obciążenia siłowego.",
       requires_confirmation: true,
       payload: {
         day_type: "recovery",
@@ -737,9 +740,7 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function parseProgressionOverrides(
-  value: Json | null | undefined,
-): {
+function parseProgressionOverrides(value: Json | null | undefined): {
   load_adjustment_percent: number;
   volume_adjustment_percent: number;
   emphasis: string | null;
@@ -779,7 +780,9 @@ function addDaysToIsoDate(isoDate: string, days: number): string {
   return `${y}-${m}-${d}`;
 }
 
-function resolveTargetProgramId(command: AITrainerActionExecuteCommand): string | null {
+function resolveTargetProgramId(
+  command: AITrainerActionExecuteCommand,
+): string | null {
   const raw = command.payload;
   const candidates = [raw.target_program_id, raw.program_id];
   return candidates.find((v): v is string => typeof v === "string") ?? null;
@@ -805,7 +808,9 @@ async function handleApplyLightVersion(
   planned: PlannedSession[],
 ): Promise<AITrainerActionExecuteResponse> {
   const reduction = clamp(
-    typeof parsed.payload.reduction_percent === "number" ? parsed.payload.reduction_percent : 20,
+    typeof parsed.payload.reduction_percent === "number"
+      ? parsed.payload.reduction_percent
+      : 20,
     10,
     30,
   );
@@ -871,9 +876,14 @@ async function handleAddDeloadWeek(
   const first = planned[0];
   if (!first) throw new ServiceError("CONFLICT", "Brak sesji do deloadu.");
   const targetWeek = first.week_index;
-  const targets = planned.filter((session) => session.week_index === targetWeek);
+  const targets = planned.filter(
+    (session) => session.week_index === targetWeek,
+  );
   if (targets.length === 0) {
-    throw new ServiceError("CONFLICT", "Brak sesji do deloadu w najbliższym tygodniu.");
+    throw new ServiceError(
+      "CONFLICT",
+      "Brak sesji do deloadu w najbliższym tygodniu.",
+    );
   }
 
   const loadReduction = clamp(
@@ -934,18 +944,29 @@ async function handleAddRecoveryDay(
   planned: PlannedSession[],
 ): Promise<AITrainerActionExecuteResponse> {
   const shiftDays = clamp(
-    typeof parsed.payload.shift_days === "number" ? parsed.payload.shift_days : 1,
+    typeof parsed.payload.shift_days === "number"
+      ? parsed.payload.shift_days
+      : 1,
     1,
     3,
   );
   const nextSession = planned[0];
-  if (!nextSession) throw new ServiceError("CONFLICT", "Brak sesji do przesunięcia.");
+  if (!nextSession)
+    throw new ServiceError("CONFLICT", "Brak sesji do przesunięcia.");
   const nextDate = addDaysToIsoDate(nextSession.scheduled_date, shiftDays);
-  const currentOverrides = parseProgressionOverrides(nextSession.progression_overrides);
+  const currentOverrides = parseProgressionOverrides(
+    nextSession.progression_overrides,
+  );
   const recoveryOverrides = {
     ...currentOverrides,
-    load_adjustment_percent: Math.min(currentOverrides.load_adjustment_percent, -20),
-    volume_adjustment_percent: Math.min(currentOverrides.volume_adjustment_percent, -20),
+    load_adjustment_percent: Math.min(
+      currentOverrides.load_adjustment_percent,
+      -20,
+    ),
+    volume_adjustment_percent: Math.min(
+      currentOverrides.volume_adjustment_percent,
+      -20,
+    ),
     emphasis: "recovery",
   };
 
@@ -1009,13 +1030,18 @@ export async function executeAITrainerActionService(
     .maybeSingle();
   if (programError) throw mapDbError(programError);
   if (!program) {
-    throw new ServiceError("NOT_FOUND", "Program treningowy nie został znaleziony.");
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Program treningowy nie został znaleziony.",
+    );
   }
 
   const todayIso = getDayIso();
   const { data: upcomingSessions, error: sessionsError } = await supabase
     .from("program_sessions")
-    .select("id,training_program_id,scheduled_date,week_index,progression_overrides,status")
+    .select(
+      "id,training_program_id,scheduled_date,week_index,progression_overrides,status",
+    )
     .eq("user_id", userId)
     .eq("training_program_id", targetProgramId)
     .eq("status", "planned")
@@ -1113,7 +1139,10 @@ async function ensureConversationAndMessage(
   } catch (error) {
     canPersist = false;
     conversationId = null;
-    console.warn("[aiTrainerChatService] Conversation persistence disabled:", error);
+    console.warn(
+      "[aiTrainerChatService] Conversation persistence disabled:",
+      error,
+    );
   }
 
   return { conversationId, canPersist };
@@ -1124,7 +1153,9 @@ async function loadChatContextData(
   userId: string,
   profileId: string | null,
 ) {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const sevenDaysAgo = new Date(
+    Date.now() - 7 * 24 * 60 * 60 * 1000,
+  ).toISOString();
   const coachQuery = profileId
     ? supabase
         .from("ai_coach_profiles")
@@ -1216,20 +1247,22 @@ async function loadAttachedProgramsContext(
 ): Promise<AIProgramAttachmentContext[]> {
   if (attachedProgramIds.length === 0) return [];
 
-  const [{ data: programsData, error: programsError }, { data: sessionsData, error: sessionsError }] =
-    await Promise.all([
-      supabase
-        .from("training_programs")
-        .select("id,name,duration_months,sessions_per_week,status")
-        .eq("user_id", userId)
-        .in("id", attachedProgramIds),
-      supabase
-        .from("program_sessions")
-        .select("training_program_id,scheduled_date,status,workout_plans(name)")
-        .eq("user_id", userId)
-        .in("training_program_id", attachedProgramIds)
-        .order("scheduled_date", { ascending: true }),
-    ]);
+  const [
+    { data: programsData, error: programsError },
+    { data: sessionsData, error: sessionsError },
+  ] = await Promise.all([
+    supabase
+      .from("training_programs")
+      .select("id,name,duration_months,sessions_per_week,status")
+      .eq("user_id", userId)
+      .in("id", attachedProgramIds),
+    supabase
+      .from("program_sessions")
+      .select("training_program_id,scheduled_date,status,workout_plans(name)")
+      .eq("user_id", userId)
+      .in("training_program_id", attachedProgramIds)
+      .order("scheduled_date", { ascending: true }),
+  ]);
 
   if (programsError) {
     if (isMissingDbObjectError(programsError)) {
@@ -1253,7 +1286,10 @@ async function loadAttachedProgramsContext(
   }
 
   const now = new Date();
-  const sessionsByProgram = new Map<string, AIProgramAttachmentContext["next_sessions"]>();
+  const sessionsByProgram = new Map<
+    string,
+    AIProgramAttachmentContext["next_sessions"]
+  >();
   const sessionRows = (sessionsData ?? []) as Array<{
     training_program_id: string;
     scheduled_date: string;
@@ -1300,7 +1336,9 @@ async function loadAttachedNotesContext(
 
   const { data: notesData, error: notesError } = await supabase
     .from("program_notes")
-    .select("training_program_id,program_session_id,note_text,fatigue_level,vitality_level,source,created_at")
+    .select(
+      "training_program_id,program_session_id,note_text,fatigue_level,vitality_level,source,created_at",
+    )
     .eq("user_id", userId)
     .in("training_program_id", attachedProgramIds)
     .order("created_at", { ascending: false })
@@ -1331,12 +1369,22 @@ async function loadAttachedNotesContext(
   }>;
 
   return notes.map((note) => {
-    const programName = programNameById.get(note.training_program_id) ?? note.training_program_id;
-    const fatigue = typeof note.fatigue_level === "number" ? `zmęczenie ${note.fatigue_level}/10` : "";
-    const vitality = typeof note.vitality_level === "number" ? `witalność ${note.vitality_level}/10` : "";
+    const programName =
+      programNameById.get(note.training_program_id) ?? note.training_program_id;
+    const fatigue =
+      typeof note.fatigue_level === "number"
+        ? `zmęczenie ${note.fatigue_level}/10`
+        : "";
+    const vitality =
+      typeof note.vitality_level === "number"
+        ? `witalność ${note.vitality_level}/10`
+        : "";
     const metrics = [fatigue, vitality].filter(Boolean).join(", ");
     const metricsPart = metrics ? ` (${metrics})` : "";
-    const shortText = note.note_text.length > 180 ? `${note.note_text.slice(0, 177)}...` : note.note_text;
+    const shortText =
+      note.note_text.length > 180
+        ? `${note.note_text.slice(0, 177)}...`
+        : note.note_text;
     return `${programName} [${note.created_at.slice(0, 10)}]${metricsPart}: ${shortText}`;
   });
 }
@@ -1383,8 +1431,11 @@ export async function aiTrainerChatService(
   const { conversationId, canPersist: canPersistConversation } =
     await ensureConversationAndMessage(supabase, userId, parsed);
 
-  const { plans: plansRows, external: externalRows, coachProfile: coachProfileRow } =
-    await loadChatContextData(supabase, userId, parsed.profile_id ?? null);
+  const {
+    plans: plansRows,
+    external: externalRows,
+    coachProfile: coachProfileRow,
+  } = await loadChatContextData(supabase, userId, parsed.profile_id ?? null);
 
   const externalSummary = summarizeExternalWorkouts(externalRows);
   const context: AITrainerChatResponse["context"] = {
@@ -1408,7 +1459,9 @@ export async function aiTrainerChatService(
     attachedProgramIds,
     programNameById,
   );
-  const attachmentContextLines = mapProgramContextToPromptLines(attachedProgramsContext);
+  const attachmentContextLines = mapProgramContextToPromptLines(
+    attachedProgramsContext,
+  );
   const conversationContextMessages = await loadConversationHistoryForPrompt({
     supabase,
     userId,
@@ -1440,13 +1493,14 @@ export async function aiTrainerChatService(
     }
   } catch (error) {
     isSystemError = true;
-    console.error("[aiTrainerChatService] OpenAI call failed, using fallback", error);
+    console.error(
+      "[aiTrainerChatService] OpenAI call failed, using fallback",
+      error,
+    );
     recommendations = buildFallbackRecommendations(parsed, context);
     const diagnostic = getErrorSummary(error);
     const diagnosticLine =
-      process.env.NODE_ENV === "production"
-        ? ""
-        : `\n[diag] ${diagnostic}`;
+      process.env.NODE_ENV === "production" ? "" : `\n[diag] ${diagnostic}`;
     reply = [
       "Nie udało się pobrać pełnej odpowiedzi modelu, dlatego używam bezpiecznego trybu fallback.",
       diagnosticLine,
@@ -1461,7 +1515,12 @@ export async function aiTrainerChatService(
   let usageAfter = usageBefore.used;
   if (!isSystemError && usageTrackingEnabled && usageLimitEnforced) {
     try {
-      usageAfter = await incrementAIUsage(supabase, userId, usageBefore, usagePolicy);
+      usageAfter = await incrementAIUsage(
+        supabase,
+        userId,
+        usageBefore,
+        usagePolicy,
+      );
     } catch (error) {
       if (
         error &&
@@ -1504,20 +1563,22 @@ export async function aiTrainerChatService(
   };
 
   if (canPersistConversation && conversationId) {
-    const [{ error: assistantMessageError }, { error: conversationUpdateError }] =
-      await Promise.all([
-        supabase.from("ai_chat_messages").insert({
-          conversation_id: conversationId,
-          user_id: userId,
-          role: "assistant",
-          content: reply,
-        }),
-        supabase
-          .from("ai_chat_conversations")
-          .update({ last_message_at: new Date().toISOString() })
-          .eq("id", conversationId)
-          .eq("user_id", userId),
-      ]);
+    const [
+      { error: assistantMessageError },
+      { error: conversationUpdateError },
+    ] = await Promise.all([
+      supabase.from("ai_chat_messages").insert({
+        conversation_id: conversationId,
+        user_id: userId,
+        role: "assistant",
+        content: reply,
+      }),
+      supabase
+        .from("ai_chat_conversations")
+        .update({ last_message_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .eq("user_id", userId),
+    ]);
 
     if (assistantMessageError) {
       console.warn(
@@ -1543,7 +1604,10 @@ export async function aiTrainerChatService(
   });
 
   if (aiRequestError) {
-    console.warn("[aiTrainerChatService] Failed to write ai_requests log:", aiRequestError);
+    console.warn(
+      "[aiTrainerChatService] Failed to write ai_requests log:",
+      aiRequestError,
+    );
   }
 
   return response;
