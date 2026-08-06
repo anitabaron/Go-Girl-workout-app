@@ -110,13 +110,15 @@ export function WorkoutSessionExerciseItemM3({
     </>
   );
 
-  // Sesje zaimportowane jako już ukończone nie mają "planu" — planned_* jest
-  // wtedy null dla wszystkich pól i karta "Planowane" nie ma nic do pokazania.
+  // Sesje zaimportowane jako już ukończone nie mają "planu" — planned_sets/
+  // reps/duration są wtedy null i karta "Planowane" nie ma nic do pokazania.
+  // Przerwa (rest) to tylko informacja pomocnicza (bez odpowiednika "actual"),
+  // więc nie decyduje o pokazaniu karty "Planowane" — jest wyświetlana w
+  // karcie "Wykonane" niezależnie od tego, czy sesja ma plan.
   const hasPlan =
     exercise.planned_sets != null ||
     exercise.planned_reps != null ||
-    exercise.planned_duration_seconds != null ||
-    exercise.planned_rest_seconds != null;
+    exercise.planned_duration_seconds != null;
 
   return (
     <Card data-test-id="workout-session-exercise-item">
@@ -264,6 +266,16 @@ export function WorkoutSessionExerciseItemM3({
                       </dd>
                     </div>
                   )}
+                {exercise.planned_rest_seconds != null && (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      {t("rest")}
+                    </dt>
+                    <dd className="font-semibold">
+                      {formatDuration(exercise.planned_rest_seconds)}
+                    </dd>
+                  </div>
+                )}
               </dl>
             )}
           </div>

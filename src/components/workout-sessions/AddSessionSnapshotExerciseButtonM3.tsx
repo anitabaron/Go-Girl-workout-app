@@ -28,7 +28,7 @@ export function AddSessionSnapshotExerciseButtonM3({
     <Button
       variant="outline"
       size="sm"
-      className="mt-4"
+      className="mt-6"
       onClick={addToLibrary}
       disabled={isLoading}
     >
