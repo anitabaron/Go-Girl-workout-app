@@ -25,15 +25,16 @@ export function AddSessionSnapshotExerciseButtonM3({
   if (exercise.exercise_id) return null;
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      className="mt-6"
-      onClick={addToLibrary}
-      disabled={isLoading}
-    >
-      <Plus className="mr-2 size-4" />
-      {isLoading ? t("adding") : t("add")}
-    </Button>
+    <div className="mt-6 pt-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={addToLibrary}
+        disabled={isLoading}
+      >
+        <Plus className="mr-2 size-4" />
+        {isLoading ? t("adding") : t("add")}
+      </Button>
+    </div>
   );
 }
