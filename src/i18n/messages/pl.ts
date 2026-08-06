@@ -882,6 +882,9 @@ export const plMessages = {
   "workoutSessionExerciseItem.rest": "Przerwa",
   "workoutSessionExerciseItem.time": "Czas",
   "workoutSessionExerciseItem.weight": "Ciężar",
+  "workoutSessionExerciseItem.notInLibrary": "Poza biblioteką",
+  "workoutSessionExerciseItem.snapshotPrHint":
+    "Aby śledzić PR, dodaj to ćwiczenie do biblioteki.",
   "workoutSessionExerciseItemEditable.exerciseLabel": "Ćwiczenie",
   "workoutSessionExerciseItemEditable.of": "z",
   "workoutSessionExerciseItemEditable.unilateral": "Jednostronne",

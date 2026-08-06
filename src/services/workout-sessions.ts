@@ -59,7 +59,11 @@ import { markProgramSessionCompletedByWorkoutSessionId } from "@/repositories/tr
 import { applyCapabilitySessionResult } from "@/services/capability-profiles";
 import { findByNormalizedTitle } from "@/repositories/exercises";
 import { normalizeTitleForDbLookup } from "@/lib/validation/exercises";
-import { DEFAULT_EXERCISE_VALUE } from "@/lib/constants";
+import {
+  DEFAULT_EXERCISE_VALUE,
+  DEFAULT_SESSION_REST_BETWEEN_SETS_SECONDS,
+  DEFAULT_SESSION_REST_AFTER_SERIES_SECONDS,
+} from "@/lib/constants";
 import { importWorkoutPlanService } from "@/services/workout-plans";
 
 export { ServiceError } from "@/lib/service-utils";
@@ -1231,6 +1235,8 @@ function buildSessionExerciseRows(
   source_sets: number | null;
   source_reps: number | null;
   source_duration_seconds: number | null;
+  source_rest_seconds: number | null;
+  source_rest_after_series_seconds: number | null;
   exercise_order: number;
 }> {
   return parsed.exercises.map((exercise, index) => {
@@ -1259,6 +1265,15 @@ function buildSessionExerciseRows(
       source_sets: exercise.planned_sets ?? null,
       source_reps: exercise.planned_reps ?? null,
       source_duration_seconds: exercise.planned_duration_seconds ?? null,
+      // Przerwa nie ma odpowiednika "actual" (nigdy nie jest porównywana z
+      // wykonaniem), więc bezpiecznie wypełniamy ją wartością domyślną, gdy
+      // JSON nie podaje własnej — to tylko informacja, nie "plan".
+      source_rest_seconds:
+        exercise.planned_rest_seconds ??
+        DEFAULT_SESSION_REST_BETWEEN_SETS_SECONDS,
+      source_rest_after_series_seconds:
+        exercise.planned_rest_after_series_seconds ??
+        DEFAULT_SESSION_REST_AFTER_SERIES_SECONDS,
       exercise_order: index + 1,
     };
   });
@@ -1331,8 +1346,9 @@ export async function importWorkoutSessionService(
         planned_sets: null,
         planned_reps: null,
         planned_duration_seconds: null,
-        planned_rest_seconds: null,
-        planned_rest_after_series_seconds: null,
+        planned_rest_seconds: row.source_rest_seconds,
+        planned_rest_after_series_seconds:
+          row.source_rest_after_series_seconds,
         actual_sets: sets,
         actual_reps: reps != null ? reps * sets : null,
         actual_duration_seconds: row.source_duration_seconds ?? null,

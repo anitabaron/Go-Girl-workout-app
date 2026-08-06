@@ -1,5 +1,5 @@
 import type { SessionExerciseDTO } from "@/types";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExerciseTypeBadge } from "@/components/ui/exercise-type-badge";
@@ -138,6 +138,17 @@ export function WorkoutSessionExerciseItemM3({
           )}
           {exercise.exercise_is_unilateral_at_time && (
             <Badge variant="secondary">{t("unilateral")}</Badge>
+          )}
+          {!exercise.exercise_id && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-amber-500 text-amber-600">
+                <AlertCircle className="mr-1 size-3" />
+                {t("notInLibrary")}
+              </Badge>
+              <span className="text-xs text-amber-700">
+                {t("snapshotPrHint")}
+              </span>
+            </div>
           )}
         </div>
       </CardHeader>

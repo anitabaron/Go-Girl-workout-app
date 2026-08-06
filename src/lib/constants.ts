@@ -71,3 +71,13 @@ export const DEFAULT_EXERCISE_VALUE = {
   planned_rest_after_series_seconds: 60,
   estimated_set_time_seconds: 360,
 };
+
+/**
+ * Domyślne czasy przerwy dla importu ukończonej sesji treningowej (patrz
+ * importWorkoutSessionService), gdy JSON nie podaje własnych wartości.
+ * Przerwa (rest) nie ma odpowiednika "actual" i nigdy nie jest porównywana
+ * z wykonaniem, więc wypełnienie jej wartością domyślną nie tworzy fałszywego
+ * "planu" ani mylących strzałek.
+ */
+export const DEFAULT_SESSION_REST_BETWEEN_SETS_SECONDS = 30;
+export const DEFAULT_SESSION_REST_AFTER_SERIES_SECONDS = 90;

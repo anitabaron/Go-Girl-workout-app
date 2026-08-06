@@ -866,6 +866,9 @@ export const enMessages = {
   "workoutSessionExerciseItem.rest": "Rest",
   "workoutSessionExerciseItem.time": "Time",
   "workoutSessionExerciseItem.weight": "Weight",
+  "workoutSessionExerciseItem.notInLibrary": "Not in library",
+  "workoutSessionExerciseItem.snapshotPrHint":
+    "Add this exercise to your library to track PRs.",
   "workoutSessionExerciseItemEditable.exerciseLabel": "Exercise",
   "workoutSessionExerciseItemEditable.of": "of",
   "workoutSessionExerciseItemEditable.unilateral": "Unilateral",
