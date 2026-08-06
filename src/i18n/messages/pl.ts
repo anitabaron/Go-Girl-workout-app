@@ -1152,7 +1152,7 @@ export const plMessages = {
     "Wgraj plan treningowy, który chcesz później wykonać krok po kroku. Plan pojawia się na liście Planów treningowych, a nie w historii Sesji.",
   "importInstructionPage.sectionSessionTitle": "Import ukończonych treningów",
   "importInstructionPage.sectionSessionDescription":
-    "Wgraj trening, który już wykonałaś. Zamiast planu do odbycia, w historii Sesji treningowych pojawia się od razu ukończony trening z wynikami.",
+    "Wgraj trening, który już wykonałaś. Zamiast planu do wykonania, w historii Sesji treningowych pojawia się od razu ukończony trening z wynikami.",
   "importInstructionPage.requiredLabel": "Wymagane:",
   "importInstructionPage.optionalLabel": "Opcjonalne:",
   "importInstructionPage.step1Title": "Informacje ogólne o planie treningowym",
@@ -1173,7 +1173,7 @@ export const plMessages = {
   "importInstructionPage.step5Point4":
     "Rekordy życiowe (suma powtórzeń / max czas) są nadal przeliczane automatycznie dla ćwiczeń dopasowanych do Twojej biblioteki.",
   "importInstructionPage.step5Point5":
-    "\"Suma powtórzeń\" po stronie Rzeczywiste to suma powtórzeń ze wszystkich serii danego ćwiczenia (np. 3 serie x 10 powtórzeń = 30), nie wartość jednej serii.",
+    "\"Suma powtórzeń\" po stronie Wykonane to suma powtórzeń ze wszystkich serii danego ćwiczenia (np. 3 serie x 10 powtórzeń = 30), nie wartość jednej serii.",
   "importInstructionPage.step5EndpointLabel": "Endpoint:",
   "privacyPolicyPage.title": "Polityka prywatności",
   "privacyPolicyPage.lastUpdated": "Ostatnia aktualizacja: luty 2026",

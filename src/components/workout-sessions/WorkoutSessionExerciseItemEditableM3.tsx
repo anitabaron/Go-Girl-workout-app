@@ -48,10 +48,23 @@ export function WorkoutSessionExerciseItemEditableM3({
     },
   } = useExerciseExecutionForm(exercise, () => {});
 
+  // Sesja zaimportowana jako DONE nie ma "planu" (planned_* = null), więc o tym,
+  // czy pokazać pole powtórzeń/czasu, decyduje obecność danych rzeczywistych
+  // (sets / actual_*), a nie tylko planned_* — patrz WorkoutSessionExerciseItemM3.
+  const hasActualReps =
+    exercise.actual_sum_reps != null ||
+    (exercise.sets ?? []).some((set) => set.reps != null);
+  const hasActualDuration =
+    exercise.actual_duration_seconds != null ||
+    (exercise.sets ?? []).some((set) => set.duration_seconds != null);
+  const showReps =
+    (exercise.planned_reps !== null && exercise.planned_reps > 0) ||
+    hasActualReps;
   const showDuration =
-    exercise.planned_duration_seconds !== null &&
-    exercise.planned_duration_seconds > 0;
-  const showReps = exercise.planned_reps !== null && exercise.planned_reps > 0;
+    ((exercise.planned_duration_seconds !== null &&
+      exercise.planned_duration_seconds > 0) ||
+      hasActualDuration) &&
+    !showReps;
 
   const title =
     exercise.exercise_title_at_time ??
