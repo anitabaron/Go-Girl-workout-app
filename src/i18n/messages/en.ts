@@ -272,6 +272,15 @@ export const enMessages = {
   "addExerciseDialog.description":
     "Choose one or more exercises from your library to add to the plan.",
   "addExerciseDialog.cancel": "Cancel",
+  "addSessionExerciseDialog.trigger": "Add exercise",
+  "addSessionExerciseDialog.title": "Choose an exercise",
+  "addSessionExerciseDialog.description":
+    "Pick an exercise from your library to add it to this session. You'll fill in the execution (sets, reps, weight) later while editing the session.",
+  "addSessionExerciseDialog.cancel": "Cancel",
+  "addSessionExerciseDialog.add": "Add",
+  "addSessionExerciseDialog.adding": "Adding...",
+  "addSessionExerciseDialog.addedSuccess": "Exercise added to session",
+  "addSessionExerciseDialog.addFailed": "Failed to add exercise",
   "addScopeDialog.addScope": "Add scope",
   "addScopeDialog.addScopeCount": "Add scope ({count} exercises x {repeat})",
   "addScopeDialog.title": "Add scope",
@@ -878,6 +887,13 @@ export const enMessages = {
   "workoutSessionExerciseItemEditable.saveExercise": "Save exercise",
   "workoutSessionExerciseItemEditable.savedSuccess": "Exercise saved",
   "workoutSessionExerciseItemEditable.saveFailed": "Failed to save exercise",
+  "workoutSessionExerciseItemEditable.deleteExercise": "Delete exercise",
+  "workoutSessionExerciseItemEditable.deleteConfirm":
+    "Remove this exercise from the session? This can't be undone.",
+  "workoutSessionExerciseItemEditable.deleting": "Deleting...",
+  "workoutSessionExerciseItemEditable.deletedSuccess": "Exercise deleted",
+  "workoutSessionExerciseItemEditable.deleteFailed":
+    "Failed to delete exercise",
   "workoutPlanDetailContent.exportSuccess": "Plan exported to JSON",
   "workoutPlanDetailContent.planNotFound": "Workout plan not found",
   "workoutPlanDetailContent.unauthorized": "Unauthorized. Please log in again.",

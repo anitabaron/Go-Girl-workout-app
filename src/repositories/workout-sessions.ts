@@ -663,6 +663,25 @@ export async function updateWorkoutSessionExercise(
 }
 
 /**
+ * Usuwa ćwiczenie z sesji treningowej. Serie (workout_session_sets) są usuwane
+ * kaskadowo (ON DELETE CASCADE). Nie renumeruje exercise_order pozostałych
+ * ćwiczeń - "X z N" w UI liczone jest z pozycji w tablicy wyników, nie z
+ * wartości exercise_order (patrz WorkoutSessionExercisesListM3), więc luki
+ * w numeracji są bezpieczne.
+ */
+export async function deleteWorkoutSessionExercise(
+  client: DbClient,
+  sessionExerciseId: string,
+) {
+  const { error } = await client
+    .from("workout_session_exercises")
+    .delete()
+    .eq("id", sessionExerciseId);
+
+  return { error };
+}
+
+/**
  * Aktualizuje current_position w workout_sessions.
  */
 export async function updateWorkoutSessionCursor(

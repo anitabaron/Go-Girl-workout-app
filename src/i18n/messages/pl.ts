@@ -271,6 +271,15 @@ export const plMessages = {
   "addExerciseDialog.description":
     "Wybierz jedno lub więcej ćwiczeń z biblioteki, aby dodać je do planu.",
   "addExerciseDialog.cancel": "Anuluj",
+  "addSessionExerciseDialog.trigger": "Dodaj ćwiczenie",
+  "addSessionExerciseDialog.title": "Wybierz ćwiczenie",
+  "addSessionExerciseDialog.description":
+    "Wybierz ćwiczenie z biblioteki, aby dodać je do tej sesji. Wykonanie (serie, powtórzenia, waga) wypełnisz później w edycji sesji.",
+  "addSessionExerciseDialog.cancel": "Anuluj",
+  "addSessionExerciseDialog.add": "Dodaj",
+  "addSessionExerciseDialog.adding": "Dodawanie...",
+  "addSessionExerciseDialog.addedSuccess": "Ćwiczenie dodane do sesji",
+  "addSessionExerciseDialog.addFailed": "Nie udało się dodać ćwiczenia",
   "addScopeDialog.addScope": "Dodaj obwód",
   "addScopeDialog.addScopeCount": "Dodaj obwód ({count} ćwiczeń x {repeat})",
   "addScopeDialog.title": "Dodaj obwód",
@@ -895,6 +904,13 @@ export const plMessages = {
   "workoutSessionExerciseItemEditable.savedSuccess": "Ćwiczenie zapisane",
   "workoutSessionExerciseItemEditable.saveFailed":
     "Nie udało się zapisać ćwiczenia",
+  "workoutSessionExerciseItemEditable.deleteExercise": "Usuń ćwiczenie",
+  "workoutSessionExerciseItemEditable.deleteConfirm":
+    "Usunąć to ćwiczenie z sesji? Tej operacji nie można odwrócić.",
+  "workoutSessionExerciseItemEditable.deleting": "Usuwanie...",
+  "workoutSessionExerciseItemEditable.deletedSuccess": "Ćwiczenie usunięte",
+  "workoutSessionExerciseItemEditable.deleteFailed":
+    "Nie udało się usunąć ćwiczenia",
   "workoutPlanDetailContent.exportSuccess": "Plan wyeksportowano do JSON",
   "workoutPlanDetailContent.planNotFound": "Nie znaleziono planu treningowego",
   "workoutPlanDetailContent.unauthorized":

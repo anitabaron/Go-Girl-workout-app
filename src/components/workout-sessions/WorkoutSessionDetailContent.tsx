@@ -16,6 +16,7 @@ import {
   getExerciseNames,
 } from "@/lib/utils/session-format";
 import { WorkoutSessionExercisesListM3 } from "./WorkoutSessionExercisesListM3";
+import { AddSessionExerciseDialogM3 } from "./AddSessionExerciseDialogM3";
 import { useTranslations } from "@/i18n/client";
 import { toast } from "sonner";
 
@@ -264,12 +265,24 @@ export function WorkoutSessionDetailContent({
       </Card>
 
       <div data-test-id="workout-session-details-exercises-list">
-        <h2 className="m3-headline mb-6">{t("exercisesInSession")}</h2>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="m3-headline">{t("exercisesInSession")}</h2>
+          {isEditMode && (
+            <AddSessionExerciseDialogM3
+              sessionId={session.id}
+              existingExerciseIds={session.exercises
+                .map((exercise) => exercise.exercise_id)
+                .filter((id): id is string => Boolean(id))}
+              onAdded={() => router.refresh()}
+            />
+          )}
+        </div>
         <WorkoutSessionExercisesListM3
           exercises={session.exercises}
           sessionId={session.id}
           isEditMode={isEditMode}
           onExerciseSaved={() => router.refresh()}
+          onExerciseDeleted={() => router.refresh()}
         />
       </div>
     </div>

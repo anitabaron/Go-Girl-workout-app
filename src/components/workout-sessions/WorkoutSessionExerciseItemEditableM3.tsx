@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,7 +14,10 @@ import {
 } from "@/lib/exercises/labels";
 import { SetLogsListM3 } from "./assistant/SetLogsListM3";
 import { useExerciseExecutionForm } from "@/hooks/use-exercise-execution-form";
-import { patchWorkoutSessionExercise } from "@/lib/api/workout-sessions";
+import {
+  patchWorkoutSessionExercise,
+  deleteWorkoutSessionExercise,
+} from "@/lib/api/workout-sessions";
 import { formDataToAutosaveCommand } from "@/types/workout-session-assistant";
 import type { SessionExerciseDTO } from "@/types";
 import { toast } from "sonner";
@@ -25,6 +29,7 @@ type WorkoutSessionExerciseItemEditableM3Props = {
   readonly totalExercises: number;
   readonly sessionId: string;
   readonly onSaved?: (updatedExercise: SessionExerciseDTO) => void;
+  readonly onDeleted?: () => void;
 };
 
 export function WorkoutSessionExerciseItemEditableM3({
@@ -33,10 +38,12 @@ export function WorkoutSessionExerciseItemEditableM3({
   totalExercises,
   sessionId,
   onSaved,
+  onDeleted,
 }: WorkoutSessionExerciseItemEditableM3Props) {
   const t = useTranslations("workoutSessionExerciseItemEditable");
   const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     formData,
@@ -91,14 +98,44 @@ export function WorkoutSessionExerciseItemEditableM3({
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm(t("deleteConfirm"))) return;
+    setIsDeleting(true);
+    try {
+      await deleteWorkoutSessionExercise(sessionId, order);
+      toast.success(t("deletedSuccess"));
+      onDeleted?.();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t("deleteFailed");
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Card data-test-id="workout-session-exercise-item-editable">
       <CardHeader>
-        <div className="mb-3 flex items-start justify-between">
+        <div className="mb-3 flex items-start justify-between gap-2">
           <h3 className="m3-title">{title}</h3>
-          <span className="text-sm text-muted-foreground">
-            {exerciseIndex + 1} {t("of")} {totalExercises}
-          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {exerciseIndex + 1} {t("of")} {totalExercises}
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              aria-label={t("deleteExercise")}
+              aria-busy={isDeleting}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {exercise.exercise_type_at_time && (

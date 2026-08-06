@@ -5,6 +5,7 @@ import type {
   SessionStatusUpdateCommand,
   SessionExerciseAutosaveCommand,
   SessionExerciseAutosaveResponse,
+  SessionExerciseDTO,
 } from "@/types";
 
 export class ApiError extends Error {
@@ -143,6 +144,76 @@ export async function patchWorkoutSessionExercise(
   }
 
   return response.json();
+}
+
+export type ExerciseCreateApiResponse = {
+  data: SessionExerciseDTO;
+};
+
+/**
+ * POST /api/workout-sessions/{id}/exercises
+ * Dodaje nowe ćwiczenie (z biblioteki) do istniejącej sesji treningowej.
+ */
+export async function postWorkoutSessionExercise(
+  sessionId: string,
+  exerciseId: string,
+): Promise<ExerciseCreateApiResponse> {
+  const url = `/api/workout-sessions/${sessionId}/exercises`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ exercise_id: exerciseId }),
+  });
+
+  if (!response.ok) {
+    let errorData: { message?: string; details?: string; code?: string } = {};
+    try {
+      const text = await response.text();
+      if (text) {
+        errorData = JSON.parse(text) as typeof errorData;
+      }
+    } catch {
+      // ignore parse error
+    }
+    const msg =
+      errorData.message || `Błąd dodawania ćwiczenia (${response.status})`;
+    const fullMsg = errorData.details ? `${msg} ${errorData.details}` : msg;
+    throw new Error(fullMsg);
+  }
+
+  return response.json();
+}
+
+/**
+ * DELETE /api/workout-sessions/{id}/exercises/{order}
+ * Usuwa ćwiczenie z sesji treningowej (i jego serie).
+ */
+export async function deleteWorkoutSessionExercise(
+  sessionId: string,
+  exerciseOrder: number,
+): Promise<void> {
+  const url = `/api/workout-sessions/${sessionId}/exercises/${exerciseOrder}`;
+  const response = await fetch(url, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    let errorData: { message?: string; details?: string; code?: string } = {};
+    try {
+      const text = await response.text();
+      if (text) {
+        errorData = JSON.parse(text) as typeof errorData;
+      }
+    } catch {
+      // ignore parse error
+    }
+    const msg =
+      errorData.message || `Błąd usuwania ćwiczenia (${response.status})`;
+    const fullMsg = errorData.details ? `${msg} ${errorData.details}` : msg;
+    throw new Error(fullMsg);
+  }
 }
 
 /**

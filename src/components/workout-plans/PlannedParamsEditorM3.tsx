@@ -8,6 +8,7 @@ import {
   calculateEstimatedSetTimeSeconds,
   getEstimatedSetTimeLabel,
 } from "@/lib/exercises/estimated-set-time";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 import { useTranslations } from "@/i18n/client";
 
 type PlannedParamsEditorM3Props = {
@@ -203,7 +204,13 @@ export function PlannedParamsEditorM3({
       planned_rest_after_series_seconds: t("restAfter"),
       estimated_set_time_seconds: t("estimatedSetTime"),
     };
-    const label = rawLabel ?? labelKeyMap[config.key];
+    const baseLabel = rawLabel ?? labelKeyMap[config.key];
+    const label =
+      config.key === "planned_duration_seconds" &&
+      value != null &&
+      value >= 60
+        ? `${baseLabel} = ${formatCompactSeconds(value)}`
+        : baseLabel;
 
     const suggestedValue =
       config.key === "estimated_set_time_seconds"

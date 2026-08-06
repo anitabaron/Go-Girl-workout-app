@@ -4,6 +4,7 @@ import type { Database } from "@/db/database.types";
 import type {
   SessionDetailDTO,
   SessionExerciseAutosaveResponse,
+  SessionExerciseDTO,
   SessionListQueryParams,
   SessionSummaryDTO,
   WorkoutPlanExerciseDTO,
@@ -13,6 +14,7 @@ import {
   sessionListQuerySchema,
   sessionStatusUpdateSchema,
   sessionExerciseAutosaveSchema,
+  sessionExerciseCreateSchema,
   sessionTimerUpdateSchema,
   workoutSessionImportSchema,
 } from "@/lib/validation/workout-sessions";
@@ -46,6 +48,7 @@ import {
   callSaveWorkoutSessionExercise,
   mapExerciseToDTO,
   deleteWorkoutSession,
+  deleteWorkoutSessionExercise,
 } from "@/repositories/workout-sessions";
 import {
   findWorkoutPlanById,
@@ -1050,6 +1053,123 @@ export async function autosaveWorkoutSessionExerciseService(
   );
 
   return result;
+}
+
+/**
+ * Usuwa ćwiczenie z sesji treningowej (i kaskadowo jego serie).
+ * Jeśli ćwiczenie było powiązane z biblioteką, przelicza jego PR po usunięciu
+ * (usunięte serie mogły być podstawą aktualnego rekordu).
+ */
+export async function deleteWorkoutSessionExerciseService(
+  userId: string,
+  sessionId: string,
+  order: number,
+): Promise<void> {
+  assertUser(userId);
+  validateAutosavePathParams(sessionId, order);
+
+  const supabase = await createClient();
+
+  await validateSessionForAutosave(supabase, userId, sessionId);
+  const exercise = await validateExerciseForAutosave(supabase, sessionId, order);
+
+  const { error: deleteError } = await deleteWorkoutSessionExercise(
+    supabase,
+    exercise.id,
+  );
+  if (deleteError) {
+    throw mapDbError(deleteError);
+  }
+
+  if (exercise.exercise_id) {
+    const { error: recalcError } = await callRecalculatePrForExercise(
+      supabase,
+      userId,
+      exercise.exercise_id,
+    );
+    if (recalcError) {
+      console.error(
+        "[deleteWorkoutSessionExerciseService] Failed to recalculate PR for exercise",
+        exercise.exercise_id,
+        recalcError,
+      );
+    }
+  }
+}
+
+/**
+ * Dodaje nowe ćwiczenie (z biblioteki) do istniejącej sesji treningowej.
+ * Ćwiczenie jest dodawane bez planu i bez serii - użytkowniczka wypełnia
+ * wykonanie później przez edycję sesji (patrz WorkoutSessionExerciseItemEditableM3).
+ */
+export async function addWorkoutSessionExerciseService(
+  userId: string,
+  sessionId: string,
+  payload: unknown,
+): Promise<SessionExerciseDTO> {
+  assertUser(userId);
+  validateUuid(sessionId, "id");
+  const parsed = parseOrThrow(sessionExerciseCreateSchema, payload);
+
+  const supabase = await createClient();
+
+  await validateSessionForAutosave(supabase, userId, sessionId);
+
+  const { data: libraryExercises, error: libraryError } =
+    await findExercisesByIdsForSnapshots(supabase, userId, [
+      parsed.exercise_id,
+    ]);
+  if (libraryError) throw mapDbError(libraryError);
+
+  const libraryData = libraryExercises?.[0];
+  if (!libraryData) {
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Ćwiczenie z biblioteki nie zostało znalezione.",
+    );
+  }
+
+  const { data: existingExercises, error: existingError } =
+    await findWorkoutSessionExercises(supabase, sessionId);
+  if (existingError) throw mapDbError(existingError);
+
+  const nextOrder =
+    (existingExercises ?? []).reduce(
+      (max, exercise) => Math.max(max, exercise.exercise_order),
+      0,
+    ) + 1;
+
+  const { data: insertedRows, error: insertError } =
+    await insertWorkoutSessionExercises(supabase, sessionId, [
+      {
+        exercise_id: libraryData.id,
+        exercise_title_at_time: libraryData.title,
+        exercise_type_at_time: libraryData.types?.[0] ?? DEFAULT_EXERCISE_TYPE,
+        exercise_part_at_time: libraryData.parts?.[0] ?? DEFAULT_EXERCISE_PART,
+        exercise_is_unilateral_at_time: libraryData.is_unilateral ?? false,
+        planned_sets: null,
+        planned_reps: null,
+        planned_duration_seconds: null,
+        planned_rest_seconds:
+          libraryData.rest_in_between_seconds ??
+          DEFAULT_SESSION_REST_BETWEEN_SETS_SECONDS,
+        planned_rest_after_series_seconds:
+          libraryData.rest_after_series_seconds ??
+          DEFAULT_SESSION_REST_AFTER_SERIES_SECONDS,
+        exercise_order: nextOrder,
+      },
+    ]);
+  if (insertError) throw mapDbError(insertError);
+
+  const insertedRow = insertedRows?.[0];
+  if (!insertedRow) {
+    throw new ServiceError(
+      "INTERNAL",
+      "Nie udało się dodać ćwiczenia do sesji.",
+    );
+  }
+
+  return mapExerciseToDTO(insertedRow, []);
 }
 
 /**

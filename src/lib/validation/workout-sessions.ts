@@ -85,6 +85,23 @@ export const sessionStatusUpdateSchema = z
   .strict();
 
 /**
+ * Schema dla dodania nowego ćwiczenia do istniejącej sesji treningowej
+ * (POST /api/workout-sessions/{id}/exercises). Ćwiczenie musi istnieć w
+ * bibliotece użytkownika - dodawane jest bez planu i bez serii (użytkowniczka
+ * wypełnia wykonanie później przez edycję sesji).
+ */
+export const sessionExerciseCreateSchema = z
+  .object({
+    exercise_id: z
+      .string()
+      .refine(
+        (val) => uuidRegex.test(val),
+        "exercise_id musi być prawidłowym UUID",
+      ),
+  })
+  .strict();
+
+/**
  * Schema dla aktualizacji timera sesji (PATCH /api/workout-sessions/{id}/timer).
  */
 export const sessionTimerUpdateSchema = z

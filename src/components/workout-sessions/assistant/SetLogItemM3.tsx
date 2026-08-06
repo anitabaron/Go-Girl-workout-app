@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { SetLogFormData } from "@/types/workout-session-assistant";
+import { formatCompactSeconds } from "@/lib/utils/time-format";
 import { useTranslations } from "@/i18n/client";
 
 type SetLogItemM3Props = {
@@ -38,7 +39,7 @@ export function SetLogItemM3({
   return (
     <div className="rounded-[var(--m3-radius-lg)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] p-4 shadow-sm">
       <div className="flex items-end justify-between gap-4">
-        <div className="flex flex-1 flex-wrap items-end gap-3">
+        <div className="flex flex-1 items-end gap-3">
           <div className="shrink-0">
             <span
               className="mb-1 block text-sm font-medium text-foreground"
@@ -87,6 +88,12 @@ export function SetLogItemM3({
                 className="mb-1 block text-sm font-medium text-foreground"
               >
                 {t("timeSeconds")}
+                {set.duration_seconds != null &&
+                  set.duration_seconds >= 60 && (
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      {`= ${formatCompactSeconds(set.duration_seconds)}`}
+                    </span>
+                  )}
               </label>
               <Input
                 id={`duration-${set.set_number}`}
@@ -105,13 +112,6 @@ export function SetLogItemM3({
                   error ? `error-${set.set_number}` : undefined
                 }
               />
-              {set.duration_seconds != null && set.duration_seconds > 0 && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {set.duration_seconds >= 60
-                    ? `= ${Math.floor(set.duration_seconds / 60)} min${set.duration_seconds % 60 > 0 ? ` ${set.duration_seconds % 60} s` : ""}`
-                    : `= ${set.duration_seconds} s`}
-                </p>
-              )}
             </div>
           )}
 
