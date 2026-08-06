@@ -734,6 +734,12 @@ export const plMessages = {
     "Sesja treningowa została wyeksportowana do JSON",
   "workoutSessionDetailContent.editSessionAria": "Edytuj sesję",
   "workoutSessionDetailContent.editSession": "Edytuj sesję",
+  "workoutSessionDetailContent.repeatSessionAria":
+    "Wykonaj tę sesję ponownie",
+  "workoutSessionDetailContent.repeatSession": "Wykonaj ponownie",
+  "workoutSessionDetailContent.repeating": "Uruchamianie...",
+  "workoutSessionDetailContent.repeatError":
+    "Nie udało się uruchomić powtórki treningu.",
   "workoutSessionDetailContent.inProgress": "W trakcie",
   "workoutSessionDetailContent.completed": "Zakończona",
   "workoutSessionDetailContent.workoutPlanLabel": "Plan treningowy",
@@ -864,7 +870,7 @@ export const plMessages = {
   "workoutSessionExerciseItem.of": "z",
   "workoutSessionExerciseItem.unilateral": "Jednostronne",
   "workoutSessionExerciseItem.planned": "Planowane",
-  "workoutSessionExerciseItem.actual": "Rzeczywiste",
+  "workoutSessionExerciseItem.actual": "Wykonane",
   "workoutSessionExerciseItem.skipped": "Pominięte",
   "workoutSessionExerciseItem.sets": "Serie",
   "workoutSessionExerciseItem.set": "Seria",

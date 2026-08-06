@@ -9,6 +9,7 @@ import {
 } from "@/lib/exercises/labels";
 import { formatDuration } from "@/lib/utils/time-format";
 import { useTranslations } from "@/i18n/client";
+import { AddSessionSnapshotExerciseButtonM3 } from "./AddSessionSnapshotExerciseButtonM3";
 
 type Comparison = "up" | "down" | "match" | "na";
 
@@ -43,12 +44,14 @@ type WorkoutSessionExerciseItemM3Props = {
   readonly exercise: SessionExerciseDTO;
   readonly exerciseIndex: number;
   readonly totalExercises: number;
+  readonly sessionId?: string;
 };
 
 export function WorkoutSessionExerciseItemM3({
   exercise,
   exerciseIndex,
   totalExercises,
+  sessionId,
 }: WorkoutSessionExerciseItemM3Props) {
   const t = useTranslations("workoutSessionExerciseItem");
   const tExerciseLabel = useTranslations(EXERCISE_LABELS_NAMESPACE);
@@ -107,6 +110,14 @@ export function WorkoutSessionExerciseItemM3({
     </>
   );
 
+  // Sesje zaimportowane jako już ukończone nie mają "planu" — planned_* jest
+  // wtedy null dla wszystkich pól i karta "Planowane" nie ma nic do pokazania.
+  const hasPlan =
+    exercise.planned_sets != null ||
+    exercise.planned_reps != null ||
+    exercise.planned_duration_seconds != null ||
+    exercise.planned_rest_seconds != null;
+
   return (
     <Card data-test-id="workout-session-exercise-item">
       <CardHeader>
@@ -131,56 +142,64 @@ export function WorkoutSessionExerciseItemM3({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-lg border border-[var(--m3-outline-variant)] p-4">
-            <h4 className="mb-3 text-sm font-medium text-muted-foreground">
-              {t("planned")}
-            </h4>
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("sets")}</dt>
-                <dd className="font-semibold">
-                  {exercise.planned_sets ?? "-"}
-                </dd>
-              </div>
-              {exercise.planned_reps != null &&
-                exercise.planned_sets != null && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <dt className="text-xs text-muted-foreground">
-                        {repsLabel}
-                      </dt>
-                      <dd className="font-semibold">{exercise.planned_reps}</dd>
+        <div className={`grid gap-4 ${hasPlan ? "grid-cols-2" : "grid-cols-1"}`}>
+          {hasPlan && (
+            <div className="rounded-lg border border-[var(--m3-outline-variant)] p-4">
+              <h4 className="mb-3 text-sm font-medium text-muted-foreground">
+                {t("planned")}
+              </h4>
+              <dl className="space-y-2">
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("sets")}</dt>
+                  <dd className="font-semibold">
+                    {exercise.planned_sets ?? "-"}
+                  </dd>
+                </div>
+                {exercise.planned_reps != null &&
+                  exercise.planned_sets != null && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <dt className="text-xs text-muted-foreground">
+                          {repsLabel}
+                        </dt>
+                        <dd className="font-semibold">
+                          {exercise.planned_reps}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-muted-foreground">
+                          {totalRepsLabel}
+                        </dt>
+                        <dd className="font-semibold">
+                          {exercise.planned_reps * exercise.planned_sets}
+                        </dd>
+                      </div>
                     </div>
+                  )}
+                {exercise.planned_duration_seconds != null &&
+                  exercise.planned_reps == null && (
                     <div>
                       <dt className="text-xs text-muted-foreground">
-                        {totalRepsLabel}
+                        {t("duration")}
                       </dt>
                       <dd className="font-semibold">
-                        {exercise.planned_reps * exercise.planned_sets}
+                        {formatDuration(exercise.planned_duration_seconds)}
                       </dd>
                     </div>
-                  </div>
-                )}
-              {exercise.planned_duration_seconds != null &&
-                exercise.planned_reps == null && (
+                  )}
+                {exercise.planned_rest_seconds != null && (
                   <div>
                     <dt className="text-xs text-muted-foreground">
-                      {t("duration")}
+                      {t("rest")}
                     </dt>
                     <dd className="font-semibold">
-                      {formatDuration(exercise.planned_duration_seconds)}
+                      {formatDuration(exercise.planned_rest_seconds)}
                     </dd>
                   </div>
                 )}
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("rest")}</dt>
-                <dd className="font-semibold">
-                  {formatDuration(exercise.planned_rest_seconds)}
-                </dd>
-              </div>
-            </dl>
-          </div>
+              </dl>
+            </div>
+          )}
           <div
             className={`rounded-lg border border-[var(--m3-outline-variant)] p-4 ${
               exercise.is_skipped ? "bg-muted/50 opacity-60" : ""
@@ -352,6 +371,12 @@ export function WorkoutSessionExerciseItemM3({
               </tbody>
             </table>
           </div>
+        )}
+        {sessionId && (
+          <AddSessionSnapshotExerciseButtonM3
+            exercise={exercise}
+            sessionId={sessionId}
+          />
         )}
       </CardContent>
     </Card>

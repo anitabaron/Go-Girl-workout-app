@@ -217,6 +217,13 @@ export const sessionExerciseAutosaveSchema = z
 
     // Flaga przesunięcia kursora do następnego ćwiczenia (opcjonalne)
     advance_cursor_to_next: z.boolean().optional(),
+
+    // Powiązanie snapshotu (exercise_id = null) z ćwiczeniem z biblioteki,
+    // np. po dodaniu go przez "Dodaj do bazy ćwiczeń" na sesji.
+    exercise_id: z
+      .string()
+      .uuid("exercise_id musi być prawidłowym UUID")
+      .optional(),
   })
   .strict()
   .refine(

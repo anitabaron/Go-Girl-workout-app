@@ -60,6 +60,7 @@ import { applyCapabilitySessionResult } from "@/services/capability-profiles";
 import { findByNormalizedTitle } from "@/repositories/exercises";
 import { normalizeTitleForDbLookup } from "@/lib/validation/exercises";
 import { DEFAULT_EXERCISE_VALUE } from "@/lib/constants";
+import { importWorkoutPlanService } from "@/services/workout-plans";
 
 export { ServiceError } from "@/lib/service-utils";
 
@@ -966,6 +967,32 @@ export async function autosaveWorkoutSessionExerciseService(
     }
   }
 
+  // Powiązanie snapshotu (exercise_id = null) z ćwiczeniem z biblioteki —
+  // np. po dodaniu go przez "Dodaj do bazy ćwiczeń" na sesji.
+  if (parsed.exercise_id !== undefined && !exercise.exercise_id) {
+    const { error: linkError } = await updateWorkoutSessionExercise(
+      supabase,
+      sessionExerciseId,
+      { exercise_id: parsed.exercise_id },
+    );
+    if (linkError) {
+      throw mapDbError(linkError);
+    }
+
+    const { error: recalcError } = await callRecalculatePrForExercise(
+      supabase,
+      userId,
+      parsed.exercise_id,
+    );
+    if (recalcError) {
+      console.error(
+        "[autosaveWorkoutSessionExerciseService] Failed to recalculate PR after linking exercise",
+        parsed.exercise_id,
+        recalcError,
+      );
+    }
+  }
+
   await applyCapabilitySessionResult({
     userId,
     exerciseTitle: exercise.exercise_title_at_time,
@@ -1377,4 +1404,123 @@ export async function importWorkoutSessionService(
     console.error("[importWorkoutSessionService] Error:", error);
     throw error;
   }
+}
+
+/**
+ * Buduje nazwę nowego planu na podstawie nazwy powtarzanej sesji, z
+ * uwzględnieniem limitu długości nazwy planu (nameSchema, max 120 znaków).
+ */
+function buildRepeatPlanName(originalName: string | null): string {
+  const base = originalName?.trim() || "Trening";
+  const suffix = " (powtórka)";
+  const maxLen = 120;
+  if (base.length + suffix.length <= maxLen) {
+    return `${base}${suffix}`;
+  }
+  return `${base.slice(0, Math.max(0, maxLen - suffix.length))}${suffix}`;
+}
+
+/**
+ * Konwertuje ukończoną (lub jakąkolwiek) sesję treningową na payload zgodny
+ * z workoutPlanImportSchema, tak by można ją "powtórzyć" jako nowy plan.
+ * Wartości "rzeczywiste" (actual_*) stają się nowym "planem" — sesja nie ma
+ * własnego planu (patrz importWorkoutSessionService), więc bazujemy na tym,
+ * co faktycznie zostało wykonane; dla sesji opartych na realnym planie
+ * (workout_plan_id != null) actual_* i planned_* zwykle są zbliżone.
+ */
+function buildWorkoutPlanImportPayloadFromSession(session: SessionDetailDTO) {
+  const sectionOrderCounters = new Map<string, number>();
+
+  const exercises = [...session.exercises]
+    .filter((exercise) => !exercise.is_skipped)
+    .sort((a, b) => a.exercise_order - b.exercise_order)
+    .map((exercise) => {
+      const sectionType = exercise.exercise_type_at_time ?? "Main Workout";
+      const nextOrder = (sectionOrderCounters.get(sectionType) ?? 0) + 1;
+      sectionOrderCounters.set(sectionType, nextOrder);
+
+      const sets = exercise.actual_count_sets ?? exercise.planned_sets ?? 1;
+      const totalReps = exercise.actual_sum_reps ?? null;
+      let reps: number | null =
+        totalReps != null && sets > 0 ? Math.round(totalReps / sets) : null;
+      const durationSeconds: number | null =
+        reps == null
+          ? exercise.actual_duration_seconds ??
+            exercise.planned_duration_seconds ??
+            null
+          : null;
+
+      // workoutPlanExerciseImportSchema wymaga co najmniej jednej metryki dla
+      // nowych (snapshot) ćwiczeń — jeśli sesja nie ma żadnych danych, wstaw
+      // bezpieczny fallback, użytkowniczka i tak poprawi to w planie.
+      if (reps == null && durationSeconds == null) {
+        reps = 1;
+      }
+
+      const base = {
+        section_type: sectionType,
+        section_order: nextOrder,
+        planned_sets: sets,
+        planned_reps: reps,
+        planned_duration_seconds: durationSeconds,
+        planned_rest_seconds: exercise.planned_rest_seconds ?? null,
+        planned_rest_after_series_seconds:
+          exercise.planned_rest_after_series_seconds ?? null,
+        exercise_is_unilateral: Boolean(
+          exercise.exercise_is_unilateral_at_time,
+        ),
+      };
+
+      if (exercise.exercise_id) {
+        return { ...base, exercise_id: exercise.exercise_id };
+      }
+
+      return {
+        ...base,
+        exercise_title: exercise.exercise_title_at_time,
+        exercise_type: sectionType,
+        exercise_part: exercise.exercise_part_at_time ?? null,
+      };
+    });
+
+  return {
+    name: buildRepeatPlanName(session.plan_name_at_time),
+    description: null,
+    part: null,
+    exercises,
+  };
+}
+
+/**
+ * "Wykonaj ponownie": tworzy nowy plan treningowy z ćwiczeń i wartości
+ * (actual_*) ukończonej sesji, a następnie natychmiast rozpoczyna z niego
+ * nową sesję treningową (in_progress). Zwraca id nowej sesji, do której UI
+ * przekierowuje na /workout-sessions/{id}/active.
+ */
+export async function repeatWorkoutSessionService(
+  userId: string,
+  sessionId: string,
+): Promise<{ session_id: string; plan_id: string }> {
+  assertUser(userId);
+  validateUuid(sessionId, "id sesji treningowej");
+
+  const session = await getWorkoutSessionService(userId, sessionId);
+
+  const repeatableExercises = session.exercises.filter(
+    (exercise) => !exercise.is_skipped,
+  );
+  if (repeatableExercises.length === 0) {
+    throw new ServiceError(
+      "BAD_REQUEST",
+      "Sesja nie ma żadnych (nieopuszczonych) ćwiczeń do powtórzenia.",
+    );
+  }
+
+  const payload = buildWorkoutPlanImportPayloadFromSession(session);
+  const plan = await importWorkoutPlanService(userId, payload);
+  const { session: newSession } = await startWorkoutSessionService(userId, {
+    workout_plan_id: plan.id,
+  });
+
+  return { session_id: newSession.id, plan_id: plan.id };
 }

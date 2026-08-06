@@ -649,6 +649,7 @@ export async function updateWorkoutSessionExercise(
     planned_reps?: number | null;
     planned_duration_seconds?: number | null;
     planned_rest_seconds?: number | null;
+    exercise_id?: string | null;
   },
 ) {
   const { data, error } = await client

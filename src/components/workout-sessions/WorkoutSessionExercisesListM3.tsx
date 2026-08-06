@@ -47,6 +47,7 @@ export function WorkoutSessionExercisesListM3({
             exercise={exercise}
             exerciseIndex={index}
             totalExercises={sortedExercises.length}
+            sessionId={sessionId}
           />
         ),
       )}

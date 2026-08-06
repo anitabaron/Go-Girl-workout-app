@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Download, Play, Pencil, X } from "lucide-react";
+import { Download, Play, Pencil, X, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +59,7 @@ export function WorkoutSessionDetailContent({
   const isEditFromUrl =
     searchParams.get("edit") === "1" && session.status === "completed";
   const [userToggledEdit, setUserToggledEdit] = useState(false);
+  const [isRepeating, setIsRepeating] = useState(false);
   const isEditMode = isEditFromUrl || userToggledEdit;
 
   const planName = session.plan_name_at_time ?? t("planDeleted");
@@ -95,6 +96,29 @@ export function WorkoutSessionDetailContent({
     a.remove();
     URL.revokeObjectURL(url);
     toast.success(t("exportSuccess"));
+  };
+
+  const handleRepeatSession = async () => {
+    if (isRepeating) return;
+    setIsRepeating(true);
+    try {
+      const response = await fetch(
+        `/api/workout-sessions/${session.id}/repeat`,
+        { method: "POST" },
+      );
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(body?.message || t("repeatError"));
+      }
+      const newSessionId = body?.data?.session_id;
+      if (!newSessionId) {
+        throw new Error(t("repeatError"));
+      }
+      router.push(`/workout-sessions/${newSessionId}/active`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("repeatError"));
+      setIsRepeating(false);
+    }
   };
 
   return (
@@ -138,6 +162,19 @@ export function WorkoutSessionDetailContent({
                 >
                   <Pencil className="mr-2 size-4" />
                   {t("editSession")}
+                </Button>
+              )}
+              {isCompleted && !isEditMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-w-0"
+                  onClick={handleRepeatSession}
+                  disabled={isRepeating}
+                  aria-label={t("repeatSessionAria")}
+                >
+                  <Repeat className="mr-2 size-4" />
+                  {isRepeating ? t("repeating") : t("repeatSession")}
                 </Button>
               )}
               {isInProgress ? (
