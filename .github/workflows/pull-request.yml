@@ -66,111 +66,113 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  e2e-test:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: [lint]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+  # E2E tymczasowo wyłączone: zdalna baza testowa Supabase jest wyłączona (wszystkie testy logowania padają).
+  # Aby przywrócić: odkomentuj job i przywróć e2e-test w needs/if joba status-comment.
+  # e2e-test:
+  #   name: E2E Tests
+  #   runs-on: ubuntu-latest
+  #   needs: [lint]
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+  #     - name: Setup pnpm
+  #       uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 9
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v6
+  #       with:
+  #         node-version-file: ".nvmrc"
+  #         cache: "pnpm"
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+  #     - name: Install Playwright browsers
+  #       run: npx playwright install --with-deps chromium
 
-      - name: Validate required secrets
-        run: |
-          echo "Validating required secrets..."
-          missing_secrets=()
+  #     - name: Validate required secrets
+  #       run: |
+  #         echo "Validating required secrets..."
+  #         missing_secrets=()
 
-          if [ -z "${{ secrets.E2E_USERNAME }}" ]; then
-            missing_secrets+=("E2E_USERNAME")
-          fi
+  #         if [ -z "${{ secrets.E2E_USERNAME }}" ]; then
+  #           missing_secrets+=("E2E_USERNAME")
+  #         fi
 
-          if [ -z "${{ secrets.E2E_PASSWORD }}" ]; then
-            missing_secrets+=("E2E_PASSWORD")
-          fi
+  #         if [ -z "${{ secrets.E2E_PASSWORD }}" ]; then
+  #           missing_secrets+=("E2E_PASSWORD")
+  #         fi
 
-          if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" ]; then
-            missing_secrets+=("NEXT_PUBLIC_SUPABASE_URL")
-          fi
+  #         if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" ]; then
+  #           missing_secrets+=("NEXT_PUBLIC_SUPABASE_URL")
+  #         fi
 
-          if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" ] && [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}" ]; then
-            missing_secrets+=("NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY")
-          fi
+  #         if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" ] && [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}" ]; then
+  #           missing_secrets+=("NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY")
+  #         fi
 
-          if [ -z "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
-            echo "⚠️  Warning: SUPABASE_SERVICE_ROLE_KEY is not set. Teardown may not work properly."
-          fi
+  #         if [ -z "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
+  #           echo "⚠️  Warning: SUPABASE_SERVICE_ROLE_KEY is not set. Teardown may not work properly."
+  #         fi
 
-          if [ -z "${{ secrets.E2E_TEST_ENV }}" ]; then
-            echo "⚠️  Warning: E2E_TEST_ENV is not set. This is required for remote test databases."
-          fi
+  #         if [ -z "${{ secrets.E2E_TEST_ENV }}" ]; then
+  #           echo "⚠️  Warning: E2E_TEST_ENV is not set. This is required for remote test databases."
+  #         fi
 
-          if [ ${#missing_secrets[@]} -ne 0 ]; then
-            echo "❌ Missing required secrets:"
-            printf '  - %s\n' "${missing_secrets[@]}"
-            echo ""
-            echo "Please add these secrets in GitHub:"
-            echo "Settings → Secrets and variables → Actions → New repository secret"
-            exit 1
-          fi
+  #         if [ ${#missing_secrets[@]} -ne 0 ]; then
+  #           echo "❌ Missing required secrets:"
+  #           printf '  - %s\n' "${missing_secrets[@]}"
+  #           echo ""
+  #           echo "Please add these secrets in GitHub:"
+  #           echo "Settings → Secrets and variables → Actions → New repository secret"
+  #           exit 1
+  #         fi
 
-          echo "✅ All required secrets are set"
+  #         echo "✅ All required secrets are set"
 
-      - name: Create .env.test file
-        run: |
-          cat > .env.test << EOF
-          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          E2E_USERNAME_ID=${{ secrets.E2E_USERNAME_ID }}
-          E2E_USERNAME=${{ secrets.E2E_USERNAME }}
-          E2E_PASSWORD=${{ secrets.E2E_PASSWORD }}
-          E2E_TEST_ENV=${{ secrets.E2E_TEST_ENV }}
-          E2E_SKIP_TEARDOWN=${{ secrets.E2E_SKIP_TEARDOWN }}
-          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          EOF
+  #     - name: Create .env.test file
+  #       run: |
+  #         cat > .env.test << EOF
+  #         NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+  #         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
+  #         NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  #         E2E_USERNAME_ID=${{ secrets.E2E_USERNAME_ID }}
+  #         E2E_USERNAME=${{ secrets.E2E_USERNAME }}
+  #         E2E_PASSWORD=${{ secrets.E2E_PASSWORD }}
+  #         E2E_TEST_ENV=${{ secrets.E2E_TEST_ENV }}
+  #         E2E_SKIP_TEARDOWN=${{ secrets.E2E_SKIP_TEARDOWN }}
+  #         SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  #         EOF
 
-      - name: Run E2E tests
-        run: pnpm test:e2e
+  #     - name: Run E2E tests
+  #       run: pnpm test:e2e
 
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-          if-no-files-found: ignore
+  #     - name: Upload Playwright report
+  #       uses: actions/upload-artifact@v6
+  #       if: always()
+  #       with:
+  #         name: playwright-report
+  #         path: playwright-report/
+  #         retention-days: 7
+  #         if-no-files-found: ignore
 
-      - name: Upload Playwright test results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: playwright-test-results
-          path: test-results/
-          retention-days: 7
-          if-no-files-found: ignore
+  #     - name: Upload Playwright test results
+  #       uses: actions/upload-artifact@v6
+  #       if: always()
+  #       with:
+  #         name: playwright-test-results
+  #         path: test-results/
+  #         retention-days: 7
+  #         if-no-files-found: ignore
 
   status-comment:
     name: Status Comment
     runs-on: ubuntu-latest
-    needs: [lint, unit-test, e2e-test]
-    if: always() && needs.lint.result == 'success' && needs.unit-test.result == 'success' && needs.e2e-test.result == 'success'
+    needs: [lint, unit-test]
+    if: always() && needs.lint.result == 'success' && needs.unit-test.result == 'success'
     permissions:
       issues: write
       pull-requests: write
@@ -239,7 +241,7 @@ jobs:
             ### Job Results
             - ✅ Lint: Passed
             - ✅ Unit Tests: Passed
-            - ✅ E2E Tests: Passed
+            - ⏸️ E2E Tests: Disabled
 
             All checks have completed successfully. This PR is ready for review.`;
 
